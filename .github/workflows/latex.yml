@@ -1,17 +1,16 @@
 name: LaTeX
 on: [push]
+
 jobs:
-  build_latex:
+  latex-job:
     runs-on: ubuntu-latest
+    name: Compile and push standards.tex
     steps:
-      - name: Set up Git repository
-        uses: actions/checkout@v1
-      - name: Compile - Standards
-        uses: dante-ev/latex-action@master
-        with:
-          root_file: doc/design/standards.tex
-      - name: Archive PDF - Standards
-        uses: actions/upload-artifact@v2
-        with:
-          name: documents-standards
-          path: standards.pdf
+    - uses: actions/checkout@v1
+    - name: Compilation
+      uses: vinay0410/tectonic-action@master
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tex_path: 'doc/design/standards.tex'
+        push: 'yes'
