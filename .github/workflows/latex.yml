@@ -6,7 +6,12 @@ jobs:
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v1
-      - name: Compile LaTeX document
+      - name: Compile design document
         uses: dante-ev/latex-action@master
         with:
           root_file: doc/design/standards.tex
+      - name: Archive PDF file
+        uses: actions/upload-artifact@v2
+        with:
+          name: documents-standards
+          path: doc/design/standards.pdf
