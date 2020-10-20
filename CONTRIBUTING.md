@@ -7,6 +7,29 @@ Code
 Please read the [standards document](doc/design/standards) before
 contributing.
 
+### Development
+
+Make new branches for features `git checkout -b my_feature` and commit often
+and push a little less often. Try to merge back to main branch as soon as
+you have something that works.
+
+### Commit Styling
+
+The first line of the commit must be *at most* ~50 characters long and
+should start with either.
+
+- `Feat:` For new feature.
+- `Fix:` For bug fix.
+- `Merge:` For merging.
+
+The commit first line must be in *present* tense so that anyone picking a
+commit hash can easily read what they are enabling.
+
+### Pull Requests
+
+Make sure you have linted and checked your code before asking for a pull
+request. Another member must check the code and approve it before merge.
+
 Issues
 ------
 
