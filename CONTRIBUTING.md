@@ -15,8 +15,8 @@ you have something that works.
 
 #### Linting
 
-For *C++* code make sure to use a static code checker like `cpplint` to check
-the code for any style issues before submitting.  For *Python*, `flake8` is
+For *C++* code make sure to use a static code checker like [cpplint](https://github.com/cpplint/cpplint) to check
+the code for any style issues before submitting.  For *Python*, [flake8](https://flake8.pycqa.org/en/latest/) is
 a good option.  Both of these may by installed using pip.
 
 To install `cpplint`
@@ -35,30 +35,31 @@ The first line of the commit must be *at most* ~50 characters long and
 should start with either.
 
 - `FEAT:` For new feature.
-- `BUG:` For bug fix.
+- `FIX:` For bug fix.
 - `MERGE:` For merging.
 - `DOC:` For documentation update.
-- `TST:` For the addition or modification of tests.
+- `TEST:` For the addition or modification of tests.
 - `STY:` For a style update (e.g., linting).
-- `DEP:` Deprecate something, or removee a deprecated object.
-- `REV:` Revert an earlier commit.
+- `DEPREC:` Deprecate something, or removee a deprecated object.
+- `REVERT:` Revert an earlier commit.
 - `MAINT:` For maintenance such as refactoring, typos, etc.
 
 The commit first line must be in *present* tense so that anyone picking a
-commit hash can easily read what they are enabling.
+commit hash can easily read what they are enabling. For more information
+check out [conventional commit messages](https://www.conventionalcommits.org/en/v1.0.0/).
 
 For example,
 
 *do:*
 
 ```
-FEAT:Hydrostatic density implementation.
+FEAT: Hydrostatic density implementation.
 ```
 
 *don't:*
 
 ```
-feat:Implemented hydrostatic density.
+Implemented hydrostatic density. (feature)
 ```
 
 ### Pull Requests
