@@ -25,7 +25,8 @@ If applicable, add screenshots to help explain your problem.
 
 **System information (please complete the following information):**
  - OS: [e.g. iOS]
- - Compilers used
+ - Compilers used, with version numbers
+ - Otheer details about your setup that could be relevant
 
 **Additional context**
 Add any other context about the problem here.
