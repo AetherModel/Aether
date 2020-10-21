@@ -24,8 +24,8 @@ instructions so we can reproduce.
 
 ## Test configuration
 
-* Operating system: Hal
-* Version number: Python 3.X, gcc version X.X
+* Operating system: [e.g., Hal]
+* Compiler, version number: [e.g., Python 3.X, gcc version X.X]
 * Any details about your local setup that are relevant
 
 # Checklist:
