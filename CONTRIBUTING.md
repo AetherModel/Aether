@@ -47,6 +47,20 @@ should start with either.
 The commit first line must be in *present* tense so that anyone picking a
 commit hash can easily read what they are enabling.
 
+For example,
+
+*do:*
+
+```
+FEAT:Hydrostatic density implementation.
+```
+
+*don't:*
+
+```
+feat:Implemented hydrostatic density.
+```
+
 ### Pull Requests
 
 Make sure you have linted and checked your code before asking for a pull
