@@ -35,7 +35,7 @@ The first line of the commit must be *at most* ~50 characters long and
 should start with either.
 
 - `FEAT:` For new feature.
-- `FIX:` For bug fix.
+- `BUG:` For bug fix.
 - `MERGE:` For merging.
 - `DOC:` For documentation update.
 - `TEST:` For the addition or modification of tests.
