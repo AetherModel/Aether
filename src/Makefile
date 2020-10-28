@@ -23,6 +23,9 @@ OBJECTS = \
 MAIN = \
 	main.o
 
+TEST = \
+	test.o
+
 #DEPS := $(OBJS:.o=.d)
 #
 #-include $(DEPS)
@@ -41,6 +44,9 @@ LIB: ${CLASSES} ${OBJECTS}
 
 Aether: ${MAIN} LIB
 	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib #-lmsis -L/opt/local/lib -lnetcdf-cxx4
+
+test: ${TEST} LIB
+	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib
 
 clean:
 	rm -f *~ core *.o *.exe *.a *.so *.d
