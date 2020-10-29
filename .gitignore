@@ -1,0 +1,8 @@
+# Compiled files:
+*.o
+*.a
+*.exe
+
+# Backup files for editors:
+*~
+*#
