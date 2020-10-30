@@ -12,13 +12,17 @@ FLAGS = -c -I/opt/local/include
 
 HEADERS = \
 	times.h\
-	constants.h
+	constants.h\
+	inputs.h\
+	file_input.h
 
 CLASSES = \
-	time.o
+	time.o\
+	inputs.o
 
 OBJECTS = \
-	time_conversion.o
+	time_conversion.o\
+	file_input.o
 
 MAIN = \
 	main.o
