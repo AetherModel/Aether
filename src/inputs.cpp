@@ -8,6 +8,7 @@
 #include "../include/constants.h"
 #include "../include/times.h"
 #include "../include/inputs.h"
+#include "../include/file_input.h"
 
 Inputs::Inputs(Times &time) {
 
@@ -65,20 +66,23 @@ Inputs::Inputs(Times &time) {
 int Inputs::read(Times &time) {
 
   int iErr;
-  std::string line;
+  std::string line, hash;
   std::vector<int> itime(7,0);
 
   iErr = 0;
 
-  std::ifstream myFile;
-  myFile.open(input_file);
+  std::ifstream infile_ptr;
+  infile_ptr.open(input_file);
 
-  if (!myFile.is_open()) {
+  if (!infile_ptr.is_open()) {
     std::cout << "Could not open input file: " << input_file << "!!!\n";
     iErr = 1;
   } else {
 
-    while (getline(myFile,line)) {
+    // while (getline(infile_ptr,line)) {
+    while (!infile_ptr.eof()) {
+
+      hash = find_next_hash(infile_ptr);
 
       iErr = 0;
 
@@ -86,9 +90,9 @@ int Inputs::read(Times &time) {
       // #starttime
       // ---------------------------
 
-      if (line=="#starttime") {
+      if (hash=="#starttime") {
 	for (int i=0; i<6; i++) {
-	  if (getline(myFile,line)) itime[i] = stoi(line);
+	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
 	  else iErr = 1;
 	}
 	itime[6] = 0;
@@ -112,9 +116,9 @@ int Inputs::read(Times &time) {
       // #endtime
       // ---------------------------
 
-      if (line=="#endtime") {
+      if (hash=="#endtime") {
 	for (int i=0; i<6; i++) {
-	  if (getline(myFile,line)) itime[i] = stoi(line);
+	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
 	  else iErr = 1;
 	}
 	itime[6] = 0;
@@ -137,8 +141,8 @@ int Inputs::read(Times &time) {
       // #f107file
       // ---------------------------
 
-      if (line=="#f107file") {
-	if (getline(myFile,f107_file)) {
+      if (hash=="#f107file") {
+	if (getline(infile_ptr,f107_file)) {
 	  DoReadF107File = 1;
 	} else {
 	  std::cout << "Issue in read_inputs!\n";
@@ -152,8 +156,8 @@ int Inputs::read(Times &time) {
       // #f107file
       // ---------------------------
 
-      if (line=="#planet") {
-	getline(myFile,planet);
+      if (hash=="#planet") {
+	getline(infile_ptr,planet);
 	// This will never happen....
 	if (iErr > 0) {
 	  std::cout << "Issue in read_inputs!\n";
@@ -165,7 +169,7 @@ int Inputs::read(Times &time) {
 
     }
 
-    myFile.close();
+    infile_ptr.close();
 
   }
 
