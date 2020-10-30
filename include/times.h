@@ -15,7 +15,9 @@ public:
   void increment_time();
   void increment_intermediate(double dt);
   void display();
-
+  void set_times(std::vector<int> itime);
+  void set_end_time(std::vector<int> itime);
+  
 private:
   
   // These variables are for keeping track of the time:
