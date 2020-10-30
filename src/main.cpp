@@ -2,12 +2,15 @@
 // Full license can be found in License.md
 
 #include "../include/times.h"
+#include "../include/inputs.h"
 
 int main() {
 
   int iErr = 0;
 
   Times time;
+  Inputs input(time);
   
   return iErr;
+
 }
