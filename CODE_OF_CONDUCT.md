@@ -157,10 +157,8 @@ will also provide escorts as desired by the person experiencing distress.
 If you feel you have been falsely or unfairly accused of violating this Code of
 Conduct, you should notify Aether Core Team with a concise description of your
 grievance, as detailed in the [Reporting Guidelines](REPORTING_GUIDELINES.md).
-Your grievance will be handled in accordance with our existing governing
-policies. 
-
-LINK TO GOVERNING POLICIES
+Your grievance will be handled using the same guidelines as an incident, in
+accordance with this document.
 
 ## 10. Scope
 
