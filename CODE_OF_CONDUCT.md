@@ -145,7 +145,7 @@ this can be done by emailing the Aether Core Team at aether-core@umich.edu. In
 the future, we intend to set up an anonymous method of reporting instances of
 unacceptable behavior.
 
-LINK TO REPORTING GUIDELINES
+[Reporting Guidelines](REPORTING_GUIDELINES.md)
 
 Additionally, community organizers are available to help community members
 engage with local law enforcement or to otherwise help those experiencing
@@ -156,8 +156,9 @@ will also provide escorts as desired by the person experiencing distress.
 
 If you feel you have been falsely or unfairly accused of violating this Code of
 Conduct, you should notify Aether Core Team with a concise description of your
-grievance. Your grievance will be handled in accordance with our existing
-governing policies. 
+grievance, as detailed in the [Reporting Guidelines](REPORTING_GUIDELINES.md).
+Your grievance will be handled in accordance with our existing governing
+policies. 
 
 LINK TO GOVERNING POLICIES
 
