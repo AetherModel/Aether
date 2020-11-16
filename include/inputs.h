@@ -16,16 +16,21 @@ public:
   Inputs(Times &time);
   int read(Times &time);
   int get_verbose();
+  std::string get_euv_model();
+  std::string get_euv_file();
+  std::string get_f107_file();
+  std::string get_planet();
+  std::string get_planetary_file();
   
-private:
-
   int iVerbose;
 
-  std::string euv_file;
-  std::string input_file="aether.in";
-  std::string euv_model;
-  std::string planetary_file;
-  std::string planet;
+private:
+
+  std::string euv_file = "UA/inputs/euv.csv";
+  std::string input_file = "aether.in";
+  std::string euv_model = "euvac";
+  std::string planetary_file = "UA/inputs/orbits.csv";
+  std::string planet = "earth";
 
   // ------------------------------
   // Grid inputs:
@@ -39,8 +44,7 @@ private:
   float lon_max;
   // ------------------------------
 
-  std::string f107_file;
-  int DoReadF107File = 0;
+  std::string f107_file = "";
 
   float euv_heating_eff_neutrals;
   float euv_heating_eff_electrons;

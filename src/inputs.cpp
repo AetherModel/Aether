@@ -9,6 +9,8 @@
 #include "../include/times.h"
 #include "../include/inputs.h"
 #include "../include/file_input.h"
+#include "../include/time_conversion.h"
+#include "../include/report.h"
 
 Inputs::Inputs(Times &time) {
 
@@ -20,8 +22,6 @@ Inputs::Inputs(Times &time) {
   // Set some defaults:
 
   iVerbose = 3;
-  euv_file="euv.csv";
-  planetary_file = "orbits.csv";
   euv_model="euvac";
   planet = "Earth";
 
@@ -63,6 +63,50 @@ Inputs::Inputs(Times &time) {
   
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_euv_model() {
+  return euv_model;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_euv_file() {
+  return euv_file;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_f107_file() {
+  return f107_file;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_planet() {
+  return planet;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_planetary_file() {
+  return planetary_file;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
 int Inputs::read(Times &time) {
 
   int iErr;
@@ -79,76 +123,47 @@ int Inputs::read(Times &time) {
     iErr = 1;
   } else {
 
-    // while (getline(infile_ptr,line)) {
     while (!infile_ptr.eof()) {
 
-      hash = find_next_hash(infile_ptr);
+      // ---------------------------
+      // Find the next hash:
+      // ---------------------------
 
-      iErr = 0;
+      hash = find_next_hash(infile_ptr);
+      if (test_verbose(3, iVerbose))
+	std::cout << "hash : -->" << hash << "<--\n";
+
+      // ---------------------------
+      // #debug or #verbose
+      // ---------------------------
+
+      if (hash == "#debug"  || hash == "#verbose") {
+	iVerbose = read_int(infile_ptr, hash);
+      }
 
       // ---------------------------
       // #starttime
       // ---------------------------
 
-      if (hash=="#starttime") {
-	for (int i=0; i<6; i++) {
-	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
-	  else iErr = 1;
+      if (hash == "#starttime") {
+	std::vector<int> istart = read_itime(infile_ptr, hash);
+	if (istart[0] > 0) time.set_times(istart);
+	if (test_verbose(3, iVerbose)) {
+	  std::cout << "Starttime : ";
+	  display_itime(istart);
 	}
-	itime[6] = 0;
-	if (iErr == 0) {
-	  time.set_times(itime);
-	} else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#starttime\n";
-	  std::cout << "year     (int)\n";
-	  std::cout << "month    (int)\n";
-	  std::cout << "day      (int)\n";
-	  std::cout << "hour     (int)\n";
-	  std::cout << "min      (int)\n";
-	  std::cout << "sec      (int)\n";
-	}
-
       }
 
       // ---------------------------
       // #endtime
       // ---------------------------
 
-      if (hash=="#endtime") {
-	for (int i=0; i<6; i++) {
-	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
-	  else iErr = 1;
-	}
-	itime[6] = 0;
-	if (iErr == 0) time.set_end_time(itime);
-	else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#endtime\n";
-	  std::cout << "year     (int)\n";
-	  std::cout << "month    (int)\n";
-	  std::cout << "day      (int)\n";
-	  std::cout << "hour     (int)\n";
-	  std::cout << "min      (int)\n";
-	  std::cout << "sec      (int)\n";
-	}
-
-      }
-
-      // ---------------------------
-      // #f107file
-      // ---------------------------
-
-      if (hash=="#f107file") {
-	if (getline(infile_ptr,f107_file)) {
-	  DoReadF107File = 1;
-	} else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#f107file\n";
-	  std::cout << "f107_file     (string)\n";
+      if (hash == "#endtime") {
+	std::vector<int> iend = read_itime(infile_ptr, hash);
+	if (iend[0] > 0) time.set_end_time(iend);
+	if (test_verbose(3, iVerbose)) {
+	  std::cout << "Endtime : ";
+	  display_itime(iend);
 	}
       }
 
@@ -156,15 +171,16 @@ int Inputs::read(Times &time) {
       // #f107file
       // ---------------------------
 
-      if (hash=="#planet") {
-	getline(infile_ptr,planet);
-	// This will never happen....
-	if (iErr > 0) {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#planet\n";
-	  std::cout << "planet     (string)\n";
-	}
+      if (hash == "#f107file") {
+	f107_file = read_string(infile_ptr, hash);
+      }
+
+      // ---------------------------
+      // #planet
+      // ---------------------------
+
+      if (hash == "#planet") {
+	planet = read_string(infile_ptr, hash);
       }
 
     }
