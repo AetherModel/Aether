@@ -6,3 +6,6 @@
 # Backup files for editors:
 *~
 *#
+
+# Run directories
+run*
