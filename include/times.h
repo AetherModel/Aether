@@ -17,6 +17,9 @@ public:
   void display();
   void set_times(std::vector<int> itime);
   void set_end_time(std::vector<int> itime);
+  double get_current();
+  float get_orbittime();
+  double get_julian_day();
   
 private:
   
