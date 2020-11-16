@@ -11,6 +11,7 @@ int day_of_year(int year, int month, int day);
 double time_int_to_real(std::vector<int> itime);
 void time_real_to_int(double timereal, std::vector<int> &itime);
 int test_time_routines();
+void display_itime(std::vector<int> itime);
 
 #endif // AETHER_INCLUDE_TIME_CONVERSION_H_
 
