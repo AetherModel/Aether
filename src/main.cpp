@@ -3,6 +3,7 @@
 
 #include "../include/times.h"
 #include "../include/inputs.h"
+#include "../include/euv.h"
 
 int main() {
 
@@ -10,6 +11,9 @@ int main() {
 
   Times time;
   Inputs input(time);
+  Euv euv(input);
+  Planets planet(input);
+  Indices indices(input);
   
   return iErr;
 
