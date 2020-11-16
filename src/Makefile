@@ -18,11 +18,16 @@ HEADERS = \
 
 CLASSES = \
 	time.o\
-	inputs.o
+	inputs.o\
+	euv.o\
+	indices.o\
+	planets.o
 
 OBJECTS = \
 	time_conversion.o\
-	file_input.o
+	report.o\
+	file_input.o\
+	read_f107_file.o
 
 MAIN = \
 	main.o
