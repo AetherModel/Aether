@@ -11,6 +11,9 @@
 #include "times.h"
 #include "indices.h"
 #include "planets.h"
+#include "grid.h"
+#include "ions.h"
+#include "report.h"
 
 class Euv {
 
@@ -45,20 +48,20 @@ public:
   // Initialize EUV
   // --------------------------------------------------------------------------
 
-  Euv(Inputs args);
+  Euv(Inputs args, Report report);
 
   // -------------------------------------------------------------------------
   //
   // -------------------------------------------------------------------------
 
-  int euvac(Times time, Indices indices, Inputs args);
+  int euvac(Times time, Indices indices, Report report);
 
   // -------------------------------------------------------------------------
   //
   // -------------------------------------------------------------------------
 
-  int scale_from_1au(Planets planet, Times time, Inputs args);
-
+  int scale_from_1au(Planets planet, Times time);
+  
 private:
   
   // --------------------------------------------------------------------------
@@ -66,7 +69,7 @@ private:
   // cross sections
   // --------------------------------------------------------------------------
 
-  int read_file(Inputs args);
+  int read_file(Inputs args, Report report);
 
   // --------------------------------------------------------------------------
   //
@@ -75,7 +78,7 @@ private:
   int slot_euv(std::string item,
 	       std::string item2,
 	       std::vector<float> &values,
-	       Inputs args);
+	       Report report);
   
 };
 

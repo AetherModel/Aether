@@ -13,24 +13,24 @@
 #include "../include/euv.h"
 #include "../include/report.h"
 
-
 // -----------------------------------------------------------------------------
 // Initialize EUV
 // -----------------------------------------------------------------------------
 
-Euv::Euv(Inputs args) {
+Euv::Euv(Inputs args, Report report) {
+
   int iErr;
   float ave;
 
   iErr = 0;
 
   // Read in the EUV file:
-  iErr = read_file(args);
+  iErr = read_file(args, report);
 
   if (!iErr) {
     // Slot the short and long wavelengths into their arrays:
-    iErr = slot_euv("Long", "", wavelengths_long, args);
-    if (!iErr) iErr = slot_euv("Short", "", wavelengths_short, args);
+    iErr = slot_euv("Long", "", wavelengths_long, report);
+    if (!iErr) iErr = slot_euv("Short", "", wavelengths_short, report);
 
     // This means we found both long and short wavelengths:
     if (!iErr) {
@@ -48,8 +48,8 @@ Euv::Euv(Inputs args) {
 
     // Slot the EUVAC model coefficients:
     if (args.get_euv_model() == "euvac") {
-      iErr = slot_euv("F74113", "", euvac_f74113, args);
-      iErr = slot_euv("AFAC", "", euvac_afac, args);
+      iErr = slot_euv("F74113", "", euvac_f74113, report);
+      iErr = slot_euv("AFAC", "", euvac_afac, report);
     }
   }
 }
@@ -59,7 +59,7 @@ Euv::Euv(Inputs args) {
 // cross sections
 // ---------------------------------------------------------------------------
 
-int Euv::read_file(Inputs args) {
+int Euv::read_file(Inputs args, Report report) {
 
   waveinfotype tmp;
   std::string line, col;
@@ -67,7 +67,7 @@ int Euv::read_file(Inputs args) {
   std::ifstream infile_ptr;
   int iErr = 0;
 
-  std::cout << "EUV File : " << args.get_euv_file() << "\n";
+  report.print(1, "Reading EUV File : "+args.get_euv_file());
 
   infile_ptr.open(args.get_euv_file());
 
@@ -84,7 +84,7 @@ int Euv::read_file(Inputs args) {
 
       while (getline(infile_ptr,line)) {
 
-	if (args.iVerbose > 5) std::cout << line << "\n";
+	report.print(5, line);
 	std::stringstream ss(line);
 
 	// This is just to count the number of wavelengths.
@@ -100,7 +100,7 @@ int Euv::read_file(Inputs args) {
 	}
 
 	getline(ss, tmp.name, ',');
-	if (args.iVerbose > 5) std::cout << tmp.name << "\n";
+	report.print(5, tmp.name);
 	getline(ss, tmp.to, ',');
 	getline(ss, tmp.type, ',');
 	getline(ss, col, ',');
@@ -141,14 +141,13 @@ int Euv::read_file(Inputs args) {
 int Euv::slot_euv(std::string item,
 		  std::string item2,
 		  std::vector<float> &values,
-		  Inputs args) {
+		  Report report) {
 
   int iErr = 0;
   int iLine;
   int IgnoreItem2 = 0;
 
-  if (args.iVerbose > 3)
-    std::cout << "in slot_euv:" << item << ";" << item2 << "; nLines : " << nLines << "\n";
+  report.print(3, "in slot_euv:" + item + ";" + item2);
 
   if (item2 == "") IgnoreItem2 = 1;
 
@@ -164,7 +163,7 @@ int Euv::slot_euv(std::string item,
     iErr = 1;
   } else {
 
-    if (args.iVerbose > 2) {
+    if (report.test_verbose(2)) {
       std::cout << "Found : " << waveinfo[iLine].name;
       if (!IgnoreItem2) std::cout << " with " << waveinfo[iLine].to;
       std::cout << "\n";
@@ -181,19 +180,18 @@ int Euv::slot_euv(std::string item,
 
 }
 
+
+
 // --------------------------------------------------------------------------
 // Scale flux (intensity) at 1 AU to distance from the sun:
 // --------------------------------------------------------------------------
 
 int Euv::scale_from_1au(Planets planet,
-			Times time,
-			Inputs args) {
+			Times time) {
 
   int iErr = 0;
   float d = planet.get_star_to_planet_dist(time);
   float scale = 1.0 / (d*d);
-
-  std::cout << "sun-planet-distance : " << d << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++)
     wavelengths_intensity_top[iWave] = scale * wavelengths_intensity_1au[iWave];
@@ -208,7 +206,7 @@ int Euv::scale_from_1au(Planets planet,
 
 int Euv::euvac(Times time,
 	       Indices indices,
-	       Inputs args) {
+	       Report report) {
 
   int iErr = 0;
   float slope;
@@ -217,7 +215,7 @@ int Euv::euvac(Times time,
   float f107a = indices.get_f107a(time.get_current());
   float mean_f107 = (f107 + f107a)/2.0;
 
-  if (test_verbose(5,args.iVerbose))
+  if (report.test_verbose(5))
     std::cout << f107 << " " << f107a << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
@@ -228,7 +226,7 @@ int Euv::euvac(Times time,
 
   }
 
-  if (test_verbose(5,args.iVerbose)) {
+  if (report.test_verbose(5)) {
 
     std::cout << "EUVAC output : "
 	      << f107 << " " << f107a
