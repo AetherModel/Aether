@@ -25,14 +25,13 @@ Indices::Indices(Inputs args) {
     iErr = read_f107_file(file, time, f107array);
     if (iErr == 0) iErr = set_f107(time, f107array);
   }
+
 }
 
 int Indices::set_f107(std::vector<double> time,
 		      std::vector<float> f107array) {
 
   int iErr = set_index(time, f107array, f107);
-
-  std::cout << "f107 struct is set with " << f107.size() << " elements!\n";
 
   // We want to set the 81-day average.  This is somewhat complicated,
   // since it seems like the f107 file does have exactly 24 hour
@@ -147,8 +146,6 @@ int Indices::set_index(std::vector<double> time,
       tmp.index = indexarray[i];
       index.push_back(tmp);
     }
-
-    std::cout << "index struct is set with " << index.size() << " elements!\n";
 
   }
 
