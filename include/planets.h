@@ -8,23 +8,24 @@
 #include <vector>
 
 #include "inputs.h"
+#include "report.h"
 
 class Planets {
 
  public:
-  Planets(Inputs args);
+  Planets(Inputs args, Report report);
   float get_star_to_planet_dist(Times time);
   float get_orbit_angle(Times time);
   float get_declination(Times time);
   float get_mu();
-  float get_radius();
+  float get_radius(float latitude);
   float get_longitude_offset(Times time);
   float get_sin_dec(Times time);
   float get_cos_dec(Times time);
 
  private:
 
-  int set_planet(Inputs args);
+  int set_planet(Inputs args, Report report);
   int update(Times time);
 
   struct planet_chars {
@@ -77,7 +78,7 @@ class Planets {
 
   planet_chars planet;
 
-  int read_file(Inputs args);
+  int read_file(Inputs args, Report report);
 
 };
 

@@ -10,16 +10,17 @@
 #include "../include/planets.h"
 #include "../include/times.h"
 #include "../include/report.h"
+#include "../include/file_input.h"
 
 // -----------------------------------------------------------------------------
 // Constructor (initiaze the class):
 // -----------------------------------------------------------------------------
 
-Planets::Planets(Inputs args) {
+Planets::Planets(Inputs args, Report report) {
   int iErr = 0;
 
-  iErr = read_file(args);
-  if (iErr == 0) iErr = set_planet(args);
+  iErr = read_file(args, report);
+  if (iErr == 0) iErr = set_planet(args, report);
 }
 
 // -----------------------------------------------------------------------------
@@ -53,7 +54,8 @@ float Planets::get_cos_dec(Times time) {
 //
 // -----------------------------------------------------------------------------
 
-float Planets::get_radius() {
+float Planets::get_radius(float latitude) {
+  // Should modify this to allow an oblate spheriod, but not now.
   return planet.radius;
 }
 
@@ -211,7 +213,7 @@ int Planets::update(Times time) {
 
 }
 
-int Planets::set_planet(Inputs args) {
+int Planets::set_planet(Inputs args, Report report) {
 
   int iErr = 0;
   int IsFound = 0;
@@ -220,7 +222,7 @@ int Planets::set_planet(Inputs args) {
     if (planets[i].name == args.get_planet()) {
       IsFound = 1;
       planet.name = planets[i].name;
-      if (test_verbose(2,args.iVerbose)) {
+      if (report.test_verbose(2)) {
 	std::cout << "Planet set to : " << planet.name << "\n";
       }
       planet.semimajoraxis = planets[i].semimajoraxis;
@@ -263,7 +265,7 @@ int Planets::set_planet(Inputs args) {
       // is at roughly 47 deg (cos(47)=0.68)
       // Obviously an approximation...
       planet.radius = 0.68 * planet.equator_radius + 0.32 * planet.polar_radius;
-      if (test_verbose(2,args.iVerbose))
+      if (report.test_verbose(2))
 	std::cout << "Planet Radius set to : "
 		  << planet.radius/1000.0 << " (km)\n";
 
@@ -283,14 +285,14 @@ int Planets::set_planet(Inputs args) {
 
 }
 
-int Planets::read_file(Inputs args) {
+int Planets::read_file(Inputs args, Report report) {
 
   planet_chars tmp;
   std::string line, col;
   std::ifstream myFile;
   int iErr = 0;
 
-  std::cout << "Planetary File : " << args.get_planetary_file() << "\n";
+  report.print(1, "Reading planetary file : " + args.get_planetary_file());
 
   myFile.open(args.get_planetary_file());
 
@@ -308,10 +310,11 @@ int Planets::read_file(Inputs args) {
 
       while (getline(myFile,line)) {
 
-	if (args.iVerbose > 5) std::cout << line << "\n";
+	report.print(5, line);
 	std::stringstream ss(line);
 
 	getline(ss, tmp.name, ',');
+	tmp.name = make_lower(tmp.name);
 	getline(ss, col, ',');
 	if (col.size() > 1) {
 	  tmp.semimajoraxis = stof(col);
