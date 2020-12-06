@@ -178,6 +178,11 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {
     std::cout << "File is not open (read_csv)!\n";
   } else {
 
+    // This assumes that the CSV file's layout is perfect - that the
+    // number of columns is the same in each row.  If that is not the
+    // case, then bad stuff happens.  I need to add more debugging
+    // stuff in here.
+    
     int IsFirstTime = 1;
     while (getline(file_ptr,line) && line.length() > 1) {
       line = strip_string_end(line);
@@ -187,11 +192,11 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {
       while (getline(ss, col, ',')) {
 	if (IsFirstTime) {
 	  row.push_back(col);
-	  IsFirstTime = 0;
 	} else row[j]=col;
 	j++;
       }
       data.push_back(row);
+      IsFirstTime = 0;
     }
     
   }
