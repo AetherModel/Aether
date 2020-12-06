@@ -18,8 +18,16 @@ public:
   void set_times(std::vector<int> itime);
   void set_end_time(std::vector<int> itime);
   double get_current();
+  double get_end();
+  std::string get_YMD_HMS();
+  double get_intermediate();
+  float get_dt();
   float get_orbittime();
   double get_julian_day();
+
+  int check_time_gate(float dt_check);
+
+  void calc_dt();
   
 private:
   

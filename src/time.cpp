@@ -1,6 +1,7 @@
 // (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
+#include <math.h>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -46,9 +47,30 @@ void Times::set_times(std::vector<int> itime) {
   
 }
 
-  double get_update();
-  double get_orbittime();
-  double get_julian_day();
+// -----------------------------------------------------------------------------
+// This function checks to see if the simulation has passed through a
+// time gate By this, I mean that the user sets a dt in which to do
+// something. If the simulation passes through that dt, then it will
+// return a 1, else it will return a 0.  It also returns 1 if the
+// current time is the start time.
+// -----------------------------------------------------------------------------
+
+int Times::check_time_gate(float dt_check) {
+  int DoThing = 0;
+  if (current == start) DoThing = 1;
+  if ( floor((simulation - dt) / dt_check) <
+       floor(simulation / dt_check)) DoThing = 1;
+  return DoThing;
+}
+
+// -----------------------------------------------------------------------------
+// Need to actually calculate dt here....
+// -----------------------------------------------------------------------------
+
+void Times::calc_dt() {
+  dt = 5.0;
+  return;
+}
 
 // -----------------------------------------------------------------------------
 // 
@@ -56,6 +78,38 @@ void Times::set_times(std::vector<int> itime) {
 
 double Times::get_current() {
   return current;
+}
+
+// -----------------------------------------------------------------------------
+// 
+// -----------------------------------------------------------------------------
+
+double Times::get_end() {
+  return end;
+}
+
+// -----------------------------------------------------------------------------
+// 
+// -----------------------------------------------------------------------------
+
+std::string Times::get_YMD_HMS() {
+  return sYMD_HMS;
+}
+
+// -----------------------------------------------------------------------------
+// 
+// -----------------------------------------------------------------------------
+
+double Times::get_intermediate() {
+  return intermediate;
+}
+
+// -----------------------------------------------------------------------------
+// 
+// -----------------------------------------------------------------------------
+
+float Times::get_dt() {
+  return dt;
 }
 
 // -----------------------------------------------------------------------------
