@@ -8,39 +8,39 @@
 
 #define nGeoGhosts 2
 
-#define nGeoAlts 50
+#define nGeoAlts 100
 #define nGeoAltsG nGeoGhosts + nGeoAlts + nGeoGhosts
-#define iGeoAltStart_ = nGeoGhosts // Inclusive!!!
-#define iGeoAltEnd_   = nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
+#define iGeoAltStart_ nGeoGhosts // Inclusive!!!
+#define iGeoAltEnd_ nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
 
-#define nGeoLons 9
+#define nGeoLons 36
 #define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
-#define iGeoLonStart_ = nGeoGhosts // Inclusive!!!
-#define iGeoLonEnd_   = nGeoGhosts + nGeoLon - 1 // Inclusive!!!
+#define iGeoLonStart_ nGeoGhosts // Inclusive!!!
+#define iGeoLonEnd_ nGeoGhosts + nGeoLon - 1 // Inclusive!!!
 
-#define nGeoLats 9
+#define nGeoLats 18
 #define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
-#define iGeoLatStart_ = nGeoGhosts // Inclusive!!!
-#define iGeoLatEnd_   = nGeoGhosts + nGeoLats - 1 // Inclusive!!!
+#define iGeoLatStart_ nGeoGhosts // Inclusive!!!
+#define iGeoLatEnd_ nGeoGhosts + nGeoLats - 1 // Inclusive!!!
 
 // This is for the magnetic grid:
 
 #define nMagGhosts 2
 
-#define nMagAlts 50
+#define nMagAlts 60
 #define nMagAltsG nMagGhosts + nMagAlts + nMagGhosts
-#define iMagAltStart_ = nMagGhosts // Inclusive!!!
-#define iMagAltEnd_   = nMagGhosts + nMagAlts - 1 // Inclusive!!!
+#define iMagAltStart_ nMagGhosts // Inclusive!!!
+#define iMagAltEnd_ nMagGhosts + nMagAlts - 1 // Inclusive!!!
 
-#define nMagLons 9
+#define nMagLons 20
 #define nMagLonsG nMagGhosts + nMagLons + nMagGhosts
-#define iMagLonStart_ = nMagGhosts // Inclusive!!!
-#define iMagLonEnd_   = nMagGhosts + nMagLons - 1 // Inclusive!!!
+#define iMagLonStart_ nMagGhosts // Inclusive!!!
+#define iMagLonEnd_ nMagGhosts + nMagLons - 1 // Inclusive!!!
 
-#define nMagLats 9
+#define nMagLats 10
 #define nMagLatsG nMagGhosts + nMagLats + nMagGhosts
-#define iMagLatStart_ = nMagGhosts // Inclusive!!!
-#define iMagLatEnd_   = nMagGhosts + nMagLats - 1 // Inclusive!!!
+#define iMagLatStart_ nMagGhosts // Inclusive!!!
+#define iMagLatEnd_ nMagGhosts + nMagLats - 1 // Inclusive!!!
 
 // This is for character string lengths:
 
