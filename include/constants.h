@@ -4,6 +4,8 @@
 #ifndef AETHER_INCLUDE_CONSTANTS_H_
 #define AETHER_INCLUDE_CONSTANTS_H_
 
+#include <vector>
+
 // Header file to define a bunch of physical constants
 
 const float avogadros_number = 6.02214086e23; //
