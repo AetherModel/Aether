@@ -8,19 +8,42 @@
 #include <string>
 
 #include "times.h"
+#include "report.h"
 
 class Inputs {
 
 public:
 
-  Inputs(Times &time);
-  int read(Times &time);
+  Inputs(Times &time, Report &report);
+  int read(Times &time, Report &report);
   int get_verbose();
+  float get_dt_euv();
+  float get_dt_output(int iOutput);
+  float get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
   std::string get_f107_file();
   std::string get_planet();
   std::string get_planetary_file();
+  std::string get_planet_species_file();
+
+  // ------------------------------
+  // Grid inputs:
+
+  struct grid_input_struct {
+
+    std::string alt_file;
+    int IsUniformAlt;
+    float alt_min;
+    float dalt;
+
+    float lat_min;
+    float lat_max;
+    float lon_min;
+    float lon_max;
+  };
+
+  grid_input_struct get_grid_inputs(); 
   
   int iVerbose;
 
@@ -31,21 +54,11 @@ private:
   std::string euv_model = "euvac";
   std::string planetary_file = "UA/inputs/orbits.csv";
   std::string planet = "earth";
-
-  // ------------------------------
-  // Grid inputs:
-  int IsUniformAlt;
-  float alt_min;
-  float dalt;
-
-  float lat_min;
-  float lat_max;
-  float lon_min;
-  float lon_max;
-  // ------------------------------
-
   std::string f107_file = "";
-
+  std::string planet_species_file = "";
+  
+  grid_input_struct grid_input;
+  
   float euv_heating_eff_neutrals;
   float euv_heating_eff_electrons;
 

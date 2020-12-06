@@ -12,7 +12,7 @@
 #include "../include/time_conversion.h"
 #include "../include/report.h"
 
-Inputs::Inputs(Times &time) {
+Inputs::Inputs(Times &time, Report &report) {
 
   int iErr;
 
@@ -21,34 +21,35 @@ Inputs::Inputs(Times &time) {
   // ------------------------------------------------
   // Set some defaults:
 
-  iVerbose = 3;
+  iVerbose = 0;
   euv_model="euvac";
   planet = "Earth";
 
   // ------------------------------------------------
   // Grid Defaults:
-  IsUniformAlt = 1;
-  alt_min = 100.0 * 1000.0;
-  dalt = 5.0 * 1000.0;
+  grid_input.alt_file = "";
+  grid_input.IsUniformAlt = 1;
+  grid_input.alt_min = 100.0 * 1000.0;
+  grid_input.dalt = 2.5 * 1000.0;
 
-  IsUniformAlt = 0;
-  alt_min = 100.0 * 1000.0;
-  dalt = 0.33;
+  //grid_input.IsUniformAlt = 0;
+  //grid_input.alt_min = 100.0 * 1000.0;
+  //grid_input.dalt = 0.33;
 
   if (nGeoLons == 1) {
-    lon_min = 0.0;
-    lon_max = 0.0;
+    grid_input.lon_min = 0.0;
+    grid_input.lon_max = 0.0;
   } else {
-    lon_min = 0.0;
-    lon_max = 2.0*pi;
+    grid_input.lon_min = 0.0;
+    grid_input.lon_max = 2.0*pi;
   }
 
   if (nGeoLats == 1) {
-    lat_min = 0.0;
-    lat_max = 0.0;
+    grid_input.lat_min = 0.0;
+    grid_input.lat_max = 0.0;
   } else {
-    lat_min = -pi;
-    lat_max = pi;
+    grid_input.lat_min = -pi/2;
+    grid_input.lat_max = pi/2;
   }
 
   euv_heating_eff_neutrals = 0.40;
@@ -59,8 +60,16 @@ Inputs::Inputs(Times &time) {
 
   // ------------------------------------------------
   // Now read the input file:
-  iErr = read(time);
+  iErr = read(time, report);
   
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+Inputs::grid_input_struct Inputs::get_grid_inputs() {
+  return grid_input;
 }
 
 // -----------------------------------------------------------------------
@@ -69,6 +78,32 @@ Inputs::Inputs(Times &time) {
 
 std::string Inputs::get_euv_model() {
   return euv_model;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+float Inputs::get_euv_heating_eff_neutrals() {
+  return euv_heating_eff_neutrals;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+float Inputs::get_dt_euv() {
+  return dt_euv;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+float Inputs::get_dt_output(int iOutput) {
+  float value = 0.0;
+  if (iOutput < dt_output.size()) value = dt_output[iOutput];
+  return value;
 }
 
 // -----------------------------------------------------------------------
@@ -107,7 +142,15 @@ std::string Inputs::get_planetary_file() {
 //
 // -----------------------------------------------------------------------
 
-int Inputs::read(Times &time) {
+std::string Inputs::get_planet_species_file() {
+  return planet_species_file;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+int Inputs::read(Times &time, Report &report) {
 
   int iErr;
   std::string line, hash;
@@ -130,7 +173,7 @@ int Inputs::read(Times &time) {
       // ---------------------------
 
       hash = find_next_hash(infile_ptr);
-      if (test_verbose(3, iVerbose))
+      if (report.test_verbose(3))
 	std::cout << "hash : -->" << hash << "<--\n";
 
       // ---------------------------
@@ -139,6 +182,7 @@ int Inputs::read(Times &time) {
 
       if (hash == "#debug"  || hash == "#verbose") {
 	iVerbose = read_int(infile_ptr, hash);
+	report.set_verbose(iVerbose);
       }
 
       // ---------------------------
@@ -148,7 +192,7 @@ int Inputs::read(Times &time) {
       if (hash == "#starttime") {
 	std::vector<int> istart = read_itime(infile_ptr, hash);
 	if (istart[0] > 0) time.set_times(istart);
-	if (test_verbose(3, iVerbose)) {
+	if (report.test_verbose(3)) {
 	  std::cout << "Starttime : ";
 	  display_itime(istart);
 	}
@@ -161,7 +205,7 @@ int Inputs::read(Times &time) {
       if (hash == "#endtime") {
 	std::vector<int> iend = read_itime(infile_ptr, hash);
 	if (iend[0] > 0) time.set_end_time(iend);
-	if (test_verbose(3, iVerbose)) {
+	if (report.test_verbose(3)) {
 	  std::cout << "Endtime : ";
 	  display_itime(iend);
 	}
@@ -181,6 +225,10 @@ int Inputs::read(Times &time) {
 
       if (hash == "#planet") {
 	planet = read_string(infile_ptr, hash);
+	if (report.test_verbose(3)) 
+	  std::cout << "Setting planet to : " << planet << "\n";
+	if (planet_species_file.length() <= 1)
+	  planet_species_file = "UA/inputs/"+planet+".in";
       }
 
     }
