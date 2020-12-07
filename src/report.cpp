@@ -48,7 +48,8 @@ void Report::enter(std::string input) {
 
   entries[iEntry].timing_start = now;
   iLevel++;
-
+  entries[iEntry].iLevel = iLevel;
+  
   print(iLevel,"Entering function : "+current_entry);
   
 }
@@ -90,8 +91,10 @@ void Report::times() {
   std::cout << "Timing Summary :\n";
   for (int i=0; i < nEntries; i++) {
     std::cout << entries[i].entry << "\n";
-    std::cout << "  nTimes called : " << entries[i].nTimes << "\n";
-    std::cout << "  timing_total (s) : " << entries[i].timing_total << "\n";
+    for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+    std::cout << "nTimes called : " << entries[i].nTimes << "\n";
+    for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+    std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
   }
 
 }
