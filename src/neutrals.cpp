@@ -329,6 +329,7 @@ int Neutrals::pair_euv(Euv euv, Ions ions, Report report) {
       std::cout << neutrals[iSpecies].cName << "\n";
 
     neutrals[iSpecies].iEuvAbsId_ = -1;
+    neutrals[iSpecies].nEuvIonSpecies = 0;
     
     // Check each row to see if the first column "name" matches:
     for (int iEuv=0; iEuv < euv.waveinfo.size(); iEuv++) {
@@ -356,6 +357,7 @@ int Neutrals::pair_euv(Euv euv, Ions ions, Report report) {
 			  << ions.species[iIon].cName << "\n";
 	      neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
 	      neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
+	      neutrals[iSpecies].nEuvIonSpecies++;
 	    }
 	  }
 	}
