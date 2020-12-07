@@ -419,21 +419,21 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 		neutrals[iSpecies].density_s3gc[index];
 	    }
 
-	    for (i_ = 0; i_ < neutrals[iSpecies].iEuvIonId_.size(); i_++) {
-
-	      ionization = 
-		intensity *
-		euv.waveinfo[i_].values[iWave] *  // cross section
-		neutrals[iSpecies].density_s3gc[index];
-
-	      neutrals[iSpecies].ionization_s3gc[index] =
-		neutrals[iSpecies].ionization_s3gc[index] + ionization;
-
-	      iIon = neutrals[iSpecies].iEuvIonId_[i_];
-	      ions.species[iIon].ionization_s3gc[index] = 
-		ions.species[iIon].ionization_s3gc[index] + ionization;	
-
-	    }
+//	    for (i_ = 0; i_ < neutrals[iSpecies].iEuvIonId_.size(); i_++) {
+//
+//	      ionization = 
+//		intensity *
+//		euv.waveinfo[i_].values[iWave] *  // cross section
+//		neutrals[iSpecies].density_s3gc[index];
+//
+//	      neutrals[iSpecies].ionization_s3gc[index] =
+//		neutrals[iSpecies].ionization_s3gc[index] + ionization;
+//
+//	      iIon = neutrals[iSpecies].iEuvIonId_[i_];
+//	      ions.species[iIon].ionization_s3gc[index] = 
+//		ions.species[iIon].ionization_s3gc[index] + ionization;	
+//
+//	    }
 	      
 	  } // Each species
 	} // Each wavelength
