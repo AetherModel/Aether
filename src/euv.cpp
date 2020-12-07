@@ -206,17 +206,20 @@ int Euv::scale_from_1au(Planets planet,
 
 int Euv::euvac(Times time,
 	       Indices indices,
-	       Report report) {
+	       Report &report) {
 
   int iErr = 0;
   float slope;
 
+  std::string function="Euv::euvac";
+  report.enter(function);  
+  
   float f107 = indices.get_f107(time.get_current());
   float f107a = indices.get_f107a(time.get_current());
   float mean_f107 = (f107 + f107a)/2.0;
 
-  if (report.test_verbose(5))
-    std::cout << f107 << " " << f107a << "\n";
+  if (report.test_verbose(7))
+    std::cout << "F107 & F107a : " << f107 << " " << f107a << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
 
@@ -226,7 +229,7 @@ int Euv::euvac(Times time,
 
   }
 
-  if (report.test_verbose(5)) {
+  if (report.test_verbose(8)) {
 
     std::cout << "EUVAC output : "
 	      << f107 << " " << f107a
@@ -240,6 +243,7 @@ int Euv::euvac(Times time,
 
   }
 
+  report.exit(function);  
   return iErr;
 
 }
