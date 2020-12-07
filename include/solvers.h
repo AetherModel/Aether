@@ -1,0 +1,16 @@
+// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
+#ifndef AETHER_INCLUDE_SOLVERS_H_
+#define AETHER_INCLUDE_SOLVERS_H_
+
+#include "sizes.h"
+
+int solver_conduction(float value[nGeoAltsG],
+		      float lambda[nGeoAltsG],
+		      float front[nGeoAltsG],
+		      float dt,
+		      float dalt_lower[nGeoAltsG],
+		      float *conduction);
+
+#endif // AETHER_INCLUDE_SOLVERS_H_
