@@ -21,13 +21,25 @@ CLASSES = \
 	inputs.o\
 	euv.o\
 	indices.o\
-	planets.o
+	planets.o\
+	grid.o\
+	neutrals.o\
+	ions.o
 
 OBJECTS = \
 	time_conversion.o\
+	transform.o\
 	report.o\
 	file_input.o\
-	read_f107_file.o
+	read_f107_file.o\
+	init_geo_grid.o\
+	fill_grid.o\
+	calc_neutral_derived.o\
+	calc_euv.o\
+	solver_conduction.o\
+	advance.o\
+	add_sources.o\
+	output.o
 
 MAIN = \
 	main.o
@@ -52,7 +64,7 @@ LIB: ${CLASSES} ${OBJECTS}
 
 
 Aether: ${MAIN} LIB
-	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib #-lmsis -L/opt/local/lib -lnetcdf-cxx4
+	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L/opt/local/lib -lnetcdf-cxx4 #-lmsis
 
 test: ${TEST} LIB
 	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib
