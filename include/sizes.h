@@ -16,7 +16,7 @@
 #define nGeoLons 36
 #define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
 #define iGeoLonStart_ nGeoGhosts // Inclusive!!!
-#define iGeoLonEnd_ nGeoGhosts + nGeoLon - 1 // Inclusive!!!
+#define iGeoLonEnd_ nGeoGhosts + nGeoLons - 1 // Inclusive!!!
 
 #define nGeoLats 18
 #define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
