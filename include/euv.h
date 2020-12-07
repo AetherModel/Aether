@@ -54,7 +54,7 @@ public:
   //
   // -------------------------------------------------------------------------
 
-  int euvac(Times time, Indices indices, Report report);
+  int euvac(Times time, Indices indices, Report &report);
 
   // -------------------------------------------------------------------------
   //

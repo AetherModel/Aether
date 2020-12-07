@@ -23,11 +23,12 @@ int calc_euv( Planets planet,
 	      Report &report) {
   
   int iErr=0;
-  std::string function="Euv::calc_euv";
-  report.enter(function);  
   
   if (time.check_time_gate(args.get_dt_euv())) {
 
+    std::string function="Euv::calc_euv";
+    report.enter(function);
+    
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid, report);
   
@@ -36,11 +37,9 @@ int calc_euv( Planets planet,
   
     neutrals.calc_ionization_heating(euv, ions, report);
 
-    report.print(2, "Ending function : "+function);
-
+    report.exit(function);
   }
 
-  report.exit(function);
   return iErr;
 
 }
