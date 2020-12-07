@@ -1,7 +1,7 @@
 // (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 #include "../include/constants.h"
@@ -15,9 +15,12 @@
 //
 //----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density() {
+void Neutrals::calc_mass_density(Report &report) {
 
   long iLon, iLat, iAlt, index, iSpecies;
+
+  std::string function="Neutrals::calc_mass_density";
+  report.enter(function);
 
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -45,6 +48,7 @@ void Neutrals::calc_mass_density() {
     }
   }
     
+  report.exit(function);
   return;
   
 }
@@ -53,9 +57,14 @@ void Neutrals::calc_mass_density() {
 //
 //----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat() {
+void Neutrals::calc_specific_heat(Report &report) {
 
   long iLon, iLat, iAlt, index, iSpecies;
+
+  double t, p, r;
+  
+  std::string function="Neutrals::calc_specific_heat";
+  report.enter(function);
 
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -66,8 +75,12 @@ void Neutrals::calc_specific_heat() {
 	Cv_s3gc[index] = 0.0;
 	gamma_s3gc[index] = 0.0;
 	kappa_s3gc[index] = 0.0;
-    
+
+	t = temperature_s3gc[index];
+		
 	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+	  p = neutrals[iSpecies].thermal_exp;
+	  r = pow(t,p); // temp ^ exp; <--- This line slows the code way down.
 	  Cv_s3gc[index] = Cv_s3gc[index] +
 	    (neutrals[iSpecies].vibe - 2) *
 	    neutrals[iSpecies].density_s3gc[index] *
@@ -77,21 +90,25 @@ void Neutrals::calc_specific_heat() {
 	  kappa_s3gc[index] = kappa_s3gc[index] +
 	    neutrals[iSpecies].density_s3gc[index] *
 	    neutrals[iSpecies].thermal_cond *
-	    pow(temperature_s3gc[index], neutrals[iSpecies].thermal_exp);
+	    r;
 	}
 
 	Cv_s3gc[index] = Cv_s3gc[index] / (2*density_s3gc[index]);
 	gamma_s3gc[index] = gamma_s3gc[index] * 2.0 / density_s3gc[index] + 1.0;
 	kappa_s3gc[index] = kappa_s3gc[index] / density_s3gc[index];
 
-	sound_s3gc[index] = sqrt(gamma_s3gc[index] *
-				 boltzmanns_constant *
-				 temperature_s3gc[index] /
-				 mean_major_mass_s3gc[index]);
+	r = gamma_s3gc[index] *
+	  boltzmanns_constant *
+	  temperature_s3gc[index] /
+	  mean_major_mass_s3gc[index];
+	
+	sound_s3gc[index] = sqrt(r); // <---- Same with this line
+
       }
     }
   }
 
+  report.exit(function);
   return;
   
 }
@@ -131,7 +148,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
   float Hp_up, Hp_dn, grad_hs, grad_xp, grad_in, Hg, Xg, in, int_g, int_p;
   long index_bottom, iindex, iindexp, iiAlt;
     
-  std::string function="calc_chapman";
+  std::string function="Neutrals::calc_chapman";
   report.enter(function);
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
@@ -254,7 +271,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
 	  }
 
-	  if (report.test_verbose(5))
+	  if (report.test_verbose(10))
 	    std::cout << "iSpecies, iAlt, chap : " << iSpecies << " " << iAlt << " " <<
 	      neutrals[iSpecies].chapman_s3gc[index] << " " << integral[iAlt] << "\n";
 
@@ -286,11 +303,20 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   
   long iLon, iLat, iAlt, index;
 
-  std::string function="calc_conduction";
+  std::string function="Neutrals::calc_conduction";
   report.enter(function);
   
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
+      for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
+	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+	conduction_s3gc[index] = 0.0;
+      }
+    }
+  }
+	
+  for (iLon = iGeoLonStart_; iLon < iGeoLonEnd_; iLon++) {
+    for (iLat = iGeoLatStart_; iLat < iGeoLatEnd_; iLat++) {
       
       // Treat each altitude slice individually:
       
@@ -345,7 +371,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
       for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
 	conduction_s3gc[index] = conduction[iAlt]/dt;
 
-	if (report.test_verbose(5))
+	if (report.test_verbose(10))
 	  std::cout << "conduction : " << index
 		    << " " << conduction_s3gc[index]*seconds_per_day << " deg/day\n";
 	
@@ -378,12 +404,28 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
   std::string function="calc_ionization_heating";
   report.enter(function);
 
+  // Zero out all source terms:
+  
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
       for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
 
 	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+
+	heating_euv_s3gc[index] = 0.0;
+	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
+	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
+
+      }
+    }
+  }
 	
+  for (iLon = iGeoLonStart_; iLon < iGeoLonEnd_; iLon++) {
+    for (iLat = iGeoLatStart_; iLat < iGeoLatEnd_; iLat++) {
+      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
+
+	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+      
 	heating_euv_s3gc[index] = 0.0;
 	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
 	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
@@ -419,21 +461,21 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 		neutrals[iSpecies].density_s3gc[index];
 	    }
 
-//	    for (i_ = 0; i_ < neutrals[iSpecies].iEuvIonId_.size(); i_++) {
-//
-//	      ionization = 
-//		intensity *
-//		euv.waveinfo[i_].values[iWave] *  // cross section
-//		neutrals[iSpecies].density_s3gc[index];
-//
-//	      neutrals[iSpecies].ionization_s3gc[index] =
-//		neutrals[iSpecies].ionization_s3gc[index] + ionization;
-//
-//	      iIon = neutrals[iSpecies].iEuvIonId_[i_];
-//	      ions.species[iIon].ionization_s3gc[index] = 
-//		ions.species[iIon].ionization_s3gc[index] + ionization;	
-//
-//	    }
+	    for (i_ = 0; i_ < neutrals[iSpecies].nEuvIonSpecies; i_++) {
+
+	      ionization = 
+		intensity *
+		euv.waveinfo[i_].values[iWave] *  // cross section
+		neutrals[iSpecies].density_s3gc[index];
+
+	      neutrals[iSpecies].ionization_s3gc[index] =
+		neutrals[iSpecies].ionization_s3gc[index] + ionization;
+
+	      iIon = neutrals[iSpecies].iEuvIonSpecies_[i_];
+	      ions.species[iIon].ionization_s3gc[index] = 
+		ions.species[iIon].ionization_s3gc[index] + ionization;	
+
+	    }
 	      
 	  } // Each species
 	} // Each wavelength
@@ -445,7 +487,7 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 	  heating_efficiency *
 	  heating_euv_s3gc[index] / rho_s3gc[index] / Cv_s3gc[index];
 
-	if (report.test_verbose(5))
+	if (report.test_verbose(10))
 	  std::cout << "heating : " << index
 	       << " " << heating_euv_s3gc[index]*seconds_per_day << " deg/day\n";
 	  

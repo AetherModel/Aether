@@ -34,6 +34,7 @@ class Neutrals {
     float thermal_exp;
 
     int iEuvAbsId_;
+    int nEuvIonSpecies;
     std::vector<int> iEuvIonSpecies_;
     std::vector<int> iEuvIonId_;
 
@@ -101,8 +102,8 @@ class Neutrals {
 			  long index,
 			  Grid grid);
   int pair_euv(Euv euv, Ions ions, Report report);
-  void calc_mass_density();
-  void calc_specific_heat();
+  void calc_mass_density(Report &report);
+  void calc_specific_heat(Report &report);
   void calc_chapman(Grid grid, Report &report);
   void calc_ionization_heating(Euv euv, Ions &ions, Report &report);
   void calc_conduction(Grid grid, Times time, Report &report);
