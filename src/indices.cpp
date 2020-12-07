@@ -23,7 +23,9 @@ Indices::Indices(Inputs args) {
     std::vector<double> time;
     std::vector<float> f107array;
     iErr = read_f107_file(file, time, f107array);
-    if (iErr == 0) iErr = set_f107(time, f107array);
+    if (iErr == 0)
+      iErr = set_f107(time, f107array);
+    else std::cout << "ERROR in reading f107 file!!!\n";
   }
 
 }

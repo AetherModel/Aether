@@ -16,6 +16,8 @@ int read_f107_file(std::string f107_file,
   std::ifstream myFile;
   int iErr;
 
+  iErr = 0;
+
   myFile.open(f107_file);
 
   if (!myFile.is_open()) {
