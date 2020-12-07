@@ -33,11 +33,10 @@ int advance( Planets &planet,
   time.display();
 
   gGrid.calc_sza(planet, time, report);
-  neutrals.calc_mass_density();
-  neutrals.calc_specific_heat();
+  neutrals.calc_mass_density(report);
+  neutrals.calc_specific_heat(report);
   time.calc_dt();
   
-  report.enter("euv+cond");
   iErr = calc_euv(planet,
 		  gGrid,
 		  time,
@@ -49,7 +48,6 @@ int advance( Planets &planet,
 		  report);
   
   neutrals.calc_conduction(gGrid, time, report);
-  report.exit("euv+cond");
 
   neutrals.add_sources(time, report);
 
