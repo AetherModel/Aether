@@ -58,6 +58,6 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   fill_grid_bfield(planet, input, report);
   
-  report.enter(function);  
+  report.exit(function);  
 
 }
