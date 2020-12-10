@@ -15,7 +15,7 @@ import glob
 
 # open netCDF file for reading.
 
-filelist = sorted(glob.glob("3DALL*.nc"))
+filelist = sorted(glob.glob("3DBFI*.nc"))
 file = filelist[-1];
 
 ncfile = Dataset(file,'r') 
@@ -31,14 +31,20 @@ nLons = len(lats[:,0,0])
 nLats = len(lats[0,:,0])
 nAlts = len(lats[0,0,:])
 
-temp = np.array(ncfile.variables['Temperature'])
-o = np.array(ncfile.variables['O'])
+# temp = np.array(ncfile.variables['Temperature'])
+# o = np.array(ncfile.variables['O'])
+maglat = np.array(ncfile.variables['Magnetic Latitude'])
+maglon = np.array(ncfile.variables['Magnetic Longitude'])
+bx = np.array(ncfile.variables['Bx'])
+by = np.array(ncfile.variables['By'])
+bz = np.array(ncfile.variables['Bz'])
 
 ncfile.close()
 
 iCut = 0
 
-value = temp # np.log10(o)
+# value = temp # np.log10(o)
+value = maglon # np.log10(o)
 
 # Lat/Lon Cut:
 if (iCut == 0):
