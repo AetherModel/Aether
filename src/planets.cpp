@@ -63,6 +63,38 @@ float Planets::get_radius(float latitude) {
 //
 // -----------------------------------------------------------------------------
 
+float Planets::get_dipole_rotation() {
+  return planet.dipole_rotation;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+float Planets::get_dipole_tilt() {
+  return planet.dipole_tilt;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+float Planets::get_dipole_strength() {
+  return planet.dipole_strength;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+std::vector<float> Planets::get_dipole_center() {
+  return planet.dipole_center;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
 float Planets::get_mu() {
   return planet.mu;
 }
@@ -182,7 +214,7 @@ int Planets::update(Times time) {
     if (x_ecl > 0) planet.orbit_angle = planet.orbit_angle+pi;
     if (x_ecl < 0 && y_ecl > 0) planet.orbit_angle = planet.orbit_angle + 2*pi;
 
-    planet.declination = atan(tan(planet.planet_tilt*dtor)*sin(planet.orbit_angle));
+    planet.declination = atan(tan(planet.planet_tilt)*sin(planet.orbit_angle));
 
     planet.sin_dec = sin(planet.declination);
     planet.cos_dec = cos(planet.declination);
@@ -269,6 +301,12 @@ int Planets::set_planet(Inputs args, Report report) {
 	std::cout << "Planet Radius set to : "
 		  << planet.radius/1000.0 << " (km)\n";
 
+      planet.dipole_strength = planets[i].dipole_strength;
+      planet.dipole_rotation = planets[i].dipole_rotation;
+      planet.dipole_tilt = planets[i].dipole_tilt;
+      for (int j=0; j<3; j++)
+	planet.dipole_center[j] = planets[i].dipole_center[j];
+      
       planet.update_time = -1e32;
 
       break;
@@ -304,65 +342,53 @@ int Planets::read_file(Inputs args, Report report) {
 
     if (myFile.good()) {
 
-      // Header line can be ignored:
-      getline(myFile,line);
-      getline(myFile,line);
+      std::vector<std::vector<std::string>> csv = read_csv(myFile);
 
-      while (getline(myFile,line)) {
+      int nLines = csv.size();
 
-	report.print(5, line);
-	std::stringstream ss(line);
+      if (nLines <= 2) {
+	iErr = 1;
+      } else {
 
-	getline(ss, tmp.name, ',');
-	tmp.name = make_lower(tmp.name);
-	getline(ss, col, ',');
-	if (col.size() > 1) {
-	  tmp.semimajoraxis = stof(col);
-	  getline(ss, col, ',');
-	  tmp.eccentricity = stof(col);
-	  getline(ss, col, ',');
-	  tmp.inclination = stof(col);
-	  getline(ss, col, ',');
-	  tmp.meanlongitude = stof(col);
-	  getline(ss, col, ',');
-	  tmp.perihelionlongitude = stof(col);
-	  getline(ss, col, ',');
-	  tmp.nodelongitude = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_semimajoraxis = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_eccentricity = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_inclination = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_meanlongitude = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_perihelionlongitude = stof(col);
-	  getline(ss, col, ',');
-	  tmp.rates_nodelongitude = stof(col);
-	  // Length of Day (hours)
-	  getline(ss, col, ',');
-	  tmp.length_of_day = stof(col)*seconds_per_hour;
-	  // Length of year (days)
-	  getline(ss, col, ',');
-	  tmp.length_of_year = stof(col)*seconds_per_day;
-	  // Length of year (days)
-	  getline(ss, col, ',');
-	  tmp.longitude_jb2000 = stof(col);
-	  // Mass of planet
-	  getline(ss, col, ',');
-	  tmp.mass = stof(col);
-	  // Equatorial Radius
-	  getline(ss, col, ',');
-	  tmp.equator_radius = stof(col);
-	  // Polar Radius
-	  getline(ss, col, ',');
-	  tmp.polar_radius = stof(col);
-	  // Planetary Tilt Angle
-	  getline(ss, col, ',');
-	  tmp.planet_tilt = stof(col);
+	for (int iLine = 2; iLine < nLines; iLine++) {
 
-	  planets.push_back(tmp);
+	  std::cout << "csv : " << iLine << " " << csv[iLine][0] << " " << csv[iLine][1].length() << "\n";
+
+	  // Some final rows can have comments in them, so we want to
+	  // skip anything where the length of the string in column 2
+	  // is == 0:
+
+	  if (csv[iLine][1].length() > 0) {
+	  
+	    tmp.name = make_lower(csv[iLine][0]);
+	    tmp.semimajoraxis = stof(csv[iLine][1]);
+	    tmp.eccentricity = stof(csv[iLine][2]);
+	    tmp.inclination = stof(csv[iLine][3]);
+	    tmp.meanlongitude = stof(csv[iLine][4]);
+	    tmp.perihelionlongitude = stof(csv[iLine][5]);
+	    tmp.nodelongitude = stof(csv[iLine][6]);
+	    tmp.rates_semimajoraxis = stof(csv[iLine][7]);
+	    tmp.rates_eccentricity = stof(csv[iLine][8]);
+	    tmp.rates_inclination = stof(csv[iLine][9]);
+	    tmp.rates_meanlongitude = stof(csv[iLine][10]);
+	    tmp.rates_perihelionlongitude = stof(csv[iLine][11]);
+	    tmp.rates_nodelongitude = stof(csv[iLine][12]);
+	    tmp.length_of_day = stof(csv[iLine][13])*seconds_per_hour;
+	    tmp.length_of_year = stof(csv[iLine][14])*seconds_per_day;
+	    tmp.longitude_jb2000 = stof(csv[iLine][15]);
+	    tmp.mass = stof(csv[iLine][16]);
+	    tmp.equator_radius = stof(csv[iLine][17]);
+	    tmp.polar_radius = stof(csv[iLine][18]);
+	    tmp.planet_tilt = stof(csv[iLine][19])*dtor;
+	    tmp.dipole_strength = stof(csv[iLine][20]);
+	    tmp.dipole_rotation = stof(csv[iLine][21])*dtor;
+	    tmp.dipole_tilt = stof(csv[iLine][22])*dtor;
+	    for (int j=0; j<3; j++)
+	      tmp.dipole_center[j] = stof(csv[iLine][23+j]);
+
+	    planets.push_back(tmp);
+
+	  }
 
 	}
 

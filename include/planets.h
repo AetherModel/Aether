@@ -23,6 +23,11 @@ class Planets {
   float get_sin_dec(Times time);
   float get_cos_dec(Times time);
 
+  std::vector<float> get_dipole_center();
+  float get_dipole_rotation();
+  float get_dipole_tilt();
+  float get_dipole_strength();
+  
  private:
 
   int set_planet(Inputs args, Report report);
@@ -61,6 +66,11 @@ class Planets {
     float equator_radius;
     float polar_radius;
     float radius;
+
+    float dipole_strength;
+    float dipole_rotation;
+    float dipole_tilt;
+    std::vector<float> dipole_center{ 0.0, 0.0, 0.0 };
 
     // These are updated during the run:
 
