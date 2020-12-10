@@ -12,8 +12,9 @@
 
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
-  report.print(3, "Starting init_geo_grid");
-  
+  std::string function="Grid::init_geo_grid";
+  report.enter(function);  
+
   // This is just an example:
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
@@ -55,6 +56,8 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   fill_grid_radius(planet, report);
 
-  report.print(3, "Ending init_geo_grid");
+  fill_grid_bfield(planet, input, report);
+  
+  report.enter(function);  
 
 }
