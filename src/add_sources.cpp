@@ -29,10 +29,6 @@ void Neutrals::add_sources( Times time, Report &report) {
 	  dt * ( heating_euv_s3gc[index] +
 		 conduction_s3gc[index]);
 
-	if (iAlt == 40 && iLon == nGeoLonsG/2 && iLat == nGeoLonsG/2 )
-	  std::cout << "sources(t) : " << heating_euv_s3gc[index]
-	       << " " << conduction_s3gc[index] << "\n";
-
       }
     }
   }

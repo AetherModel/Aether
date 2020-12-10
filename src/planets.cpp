@@ -352,8 +352,6 @@ int Planets::read_file(Inputs args, Report report) {
 
 	for (int iLine = 2; iLine < nLines; iLine++) {
 
-	  std::cout << "csv : " << iLine << " " << csv[iLine][0] << " " << csv[iLine][1].length() << "\n";
-
 	  // Some final rows can have comments in them, so we want to
 	  // skip anything where the length of the string in column 2
 	  // is == 0:
