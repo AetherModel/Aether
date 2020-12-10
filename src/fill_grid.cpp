@@ -11,6 +11,7 @@
 #include "../include/sizes.h"
 #include "../include/planets.h"
 #include "../include/transform.h"
+#include "../include/bfield.h"
 
 // -----------------------------------------------------------------------------
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
@@ -49,6 +50,65 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
 
   report.exit(function);
 
+}
+
+// -----------------------------------------------------------------------------
+//  fill grid with magnetic field values
+// -----------------------------------------------------------------------------
+
+void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
+
+  std::string function = "Grid::fill_grid_bfield";
+  report.enter(function);
+
+  long nLons, nLats, nAlts, iLon, iLat, iAlt, iDim, index, indexv;
+  float lon, lat, alt;
+  bfield_info_type bfield_info;
+  
+  if (IsGeoGrid) {
+    nLons = nGeoLonsG;
+    nLats = nGeoLatsG;
+    nAlts = nGeoAltsG;
+  } else {
+    nLons = nMagLonsG;
+    nLats = nMagLatsG;
+    nAlts = nMagAltsG;
+  }
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
+
+	if (IsGeoGrid) {
+	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+	} else {
+	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
+	}
+
+	lon = geoLon_s3gc[index];
+	lat = geoLat_s3gc[index];
+	alt = geoAlt_s3gc[index];
+	
+	bfield_info = get_bfield(lon, lat, alt, planet, input, report);
+
+	magLat_s3gc[index] = bfield_info.lat;
+	magLon_s3gc[index] = bfield_info.lon;
+
+	for (iDim = 0; iDim < 3; iDim++) {
+	  if (IsGeoGrid) {
+	    indexv = ijkl_geo_v3gc(iLon,iLat,iAlt,iDim);
+	  } else {
+	    indexv = ijkl_mag_v3gc(iLon,iLat,iAlt,iDim);
+	  }
+	  bfield_v3gc[indexv] = bfield_info.b[iDim];
+	}
+	
+      }
+    }
+  }
+  
+  report.exit(function);
+  return;
 }
 
 // -----------------------------------------------------------------------------

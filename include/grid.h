@@ -50,9 +50,15 @@ For example:
    (k));
 
 // Vectors, 3D, Include Ghostcells, Cell Centers:
-#define ijk_geo_v3gc(i,j,k,l) \
+#define ijkl_geo_v3gc(i,j,k,l) \
   ((i)*long(nGeoLatsG)*long(nGeoAltsG)*long(3) + \
    (j)*long(nGeoAltsG)*long(3) + \
+   (k)*long(3) + \
+   (l))
+// Vectors, 3D, Include Ghostcells, Cell Centers:
+#define ijkl_mag_v3gc(i,j,k,l) \
+  ((i)*long(nMagLatsG)*long(nMagAltsG)*long(3) + \
+   (j)*long(nMagAltsG)*long(3) + \
    (k)*long(3) + \
    (l))
 
@@ -64,6 +70,8 @@ public:
   int get_IsGeoGrid();
   void set_IsGeoGrid(int value);
 
+  long get_nPointsInGrid();
+  
   // These define the geographic grid:
   float *geoLon_s3gc, *geoX_s3gc;
   float *geoLat_s3gc, *geoY_s3gc;
@@ -90,7 +98,10 @@ public:
   float *radius_inv_sq_s3gc;
   float *gravity_s3gc;
   float *sza_s3gc, *cos_sza_s3gc;
-
+  
+  float *bfield_v3gc;
+  float *bfield_mag_s3gc;
+  
   float *geoX_edges_s3ge, *geoX_cell_width_s3gc;
 
   float *alt_edges;
@@ -104,7 +115,8 @@ public:
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
   void init_geo_grid(Planets planet, Inputs input, Report &report);
-  
+  void fill_grid_bfield(Planets planet, Inputs input, Report &report);
+
  private:
 
   int IsGeoGrid;
