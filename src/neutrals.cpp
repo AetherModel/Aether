@@ -47,7 +47,7 @@ Neutrals::species_chars Neutrals::create_species() {
 	tmp.ionization_s3gc[index] = 1.0e-32;
 
 	for (iDir = 0; iDir < 3; iDir++) {
-	  index = ijk_geo_v3gc(iLon,iLat,iAlt,iDir);
+	  index = ijkl_geo_v3gc(iLon,iLat,iAlt,iDir);
 	  tmp.velocity_v3gc[index] = 0.0;
 	}
 	
