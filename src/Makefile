@@ -5,7 +5,7 @@ COMPILE.CPP = g++
 LINK.CPP = g++
 AR = ar -rs
 
-FLAGS = -c -I/opt/local/include
+FLAGS = -O3 -ffast-math -c -I/opt/local/include
 
 .SUFFICES:
 .SUFFICES: .cpp .o
@@ -39,7 +39,9 @@ OBJECTS = \
 	solver_conduction.o\
 	advance.o\
 	add_sources.o\
-	output.o
+	output.o\
+	bfield.o\
+	dipole.o
 
 MAIN = \
 	main.o
