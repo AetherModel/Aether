@@ -56,6 +56,7 @@ Inputs::Inputs(Times &time, Report &report) {
   euv_heating_eff_electrons = 0.05;
 
   dt_output.push_back(300.0);
+  type_output.push_back("states");
   dt_euv = 60.0;
 
   // ------------------------------------------------
@@ -70,6 +71,14 @@ Inputs::Inputs(Times &time, Report &report) {
 
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
   return grid_input;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_bfield_type() {
+  return bfield;
 }
 
 // -----------------------------------------------------------------------
@@ -100,9 +109,27 @@ float Inputs::get_dt_euv() {
 //
 // -----------------------------------------------------------------------
 
+float Inputs::get_n_outputs() {
+  return dt_output.size();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
 float Inputs::get_dt_output(int iOutput) {
   float value = 0.0;
   if (iOutput < dt_output.size()) value = dt_output[iOutput];
+  return value;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_type_output(int iOutput) {
+  std::string value = "";
+  if (iOutput < dt_output.size()) value = type_output[iOutput];
   return value;
 }
 
@@ -147,7 +174,7 @@ std::string Inputs::get_planet_species_file() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Read input file!
 // -----------------------------------------------------------------------
 
 int Inputs::read(Times &time, Report &report) {
@@ -220,6 +247,14 @@ int Inputs::read(Times &time, Report &report) {
       }
 
       // ---------------------------
+      // #bfield
+      // ---------------------------
+
+      if (hash == "#bfield") {
+	bfield = read_string(infile_ptr, hash);
+      }
+
+      // ---------------------------
       // #planet
       // ---------------------------
 
@@ -229,6 +264,34 @@ int Inputs::read(Times &time, Report &report) {
 	  std::cout << "Setting planet to : " << planet << "\n";
 	if (planet_species_file.length() <= 1)
 	  planet_species_file = "UA/inputs/"+planet+".in";
+      }
+
+      // ---------------------------
+      // #output
+      // ---------------------------
+
+      if (hash == "#output") {
+	std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
+	// comma separated values, with type, then dt:
+	int nOutputs = csv.size();
+	int iOutput;
+	std::cout << "output : " << nOutputs << "\n";
+	if (nOutputs > 1) {
+	std::cout << "output0: " << type_output[0] << "\n";
+	  type_output[0] = csv[0][0];
+	  dt_output[0] = stof(csv[0][1]);
+	  for (iOutput = 1; iOutput < nOutputs; iOutput++) {
+	    std::cout << "output n : " << iOutput << " " << csv[iOutput][0] << "\n";
+	    type_output.push_back(csv[iOutput][0]);
+	    dt_output.push_back(stof(csv[iOutput][1]));
+	  }
+	  // Allow users to enter 0 for dt, so they only get the
+	  // output at the beginning of the run:
+	  for (iOutput = 0; iOutput < nOutputs; iOutput++)
+	    if (dt_output[iOutput] <= 0.0) dt_output[iOutput] = 1.0e32;
+	} else {
+	  std::cout << "Something wrong with #output. Need to report...\n";
+	}
       }
 
     }
