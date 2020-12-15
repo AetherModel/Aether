@@ -134,16 +134,16 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
   // Also Updated the Grazing Integral for SZA > 90.0
   // We now do log-linear interpolation for smoother transitions
   
-  float a = 1.06069630;
-  float b = 0.55643831;
-  float c = 1.06198960;
-  float d = 1.72456090;
-  float f = 0.56498823;
-  float g = 0.06651874;
+  double a = 1.06069630;
+  double b = 0.55643831;
+  double c = 1.06198960;
+  double d = 1.72456090;
+  double f = 0.56498823;
+  double g = 0.06651874;
 
-  float integral[nGeoAltsG], xp[nGeoAltsG], erfcy[nGeoAltsG];
-  float log_int[nGeoAltsG];
-  float y, dy;
+  double integral[nGeoAltsG], xp[nGeoAltsG], erfcy[nGeoAltsG];
+  double log_int[nGeoAltsG];
+  double y, dy;
 
   float Hp_up, Hp_dn, grad_hs, grad_xp, grad_in, Hg, Xg, in, int_g, int_p;
   long index_bottom, iindex, iindexp, iiAlt;
@@ -188,13 +188,11 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 	  xp[iAlt] = grid.radius_s3gc[index] / H;
 
 	  // Eqn (10) Smith & Smith
-	  y = sqrt(0.5 * xp[iAlt] * abs(grid.cos_sza_s3gc[index]));
+	  y = sqrt(0.5 * xp[iAlt]) * fabs(grid.cos_sza_s3gc[index]);
 
 	  // Eqn (12) Smith and Smith
 	  if (y < 8) erfcy[iAlt] = (a + b*y) / (c + d*y + y*y);
 	  else erfcy[iAlt] = f / (g + y);
-
-	  // cout << "erfcy : " << iAlt << " " << erfcy[iAlt] << " " << xp[iAlt]<< "\n";
 
 	}
     
@@ -273,14 +271,17 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
 	  if (report.test_verbose(10))
 	    std::cout << "iSpecies, iAlt, chap : " << iSpecies << " " << iAlt << " " <<
+	      grid.sza_s3gc[index]*rtod << " " << 
+	      xp[iAlt] << " " << 
+	      erfcy[iAlt] << " " << 
 	      neutrals[iSpecies].chapman_s3gc[index] << " " << integral[iAlt] << "\n";
 
-	}
+	} // iAlt
 
-      }
-    }
+      } // iLat
+    } // iLon
     
-  }
+  } // iSpecies
     
   report.exit(function);
   return;
@@ -396,7 +397,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 
   long iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
-  int i_, idion_, ideuv_, nIonizations, iIon;
+  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
   float tau, intensity, photoion;
 
   float ionization;
@@ -448,7 +449,7 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 	  }
 
 	  intensity = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau);
-
+	  
 	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
 	    // Calculate Photo-Absorbtion for each species and add them up:
@@ -461,8 +462,11 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 		neutrals[iSpecies].density_s3gc[index];
 	    }
 
-	    for (i_ = 0; i_ < neutrals[iSpecies].nEuvIonSpecies; i_++) {
+	    for (iIonization = 0; iIonization < neutrals[iSpecies].nEuvIonSpecies; iIonization++) {
 
+	      i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
+	      // std::cout << iSpecies << " " << iIonization << " " << i_ << "\n";
+	      
 	      ionization = 
 		intensity *
 		euv.waveinfo[i_].values[iWave] *  // cross section
@@ -471,13 +475,15 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 	      neutrals[iSpecies].ionization_s3gc[index] =
 		neutrals[iSpecies].ionization_s3gc[index] + ionization;
 
-	      iIon = neutrals[iSpecies].iEuvIonSpecies_[i_];
+	      iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
 	      ions.species[iIon].ionization_s3gc[index] = 
 		ions.species[iIon].ionization_s3gc[index] + ionization;	
 
 	    }
-	      
+	     
 	  } // Each species
+
+	  
 	} // Each wavelength
 
 	// Scale heating with efficiency, and 
