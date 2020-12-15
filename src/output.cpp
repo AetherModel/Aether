@@ -16,6 +16,7 @@ using namespace netCDF;
 using namespace netCDF::exceptions;
 
 int output(Neutrals neutrals,
+	   Ions ions,
 	   Grid grid,
 	   Times time,
 	   Planets planet,
@@ -113,6 +114,35 @@ int output(Neutrals neutrals,
 	NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
 	tempVar.putAtt(UNITS,neutrals.temperature_unit);
 	tempVar.putVar(startp, countp, neutrals.temperature_s3gc);
+
+      }
+
+      // ----------------------------------------------
+      // Ion Densities and Ion Temperature and Electron Temperature
+      // ----------------------------------------------
+
+      if (type_output == "ions" ||
+	  type_output == "states") {
+
+	// Output all species densities:
+	std::vector<NcVar> ionVar;
+	for (int iSpecies=0; iSpecies < nIons; iSpecies++) {
+	  if (report.test_verbose(3))
+	    std::cout << "Outputting Var : "
+		      << ions.species[iSpecies].cName << "\n";
+	  ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName, ncFloat, dimVector));
+	  ionVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
+	  ionVar[iSpecies].putVar(startp, countp, ions.species[iSpecies].density_s3gc);
+	}
+  
+	ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
+	ionVar[nIons].putAtt(UNITS,neutrals.density_unit);
+	ionVar[nIons].putVar(startp, countp, ions.density_s3gc);
+
+	// // Output bulk temperature:
+	// NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
+	// tempVar.putAtt(UNITS,neutrals.temperature_unit);
+	// tempVar.putVar(startp, countp, neutrals.temperature_s3gc);
 
       }
 

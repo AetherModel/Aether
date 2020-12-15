@@ -12,6 +12,7 @@
 #include "../include/report.h"
 
 int output(Neutrals neutrals,
+	   Ions ions,
 	   Grid grid,
 	   Times time,
 	   Planets planet,
