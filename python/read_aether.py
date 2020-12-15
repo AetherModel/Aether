@@ -15,8 +15,8 @@ import glob
 
 # open netCDF file for reading.
 
-filelist = sorted(glob.glob("3DBFI*.nc"))
-file = filelist[-1];
+filelist = sorted(glob.glob("3DALL*.nc"))
+file = filelist[1];
 
 ncfile = Dataset(file,'r') 
 
@@ -32,23 +32,29 @@ nLats = len(lats[0,:,0])
 nAlts = len(lats[0,0,:])
 
 # temp = np.array(ncfile.variables['Temperature'])
-# o = np.array(ncfile.variables['O'])
-maglat = np.array(ncfile.variables['Magnetic Latitude'])
-maglon = np.array(ncfile.variables['Magnetic Longitude'])
-bx = np.array(ncfile.variables['Bx'])
-by = np.array(ncfile.variables['By'])
-bz = np.array(ncfile.variables['Bz'])
+o = np.array(ncfile.variables['O'])
+o2p = np.array(ncfile.variables['O2+'])
+op = np.array(ncfile.variables['O+'])
+e = np.array(ncfile.variables['e-'])
+# maglat = np.array(ncfile.variables['Magnetic Latitude'])
+# maglon = np.array(ncfile.variables['Magnetic Longitude'])
+# bx = np.array(ncfile.variables['Bx'])
+# by = np.array(ncfile.variables['By'])
+# bz = np.array(ncfile.variables['Bz'])
 
 ncfile.close()
 
-iCut = 0
+iCut = 2
 
 # value = temp # np.log10(o)
-value = maglon # np.log10(o)
+# value = maglon # np.log10(o)
+#value = o2p
+#value = e
+value = np.log10(o)
 
 # Lat/Lon Cut:
 if (iCut == 0):
-    AllData2D = value[:,:,40]
+    AllData2D = value[:,:,5]
     xPos = lons[:,0,0]
     yPos = lats[0,:,0]
 
@@ -60,7 +66,7 @@ if (iCut == 1):
     
 # Lat/Alt Cut:
 if (iCut == 2):
-    AllData2D = value[nLons/2,:,:]
+    AllData2D = value[int(nLons/2),:,:]
     xPos = lats[0,:,0]
     yPos = alts[0,0,:]
 
