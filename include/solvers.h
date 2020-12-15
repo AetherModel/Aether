@@ -13,4 +13,9 @@ int solver_conduction(float value[nGeoAltsG],
 		      float dalt_lower[nGeoAltsG],
 		      float *conduction);
 
+float solver_chemistry(float old_density,
+		       float source,
+		       float loss,
+		       float dt);
+
 #endif // AETHER_INCLUDE_SOLVERS_H_
