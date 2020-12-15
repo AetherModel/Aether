@@ -18,6 +18,7 @@ int advance( Planets &planet,
 	     Euv &euv,
 	     Neutrals &neutrals,
 	     Ions &ions,
+	     Chemistry &chemistry,
 	     Indices &indices,
 	     Inputs &args,
 	     Report &report);
