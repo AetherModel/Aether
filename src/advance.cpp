@@ -10,6 +10,7 @@
 #include "../include/grid.h"
 #include "../include/planets.h"
 #include "../include/ions.h"
+#include "../include/chemistry.h"
 #include "../include/calc_euv.h"
 #include "../include/report.h"
 #include "../include/output.h"
@@ -21,6 +22,7 @@ int advance( Planets &planet,
 	     Euv &euv,
 	     Neutrals &neutrals,
 	     Ions &ions,
+	     Chemistry &chemistry,
 	     Indices &indices,
 	     Inputs &input,
 	     Report &report) {
@@ -51,9 +53,11 @@ int advance( Planets &planet,
 
   neutrals.add_sources(time, report);
 
+  chemistry.calc_chemistry(neutrals, ions, time, gGrid, report); 
+  
   time.increment_time();
 
-  iErr = output(neutrals, gGrid, time, planet, input, report);
+  iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
   report.exit(function);
   return iErr;
