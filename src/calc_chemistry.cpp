@@ -96,29 +96,6 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
 	calc_chemical_sources(neutral_density,
 			      ion_density,
 			      Tn, Ti, Te, report);
-
-//	if (iAlt == 4 && iLon == 10 && iLat == 20) {
-//	  std::cout << "ionization: ";
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
-//	    std::cout << neutrals.neutrals[iSpecies].ionization_s3gc[index] << " ";
-//	  std::cout << "\n";
-//	  std::cout << "neutral_losses : ";
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
-//	    std::cout << sources_and_losses.neutral_losses[iSpecies] << " ";
-//	  std::cout << "\n";
-//	  std::cout << "neutral_sources : ";
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
-//	    std::cout << sources_and_losses.neutral_sources[iSpecies] << " ";
-//	  std::cout << "\n";
-//	  std::cout << "ion_losses : ";
-//	  for (iSpecies=0; iSpecies < nIons; iSpecies++) 
-//	    std::cout << sources_and_losses.ion_losses[iSpecies] << " ";
-//	  std::cout << "\n";
-//	  std::cout << "ion_sources : ";
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
-//	    std::cout << sources_and_losses.ion_sources[iSpecies] << " ";
-//	  std::cout << "\n";
-//	}
 	
 	//report.enter("solver_chemistry");
 	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
