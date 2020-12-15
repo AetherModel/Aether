@@ -24,6 +24,7 @@ public:
   float get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
+  std::string get_chemistry_file();
   std::string get_f107_file();
   std::string get_planet();
   std::string get_planetary_file();
@@ -53,6 +54,7 @@ public:
 private:
 
   std::string euv_file = "UA/inputs/euv.csv";
+  std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
   std::string input_file = "aether.in";
   std::string euv_model = "euvac";
   std::string planetary_file = "UA/inputs/orbits.csv";

@@ -145,6 +145,14 @@ std::string Inputs::get_euv_file() {
 //
 // -----------------------------------------------------------------------
 
+std::string Inputs::get_chemistry_file() {
+  return chemistry_file;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
 std::string Inputs::get_f107_file() {
   return f107_file;
 }
@@ -252,6 +260,14 @@ int Inputs::read(Times &time, Report &report) {
 
       if (hash == "#bfield") {
 	bfield = read_string(infile_ptr, hash);
+      }
+
+      // ---------------------------
+      // #chemistry
+      // ---------------------------
+
+      if (hash == "#chemistry") {
+	chemistry_file = read_string(infile_ptr, hash);
       }
 
       // ---------------------------
