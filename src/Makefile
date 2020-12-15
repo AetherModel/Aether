@@ -5,7 +5,8 @@ COMPILE.CPP = g++
 LINK.CPP = g++
 AR = ar -rs
 
-FLAGS = -O3 -ffast-math -c -I/opt/local/include
+# FLAGS = -O3 -ffast-math -c -I/opt/local/include
+FLAGS = -c -I/opt/local/include
 
 .SUFFICES:
 .SUFFICES: .cpp .o
@@ -24,7 +25,8 @@ CLASSES = \
 	planets.o\
 	grid.o\
 	neutrals.o\
-	ions.o
+	ions.o\
+	chemistry.o
 
 OBJECTS = \
 	time_conversion.o\
@@ -37,11 +39,14 @@ OBJECTS = \
 	calc_neutral_derived.o\
 	calc_euv.o\
 	solver_conduction.o\
+	solver_chemistry.o\
 	advance.o\
 	add_sources.o\
 	output.o\
 	bfield.o\
-	dipole.o
+	dipole.o\
+	calc_chemistry.o\
+	calc_chemical_sources.o
 
 MAIN = \
 	main.o
