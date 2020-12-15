@@ -6,6 +6,7 @@
 
 #include "inputs.h"
 #include "report.h"
+#include "grid.h"
 
 class Ions {
 
@@ -46,6 +47,7 @@ class Ions {
   Ions(Inputs input, Report report);
   species_chars create_species();
   int read_planet_file(Inputs input, Report report);
+  void fill_electrons(Grid grid, Report &report);
 
 };
 #endif // AETHER_INCLUDE_NEUTRALS_H_

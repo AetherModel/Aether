@@ -75,6 +75,10 @@ Ions::Ions(Inputs input, Report report) {
     species.push_back(tmp);
   }
 
+  // Create one extra species for electrons
+  tmp = create_species();
+  species.push_back(tmp);
+
   // State variables:
   density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
@@ -146,6 +150,10 @@ int Ions::read_planet_file(Inputs input, Report report) {
 	    species[iSpecies].DoAdvect = stoi(lines[iSpecies+1][3]);
 	  }
 
+	  species[nIons].cName = "e-";
+	  species[nIons].mass = mass_electron;
+	  species[nIons].charge = -1;
+	  species[nIons].DoAdvect = 0;
 	}
 	
       }
@@ -162,3 +170,52 @@ int Ions::read_planet_file(Inputs input, Report report) {
   
 }
 
+// -----------------------------------------------------------------------------
+//  
+// -----------------------------------------------------------------------------
+
+void Ions::fill_electrons(Grid grid,
+			  Report &report) {
+
+  long nLons, nLats, nAlts, iLon, iLat, iAlt, index;
+  int iSpecies;
+  float electron_density;
+  
+  std::string function = "Ions::fill_electrons";
+  report.enter(function);
+
+  if (grid.get_IsGeoGrid()) {
+    nLons = nGeoLonsG;
+    nLats = nGeoLatsG;
+    nAlts = nGeoAltsG;
+  } else {
+    nLons = nMagLonsG;
+    nLats = nMagLatsG;
+    nAlts = nMagAltsG;
+  }
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
+
+	if (grid.get_IsGeoGrid()) {
+	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+	} else {
+	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
+	}
+
+	electron_density = 0.0;
+
+	for (iSpecies=0; iSpecies < nIons; iSpecies++)
+	  electron_density = electron_density  + species[iSpecies].density_s3gc[index];
+
+	species[nIons].density_s3gc[index] = electron_density;
+	density_s3gc[index] = electron_density;
+
+      }
+    }
+  }
+
+  report.exit(function);
+  return;
+}
