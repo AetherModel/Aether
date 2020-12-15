@@ -15,6 +15,7 @@
 #include "../include/planets.h"
 #include "../include/sizes.h"
 #include "../include/ions.h"
+#include "../include/chemistry.h"
 #include "../include/output.h"
 #include "../include/advance.h"
 
@@ -41,9 +42,11 @@ int main() {
   Ions ions(input, report);
   neutrals.pair_euv(euv, ions, report);  
 
+  Chemistry chemistry(neutrals, ions, input, report);
+  
   // This is for the initial output.  If it is not a restart, this will go:
   if (time.check_time_gate(input.get_dt_output(0))) {
-    iErr = output(neutrals, gGrid, time, planet, input, report);
+    iErr = output(neutrals, ions, gGrid, time, planet, input, report);
   }
 
   // This is advancing now...
@@ -68,6 +71,7 @@ int main() {
 		     euv,
 		     neutrals,
 		     ions,
+		     chemistry,
 		     indices,
 		     input,
 		     report);
