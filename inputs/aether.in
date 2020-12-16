@@ -1,12 +1,13 @@
 
-#test1
+#debug
+1    iVerbose
 
+#planet
+earth
 
-#test2
-
-#starttime
+#STARTTIME   this is the start time
 2011
-03
+06
 21
 12
 00
@@ -14,11 +15,19 @@
 
 #endtime
 2011
-03
+06
 21
-13
-00
+12
+10
 00
 
 #f107file
-f107.txt
+UA/inputs/f107.txt
+
+#bfield
+dipole
+
+#output
+states, 300.0
+bfield, 0.0
+
