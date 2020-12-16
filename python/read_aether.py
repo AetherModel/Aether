@@ -16,7 +16,7 @@ import glob
 # open netCDF file for reading.
 
 filelist = sorted(glob.glob("3DALL*.nc"))
-file = filelist[1];
+file = filelist[-1];
 
 ncfile = Dataset(file,'r') 
 
@@ -49,8 +49,8 @@ iCut = 2
 # value = temp # np.log10(o)
 # value = maglon # np.log10(o)
 #value = o2p
-#value = e
-value = np.log10(o)
+value = e
+#value = np.log10(o)
 
 # Lat/Lon Cut:
 if (iCut == 0):
