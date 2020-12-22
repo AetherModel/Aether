@@ -1,4 +1,4 @@
-# Aether
+# Aethers
 This is the home of the Aether model of the thermosphere and ionosphere
 
 The Aether model has been developed using gnu c++ (version 9.3.0). If
