@@ -21,7 +21,46 @@
 #include "../../include/sizes.h"
 #include "../../include/constants.h"
 
-using namespace arma;
+#include "arm_vars.h"
+
+// -----------------------------------------------------
+// These are defined for the class
+// -----------------------------------------------------
+
+Grid::Grid(int nX, int nY, int nZ) {
+
+  radius3d.set_size(nX, nY, nZ);
+  radius3d.zeros();
+
+  fcube tmp(nX, nY, nZ);
+  tmp.zeros();
+  
+  // Create a 3-element vector of 3D variables:
+  gravity3dv.push_back(tmp);
+  gravity3dv.push_back(tmp);
+  gravity3dv.push_back(tmp);
+  
+  return;
+  
+}
+
+void Grid::set_radius(float planet_radius, fcube alts3d) {
+
+  radius3d = planet_radius + alts3d;
+  return;
+
+}
+
+fcube Grid::get_radius() {
+
+  return radius3d;
+
+}
+
+// -----------------------------------------------------
+// main code to demonstrate how armadillo works.
+// -----------------------------------------------------
+
 
 int main(int argc, char** argv) {
 
@@ -49,6 +88,8 @@ int main(int argc, char** argv) {
   long nLons = nGeoLonsG;
   long nLats = nGeoLatsG;
   long nAlts = nGeoAltsG;
+
+  Grid grid(nLons, nLats, nAlts);  
 
   // Ok, it doesn't seem like it makes a difference whether we use a
   // static variable (nGeoAltsG) vs a dynamic variable (nAlts)
@@ -121,8 +162,12 @@ int main(int argc, char** argv) {
   // If we want to time this, just do it over and over again.
   // Commented it out for now:
   // for (long iTime = 0; iTime < 1000; iTime++) {
-  
-  radius = earth_radius + alt3d;
+
+  // This just demonstrates a set and get functional pair:
+  grid.set_radius(earth_radius, alt3d);
+  radius = grid.get_radius();
+
+  // radius = earth_radius + alt3d;
 
   gravity = 9.8 * (earth_radius / radius) % (earth_radius / radius);
 
