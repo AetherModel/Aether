@@ -23,7 +23,8 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   float local_time;
 
   std::string function = "Grid::calc_sza";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   float lon_offset = planet.get_longitude_offset(time);
   float sin_dec = planet.get_sin_dec(time);
@@ -59,7 +60,8 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
 void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
 
   std::string function = "Grid::fill_grid_bfield";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   long nLons, nLats, nAlts, iLon, iLat, iAlt, iDim, index, indexv;
   float lon, lat, alt;

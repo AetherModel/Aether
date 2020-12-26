@@ -21,7 +21,8 @@ Chemistry::Chemistry(Neutrals neutrals,
 		     Report &report) {
 
   std::string function = "Chemistry::Chemistry";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   int iErr = 0;
 
@@ -42,7 +43,8 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 				   Report &report) {
 
   std::string function = "Chemistry::read_chemistry_file";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   std::ifstream infile_ptr;
   int iErr = 0;
@@ -107,7 +109,8 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 							    Report &report) {
 
   std::string function = "Chemistry::interpret_reaction_line";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   reaction_type reaction;
 
@@ -163,7 +166,8 @@ void Chemistry::find_species_id(std::string name,
 				Report &report) {
 
   std::string function = "Chemistry::find_species_id";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   int iSpecies;
   

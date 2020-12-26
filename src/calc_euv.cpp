@@ -27,7 +27,8 @@ int calc_euv( Planets planet,
   if (time.check_time_gate(args.get_dt_euv())) {
 
     std::string function="Euv::calc_euv";
-    report.enter(function);
+    static int iFunction = -1;
+    report.enter(function, iFunction);  
     
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid, report);

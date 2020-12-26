@@ -13,7 +13,8 @@
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   std::string function="Grid::init_geo_grid";
-  report.enter(function);  
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   // This is just an example:
 

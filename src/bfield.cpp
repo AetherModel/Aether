@@ -15,7 +15,8 @@ bfield_info_type get_bfield(float lon,
 			    Report &report) {
 
   std::string function = "get_bfield";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   if (lat > pi/2) {
     lat = twopi - lat;

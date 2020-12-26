@@ -19,7 +19,8 @@ bfield_info_type get_dipole(float lon,
 			    Report &report) {
 
   std::string function = "dipole";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   bfield_info_type bfield_info;
   

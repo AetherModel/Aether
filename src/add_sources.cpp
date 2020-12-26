@@ -12,7 +12,8 @@
 void Neutrals::add_sources( Times time, Report &report) {
 
   std::string function="add_sources";
-  report.enter(function);  
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   long iLon, iLat, iAlt, index;
 

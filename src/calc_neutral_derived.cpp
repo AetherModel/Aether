@@ -20,7 +20,8 @@ void Neutrals::calc_mass_density(Report &report) {
   long iLon, iLat, iAlt, index, iSpecies;
 
   std::string function="Neutrals::calc_mass_density";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -64,7 +65,8 @@ void Neutrals::calc_specific_heat(Report &report) {
   double t, p, r;
   
   std::string function="Neutrals::calc_specific_heat";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -149,7 +151,8 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
   long index_bottom, iindex, iindexp, iiAlt;
     
   std::string function="Neutrals::calc_chapman";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
@@ -305,7 +308,8 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   long iLon, iLat, iAlt, index;
 
   std::string function="Neutrals::calc_conduction";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
   
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -403,7 +407,8 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
   float ionization;
 
   std::string function="calc_ionization_heating";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   // Zero out all source terms:
   

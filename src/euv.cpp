@@ -212,10 +212,16 @@ int Euv::euvac(Times time,
   float slope;
 
   std::string function="Euv::euvac";
-  report.enter(function);  
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
   
   float f107 = indices.get_f107(time.get_current());
   float f107a = indices.get_f107a(time.get_current());
+
+  f107 = 100.0;
+  f107a = 100.0;
+
+  
   float mean_f107 = (f107 + f107a)/2.0;
 
   if (report.test_verbose(7))

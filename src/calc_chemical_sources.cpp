@@ -14,7 +14,8 @@ void Chemistry::calc_chemical_sources(float *neutral_density,
 				      Report &report) {
 
   std::string function = "Chemistry::calc_chemical_sources";
-  //report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   long iReaction, iLoss, iSource;
   float change, rate;
@@ -74,7 +75,7 @@ void Chemistry::calc_chemical_sources(float *neutral_density,
     
   }
   
-  //report.exit(function);
+  report.exit(function);
 
   return;
 

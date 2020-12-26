@@ -23,7 +23,8 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   int iSpecies;
 
   std::string function = "Chemistry::calc_chemistry";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   if (grid.get_IsGeoGrid()) {
     nLons = nGeoLonsG;
@@ -97,7 +98,6 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
 			      ion_density,
 			      Tn, Ti, Te, report);
 	
-	//report.enter("solver_chemistry");
 	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 	  old_density = neutral_density[iSpecies];
 	  source = sources_and_losses.neutral_sources[iSpecies];
@@ -113,7 +113,6 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
 	  ions.species[iSpecies].density_s3gc[index] =
 	    solver_chemistry(old_density, source, loss, dt);
 	}
-	//report.exit("solver_chemistry");
 	
       }
     }

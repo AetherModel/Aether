@@ -18,7 +18,7 @@ public:
   void print(int iLevel, std::string output_string);
   int test_verbose(int iLevel);
   int get_verbose();
-  void enter(std::string);
+  void enter(std::string, int &iFunction);
   void exit(std::string);
   void times();
   
@@ -33,12 +33,15 @@ private:
     float timing_total;
     unsigned long long timing_start;
     int iLevel;
-    
+    int iStringPosBefore;
+    int iLastEntry;
+
   };
   
   std::vector<item_struct> entries;
   int nEntries;
   std::string current_entry;
+  int iCurrentFunction = -1;
 
   std::string divider;
   int divider_length;

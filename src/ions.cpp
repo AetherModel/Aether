@@ -182,7 +182,8 @@ void Ions::fill_electrons(Grid grid,
   float electron_density;
   
   std::string function = "Ions::fill_electrons";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
 
   if (grid.get_IsGeoGrid()) {
     nLons = nGeoLonsG;

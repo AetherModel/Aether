@@ -30,7 +30,8 @@ int advance( Planets &planet,
   int iErr=0;
 
   std::string function="advance";
-  report.enter(function);
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   time.display();
 

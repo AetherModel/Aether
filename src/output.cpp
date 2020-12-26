@@ -28,13 +28,14 @@ int output(Neutrals neutrals,
   int nOutputs = args.get_n_outputs();
   int IsGeoGrid = grid.get_IsGeoGrid();
 
+  std::string function="output";
+  static int iFunction = -1;
+  report.enter(function, iFunction);  
+
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
  
-      std::string function="output";
-      report.enter(function);
-
       std::string time_string;
       std::string file_name;
       std::string file_ext = ".nc";
@@ -182,10 +183,10 @@ int output(Neutrals neutrals,
       
       ncdf_file.close();
 
-      report.exit(function);
     }
   }
   
+  report.exit(function);
   return iErr;
   
 }
