@@ -154,137 +154,291 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
   static int iFunction = -1;
   report.enter(function, iFunction);  
 
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  long nGCs = grid.get_nGCs();
+  
+  // New way of doing it with 3D arrays:
+
+  fcube integral3d(nLons, nLats, nAlts);
+  fcube log_int3d(nLons, nLats, nAlts);
+  fcube xp3d(nLons, nLats, nAlts);
+  fcube y3d(nLons, nLats, nAlts);
+  fcube erfcy3d(nLons, nLats, nAlts);
+
+  fvec integral1d(nAlts);
+  fvec log_int1d(nAlts);
+  fvec xp1d(nAlts);
+  fvec y1d(nAlts);
+  fvec erfcy1d(nAlts);
+  fvec dAlt1d(nAlts);
+  fvec sza1d(nAlts);
+  fvec radius1d(nAlts);
+  fvec H1d(nAlts);
+  
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
-    for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-      for (iLat = 0; iLat < nGeoLatsG; iLat++) {
+    neutrals[iSpecies].scale_height_scgc =
+      boltzmanns_constant * temperature_scgc /
+      ( neutrals[iSpecies].mass * grid.gravity_scgc );
 
-	iAlt = nGeoAltsG-1;
+    xp3d = grid.radius_scgc / neutrals[iSpecies].scale_height_scgc;
+    y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
+    iAlt = nAlts-1;
 
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	
-	// The integral from the top to infinity is the density * H (scale height)
-	// So calculate the scale height:
+    integral3d.slice(iAlt) =
+      neutrals[iSpecies].density_scgc.slice(iAlt) % 
+      neutrals[iSpecies].scale_height_scgc.slice(iAlt);
 
-	H = calc_scale_height(iSpecies, index, grid);
+    for (iAlt = nAlts-1; iAlt>=0; iAlt--) {
+
+      if (iAlt < nAlts-1) {
+	integral3d.slice(iAlt) = integral3d.slice(iAlt+1) +
+	  neutrals[iSpecies].density_scgc.slice(iAlt) %
+	  grid.dalt_lower_scgc.slice(iAlt+1);
+      }
+
+    }
+
+    erfcy3d = (a + b * y3d) / (c + d*y3d + y3d % y3d);
+    for (iLon = 0; iLon < nLons ; iLon++) 
+      for (iLat = 0; iLat < nLats ; iLat++) 
+	for (iAlt = 0; iAlt < nAlts ; iAlt++) 
+	  if (y3d(iLon,iLat,iAlt) >= 8.0)
+	    erfcy3d(iLon,iLat,iAlt) = f / (g + y3d(iLon,iLat,iAlt));
     
-	integral[iAlt] = neutrals[iSpecies].density_s3gc[index] * H;
-	log_int[iAlt] = log(integral[iAlt]);
+    log_int3d = log(integral3d);
 
-	// if we wanted to do this properly, then the integral should be
-	// with cell edge values and the distances from cell centers to
-	// cell centers. But, we are approximating here:
-
-	for (int iAlt=nGeoAltsG-1; iAlt>=0; iAlt--) {
-
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	  indexp = ijk_geo_s3gc(iLon,iLat,iAlt+1);
-
-	  if (iAlt < nGeoAltsG-1) {
-	    integral[iAlt] = integral[iAlt+1] +
-	      neutrals[iSpecies].density_s3gc[index] * grid.dalt_lower_s3gc[indexp];
-	    log_int[iAlt] = log(integral[iAlt]);
-	  }
-
-	  H = calc_scale_height(iSpecies, index, grid);
-      
-	  xp[iAlt] = grid.radius_s3gc[index] / H;
-
-	  // Eqn (10) Smith & Smith
-	  y = sqrt(0.5 * xp[iAlt]) * fabs(grid.cos_sza_s3gc[index]);
-
-	  // Eqn (12) Smith and Smith
-	  if (y < 8) erfcy[iAlt] = (a + b*y) / (c + d*y + y*y);
-	  else erfcy[iAlt] = f / (g + y);
-
-	}
+    // Set chapman integrals to max in the lower ghostcells
     
-	// Don't need chapman integrals in the lower ghostcells:
+    for (int iAlt=0; iAlt < nGCs; iAlt++)
+      neutrals[iSpecies].chapman_scgc.slice(iAlt).fill(max_chapman);
 
-	for (int iAlt=0; iAlt < nGeoGhosts; iAlt++) { 
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	  neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
-	}
+    for (iLon = 0; iLon < nLons ; iLon++) {
+      for (iLat = 0; iLat < nLats ; iLat++) {
+
+	dAlt1d = grid.dalt_lower_scgc.tube(iLon,iLat);
+	sza1d = grid.sza_scgc.tube(iLon,iLat);
+	integral1d = integral3d.tube(iLon,iLat);
+	log_int1d = log_int3d.tube(iLon,iLat);
+	xp1d = xp3d.tube(iLon,iLat);
+	y1d = y3d.tube(iLon,iLat);
+	erfcy1d = erfcy3d.tube(iLon,iLat);
+	radius1d = grid.radius_scgc.tube(iLon,iLat);
+	H1d = neutrals[iSpecies].scale_height_scgc.tube(iLon,iLat);
 	
-	// Rest of domain:
-
-	for (int iAlt=nGeoGhosts; iAlt < nGeoAltsG; iAlt++) {
-
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+	for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
 
 	  // This is on the dayside:
-	  if (grid.sza_s3gc[index] < pi/2 || grid.sza_s3gc[index] > 3*pi/2) {
+	  if (sza1d(iAlt) < pi/2 || sza1d(iAlt) > 3*pi/2) {
 
-	    neutrals[iSpecies].chapman_s3gc[index] =
-	      integral[iAlt] * sqrt(0.5 * pi * xp[iAlt]) * erfcy[iAlt];
+	    neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt) =
+	      integral1d(iAlt) * sqrt(0.5 * pi * xp1d(iAlt)) * erfcy1d(iAlt);
 
 	  } else {
 
 	    // This is on the nghtside of the terminator:
 
-	    y = grid.radius_s3gc[index] * abs(cos(grid.sza_s3gc[index]-pi/2));
+	    y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-pi/2));
 
 	    // This sort of assumes that nGeoGhosts >= 2:
-	    index_bottom = ijk_geo_s3gc(iLon,iLat,nGeoGhosts);
-	    if (y > grid.radius_s3gc[index_bottom]) {
+	    if (y > radius1d(nGCs)) {
 
 	      iiAlt = iAlt;
-	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
-	      while (grid.radius_s3gc[iindex]>y) {
-		iiAlt--;
-		iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
-	      }
+	      while (radius1d(iiAlt) > y) iiAlt--;
 	      iiAlt--;
 
-	      iindexp = ijk_geo_s3gc(iLon,iLat,iiAlt+1);
-	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt);
-
-	      Hp_up = calc_scale_height(iSpecies, iindexp, grid);
-	      Hp_dn = calc_scale_height(iSpecies, iindex, grid);
+	      Hp_up = H1d(iiAlt+1);
+	      Hp_dn = H1d(iiAlt);
 
 	      // make sure to use the proper cell spacing (iiAlt+1 & lower):
-	      grad_hs = (Hp_up - Hp_dn) / grid.dalt_lower_s3gc[iindexp];
-	      grad_xp = (xp[iiAlt+1]-xp[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
-	      grad_in = (log_int[iiAlt+1] - log_int[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
+	      grad_hs = (Hp_up - Hp_dn) / dAlt1d(iiAlt+1);
+	      grad_xp = (xp1d(iiAlt+1) - xp1d(iiAlt)) / dAlt1d(iiAlt+1);
+	      grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) / dAlt1d(iiAlt+1);
 	  
 	      // Linearly interpolate H and X:
-	      dy = y - grid.radius_s3gc[iindex];
+	      dy = y - radius1d(iiAlt+1);
 	      Hg = Hp_dn + grad_hs * dy;
-	      Xg = xp[iiAlt] + grad_xp * dy;
-	      in = log_int[iiAlt] + grad_in * dy;
+	      Xg = xp1d(iiAlt) + grad_xp * dy;
+	      in = log_int1d(iiAlt) + grad_in * dy;
 
 	      int_g = exp(in);
-	      int_p = integral[iAlt];
+	      int_p = integral1d(iAlt);
 	      // Equation (19) Smith & Smith
-	      neutrals[iSpecies].chapman_s3gc[index] =
-		sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy[iAlt]);
+	      neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt) =
+		sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
-	      if (neutrals[iSpecies].chapman_s3gc[index] > max_chapman)
-		neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+	      if (neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt) > max_chapman)
+		neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt) = max_chapman;
 	  
 	    } else {
 
 	      // This says that we are in the shadow of the planet:
 
-	      neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+	      neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt) = max_chapman;
 
 	    }
 
 	  }
+	  
+	}
+      }
+    }
+  }
 
-	  if (report.test_verbose(10))
-	    std::cout << "iSpecies, iAlt, chap : " << iSpecies << " " << iAlt << " " <<
-	      grid.sza_s3gc[index]*rtod << " " << 
-	      xp[iAlt] << " " << 
-	      erfcy[iAlt] << " " << 
-	      neutrals[iSpecies].chapman_s3gc[index] << " " << integral[iAlt] << "\n";
+  for (iAlt = 0; iAlt < nAlts; iAlt++) 
+    cout << iAlt << " " <<
+      grid.sza_scgc(9,18,iAlt) << " " <<
+      neutrals[0].density_scgc(3,18,iAlt) << " " <<
+      neutrals[0].chapman_scgc(3,18,iAlt) << " " <<
+      neutrals[0].density_scgc(9,18,iAlt) << " " <<
+      neutrals[0].chapman_scgc(9,18,iAlt) << "\n";
+  
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    for (iLon = 0; iLon < nLons ; iLon++) {
+      for (iLat = 0; iLat < nLats ; iLat++) {
+	for (iAlt = 0; iAlt < nAlts; iAlt++) {
+	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+	  neutrals[iSpecies].chapman_s3gc[index] = 
+	    neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt);
+	}
+      }
+    }
+  }
 
-	} // iAlt
-
-      } // iLat
-    } // iLon
-    
-  } // iSpecies
+  
+//  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+//
+//    for (iLon = 0; iLon < nLons; iLon++) {
+//      for (iLat = 0; iLat < nLats; iLat++) {
+//
+//	iAlt = nAlts-1;
+//
+//	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+//	
+//	// The integral from the top to infinity is the density * H (scale height)
+//	// So calculate the scale height:
+//
+//	H = calc_scale_height(iSpecies, index, grid);
+//    
+//	integral[iAlt] = neutrals[iSpecies].density_s3gc[index] * H;
+//	log_int[iAlt] = log(integral[iAlt]);
+//
+//	// if we wanted to do this properly, then the integral should be
+//	// with cell edge values and the distances from cell centers to
+//	// cell centers. But, we are approximating here:
+//
+//	for (int iAlt=nAlts-1; iAlt>=0; iAlt--) {
+//
+//	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+//	  indexp = ijk_geo_s3gc(iLon,iLat,iAlt+1);
+//
+//	  if (iAlt < nAlts-1) {
+//	    integral[iAlt] = integral[iAlt+1] +
+//	      neutrals[iSpecies].density_s3gc[index] * grid.dalt_lower_s3gc[indexp];
+//	    log_int[iAlt] = log(integral[iAlt]);
+//	  }
+//
+//	  H = calc_scale_height(iSpecies, index, grid);
+//      
+//	  xp[iAlt] = grid.radius_s3gc[index] / H;
+//
+//	  // Eqn (10) Smith & Smith
+//	  y = sqrt(0.5 * xp[iAlt]) * fabs(grid.cos_sza_s3gc[index]);
+//
+//	  // Eqn (12) Smith and Smith
+//	  if (y < 8) erfcy[iAlt] = (a + b*y) / (c + d*y + y*y);
+//	  else erfcy[iAlt] = f / (g + y);
+//
+//	}
+//    
+//	// Don't need chapman integrals in the lower ghostcells:
+//
+//	for (int iAlt=0; iAlt < nGCs; iAlt++) { 
+//	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+//	  neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+//	}
+//	
+//	// Rest of domain:
+//
+//	for (int iAlt=nGCs; iAlt < nAlts; iAlt++) {
+//
+//	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+//
+//	  // This is on the dayside:
+//	  if (grid.sza_s3gc[index] < pi/2 || grid.sza_s3gc[index] > 3*pi/2) {
+//
+//	    neutrals[iSpecies].chapman_s3gc[index] =
+//	      integral[iAlt] * sqrt(0.5 * pi * xp[iAlt]) * erfcy[iAlt];
+//
+//	  } else {
+//
+//	    // This is on the nghtside of the terminator:
+//
+//	    y = grid.radius_s3gc[index] * abs(cos(grid.sza_s3gc[index]-pi/2));
+//
+//	    // This sort of assumes that nGeoGhosts >= 2:
+//	    index_bottom = ijk_geo_s3gc(iLon,iLat,nGCs);
+//	    if (y > grid.radius_s3gc[index_bottom]) {
+//
+//	      iiAlt = iAlt;
+//	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
+//	      while (grid.radius_s3gc[iindex]>y) {
+//		iiAlt--;
+//		iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
+//	      }
+//	      iiAlt--;
+//
+//	      iindexp = ijk_geo_s3gc(iLon,iLat,iiAlt+1);
+//	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt);
+//
+//	      Hp_up = calc_scale_height(iSpecies, iindexp, grid);
+//	      Hp_dn = calc_scale_height(iSpecies, iindex, grid);
+//
+//	      // make sure to use the proper cell spacing (iiAlt+1 & lower):
+//	      grad_hs = (Hp_up - Hp_dn) / grid.dalt_lower_s3gc[iindexp];
+//	      grad_xp = (xp[iiAlt+1]-xp[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
+//	      grad_in = (log_int[iiAlt+1] - log_int[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
+//	  
+//	      // Linearly interpolate H and X:
+//	      dy = y - grid.radius_s3gc[iindex];
+//	      Hg = Hp_dn + grad_hs * dy;
+//	      Xg = xp[iiAlt] + grad_xp * dy;
+//	      in = log_int[iiAlt] + grad_in * dy;
+//
+//	      int_g = exp(in);
+//	      int_p = integral[iAlt];
+//	      // Equation (19) Smith & Smith
+//	      neutrals[iSpecies].chapman_s3gc[index] =
+//		sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy[iAlt]);
+//
+//	      if (neutrals[iSpecies].chapman_s3gc[index] > max_chapman)
+//		neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+//	  
+//	    } else {
+//
+//	      // This says that we are in the shadow of the planet:
+//
+//	      neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+//
+//	    }
+//
+//	  }
+//
+//	  if (report.test_verbose(10))
+//	    std::cout << "iSpecies, iAlt, chap : " << iSpecies << " " << iAlt << " " <<
+//	      grid.sza_s3gc[index]*rtod << " " << 
+//	      xp[iAlt] << " " << 
+//	      erfcy[iAlt] << " " << 
+//	      neutrals[iSpecies].chapman_s3gc[index] << " " << integral[iAlt] << "\n";
+//
+//	} // iAlt
+//
+//      } // iLat
+//    } // iLon
+//    
+//  } // iSpecies
     
   report.exit(function);
   return;

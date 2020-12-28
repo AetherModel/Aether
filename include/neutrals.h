@@ -4,12 +4,16 @@
 #ifndef AETHER_INCLUDE_NEUTRALS_H_
 #define AETHER_INCLUDE_NEUTRALS_H_
 
+#include <armadillo>
+
 #include "grid.h"
 #include "euv.h"
 #include "time.h"
 #include "ions.h"
 #include "inputs.h"
 #include "report.h"
+
+using namespace arma;
 
 class Neutrals {
 
@@ -23,6 +27,8 @@ class Neutrals {
 
     int DoAdvect;
     
+    fcube density_scgc;
+
     float *density_s3gc;
     float *velocity_v3gc;
 
@@ -40,7 +46,9 @@ class Neutrals {
 
     // Some derived quantities:
     float *chapman_s3gc;
-
+    fcube chapman_scgc;
+    fcube scale_height_scgc;
+    
     // Sources and Losses:
 
     float *ionization_s3gc;
@@ -55,6 +63,9 @@ class Neutrals {
   float *velocity_v3gc;
   float *temperature_s3gc;
 
+  fcube density_scgc;
+  fcube temperature_scgc;
+  
   float *rho_s3gc;
   float *mean_major_mass_s3gc;
   float *pressure_s3gc;
@@ -95,7 +106,7 @@ class Neutrals {
   // Functions:
   
   Neutrals(Grid grid, Inputs input, Report report);
-  species_chars create_species();
+  species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
   int initial_conditions(Grid grid, Inputs input, Report report);
   float calc_scale_height(int iSpecies,

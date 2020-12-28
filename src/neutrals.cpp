@@ -4,6 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <armadillo>
 
 #include "../include/constants.h"
 #include "../include/inputs.h"
@@ -14,31 +15,45 @@
 #include "../include/report.h"
 #include "../include/earth.h"
 
+using namespace arma;
+
 // -----------------------------------------------------------------------------
 //  
 // -----------------------------------------------------------------------------
 
-Neutrals::species_chars Neutrals::create_species() {
+Neutrals::species_chars Neutrals::create_species(Grid grid) {
 
   long iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  
+  long iTotal = long(nLons) * long(nLats) * long(nAlts);
 
   // Constants:
   tmp.DoAdvect = 0;
   tmp.thermal_cond = 0.0;
   tmp.thermal_exp = 0.0;
   tmp.lower_bc_density = -1.0;
+
+  tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
+  tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
+
+  tmp.density_scgc.ones();
+  tmp.chapman_scgc.ones();
+  tmp.scale_height_scgc.ones();
   
   tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   tmp.velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   tmp.chapman_s3gc = (float*) malloc( iTotal * sizeof(float) );
   tmp.ionization_s3gc = (float*) malloc( iTotal * sizeof(float) );
 
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
 	
 	index = ijk_geo_s3gc(iLon,iLat,iAlt);
 
@@ -67,16 +82,27 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   int iErr;
   species_chars tmp;
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
 
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  
   report.print(2, "Initializing Neutrals");
 
+  long iTotal = long(nLons) * long(nLats) * long(nAlts);
+
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    tmp = create_species();
+    tmp = create_species(grid);
     neutrals.push_back(tmp);
   }
 
   // State variables:
+
+  density_scgc.set_size(nLons, nLats, nAlts);
+  density_scgc.ones();
+  temperature_scgc.set_size(nLons, nLats, nAlts);
+  temperature_scgc.ones();
+  
   density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
@@ -239,69 +265,98 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
   // temperature profile in the planet.in file.
   // ---------------------------------------------------------------------
 
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  long nGCs = grid.get_nGCs();
+
+  // Let's assume that the altitudes are not dependent on lat/lon:
+  
+  fvec alt1d(nAlts);
+  fvec temp1d(nAlts);
+  std::cout << "before\n";
+
+  fmat H2d;
+  H2d.set_size(nLons,nLats);
+  std::cout << "after\n";
+
+  alt1d = grid.geoAlt_scgc.tube(0,0);
+
   if (nInitial_temps > 0) {
-
-    for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-      for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-	for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	  alt = grid.geoAlt_s3gc[index];
-
-	  // Need to make a generic linear interpolator!!!
-	
-	  // Find temperatures:
-	  if (alt <= initial_altitudes[0]) {
-	    temperature_s3gc[index] = initial_temperatures[0];
-	  } else {
-	    if (alt >= initial_altitudes[nInitial_temps-1]) {
-	      temperature_s3gc[index] = initial_temperatures[nInitial_temps-1];
-	    } else {
-	      // Linear interpolation!
-	      iA = 0;
-	      while (alt > initial_altitudes[iA]) iA++;
-	      iA--;
-	      // alt will be between iA and iA+1:
-	      r = (alt - initial_altitudes[iA]) /
-		(initial_altitudes[iA+1] - initial_altitudes[iA]);
-	      temperature_s3gc[index] =
-		(1.0-r) * initial_temperatures[iA  ] + 
-		(    r) * initial_temperatures[iA+1];
-	    }
-	  }
-	
-	  // Now do the neutrals.
-
-	  // For the bottom, set to the constant conditions:
-
-	  if (iAlt == 0) {
-	    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	      neutrals[iSpecies].density_s3gc[index] =
-		neutrals[iSpecies].lower_bc_density;
-	  } else {
-
-	    // Let's use the cell below to set the density.
-	    // Calculate scale height and then use hydrostatic balance
-	    // to derive the density:
-
-	    indexm = ijk_geo_s3gc(iLon,iLat,iAlt-1);
-
-	    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	      H = calc_scale_height(iSpecies, index, grid);
-	      
-	      neutrals[iSpecies].density_s3gc[index] = 
-		neutrals[iSpecies].density_s3gc[indexm] *
-		exp(-grid.dalt_lower_s3gc[index]/H);
-
-	    }
-	    
-	  }
+    for (iAlt = 0; iAlt < nAlts; iAlt++) {
+      alt = alt1d(iAlt);
+      // Find temperatures:
+      if (alt <= initial_altitudes[0]) {
+	temp1d[iAlt] = initial_temperatures[0];
+      } else {
+	if (alt >= initial_altitudes[nInitial_temps-1]) {
+	  temp1d[index] = initial_temperatures[nInitial_temps-1];
+	} else {
+	  // Linear interpolation!
+	  iA = 0;
+	  while (alt > initial_altitudes[iA]) iA++;
+	  iA--;
+	  // alt will be between iA and iA+1:
+	  r = (alt - initial_altitudes[iA]) /
+	    (initial_altitudes[iA+1] - initial_altitudes[iA]);
+	  temp1d[iAlt] =
+	    (1.0-r) * initial_temperatures[iA  ] + 
+	    (    r) * initial_temperatures[iA+1];
 	}
       }
     }
+  } else {
+    temp1d = 200.0;
   }
 
+  // spread the 1D temperature across the globe:
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      temperature_scgc.tube(iLon,iLat) = temp1d;
+    }
+  }
+    
+  std::cout << "integrating...\n";
+      
+  // Set the lower boundary condition:
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+
+    neutrals[iSpecies].
+      density_scgc.slice(0).
+      fill(neutrals[iSpecies].lower_bc_density);
+
+    // Integrate with hydrostatic equilibrium up:
+    for (iAlt = 1; iAlt < nAlts; iAlt++) {
+      std::cout << "iAlt : " << iAlt << "\n";
+      neutrals[iSpecies].scale_height_scgc.slice(iAlt-1) =
+	boltzmanns_constant *
+	temperature_scgc.slice(iAlt-1) /
+	( neutrals[iSpecies].mass *
+	  grid.gravity_scgc.slice(iAlt-1));
+
+      neutrals[iSpecies].density_scgc.slice(iAlt) =
+	neutrals[iSpecies].density_scgc.slice(iAlt-1) %
+	exp(-grid.dalt_lower_scgc.slice(iAlt) /
+	    neutrals[iSpecies].scale_height_scgc.slice(iAlt-1));
+      
+    }
+  }
+
+  // Copy into old variable:
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
+	
+	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+
+	for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
+	  neutrals[iSpecies].density_s3gc[index] = 
+	    neutrals[iSpecies].density_scgc(iLon,iLat,iAlt);
+      }
+    }
+  }
+  
   return iErr;
   
 }
