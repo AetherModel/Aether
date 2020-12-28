@@ -8,7 +8,6 @@
 #include "../include/inputs.h"
 #include "../include/report.h"
 
-
 #include "../include/neutrals.h"
 #include "../include/euv.h"
 #include "../include/grid.h"
@@ -31,12 +30,12 @@ int main() {
   Indices indices(input);
 
   // Geo grid stuff:
-  Grid gGrid(nGeoLonsG, nGeoLatsG, nGeoAltsG);
+  Grid gGrid(nGeoLonsG, nGeoLatsG, nGeoAltsG, nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
   // Magnetic grid stuff:
-  Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG);
+  Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
   
   Neutrals neutrals(gGrid, input, report);
   Ions ions(input, report);
