@@ -4,10 +4,14 @@
 #ifndef AETHER_INCLUDE_GRID_H_
 #define AETHER_INCLUDE_GRID_H_
 
+#include <armadillo>
+
 #include "inputs.h"
 #include "sizes.h"
 #include "planets.h"
 #include "times.h"
+
+using namespace arma;
 
 // We need a naming convention for the variables that are defined on
 // the grid.  These could then match the formulas that are used to find
@@ -27,6 +31,9 @@ For example:
 
 
  */
+
+// scgc == scalar cube ghostcells at cell centers
+
 
 // These are mapping functions from 3d to 1d arrays. They have to be
 // pretty precise, which is a bit scary to me.
@@ -71,11 +78,26 @@ public:
   void set_IsGeoGrid(int value);
 
   long get_nPointsInGrid();
+
+  long get_nX();
+  long get_nY();
+  long get_nZ();
+  
+  long get_nLons();
+  long get_nLats();
+  long get_nAlts();
+
+  long get_nGCs();
   
   // These define the geographic grid:
   float *geoLon_s3gc, *geoX_s3gc;
   float *geoLat_s3gc, *geoY_s3gc;
   float *geoAlt_s3gc, *geoZ_s3gc;
+
+  // Armidillo Cube Versions:
+  fcube geoLon_scgc;
+  fcube geoLat_scgc;
+  fcube geoAlt_scgc;
   
   // These define the magnetic grid:
   float *magLon_s3gc, *magX_s3gc;
@@ -93,6 +115,19 @@ public:
   std::string latitude_unit = "radians";
   
   // These are derived variables from the grid:
+
+  // Switch to armadillo variables (float cubes):
+  fcube radius_scgc;
+  fcube radius2_scgc;
+  fcube radius2i_scgc;
+  fcube gravity_scgc;
+
+  fcube sza_scgc;
+  fcube cos_sza_scgc;
+
+  fcube dalt_center_scgc;
+  fcube dalt_lower_scgc;
+  
   float *radius_s3gc;
   float *radius_sq_s3gc;
   float *radius_inv_sq_s3gc;
@@ -109,7 +144,7 @@ public:
   float *dalt_center_s3gc;
   float *dalt_lower_s3gc;
 
-  Grid(int nX, int nY, int nZ);
+  Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
   void calc_sza(Planets planet, Times time, Report &report);
   void fill_grid(Planets planet, Report &report);
@@ -121,6 +156,12 @@ public:
 
   int IsGeoGrid;
 
+  long nX, nLons; 
+  long nY, nLats; 
+  long nZ, nAlts; 
+
+  int nGCs; // number of ghostcells
+  
 };
 
 #endif // AETHER_INCLUDE_GRID_H_
