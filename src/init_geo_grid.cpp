@@ -2,6 +2,7 @@
 // Full license can be found in License.md
 
 #include <iostream>
+#include <armadillo>
 
 #include "../include/inputs.h"
 #include "../include/report.h"
@@ -9,6 +10,8 @@
 #include "../include/planets.h"
 #include "../include/sizes.h"
 #include "../include/fill_grid.h"
+
+using namespace arma;
 
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
@@ -23,10 +26,50 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   long iLon, iLat, iAlt, index;
   float longitude, latitude, altitude;
 
-  float altitudes[nGeoAltsG];
-
-  float dlat = (grid_input.lat_max - grid_input.lat_min) / nGeoLats;
+  // Longitudes:
+  // - Make a 1d vector
+  // - copy it into the 3d cube
+  fvec lon1d(nLons);
   float dlon = (grid_input.lon_max - grid_input.lon_min) / nGeoLons;
+  for (iLon=0; iLon < nLons; iLon++)
+    lon1d(iLon) = (iLon-nGCs+0.5) * dlon;
+
+  for (iLat=0; iLat < nLats; iLat++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++) {
+      geoLon_scgc.subcube(0,iLat,iAlt,nLons-1,iLat,iAlt) = lon1d;
+    }
+  }
+
+  // Latitudes:
+  // - Make a 1d vector
+  // - copy it into the 3d cube
+  fvec lat1d(nLats);
+  float dlat = (grid_input.lat_max - grid_input.lat_min) / nGeoLats;
+  for (iLat=0; iLat < nLats; iLat++)
+    lat1d(iLat) = grid_input.lat_min + (iLat-nGCs+0.5) * dlat;
+  
+  for (iLon=0; iLon < nLons; iLon++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++) {
+      geoLat_scgc.subcube(iLon,0,iAlt,iLon,nLats-1,iAlt) = lat1d;
+    }
+  }
+  
+  
+  fvec alt1d(nAlts);
+
+  if (grid_input.IsUniformAlt) {
+    for (iAlt = 0; iAlt < nAlts; iAlt++)
+      alt1d(iAlt) =
+	grid_input.alt_min +
+	(iAlt-nGeoGhosts) * grid_input.dalt;
+  }
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      geoAlt_scgc.tube(iLon,iLat) = alt1d;
+    }
+  }
+
+  float altitudes[nGeoAltsG];
 
   IsGeoGrid = 1;
   

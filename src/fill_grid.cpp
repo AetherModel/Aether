@@ -30,6 +30,13 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   float sin_dec = planet.get_sin_dec(time);
   float cos_dec = planet.get_cos_dec(time);
 
+  fcube local_time3d(nLons,nLats,nAlts);
+  local_time3d = geoLon_scgc + lon_offset;
+  cos_sza_scgc = 
+    sin_dec * sin(geoLat_scgc) +
+    cos_dec * cos(geoLat_scgc) % cos(local_time3d-pi);
+  sza_scgc = acos(cos_sza_scgc);
+  
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
       for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
@@ -125,10 +132,24 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
   float mu = planet.get_mu();
 
   report.print(3, "starting fill_grid_radius");
+
+  // Just in case we have a latitude-dependent planetary radius
+  fvec radius0_1d(nLats);
+  for (iLat = 0; iLat < nLats; iLat++) 
+    radius0_1d(iLat) = planet.get_radius(geoLat_scgc(0,iLat,0));
   
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
+  for (iLon=0; iLon < nLons; iLon++) 
+    for (iAlt=0; iAlt < nAlts; iAlt++) 
+      radius_scgc.subcube(iLon,0,iAlt,iLon,nLats-1,iAlt) = radius0_1d;
+
+  radius2_scgc = radius_scgc % radius_scgc;
+  radius2i_scgc = 1.0 / radius2_scgc;
+
+  gravity_scgc = mu * radius2i_scgc;
+  
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
 
 	if (IsGeoGrid) {
 	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
@@ -166,22 +187,35 @@ void Grid::fill_grid(Planets planet, Report &report) {
   long iLon, iLat, iAlt, index;
 
   long indexp, indexm;
-  long nLons, nLats, nAlts;
   
   report.print(3, "starting fill_grid");
   
-  if (IsGeoGrid) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
+  //if (IsGeoGrid) {
+  //  nLons = nGeoLonsG;
+  //  nLats = nGeoLatsG;
+  //  nAlts = nGeoAltsG;
+  //} else {
+  //  nLons = nMagLonsG;
+  //  nLats = nMagLatsG;
+  //  nAlts = nMagAltsG;
+  //}
 
   float xyz[3], llr[3];
-  
+
+  for (iAlt = 1; iAlt < nAlts-1; iAlt++) {
+    dalt_center_scgc.slice(iAlt) =
+      geoAlt_scgc.slice(iAlt+1) - geoAlt_scgc.slice(iAlt-1);
+    dalt_lower_scgc.slice(iAlt) =
+      geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt-1);
+  }
+  dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1); 
+  dalt_center_scgc.slice(nAlts-1) = dalt_center_scgc.slice(nAlts-2);
+
+  dalt_lower_scgc.slice(0) = dalt_lower_scgc.slice(1); 
+  iAlt = nAlts-1;
+  dalt_lower_scgc.slice(iAlt) =
+    geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt-1);
+
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iLat = 0; iLat < nLats; iLat++) {
       for (iAlt = 0; iAlt < nAlts; iAlt++) {
