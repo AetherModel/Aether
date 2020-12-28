@@ -10,7 +10,7 @@
  is each to use these 3d arrys.
 
  Here is how I compiled the code (clearly, I installed it in /usr/local):
- g++ arm.cpp -o arm.exe -std=c++11 -O2 -larmadillo -I/usr/local/include -L/usr/local/lib
+ g++ arm.cpp -o arm.exe -std=c++11 -O2 -larmadillo -I/usr/local/include
 
 */
 
