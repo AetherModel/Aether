@@ -8,17 +8,17 @@
 
 #define nGeoGhosts 2
 
-#define nGeoAlts 50
+#define nGeoAlts 60
 #define nGeoAltsG nGeoGhosts + nGeoAlts + nGeoGhosts
 #define iGeoAltStart_ nGeoGhosts // Inclusive!!!
 #define iGeoAltEnd_ nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
 
-#define nGeoLons 18
+#define nGeoLons 36
 #define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
 #define iGeoLonStart_ nGeoGhosts // Inclusive!!!
 #define iGeoLonEnd_ nGeoGhosts + nGeoLons - 1 // Inclusive!!!
 
-#define nGeoLats 36
+#define nGeoLats 72
 #define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
 #define iGeoLatStart_ nGeoGhosts // Inclusive!!!
 #define iGeoLatEnd_ nGeoGhosts + nGeoLats - 1 // Inclusive!!!

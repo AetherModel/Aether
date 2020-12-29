@@ -141,6 +141,7 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
   for (iLon=0; iLon < nLons; iLon++) 
     for (iAlt=0; iAlt < nAlts; iAlt++) 
       radius_scgc.subcube(iLon,0,iAlt,iLon,nLats-1,iAlt) = radius0_1d;
+  radius_scgc = radius_scgc + geoAlt_scgc;
 
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;

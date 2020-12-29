@@ -4,14 +4,26 @@
 #ifndef AETHER_INCLUDE_SOLVERS_H_
 #define AETHER_INCLUDE_SOLVERS_H_
 
-#include "sizes.h"
+#include <armadillo>
+using namespace arma;
+fvec solver_conduction_old(fvec value,
+		       fvec lambda,
+		       fvec front,
+		       float dt,
+		       fvec dx);
 
-int solver_conduction(float value[nGeoAltsG],
-		      float lambda[nGeoAltsG],
-		      float front[nGeoAltsG],
-		      float dt,
-		      float dalt_lower[nGeoAltsG],
-		      float *conduction);
+fvec solver_conduction_new(fvec value,
+		       fvec lambda,
+		       fvec front,
+		       float dt,
+		       fvec dx);
+
+fvec solver_conduction(fvec value,
+		       fvec lambda,
+		       fvec front,
+		       float dt,
+		       fvec dx);
+
 
 float solver_chemistry(float old_density,
 		       float source,

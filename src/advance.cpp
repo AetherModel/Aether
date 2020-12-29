@@ -55,6 +55,8 @@ int advance( Planets &planet,
   neutrals.add_sources(time, report);
 
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report); 
+
+  neutrals.set_bcs(report);
   
   time.increment_time();
 

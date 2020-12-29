@@ -66,16 +66,16 @@ class Neutrals {
   fcube density_scgc;
   fcube temperature_scgc;
   
-  float *rho_s3gc;
-  float *mean_major_mass_s3gc;
-  float *pressure_s3gc;
-  float *sound_s3gc;
+  fcube rho_scgc;
+  fcube mean_major_mass_scgc;
+  fcube pressure_scgc;
+  fcube sound_scgc;
   
   // For heating/cooling:
-  float *Cv_s3gc;
-  float *gamma_s3gc;
-  float *kappa_s3gc;
-
+  fcube Cv_scgc;
+  fcube gamma_scgc;
+  fcube kappa_scgc;
+  
   std::vector<species_chars> neutrals;
 
   float max_chapman = 1.0e26;
@@ -84,6 +84,8 @@ class Neutrals {
 
   float *heating_euv_s3gc;
   float *conduction_s3gc;
+  fcube conduction_scgc;
+  fcube heating_euv_scgc;
 
   float heating_efficiency;
   
@@ -119,6 +121,7 @@ class Neutrals {
   void calc_ionization_heating(Euv euv, Ions &ions, Report &report);
   void calc_conduction(Grid grid, Times time, Report &report);
   void add_sources(Times time, Report &report);
+  void set_bcs(Report &report);
   
 };
   

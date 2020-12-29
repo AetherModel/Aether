@@ -18,6 +18,11 @@ void Neutrals::add_sources( Times time, Report &report) {
   long iLon, iLat, iAlt, index;
 
   float dt = time.get_dt();
+
+  temperature_scgc =
+    temperature_scgc +
+    dt * (heating_euv_scgc +
+	  conduction_scgc);
   
   for (iLon = 0; iLon < nGeoLonsG; iLon++) {
     for (iLat = 0; iLat < nGeoLatsG; iLat++) {
@@ -26,9 +31,7 @@ void Neutrals::add_sources( Times time, Report &report) {
 	index = ijk_geo_s3gc(iLon,iLat,iAlt);
 
 	temperature_s3gc[index] =
-	  temperature_s3gc[index] +
-	  dt * ( heating_euv_s3gc[index] +
-		 conduction_s3gc[index]);
+	  temperature_scgc(iLon, iLat, iAlt);
 
       }
     }

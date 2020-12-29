@@ -102,21 +102,32 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
   density_scgc.ones();
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
+
+  // Derived quantities:
+
+  rho_scgc.set_size(nLons, nLats, nAlts);
+  rho_scgc.ones();
+  mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.ones();
+  pressure_scgc.set_size(nLons, nLats, nAlts);
+  pressure_scgc.ones();
+  sound_scgc.set_size(nLons, nLats, nAlts);
+  sound_scgc.ones();
+
+  // Heating and cooling parameters:
+  Cv_scgc.set_size(nLons, nLats, nAlts);
+  Cv_scgc.ones();
+  gamma_scgc.set_size(nLons, nLats, nAlts);
+  gamma_scgc.zeros();
+  kappa_scgc.set_size(nLons, nLats, nAlts);
+  kappa_scgc.zeros();
+
+  conduction_scgc.set_size(nLons, nLats, nAlts);
+  heating_euv_scgc.set_size(nLons, nLats, nAlts);
   
   density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
-  // Derived quantities:
-  rho_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  mean_major_mass_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  pressure_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  sound_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
-  // Heating and cooling parameters:
-  Cv_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  gamma_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  kappa_s3gc = (float*) malloc( iTotal * sizeof(float) );
 
   // Source Terms:
   heating_euv_s3gc = (float*) malloc( iTotal * sizeof(float) );
@@ -274,11 +285,8 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
   
   fvec alt1d(nAlts);
   fvec temp1d(nAlts);
-  std::cout << "before\n";
 
-  fmat H2d;
-  H2d.set_size(nLons,nLats);
-  std::cout << "after\n";
+  fmat H2d(nLons,nLats);
 
   alt1d = grid.geoAlt_scgc.tube(0,0);
 
@@ -316,8 +324,6 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
     }
   }
     
-  std::cout << "integrating...\n";
-      
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
@@ -327,17 +333,16 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
     // Integrate with hydrostatic equilibrium up:
     for (iAlt = 1; iAlt < nAlts; iAlt++) {
-      std::cout << "iAlt : " << iAlt << "\n";
-      neutrals[iSpecies].scale_height_scgc.slice(iAlt-1) =
+      neutrals[iSpecies].scale_height_scgc.slice(iAlt) =
 	boltzmanns_constant *
-	temperature_scgc.slice(iAlt-1) /
+	temperature_scgc.slice(iAlt) /
 	( neutrals[iSpecies].mass *
-	  grid.gravity_scgc.slice(iAlt-1));
+	  grid.gravity_scgc.slice(iAlt));
 
       neutrals[iSpecies].density_scgc.slice(iAlt) =
 	neutrals[iSpecies].density_scgc.slice(iAlt-1) %
 	exp(-grid.dalt_lower_scgc.slice(iAlt) /
-	    neutrals[iSpecies].scale_height_scgc.slice(iAlt-1));
+	    neutrals[iSpecies].scale_height_scgc.slice(iAlt));
       
     }
   }
@@ -349,7 +354,7 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
       for (iAlt = 0; iAlt < nAlts; iAlt++) {
 	
 	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
+	temperature_s3gc[index] = temperature_scgc(iLon,iLat,iAlt);
 	for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
 	  neutrals[iSpecies].density_s3gc[index] = 
 	    neutrals[iSpecies].density_scgc(iLon,iLat,iAlt);
@@ -357,7 +362,30 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
     }
   }
   
+  calc_mass_density(report);
   return iErr;
+  
+}
+
+//----------------------------------------------------------------------
+// set_bcs
+//----------------------------------------------------------------------
+
+void Neutrals::set_bcs(Report &report) {
+
+  std::string function="Neutrals::set_bcs";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  long nAlts = temperature_scgc.n_slices;
+
+  // temperature_scgc.slice(nAlts-2).fill(800.0);
+  // temperature_scgc.slice(nAlts-1).fill(800.0);
+
+  temperature_scgc.slice(nAlts-2) = temperature_scgc.slice(nAlts-3);
+  temperature_scgc.slice(nAlts-1) = temperature_scgc.slice(nAlts-2);
+
+  report.exit(function);
   
 }
 
