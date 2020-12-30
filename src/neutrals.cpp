@@ -41,11 +41,18 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
   tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
+  tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
 
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
-  
+  tmp.ionization_scgc.zeros();
+
+  tmp.sources_scgc.set_size(nLons, nLats, nAlts);
+  tmp.sources_scgc.zeros();
+  tmp.losses.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.zeros();
+
   tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   tmp.velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   tmp.chapman_s3gc = (float*) malloc( iTotal * sizeof(float) );

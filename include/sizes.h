@@ -13,12 +13,12 @@
 #define iGeoAltStart_ nGeoGhosts // Inclusive!!!
 #define iGeoAltEnd_ nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
 
-#define nGeoLons 36
+#define nGeoLons 18
 #define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
 #define iGeoLonStart_ nGeoGhosts // Inclusive!!!
 #define iGeoLonEnd_ nGeoGhosts + nGeoLons - 1 // Inclusive!!!
 
-#define nGeoLats 72
+#define nGeoLats 36
 #define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
 #define iGeoLatStart_ nGeoGhosts // Inclusive!!!
 #define iGeoLatEnd_ nGeoGhosts + nGeoLats - 1 // Inclusive!!!

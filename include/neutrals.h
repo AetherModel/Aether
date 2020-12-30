@@ -52,10 +52,14 @@ class Neutrals {
     // Sources and Losses:
 
     float *ionization_s3gc;
+    fcube ionization_scgc;
 
+    fcube sources_scgc;
+    fcube losses_scgc;
+    
     // If we want a flat lower BC:
     float lower_bc_density;
-    
+
   };
   
   // bulk quantities (states):

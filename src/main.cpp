@@ -38,7 +38,7 @@ int main() {
   Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
   
   Neutrals neutrals(gGrid, input, report);
-  Ions ions(input, report);
+  Ions ions(gGrid, input, report);
   neutrals.pair_euv(euv, ions, report);  
 
   Chemistry chemistry(neutrals, ions, input, report);

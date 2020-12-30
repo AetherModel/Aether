@@ -18,16 +18,27 @@
 //  
 // -----------------------------------------------------------------------------
 
-Ions::species_chars Ions::create_species() {
+Ions::species_chars Ions::create_species(Grid grid) {
 
   long iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  
+  long iTotal = long(nLons) * long(nLats) * long(nAlts);
 
   // Constants:
   tmp.DoAdvect = 0;
-  
+
+  tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.density_scgc.ones();
+  tmp.temperature_scgc.set_size(nLons, nLats, nAlts);
+  tmp.temperature_scgc.ones();
+  tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
+  tmp.ionization_scgc.zeros();
+
   tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   tmp.par_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   tmp.perp_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
@@ -62,21 +73,26 @@ Ions::species_chars Ions::create_species() {
 //  
 // -----------------------------------------------------------------------------
 
-Ions::Ions(Inputs input, Report report) {
+Ions::Ions(Grid grid, Inputs input, Report report) {
 
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  
+  long iTotal = long(nLons) * long(nLats) * long(nAlts);
+
   species_chars tmp;
   int iErr;
 
   report.print(2,"Initializing Ions");
   
   for (int iSpecies=0; iSpecies < nIons; iSpecies++) {
-    tmp = create_species();
+    tmp = create_species(grid);
     species.push_back(tmp);
   }
 
   // Create one extra species for electrons
-  tmp = create_species();
+  tmp = create_species(grid);
   species.push_back(tmp);
 
   // State variables:
@@ -86,6 +102,18 @@ Ions::Ions(Inputs input, Report report) {
   ion_temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
   electron_temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
 
+  density_scgc.set_size(nLons, nLats, nAlts);
+  density_scgc.ones();
+  ion_temperature_scgc.set_size(nLons, nLats, nAlts);
+  ion_temperature_scgc.ones();
+  electron_temperature_scgc.set_size(nLons, nLats, nAlts);
+  electron_temperature_scgc.ones();
+
+  tmp.sources_scgc.set_size(nLons, nLats, nAlts);
+  tmp.sources_scgc.zeros();
+  tmp.losses.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.zeros();
+  
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(input, report);
 
@@ -185,6 +213,13 @@ void Ions::fill_electrons(Grid grid,
   static int iFunction = -1;
   report.enter(function, iFunction);  
 
+  species[nIons].density_scgc.zeros();
+  for (iSpecies=0; iSpecies < nIons; iSpecies++)
+    species[nIons].density_scgc = 
+      species[nIons].density_scgc +
+      species[iIon].density_scgc; 
+  density_scgc = species[nIons].density_scgc;
+  
   if (grid.get_IsGeoGrid()) {
     nLons = nGeoLonsG;
     nLats = nGeoLatsG;

@@ -394,91 +394,151 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
   }
 
   heating_euv_scgc.zeros();
-  
-//  for (iLon = iGeoLonStart_; iLon < iGeoLonEnd_; iLon++) {
-//    for (iLat = iGeoLatStart_; iLat < iGeoLatEnd_; iLat++) {
-//      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
+  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
+    neutrals[iSpecies].ionization_scgc.zeros();
 
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
+  long nLons = heating_euv_scgc.n_rows;
+  long nLats = heating_euv_scgc.n_cols;
+  long nAlts = heating_euv_scgc.n_slices;
 
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  fmat tau2d(nLons,nLats);
+  fmat intensity2d(nLons,nLats);
+  fmat ionization2d(nLons,nLats);
+
+  for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
+
+    for (iWave=0; iWave < euv.nWavelengths; iWave++) {
       
-	heating_euv_s3gc[index] = 0.0;
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
-    
-	for (iWave=0; iWave < euv.nWavelengths; iWave++) {
+      tau2d.zeros();
 
-	  // Need to calculate the intensity at particular wavelength
-	  // (iWave), for each species (iSpecies), which is dependent
-	  // on the chapman integrals at that particular location (index)
-	  // and the cross section (i_):
-	
-	  tau = 0.0;
-	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	    if (neutrals[iSpecies].iEuvAbsId_ > -1) {
-	      i_ = neutrals[iSpecies].iEuvAbsId_;
-	      tau = tau +
-		euv.waveinfo[i_].values[iWave] *
-		neutrals[iSpecies].chapman_s3gc[index];
-	    }	  
-	  }
+      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+	if (neutrals[iSpecies].iEuvAbsId_ > -1) {
+	  i_ = neutrals[iSpecies].iEuvAbsId_;
+	  tau2d = tau2d +
+	    euv.waveinfo[i_].values[iWave] *
+	    neutrals[iSpecies].chapman_scgc.slice(iAlt);
+	}	  
+      }
 
-	  intensity = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau);
-	  
-	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau2d);
+      
+      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
-	    // Calculate Photo-Absorbtion for each species and add them up:
-	    i_ = neutrals[iSpecies].iEuvAbsId_; // index of photo abs cross section
-	    if (i_ > -1) {
-	      heating_euv_s3gc[index] = heating_euv_s3gc[index] +
-		intensity *
-		euv.wavelengths_energy[iWave] * 
-		euv.waveinfo[i_].values[iWave] *  // cross section
-		neutrals[iSpecies].density_s3gc[index];
-	    }
+	// Calculate Photo-Absorbtion for each species and add them up:
+	i_ = neutrals[iSpecies].iEuvAbsId_; // index of photo abs cross section
+	if (i_ > -1) {
+	  heating_euv_scgc.slice(iAlt) = heating_euv_scgc.slice(iAlt) +
+	    euv.wavelengths_energy[iWave] * 
+	    euv.waveinfo[i_].values[iWave] *  // cross section
+	    ( intensity2d %
+	      neutrals[iSpecies].density_scgc.slice(iAlt) );
+	}
 
-	    for (iIonization = 0; iIonization < neutrals[iSpecies].nEuvIonSpecies; iIonization++) {
+	for (iIonization = 0;
+	     iIonization < neutrals[iSpecies].nEuvIonSpecies;
+	     iIonization++) {
 
-	      i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
-	      // std::cout << iSpecies << " " << iIonization << " " << i_ << "\n";
+	  i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
 	      
-	      ionization = 
-		intensity *
-		euv.waveinfo[i_].values[iWave] *  // cross section
-		neutrals[iSpecies].density_s3gc[index];
+	  ionization2d = 
+	    euv.waveinfo[i_].values[iWave] *  // cross section
+	    intensity2d %
+	    neutrals[iSpecies].density_scgc.slice(iAlt);
 
-	      neutrals[iSpecies].ionization_s3gc[index] =
-		neutrals[iSpecies].ionization_s3gc[index] + ionization;
+	  neutrals[iSpecies].ionization_scgc.slice(iAlt) =
+	    neutrals[iSpecies].ionization_scgc(iAlt) + ionization2d;
 
-	      iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
-	      ions.species[iIon].ionization_s3gc[index] = 
-		ions.species[iIon].ionization_s3gc[index] + ionization;	
+	  iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
+	  ions.species[iIon].ionization_scgc.slice(iAlt) = 
+	    ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;	
 
-	    }
-	     
-	  } // Each species
+	} // iIonization
 
-	  
-	} // Each wavelength
+      } // iSpecies
 
-	// Scale heating with efficiency, and 
-	// convert energy deposition to change in temperature:
+    } // iWave
 
-	heating_euv_s3gc[index] =
-	  heating_efficiency *
-	  heating_euv_s3gc[index] / rho_scgc(iLon,iLat,iAlt) / Cv_scgc(iLon,iLat,iAlt);
+  } // iAlt
 
-	heating_euv_scgc(iLon,iLat,iAlt) = heating_euv_s3gc[index];
-	if (report.test_verbose(10))
-	  std::cout << "heating : " << index
-	       << " " << heating_euv_s3gc[index]*seconds_per_day << " deg/day\n";
-	  
-      } // Alts
-    } // Lats
-  } // Lons
+  heating_euv_scgc =
+    heating_efficiency * heating_euv_scgc / rho_scgc / Cv_scgc;
+  
+//  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
+//    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
+//      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
+//
+//	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+//      
+//	for (iWave=0; iWave < euv.nWavelengths; iWave++) {
+//
+//	  // Need to calculate the intensity at particular wavelength
+//	  // (iWave), for each species (iSpecies), which is dependent
+//	  // on the chapman integrals at that particular location (index)
+//	  // and the cross section (i_):
+//	
+//	  tau = 0.0;
+//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+//	    if (neutrals[iSpecies].iEuvAbsId_ > -1) {
+//	      i_ = neutrals[iSpecies].iEuvAbsId_;
+//	      tau = tau +
+//		euv.waveinfo[i_].values[iWave] *
+//		neutrals[iSpecies].chapman_s3gc[index];
+//	    }	  
+//	  }
+//
+//	  intensity = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau);
+//	  
+//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+//
+//	    // Calculate Photo-Absorbtion for each species and add them up:
+//	    i_ = neutrals[iSpecies].iEuvAbsId_; // index of photo abs cross section
+//	    if (i_ > -1) {
+//	      heating_euv_s3gc[index] = heating_euv_s3gc[index] +
+//		intensity *
+//		euv.wavelengths_energy[iWave] * 
+//		euv.waveinfo[i_].values[iWave] *  // cross section
+//		neutrals[iSpecies].density_s3gc[index];
+//	    }
+//
+//	    for (iIonization = 0; iIonization < neutrals[iSpecies].nEuvIonSpecies; iIonization++) {
+//
+//	      i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
+//	      // std::cout << iSpecies << " " << iIonization << " " << i_ << "\n";
+//	      
+//	      ionization = 
+//		intensity *
+//		euv.waveinfo[i_].values[iWave] *  // cross section
+//		neutrals[iSpecies].density_s3gc[index];
+//
+//	      neutrals[iSpecies].ionization_s3gc[index] =
+//		neutrals[iSpecies].ionization_s3gc[index] + ionization;
+//
+//	      iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
+//	      ions.species[iIon].ionization_s3gc[index] = 
+//		ions.species[iIon].ionization_s3gc[index] + ionization;	
+//
+//	    }
+//	     
+//	  } // Each species
+//
+//	  
+//	} // Each wavelength
+//
+//	// Scale heating with efficiency, and 
+//	// convert energy deposition to change in temperature:
+//
+//	heating_euv_s3gc[index] =
+//	  heating_efficiency *
+//	  heating_euv_s3gc[index] / rho_scgc(iLon,iLat,iAlt) / Cv_scgc(iLon,iLat,iAlt);
+//
+//	heating_euv_scgc(iLon,iLat,iAlt) = heating_euv_s3gc[index];
+//	if (report.test_verbose(10))
+//	  std::cout << "heating : " << index
+//	       << " " << heating_euv_s3gc[index]*seconds_per_day << " deg/day\n";
+//	  
+//      } // Alts
+//    } // Lats
+//  } // Lons
 	    
 //	// We need to do things here:
 //	// - Identify where the ionization cross section is stored
