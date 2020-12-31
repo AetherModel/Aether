@@ -29,9 +29,6 @@ class Neutrals {
     
     fcube density_scgc;
 
-    float *density_s3gc;
-    float *velocity_v3gc;
-
     std::vector<float> diff0;
     std::vector<float> diff_exp;
     std::vector<float> neutral_ion;
@@ -45,13 +42,11 @@ class Neutrals {
     std::vector<int> iEuvIonId_;
 
     // Some derived quantities:
-    float *chapman_s3gc;
     fcube chapman_scgc;
     fcube scale_height_scgc;
     
     // Sources and Losses:
 
-    float *ionization_s3gc;
     fcube ionization_scgc;
 
     fcube sources_scgc;
@@ -63,9 +58,6 @@ class Neutrals {
   };
   
   // bulk quantities (states):
-  float *density_s3gc;
-  float *velocity_v3gc;
-  float *temperature_s3gc;
 
   fcube density_scgc;
   fcube temperature_scgc;
@@ -86,8 +78,6 @@ class Neutrals {
 
   // Source terms:
 
-  float *heating_euv_s3gc;
-  float *conduction_s3gc;
   fcube conduction_scgc;
   fcube heating_euv_scgc;
 
@@ -115,9 +105,6 @@ class Neutrals {
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
   int initial_conditions(Grid grid, Inputs input, Report report);
-  float calc_scale_height(int iSpecies,
-			  long index,
-			  Grid grid);
   int pair_euv(Euv euv, Ions ions, Report report);
   void calc_mass_density(Report &report);
   void calc_specific_heat(Report &report);

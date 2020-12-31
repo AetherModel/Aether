@@ -53,30 +53,6 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
 
-  tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  tmp.chapman_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.ionization_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	tmp.density_s3gc[index] = 1.0e-32;
-	tmp.chapman_s3gc[index] = 1.0e-32;
-	tmp.ionization_s3gc[index] = 1.0e-32;
-
-	for (iDir = 0; iDir < 3; iDir++) {
-	  index = ijkl_geo_v3gc(iLon,iLat,iAlt,iDir);
-	  tmp.velocity_v3gc[index] = 0.0;
-	}
-	
-      }
-    }
-  }
-	
   return tmp;
   
 }
@@ -132,14 +108,6 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
   
-  density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
-  // Source Terms:
-  heating_euv_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  conduction_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
   heating_efficiency = input.get_euv_heating_eff_neutrals();
   
   initial_temperatures = NULL;
@@ -253,23 +221,6 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 //  
 // -----------------------------------------------------------------------------
 
-float Neutrals::calc_scale_height(int iSpecies,
-				  long index,
-				  Grid grid) {
-
-  float g = grid.gravity_s3gc[index];
-  float t = temperature_s3gc[index];
-  float m = neutrals[iSpecies].mass;
-  float H = boltzmanns_constant * t / m / g;
-
-  return H;
-
-}
-
-// -----------------------------------------------------------------------------
-//  
-// -----------------------------------------------------------------------------
-
 int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   int iErr = 0;
@@ -349,21 +300,6 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 	neutrals[iSpecies].density_scgc.slice(iAlt-1) %
 	exp(-grid.dalt_lower_scgc.slice(iAlt) /
 	    neutrals[iSpecies].scale_height_scgc.slice(iAlt));
-    }
-  }
-
-  // Copy into old variable:
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	temperature_s3gc[index] = temperature_scgc(iLon,iLat,iAlt);
-	for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	  neutrals[iSpecies].density_s3gc[index] = 
-	    neutrals[iSpecies].density_scgc(iLon,iLat,iAlt);
-      }
     }
   }
 

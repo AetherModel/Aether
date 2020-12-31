@@ -43,32 +43,6 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.sources_scgc.zeros();
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
-
-  tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.par_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  tmp.perp_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  tmp.temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.ionization_s3gc = (float*) malloc( iTotal * sizeof(float) );
-
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	tmp.density_s3gc[index] = 1.0;
-	tmp.temperature_s3gc[index] = 1.0e-32;
-	tmp.ionization_s3gc[index] = 1.0e-32;
-
-	for (iDir = 0; iDir < 3; iDir++) {
-	  index = ijkl_geo_v3gc(iLon,iLat,iAlt,iDir);
-	  tmp.par_velocity_v3gc[index] = 0.0;
-	  tmp.perp_velocity_v3gc[index] = 0.0;
-	}
-	
-      }
-    }
-  }
 	
   return tmp;
   
@@ -101,11 +75,6 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   species.push_back(tmp);
 
   // State variables:
-  density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  exb_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  ion_temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  electron_temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
 
   density_scgc.set_size(nLons, nLats, nAlts);
   density_scgc.ones();

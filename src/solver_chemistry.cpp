@@ -5,7 +5,6 @@
 #include <armadillo>
 using namespace arma;
 
-
 float solver_chemistry(float old_density, float source, float loss, float dt) {
 
   float new_density;
@@ -30,20 +29,11 @@ float solver_chemistry(float old_density, float source, float loss, float dt) {
 }
 
 fcube solver_chemistry_new(fcube density, fcube source, fcube loss, float dt) {
-
-  std::cout << "in solver\n";
-
-  //  loss = loss / (density + 1e-6);
   
-//  std::cout << "in solver 0\n";
-//  fcube normalized_loss = loss;
-//  std::cout << "in solver 1\n";
-//  normalized_loss = normalized_loss / (density + 1e-6);
-//  std::cout << "in solver 2\n";
-//  fcube new_density = (density + dt * source) / (1.0 + dt * normalized_loss);
-  std::cout << "in solver 3\n";
+  fcube normalized_loss = loss / (density + 1e-6);
+  fcube new_density = (density + dt * source) / (1.0 + dt * normalized_loss);
 
-  return density;
+  return new_density;
 
 }
 

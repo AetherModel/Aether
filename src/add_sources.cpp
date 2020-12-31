@@ -23,20 +23,7 @@ void Neutrals::add_sources( Times time, Report &report) {
     temperature_scgc +
     dt * (heating_euv_scgc +
 	  conduction_scgc);
-  
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	temperature_s3gc[index] =
-	  temperature_scgc(iLon, iLat, iAlt);
-
-      }
-    }
-  }
-  
+    
   report.exit(function);  
   return;
   

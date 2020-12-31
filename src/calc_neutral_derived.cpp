@@ -257,19 +257,6 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
       } // iLat
     } // iLon
   } // iSpecies
-
-  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    for (iLon = 0; iLon < nLons ; iLon++) {
-      for (iLat = 0; iLat < nLats ; iLat++) {
-	for (iAlt = 0; iAlt < nAlts; iAlt++) {
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	  neutrals[iSpecies].chapman_s3gc[index] = 
-	    neutrals[iSpecies].chapman_scgc(iLon,iLat,iAlt);
-	}
-      }
-    }
-  }
-
   
   report.exit(function);
   return;
@@ -300,15 +287,6 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   long nLats = grid.get_nLats();
   long nAlts = grid.get_nAlts();
   
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	conduction_s3gc[index] = 0.0;
-      }
-    }
-  }
-
   fcube rhocvr23d(nLons,nLats,nAlts);
   fcube lambda3d(nLons,nLats,nAlts);
   fcube prandtl3d(nLons,nLats,nAlts);
@@ -342,16 +320,6 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
       conduction_scgc.tube(iLon,iLat) = conduction1d / dt;
       
-      for (iAlt=0; iAlt < nAlts; iAlt++) {
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	conduction_s3gc[index] = conduction1d(iAlt)/dt;
-
-	if (report.test_verbose(10))
-	  std::cout << "conduction : " << index << " " << iAlt << " " 
-		    << " " << conduction_s3gc[index]*seconds_per_day << " deg/day\n";
-	
-      }
-
     } // lat
   } // lon
 
@@ -379,20 +347,6 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
 
   // Zero out all source terms:
   
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	heating_euv_s3gc[index] = 0.0;
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
-
-      }
-    }
-  }
-
   heating_euv_scgc.zeros();
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) 
     neutrals[iSpecies].ionization_scgc.zeros();
@@ -463,116 +417,6 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
   heating_euv_scgc =
     heating_efficiency * heating_euv_scgc / rho_scgc / Cv_scgc;
   
-//  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-//    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-//      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
-//
-//	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-//      
-//	for (iWave=0; iWave < euv.nWavelengths; iWave++) {
-//
-//	  // Need to calculate the intensity at particular wavelength
-//	  // (iWave), for each species (iSpecies), which is dependent
-//	  // on the chapman integrals at that particular location (index)
-//	  // and the cross section (i_):
-//	
-//	  tau = 0.0;
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-//	    if (neutrals[iSpecies].iEuvAbsId_ > -1) {
-//	      i_ = neutrals[iSpecies].iEuvAbsId_;
-//	      tau = tau +
-//		euv.waveinfo[i_].values[iWave] *
-//		neutrals[iSpecies].chapman_s3gc[index];
-//	    }	  
-//	  }
-//
-//	  intensity = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau);
-//	  
-//	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-//
-//	    // Calculate Photo-Absorbtion for each species and add them up:
-//	    i_ = neutrals[iSpecies].iEuvAbsId_; // index of photo abs cross section
-//	    if (i_ > -1) {
-//	      heating_euv_s3gc[index] = heating_euv_s3gc[index] +
-//		intensity *
-//		euv.wavelengths_energy[iWave] * 
-//		euv.waveinfo[i_].values[iWave] *  // cross section
-//		neutrals[iSpecies].density_s3gc[index];
-//	    }
-//
-//	    for (iIonization = 0; iIonization < neutrals[iSpecies].nEuvIonSpecies; iIonization++) {
-//
-//	      i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
-//	      // std::cout << iSpecies << " " << iIonization << " " << i_ << "\n";
-//	      
-//	      ionization = 
-//		intensity *
-//		euv.waveinfo[i_].values[iWave] *  // cross section
-//		neutrals[iSpecies].density_s3gc[index];
-//
-//	      neutrals[iSpecies].ionization_s3gc[index] =
-//		neutrals[iSpecies].ionization_s3gc[index] + ionization;
-//
-//	      iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
-//	      ions.species[iIon].ionization_s3gc[index] = 
-//		ions.species[iIon].ionization_s3gc[index] + ionization;	
-//
-//	    }
-//	     
-//	  } // Each species
-//
-//	  
-//	} // Each wavelength
-//
-//	// Scale heating with efficiency, and 
-//	// convert energy deposition to change in temperature:
-//
-//	heating_euv_s3gc[index] =
-//	  heating_efficiency *
-//	  heating_euv_s3gc[index] / rho_scgc(iLon,iLat,iAlt) / Cv_scgc(iLon,iLat,iAlt);
-//
-//	heating_euv_scgc(iLon,iLat,iAlt) = heating_euv_s3gc[index];
-//	if (report.test_verbose(10))
-//	  std::cout << "heating : " << index
-//	       << " " << heating_euv_s3gc[index]*seconds_per_day << " deg/day\n";
-//	  
-//      } // Alts
-//    } // Lats
-//  } // Lons
-	    
-//	// We need to do things here:
-//	// - Identify where the ionization cross section is stored
-//	// - Identify which ion gets the ionization
-//	// - Keep track of neutral losses
-//
-//	// How many ionizations do we have:
-//	nIonizations = neutrals[iSpecies].iEuvIonId_.size();
-//	for (int iIon=0; iIon < nIonizations; iIon++) {
-//
-//	  // Find cross section:
-//	  ideuv_ = neutrals[iSpecies].iEuvIonId_[iIon];
-//	  // Find ion to put sources:
-//	  idion_ = neutrals[iSpecies].iEuvIonSpecies_[iIon];
-//
-//	  photoion = euv.waveinfo[ideuv_].values[iWave];
-//
-//	  // This is the ionization rate:
-//	  ionization = intensity * photoion * 
-//	    neutrals[iSpecies].density[iAlt];
-//	    
-//	  // Keep track of losses for neutrals:
-//	  neutrals[iSpecies].ionization[iAlt] =
-//	    neutrals[iSpecies].ionization[iAlt] +
-//	    ionization;
-//
-//	  // Keep track of sources for ions:
-//	  ions.species[idion_].ionization[iAlt] = 
-//	    ions.species[idion_].ionization[iAlt] +
-//	    ionization;
-//
-//	}
-//	  
-
   report.exit(function);
   return;
 

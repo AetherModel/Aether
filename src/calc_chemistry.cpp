@@ -64,52 +64,23 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   fcube norm_loss = neutrals.neutrals[0].losses_scgc;
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    norm_loss = neutrals.neutrals[0].losses_scgc /
-      (neutrals.neutrals[iSpecies].density_scgc + 1.0e-6);
     neutrals.neutrals[iSpecies].density_scgc =
-      ( neutrals.neutrals[iSpecies].density_scgc + 
-	dt * neutrals.neutrals[iSpecies].sources_scgc ) /
-      (1.0 + dt * norm_loss);
+      solver_chemistry_new(neutrals.neutrals[iSpecies].density_scgc,
+			   neutrals.neutrals[iSpecies].sources_scgc,
+			   neutrals.neutrals[iSpecies].losses_scgc,
+			   dt);
   }
 
   for (iSpecies=0; iSpecies < nIons; iSpecies++) {
-    norm_loss = ions.species[iSpecies].losses_scgc /
-      (ions.species[iSpecies].density_scgc + 1.0e-6);
     ions.species[iSpecies].density_scgc =
-      ( ions.species[iSpecies].density_scgc + 
-    	dt * ions.species[iSpecies].sources_scgc ) /
-      (1.0 + dt * norm_loss);
+      solver_chemistry_new(ions.species[iSpecies].density_scgc,
+			   ions.species[iSpecies].sources_scgc,
+			   ions.species[iSpecies].losses_scgc,
+			   dt);
   }
 
   ions.fill_electrons(report);
 
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  neutrals.neutrals[iSpecies].density_s3gc[index] =
-	    neutrals.neutrals[iSpecies].density_scgc(iLon,iLat,iAlt);
-	}
-
-	for (iSpecies=0; iSpecies <= nIons; iSpecies++) {
-	  ions.species[iSpecies].density_s3gc[index] =
-	    ions.species[iSpecies].density_scgc(iLon,iLat,iAlt);
-
-	}
-	ions.density_s3gc[index] = ions.density_scgc(iLon,iLat,iAlt);
-	
-      }
-    }
-  }
-
-//  for (iAlt = 0; iAlt < nAlts; iAlt++) 
-//    std::cout << iAlt << " " << ions.density_scgc(9,18,iAlt) << " " 
-//	      << ions.species[0].ionization_scgc(9,18,iAlt) << " " 
-//	      << "\n";
-  
   report.exit(function);
   return;
 }
