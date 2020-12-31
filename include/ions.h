@@ -69,7 +69,7 @@ class Ions {
   Ions(Grid grid, Inputs input, Report report);
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
-  void fill_electrons(Grid grid, Report &report);
+  void fill_electrons(Report &report);
 
 };
 #endif // AETHER_INCLUDE_NEUTRALS_H_

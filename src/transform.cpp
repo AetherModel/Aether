@@ -3,9 +3,38 @@
 
 #include <math.h>
 #include <vector>
+#include <armadillo>
 
 #include "../include/sizes.h"
 #include "../include/grid.h"
+
+using namespace arma;
+
+
+// -----------------------------------------------------------------------
+// copy from armidillo cube to 3d c-native array
+// -----------------------------------------------------------------------
+
+void copy_cube_to_array(fcube cube_in,
+			float *array_out) {
+
+  long nX = cube_in.n_rows;
+  long nY = cube_in.n_cols;
+  long nZ = cube_in.n_slices;
+  long iX, iY, iZ, index;
+
+  for (iX = 0; iX < nX; iX++) {
+    for (iY = 0; iY < nY; iY++) {
+      for (iZ = 0; iZ < nZ; iZ++) {
+	index = iX*nY*nZ + iY*nZ + iZ;
+	array_out[index] = cube_in(iX,iY,iZ);
+      }
+    }
+  }
+  
+}
+
+
 
 // -----------------------------------------------------------------------
 // Transform Longitude, Latitude, Radius to X, Y, Z

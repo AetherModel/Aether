@@ -28,6 +28,13 @@ int output(Neutrals neutrals,
   int nOutputs = args.get_n_outputs();
   int IsGeoGrid = grid.get_IsGeoGrid();
 
+  long nLons = grid.get_nLons();
+  long nLats = grid.get_nLats();
+  long nAlts = grid.get_nAlts();
+  long iTotal = long(nLons) * long(nLats) * long(nAlts);
+
+  float *tmp_s3gc = (float*) malloc( iTotal * sizeof(float) );
+  
   std::string function="output";
   static int iFunction = -1;
   report.enter(function, iFunction);  
@@ -55,9 +62,9 @@ int output(Neutrals neutrals,
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
-      NcDim lonDim = ncdf_file.addDim("Longitude", nGeoLonsG); 
-      NcDim latDim = ncdf_file.addDim("Latitude", nGeoLatsG); 
-      NcDim altDim = ncdf_file.addDim("Altitude", nGeoAltsG); 
+      NcDim lonDim = ncdf_file.addDim("Longitude", nLons); 
+      NcDim latDim = ncdf_file.addDim("Latitude", nLats); 
+      NcDim altDim = ncdf_file.addDim("Altitude", nAlts); 
 
       // If we wanted 1D variables, we would do something like this, but
       // since all of out variables will be 3d, skip this:
@@ -84,14 +91,17 @@ int output(Neutrals neutrals,
       startp.push_back(0);
       startp.push_back(0);
 
-      countp.push_back(nGeoLonsG);
-      countp.push_back(nGeoLatsG);
-      countp.push_back(nGeoAltsG);
+      countp.push_back(nLons);
+      countp.push_back(nLats);
+      countp.push_back(nAlts);
 
       // Output longitude, latitude, altitude 3D arrays:
-      lonVar.putVar(startp, countp, grid.geoLon_s3gc);
-      latVar.putVar(startp, countp, grid.geoLat_s3gc);
-      altVar.putVar(startp, countp, grid.geoAlt_s3gc);
+      copy_cube_to_array(grid.geoLon_scgc, tmp_s3gc);
+      lonVar.putVar(startp, countp, tmp_s3gc);
+      copy_cube_to_array(grid.geoLat_scgc, tmp_s3gc);
+      latVar.putVar(startp, countp, tmp_s3gc);
+      copy_cube_to_array(grid.geoAlt_scgc, tmp_s3gc);
+      altVar.putVar(startp, countp, tmp_s3gc);
 
       // ----------------------------------------------
       // Neutral Densities and Temperature
@@ -108,13 +118,15 @@ int output(Neutrals neutrals,
 		      << neutrals.neutrals[iSpecies].cName << "\n";
 	  denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName, ncFloat, dimVector));
 	  denVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  denVar[iSpecies].putVar(startp, countp, neutrals.neutrals[iSpecies].density_s3gc);
+	  copy_cube_to_array(neutrals.neutrals[iSpecies].density_scgc, tmp_s3gc);
+	  denVar[iSpecies].putVar(startp, countp, tmp_s3gc);
 	}
   
 	// Output bulk temperature:
 	NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
 	tempVar.putAtt(UNITS,neutrals.temperature_unit);
-	tempVar.putVar(startp, countp, neutrals.temperature_s3gc);
+	copy_cube_to_array(neutrals.temperature_scgc, tmp_s3gc);
+	tempVar.putVar(startp, countp, tmp_s3gc);
 
       }
 
@@ -133,12 +145,14 @@ int output(Neutrals neutrals,
 		      << ions.species[iSpecies].cName << "\n";
 	  ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName, ncFloat, dimVector));
 	  ionVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  ionVar[iSpecies].putVar(startp, countp, ions.species[iSpecies].density_s3gc);
+	  copy_cube_to_array(ions.species[iSpecies].density_scgc, tmp_s3gc);
+	  ionVar[iSpecies].putVar(startp, countp, tmp_s3gc);
 	}
   
 	ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
 	ionVar[nIons].putAtt(UNITS,neutrals.density_unit);
-	ionVar[nIons].putVar(startp, countp, ions.density_s3gc);
+	copy_cube_to_array(ions.density_scgc, tmp_s3gc);
+	ionVar[nIons].putVar(startp, countp, tmp_s3gc);
 
 	// // Output bulk temperature:
 	// NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);

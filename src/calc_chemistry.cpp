@@ -26,15 +26,9 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   static int iFunction = -1;
   report.enter(function, iFunction);  
 
-  if (grid.get_IsGeoGrid()) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
+  nLons = grid.get_nLons();
+  nLats = grid.get_nLats();
+  nAlts = grid.get_nAlts();
 
   float neutral_density[nSpecies];
   float ion_density[nIons+1];  // add one for electron density
@@ -53,70 +47,68 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Calculate electron densities
   // ------------------------------------
 
-  ions.fill_electrons(grid, report);
+  ions.fill_electrons(report);
 
-  // Don't do chemistry in the ghostcells!
+  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    neutrals.neutrals[iSpecies].losses_scgc = neutrals.neutrals[iSpecies].ionization_scgc;
+    neutrals.neutrals[iSpecies].sources_scgc.zeros();
+  }
+
+  for (iSpecies=0; iSpecies < nIons; iSpecies++) {
+    ions.species[iSpecies].losses_scgc.zeros();
+    ions.species[iSpecies].sources_scgc = ions.species[iSpecies].ionization_scgc;
+  }
+
+  calc_chemical_sources(neutrals, ions, report);
+
+  fcube norm_loss = neutrals.neutrals[0].losses_scgc;
+
+  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    norm_loss = neutrals.neutrals[0].losses_scgc /
+      (neutrals.neutrals[iSpecies].density_scgc + 1.0e-6);
+    neutrals.neutrals[iSpecies].density_scgc =
+      ( neutrals.neutrals[iSpecies].density_scgc + 
+	dt * neutrals.neutrals[iSpecies].sources_scgc ) /
+      (1.0 + dt * norm_loss);
+  }
+
+  for (iSpecies=0; iSpecies < nIons; iSpecies++) {
+    norm_loss = ions.species[iSpecies].losses_scgc /
+      (ions.species[iSpecies].density_scgc + 1.0e-6);
+    ions.species[iSpecies].density_scgc =
+      ( ions.species[iSpecies].density_scgc + 
+    	dt * ions.species[iSpecies].sources_scgc ) /
+      (1.0 + dt * norm_loss);
+  }
+
+  ions.fill_electrons(report);
 
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iLat = 0; iLat < nLats; iLat++) {
       for (iAlt = 0; iAlt < nAlts; iAlt++) {
-
-	if (grid.get_IsGeoGrid()) {
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	} else {
-	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
-	}
-
-	// Use the private variable sources_and_losses, so we don't
-	// have to pass it around
+	
+	index = ijk_geo_s3gc(iLon,iLat,iAlt);
 
 	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  neutral_density[iSpecies] = neutrals.neutrals[iSpecies].density_s3gc[index];
-	  sources_and_losses.neutral_losses[iSpecies] = neutrals.neutrals[iSpecies].ionization_s3gc[index];
-	  sources_and_losses.neutral_sources[iSpecies] = 0.0;
-	}
-
-	for (iSpecies=0; iSpecies < nIons; iSpecies++) {
-	  ion_density[iSpecies] = ions.species[iSpecies].density_s3gc[index];
-	  sources_and_losses.ion_sources[iSpecies] = ions.species[iSpecies].ionization_s3gc[index];
-	  sources_and_losses.ion_losses[iSpecies] = 0.0;
-	}
-	ion_density[nIons] = ions.density_s3gc[index];
-
-	Tn = neutrals.temperature_s3gc[index];
-	Ti = ions.ion_temperature_s3gc[index];
-	Te = ions.electron_temperature_s3gc[index];
-
-	// If we wanted to do a higher-order solver, we would probably
-	// put it starting here: (If we do that, we may want to have a
-	// code that calculates the reaction rates first, then take
-	// this outside of the higher-order solver, since the reaction
-	// rates involve a lot of powers, which seem like there are
-	// quite slow in C.)
-	
-	calc_chemical_sources(neutral_density,
-			      ion_density,
-			      Tn, Ti, Te, report);
-	
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  old_density = neutral_density[iSpecies];
-	  source = sources_and_losses.neutral_sources[iSpecies];
-	  loss = sources_and_losses.neutral_losses[iSpecies];
 	  neutrals.neutrals[iSpecies].density_s3gc[index] =
-	    solver_chemistry(old_density, source, loss, dt);
+	    neutrals.neutrals[iSpecies].density_scgc(iLon,iLat,iAlt);
 	}
 
-	for (iSpecies=0; iSpecies < nIons; iSpecies++) {
-	  old_density = ion_density[iSpecies];
-	  source = sources_and_losses.ion_sources[iSpecies];
-	  loss = sources_and_losses.ion_losses[iSpecies];
+	for (iSpecies=0; iSpecies <= nIons; iSpecies++) {
 	  ions.species[iSpecies].density_s3gc[index] =
-	    solver_chemistry(old_density, source, loss, dt);
+	    ions.species[iSpecies].density_scgc(iLon,iLat,iAlt);
+
 	}
+	ions.density_s3gc[index] = ions.density_scgc(iLon,iLat,iAlt);
 	
       }
     }
   }
+
+//  for (iAlt = 0; iAlt < nAlts; iAlt++) 
+//    std::cout << iAlt << " " << ions.density_scgc(9,18,iAlt) << " " 
+//	      << ions.species[0].ionization_scgc(9,18,iAlt) << " " 
+//	      << "\n";
   
   report.exit(function);
   return;

@@ -4,6 +4,12 @@
 #ifndef AETHER_INCLUDE_TRANSFORM_H_
 #define AETHER_INCLUDE_TRANSFORM_H_
 
+#include <armadillo>
+using namespace arma;
+
+void copy_cube_to_array(fcube cube_in,
+			float *array_out);
+
 void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]);
 void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]);
 void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]);

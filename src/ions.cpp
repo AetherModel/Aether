@@ -39,6 +39,11 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.zeros();
 
+  tmp.sources_scgc.set_size(nLons, nLats, nAlts);
+  tmp.sources_scgc.zeros();
+  tmp.losses_scgc.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.zeros();
+
   tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
   tmp.par_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
   tmp.perp_velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
@@ -111,7 +116,7 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
 
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();
-  tmp.losses.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
   
   // This gets a bunch of the species-dependent characteristics:
@@ -202,12 +207,9 @@ int Ions::read_planet_file(Inputs input, Report report) {
 //  
 // -----------------------------------------------------------------------------
 
-void Ions::fill_electrons(Grid grid,
-			  Report &report) {
+void Ions::fill_electrons(Report &report) {
 
-  long nLons, nLats, nAlts, iLon, iLat, iAlt, index;
   int iSpecies;
-  float electron_density;
   
   std::string function = "Ions::fill_electrons";
   static int iFunction = -1;
@@ -217,41 +219,9 @@ void Ions::fill_electrons(Grid grid,
   for (iSpecies=0; iSpecies < nIons; iSpecies++)
     species[nIons].density_scgc = 
       species[nIons].density_scgc +
-      species[iIon].density_scgc; 
+      species[iSpecies].density_scgc; 
   density_scgc = species[nIons].density_scgc;
   
-  if (grid.get_IsGeoGrid()) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-
-	if (grid.get_IsGeoGrid()) {
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	} else {
-	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
-	}
-
-	electron_density = 0.0;
-
-	for (iSpecies=0; iSpecies < nIons; iSpecies++)
-	  electron_density = electron_density  + species[iSpecies].density_s3gc[index];
-
-	species[nIons].density_s3gc[index] = electron_density;
-	density_s3gc[index] = electron_density;
-
-      }
-    }
-  }
-
   report.exit(function);
   return;
 }

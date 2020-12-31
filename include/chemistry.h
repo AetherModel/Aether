@@ -56,11 +56,8 @@ class Chemistry {
 		      Grid grid,
 		      Report &report);
 
-  void calc_chemical_sources(float *neutral_density,
-			     float *ion_density,
-			     float Tn,
-			     float Ti,
-			     float Te,
+  void calc_chemical_sources(Neutrals &neutrals,
+			     Ions &ions,
 			     Report &report);
 
  private:

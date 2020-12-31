@@ -30,4 +30,9 @@ float solver_chemistry(float old_density,
 		       float loss,
 		       float dt);
 
+float solver_chemistry_new(fcube density,
+			   fcube source,
+			   fcube loss,
+			   float dt);
+
 #endif // AETHER_INCLUDE_SOLVERS_H_
