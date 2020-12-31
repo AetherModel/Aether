@@ -50,7 +50,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();
-  tmp.losses.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
 
   tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
@@ -305,7 +305,7 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 	temp1d[iAlt] = initial_temperatures[0];
       } else {
 	if (alt >= initial_altitudes[nInitial_temps-1]) {
-	  temp1d[index] = initial_temperatures[nInitial_temps-1];
+	  temp1d[iAlt] = initial_temperatures[nInitial_temps-1];
 	} else {
 	  // Linear interpolation!
 	  iA = 0;
@@ -345,12 +345,10 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 	temperature_scgc.slice(iAlt) /
 	( neutrals[iSpecies].mass *
 	  grid.gravity_scgc.slice(iAlt));
-
       neutrals[iSpecies].density_scgc.slice(iAlt) =
 	neutrals[iSpecies].density_scgc.slice(iAlt-1) %
 	exp(-grid.dalt_lower_scgc.slice(iAlt) /
 	    neutrals[iSpecies].scale_height_scgc.slice(iAlt));
-      
     }
   }
 
@@ -368,7 +366,7 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
       }
     }
   }
-  
+
   calc_mass_density(report);
   return iErr;
   
