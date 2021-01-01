@@ -69,32 +69,32 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
     }
   }
 
-  float altitudes[nGeoAltsG];
+  //float altitudes[nGeoAltsG];
 
   IsGeoGrid = 1;
   
-  // Make a uniform grid in altitude:
-  if (grid_input.IsUniformAlt) {
-    for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-      altitudes[iAlt] =
-	grid_input.alt_min + float(iAlt-nGeoGhosts)*grid_input.dalt;
-    }
-  } else {
-    // calc_stretched_altitudes(input, planet, altitudes);
-  }
-
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    longitude = grid_input.lon_min + (float(iLon-nGeoGhosts)+0.5) * dlon;
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      latitude = grid_input.lat_min + (float(iLat-nGeoGhosts)+0.5) * dlat;
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	geoLon_s3gc[index] = longitude;
-	geoLat_s3gc[index] = latitude;
-	geoAlt_s3gc[index] = altitudes[iAlt];
-      }
-    }
-  }
+  //// Make a uniform grid in altitude:
+  //if (grid_input.IsUniformAlt) {
+  //  for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
+  //    altitudes[iAlt] =
+  //	grid_input.alt_min + float(iAlt-nGeoGhosts)*grid_input.dalt;
+  //  }
+  //} else {
+  //  // calc_stretched_altitudes(input, planet, altitudes);
+  //}
+  //
+  //for (iLon = 0; iLon < nGeoLonsG; iLon++) {
+  //  longitude = grid_input.lon_min + (float(iLon-nGeoGhosts)+0.5) * dlon;
+  //  for (iLat = 0; iLat < nGeoLatsG; iLat++) {
+  //    latitude = grid_input.lat_min + (float(iLat-nGeoGhosts)+0.5) * dlat;
+  //    for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
+  //	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  //	geoLon_s3gc[index] = longitude;
+  //	geoLat_s3gc[index] = latitude;
+  //	geoAlt_s3gc[index] = altitudes[iAlt];
+  //    }
+  //  }
+  //}
 
   // Calculate the radius, etc:
 

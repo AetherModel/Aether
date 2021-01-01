@@ -95,9 +95,9 @@ public:
   float *geoAlt_s3gc, *geoZ_s3gc;
 
   // Armidillo Cube Versions:
-  fcube geoLon_scgc;
-  fcube geoLat_scgc;
-  fcube geoAlt_scgc;
+  fcube geoLon_scgc, geoX_scgc;
+  fcube geoLat_scgc, geoY_scgc;
+  fcube geoAlt_scgc, geoZ_scgc;
   
   // These define the magnetic grid:
   float *magLon_s3gc, *magX_s3gc;
@@ -105,6 +105,13 @@ public:
   float *magAlt_s3gc, *magZ_s3gc;
   float *magLocalTime_s3gc;
 
+  // These define the magnetic grid:
+  // Armidillo Cube Versions:
+  fcube magLon_scgc, magX_scgc;
+  fcube magLat_scgc, magY_scgc;
+  fcube magAlt_scgc, magZ_scgc;
+  fcube magLocalTime_scgc;
+  
   std::string altitude_name = "Altitude";
   std::string altitude_unit = "meters";
 
@@ -128,22 +135,9 @@ public:
   fcube dalt_center_scgc;
   fcube dalt_lower_scgc;
   
-  float *radius_s3gc;
-  float *radius_sq_s3gc;
-  float *radius_inv_sq_s3gc;
-  float *gravity_s3gc;
-  float *sza_s3gc, *cos_sza_s3gc;
-  
   float *bfield_v3gc;
   float *bfield_mag_s3gc;
   
-  float *geoX_edges_s3ge, *geoX_cell_width_s3gc;
-
-  float *alt_edges;
-  float *alt_cell_width;
-  float *dalt_center_s3gc;
-  float *dalt_lower_s3gc;
-
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
   void calc_sza(Planets planet, Times time, Report &report);

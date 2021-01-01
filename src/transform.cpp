@@ -38,6 +38,24 @@ void copy_cube_to_array(fcube cube_in,
 
 // -----------------------------------------------------------------------
 // Transform Longitude, Latitude, Radius to X, Y, Z
+// Use armidillo cubes
+// -----------------------------------------------------------------------
+
+void transform_llr_to_xyz_3d(fcube lat3d,
+			     fcube lon3d,
+			     fcube r3d,
+			     fcube &x3d,
+			     fcube &y3d,
+			     fcube &z3d) {
+
+  x3d = r3d % cos(lat3d) % cos(lon3d);
+  y3d = r3d % cos(lat3d) % sin(lon3d);
+  z3d = r3d % sin(lat3d);
+  
+}
+
+// -----------------------------------------------------------------------
+// Transform Longitude, Latitude, Radius to X, Y, Z
 // -----------------------------------------------------------------------
 
 void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]) {

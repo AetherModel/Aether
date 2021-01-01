@@ -10,6 +10,13 @@ using namespace arma;
 void copy_cube_to_array(fcube cube_in,
 			float *array_out);
 
+void transform_llr_to_xyz_3d(fcube lat3d,
+			     fcube lon3d,
+			     fcube r3d,
+			     fcube &x3d,
+			     fcube &y3d,
+			     fcube &z3d);
+
 void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]);
 void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]);
 void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]);

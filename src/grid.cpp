@@ -8,6 +8,8 @@
 #include "../include/grid.h"
 #include "../include/sizes.h"
 
+using namespace arma;
+
 Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
   nX = nX_in; nLons = nX;
@@ -21,6 +23,20 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   geoLat_scgc.set_size(nX,nY,nZ);
   geoAlt_scgc.set_size(nX,nY,nZ);
 
+  geoX_scgc.set_size(nX,nY,nZ);
+  geoY_scgc.set_size(nX,nY,nZ);
+  geoZ_scgc.set_size(nX,nY,nZ);
+
+  magLon_scgc.set_size(nX,nY,nZ);
+  magLat_scgc.set_size(nX,nY,nZ);
+  magAlt_scgc.set_size(nX,nY,nZ);
+
+  magX_scgc.set_size(nX,nY,nZ);
+  magY_scgc.set_size(nX,nY,nZ);
+  magZ_scgc.set_size(nX,nY,nZ);
+
+  magLocalTime_scgc.set_size(nX,nY,nZ);
+
   radius_scgc.set_size(nX,nY,nZ);
   radius2_scgc.set_size(nX,nY,nZ);
   radius2i_scgc.set_size(nX,nY,nZ);
@@ -31,37 +47,9 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   sza_scgc.set_size(nX,nY,nZ);
   cos_sza_scgc.set_size(nX,nY,nZ);
   
-  geoLon_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoLat_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoAlt_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoX_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoY_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoZ_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
-  magLon_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magLat_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magAlt_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magX_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magY_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magZ_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
-  magLocalTime_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
-  radius_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  radius_sq_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  radius_inv_sq_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
-  gravity_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
-  sza_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  cos_sza_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-
   bfield_v3gc = (float*) malloc( 3 * nTotalPoints * sizeof(float) );
   bfield_mag_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
 
-  dalt_center_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  dalt_lower_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  
 }
 
 int Grid::get_IsGeoGrid() {
