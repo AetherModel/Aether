@@ -30,7 +30,7 @@ Inputs::Inputs(Times &time, Report &report) {
   grid_input.alt_file = "";
   grid_input.IsUniformAlt = 1;
   grid_input.alt_min = 100.0 * 1000.0;
-  grid_input.dalt = 2.5 * 1000.0;
+  grid_input.dalt = 5.0 * 1000.0;
 
   //grid_input.IsUniformAlt = 0;
   //grid_input.alt_min = 100.0 * 1000.0;
