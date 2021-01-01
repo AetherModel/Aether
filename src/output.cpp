@@ -15,6 +15,34 @@
 using namespace netCDF;
 using namespace netCDF::exceptions;
 
+void output_variable_3d(std::vector<size_t> count_start,
+			std::vector<size_t> count_end,
+			fcube value,
+			NcVar variable) {
+
+  long nX = value.n_rows;
+  long nY = value.n_cols;
+  long nZ = value.n_slices;
+  long iX, iY, iZ, iTotal, index;
+
+  iTotal = nX * nY * nZ; 
+  
+  float *tmp_s3gc = (float*) malloc( iTotal * sizeof(float) );
+
+  for (iX = 0; iX < nX; iX++) {
+    for (iY = 0; iY < nY; iY++) {
+      for (iZ = 0; iZ < nZ; iZ++) {
+	index = iX*nY*nZ + iY*nZ + iZ;
+	tmp_s3gc[index] = value(iX,iY,iZ);
+      }
+    }
+  }
+
+  variable.putVar(count_start, count_end, tmp_s3gc);
+    
+}
+			
+
 int output(Neutrals neutrals,
 	   Ions ions,
 	   Grid grid,
@@ -96,12 +124,10 @@ int output(Neutrals neutrals,
       countp.push_back(nAlts);
 
       // Output longitude, latitude, altitude 3D arrays:
-      copy_cube_to_array(grid.geoLon_scgc, tmp_s3gc);
-      lonVar.putVar(startp, countp, tmp_s3gc);
-      copy_cube_to_array(grid.geoLat_scgc, tmp_s3gc);
-      latVar.putVar(startp, countp, tmp_s3gc);
-      copy_cube_to_array(grid.geoAlt_scgc, tmp_s3gc);
-      altVar.putVar(startp, countp, tmp_s3gc);
+
+      output_variable_3d(startp, countp, grid.geoLon_scgc, lonVar);
+      output_variable_3d(startp, countp, grid.geoLat_scgc, latVar);
+      output_variable_3d(startp, countp, grid.geoAlt_scgc, altVar);
 
       // ----------------------------------------------
       // Neutral Densities and Temperature
@@ -118,15 +144,17 @@ int output(Neutrals neutrals,
 		      << neutrals.neutrals[iSpecies].cName << "\n";
 	  denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName, ncFloat, dimVector));
 	  denVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  copy_cube_to_array(neutrals.neutrals[iSpecies].density_scgc, tmp_s3gc);
-	  denVar[iSpecies].putVar(startp, countp, tmp_s3gc);
+	  //copy_cube_to_array(neutrals.neutrals[iSpecies].density_scgc, tmp_s3gc);
+	  //denVar[iSpecies].putVar(startp, countp, tmp_s3gc);
+	  output_variable_3d(startp, countp, neutrals.neutrals[iSpecies].density_scgc, denVar[iSpecies]);
 	}
   
 	// Output bulk temperature:
 	NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
 	tempVar.putAtt(UNITS,neutrals.temperature_unit);
-	copy_cube_to_array(neutrals.temperature_scgc, tmp_s3gc);
-	tempVar.putVar(startp, countp, tmp_s3gc);
+	//copy_cube_to_array(neutrals.temperature_scgc, tmp_s3gc);
+	//tempVar.putVar(startp, countp, tmp_s3gc);
+	output_variable_3d(startp, countp, neutrals.temperature_scgc, tempVar);
 
       }
 
@@ -145,14 +173,16 @@ int output(Neutrals neutrals,
 		      << ions.species[iSpecies].cName << "\n";
 	  ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName, ncFloat, dimVector));
 	  ionVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  copy_cube_to_array(ions.species[iSpecies].density_scgc, tmp_s3gc);
-	  ionVar[iSpecies].putVar(startp, countp, tmp_s3gc);
+	  //copy_cube_to_array(ions.species[iSpecies].density_scgc, tmp_s3gc);
+	  //ionVar[iSpecies].putVar(startp, countp, tmp_s3gc);
+	  output_variable_3d(startp, countp, ions.species[iSpecies].density_scgc, ionVar[iSpecies]);
 	}
   
 	ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
 	ionVar[nIons].putAtt(UNITS,neutrals.density_unit);
-	copy_cube_to_array(ions.density_scgc, tmp_s3gc);
-	ionVar[nIons].putVar(startp, countp, tmp_s3gc);
+	//copy_cube_to_array(ions.density_scgc, tmp_s3gc);
+	//ionVar[nIons].putVar(startp, countp, tmp_s3gc);
+	output_variable_3d(startp, countp, ions.density_scgc, ionVar[nIons]);
 
 	// // Output bulk temperature:
 	// NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
@@ -168,10 +198,15 @@ int output(Neutrals neutrals,
       if (type_output == "bfield") {
 	NcVar mLatVar = ncdf_file.addVar("Magnetic Latitude", ncFloat, dimVector);
 	mLatVar.putAtt(UNITS,"radians");
-	mLatVar.putVar(startp, countp, grid.magLat_s3gc);
+	//copy_cube_to_array(grid.magLat_scgc, tmp_s3gc);
+	//mLatVar.putVar(startp, countp, tmp_s3gc);
+	output_variable_3d(startp, countp, grid.magLat_scgc, mLatVar);
+
 	NcVar mLonVar = ncdf_file.addVar("Magnetic Longitude", ncFloat, dimVector);
 	mLonVar.putAtt(UNITS,"radians");
-	mLonVar.putVar(startp, countp, grid.magLon_s3gc);
+	//copy_cube_to_array(grid.magLon_scgc, tmp_s3gc);
+	//mLonVar.putVar(startp, countp, tmp_s3gc);
+	output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
 
 	// Output magnetic field components:
 	float *bfield_component_s3gc;
