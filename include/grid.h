@@ -89,22 +89,11 @@ public:
 
   long get_nGCs();
   
-  // These define the geographic grid:
-  float *geoLon_s3gc, *geoX_s3gc;
-  float *geoLat_s3gc, *geoY_s3gc;
-  float *geoAlt_s3gc, *geoZ_s3gc;
-
   // Armidillo Cube Versions:
   fcube geoLon_scgc, geoX_scgc;
   fcube geoLat_scgc, geoY_scgc;
   fcube geoAlt_scgc, geoZ_scgc;
   
-  // These define the magnetic grid:
-  float *magLon_s3gc, *magX_s3gc;
-  float *magLat_s3gc, *magY_s3gc;
-  float *magAlt_s3gc, *magZ_s3gc;
-  float *magLocalTime_s3gc;
-
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   fcube magLon_scgc, magX_scgc;
@@ -135,8 +124,8 @@ public:
   fcube dalt_center_scgc;
   fcube dalt_lower_scgc;
   
-  float *bfield_v3gc;
-  float *bfield_mag_s3gc;
+  std::vector<fcube> bfield_vcgc;
+  fcube bfield_mag_scgc;
   
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 

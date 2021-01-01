@@ -46,10 +46,15 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
   sza_scgc.set_size(nX,nY,nZ);
   cos_sza_scgc.set_size(nX,nY,nZ);
-  
-  bfield_v3gc = (float*) malloc( 3 * nTotalPoints * sizeof(float) );
-  bfield_mag_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
 
+  fcube tmp(nX, nY, nZ);
+  tmp.zeros();
+  bfield_vcgc.push_back(tmp); // x-component
+  bfield_vcgc.push_back(tmp); // y-component
+  bfield_vcgc.push_back(tmp); // z-component
+  bfield_mag_scgc.set_size(nX,nY,nZ);
+  bfield_mag_scgc.zeros();
+  
 }
 
 int Grid::get_IsGeoGrid() {

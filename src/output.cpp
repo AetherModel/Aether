@@ -144,16 +144,12 @@ int output(Neutrals neutrals,
 		      << neutrals.neutrals[iSpecies].cName << "\n";
 	  denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName, ncFloat, dimVector));
 	  denVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  //copy_cube_to_array(neutrals.neutrals[iSpecies].density_scgc, tmp_s3gc);
-	  //denVar[iSpecies].putVar(startp, countp, tmp_s3gc);
 	  output_variable_3d(startp, countp, neutrals.neutrals[iSpecies].density_scgc, denVar[iSpecies]);
 	}
   
 	// Output bulk temperature:
 	NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
 	tempVar.putAtt(UNITS,neutrals.temperature_unit);
-	//copy_cube_to_array(neutrals.temperature_scgc, tmp_s3gc);
-	//tempVar.putVar(startp, countp, tmp_s3gc);
 	output_variable_3d(startp, countp, neutrals.temperature_scgc, tempVar);
 
       }
@@ -173,15 +169,11 @@ int output(Neutrals neutrals,
 		      << ions.species[iSpecies].cName << "\n";
 	  ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName, ncFloat, dimVector));
 	  ionVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  //copy_cube_to_array(ions.species[iSpecies].density_scgc, tmp_s3gc);
-	  //ionVar[iSpecies].putVar(startp, countp, tmp_s3gc);
 	  output_variable_3d(startp, countp, ions.species[iSpecies].density_scgc, ionVar[iSpecies]);
 	}
   
 	ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
 	ionVar[nIons].putAtt(UNITS,neutrals.density_unit);
-	//copy_cube_to_array(ions.density_scgc, tmp_s3gc);
-	//ionVar[nIons].putVar(startp, countp, tmp_s3gc);
 	output_variable_3d(startp, countp, ions.density_scgc, ionVar[nIons]);
 
 	// // Output bulk temperature:
@@ -198,35 +190,34 @@ int output(Neutrals neutrals,
       if (type_output == "bfield") {
 	NcVar mLatVar = ncdf_file.addVar("Magnetic Latitude", ncFloat, dimVector);
 	mLatVar.putAtt(UNITS,"radians");
-	//copy_cube_to_array(grid.magLat_scgc, tmp_s3gc);
-	//mLatVar.putVar(startp, countp, tmp_s3gc);
 	output_variable_3d(startp, countp, grid.magLat_scgc, mLatVar);
 
 	NcVar mLonVar = ncdf_file.addVar("Magnetic Longitude", ncFloat, dimVector);
 	mLonVar.putAtt(UNITS,"radians");
-	//copy_cube_to_array(grid.magLon_scgc, tmp_s3gc);
-	//mLonVar.putVar(startp, countp, tmp_s3gc);
 	output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
 
 	// Output magnetic field components:
 	float *bfield_component_s3gc;
 	long nPointsTotal = grid.get_nPointsInGrid();
-	bfield_component_s3gc = (float*) malloc( nPointsTotal * sizeof(float) );
+	//bfield_component_s3gc = (float*) malloc( nPointsTotal * sizeof(float) );
 	
 	NcVar bxVar = ncdf_file.addVar("Bx", ncFloat, dimVector);
 	bxVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 0, IsGeoGrid, bfield_component_s3gc);
-	bxVar.putVar(startp, countp, bfield_component_s3gc);
+	output_variable_3d(startp, countp, grid.bfield_vcgc[0], bxVar);
+	//get_vector_component(grid.bfield_v3gc, 0, IsGeoGrid, bfield_component_s3gc);
+	//bxVar.putVar(startp, countp, bfield_component_s3gc);
 	
 	NcVar byVar = ncdf_file.addVar("By", ncFloat, dimVector);
 	byVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 1, IsGeoGrid, bfield_component_s3gc);
-	byVar.putVar(startp, countp, bfield_component_s3gc);
+	output_variable_3d(startp, countp, grid.bfield_vcgc[1], bxVar);
+	//get_vector_component(grid.bfield_v3gc, 1, IsGeoGrid, bfield_component_s3gc);
+	//byVar.putVar(startp, countp, bfield_component_s3gc);
 	
 	NcVar bzVar = ncdf_file.addVar("Bz", ncFloat, dimVector);
 	bzVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 2, IsGeoGrid, bfield_component_s3gc);
-	bzVar.putVar(startp, countp, bfield_component_s3gc);
+	output_variable_3d(startp, countp, grid.bfield_vcgc[2], bxVar);
+	//get_vector_component(grid.bfield_v3gc, 2, IsGeoGrid, bfield_component_s3gc);
+	//bzVar.putVar(startp, countp, bfield_component_s3gc);
 	
       }
       

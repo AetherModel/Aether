@@ -71,12 +71,13 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
 	magLon_scgc(iLon,iLat,iAlt) = bfield_info.lon;
 
 	for (iDim = 0; iDim < 3; iDim++) {
-	  if (IsGeoGrid) {
-	    indexv = ijkl_geo_v3gc(iLon,iLat,iAlt,iDim);
-	  } else {
-	    indexv = ijkl_mag_v3gc(iLon,iLat,iAlt,iDim);
-	  }
-	  bfield_v3gc[indexv] = bfield_info.b[iDim];
+	  bfield_vcgc[iDim](iLon,iLat,iAlt) = bfield_info.b[iDim];
+//	  if (IsGeoGrid) {
+//	    indexv = ijkl_geo_v3gc(iLon,iLat,iAlt,iDim);
+//	  } else {
+//	    indexv = ijkl_mag_v3gc(iLon,iLat,iAlt,iDim);
+//	  }
+//	  bfield_v3gc[indexv] = bfield_info.b[iDim];
 	}
 	
       }
@@ -160,45 +161,4 @@ void Grid::fill_grid(Planets planet, Report &report) {
   transform_llr_to_xyz_3d(geoLon_scgc, geoLat_scgc, radius_scgc,
 			  geoX_scgc, geoY_scgc, geoZ_scgc);
 
-  geoX_scgc.slice(25).print();
-
-//  for (iLon = 0; iLon < nLons; iLon++) {
-//    for (iLat = 0; iLat < nLats; iLat++) {
-//      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-//
-//	if (IsGeoGrid) {
-//	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-//	} else {
-//	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
-//	}
-//
-//	// Find XYZ coordinates (Geo):
-//	
-//	llr[0] = geoLon_s3gc[index];
-//	llr[1] = geoLat_s3gc[index];
-//	llr[2] = geoAlt_s3gc[index];
-//
-//	transform_llr_to_xyz(llr, xyz);
-//
-//	geoX_s3gc[index] = xyz[0];
-//	geoY_s3gc[index] = xyz[1];
-//	geoZ_s3gc[index] = xyz[2];
-//
-//	//// Find XYZ coordinates (Mag):
-//	//
-//	//llr[0] = magLon_s3gc[index];
-//	//llr[1] = magLat_s3gc[index];
-//	//llr[2] = magAlt_s3gc[index];
-//	//
-//	//transform_llr_to_xyz(llr, xyz);
-//	//
-//	//magX_s3gc[index] = xyz[0];
-//	//magY_s3gc[index] = xyz[1];
-//	//magZ_s3gc[index] = xyz[2];
-//	
-//      }
-//    }
-//  }
-
-  
 }
