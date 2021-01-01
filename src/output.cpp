@@ -197,27 +197,18 @@ int output(Neutrals neutrals,
 	output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
 
 	// Output magnetic field components:
-	float *bfield_component_s3gc;
-	long nPointsTotal = grid.get_nPointsInGrid();
-	//bfield_component_s3gc = (float*) malloc( nPointsTotal * sizeof(float) );
 	
 	NcVar bxVar = ncdf_file.addVar("Bx", ncFloat, dimVector);
 	bxVar.putAtt(UNITS,"nT");
 	output_variable_3d(startp, countp, grid.bfield_vcgc[0], bxVar);
-	//get_vector_component(grid.bfield_v3gc, 0, IsGeoGrid, bfield_component_s3gc);
-	//bxVar.putVar(startp, countp, bfield_component_s3gc);
 	
 	NcVar byVar = ncdf_file.addVar("By", ncFloat, dimVector);
 	byVar.putAtt(UNITS,"nT");
 	output_variable_3d(startp, countp, grid.bfield_vcgc[1], bxVar);
-	//get_vector_component(grid.bfield_v3gc, 1, IsGeoGrid, bfield_component_s3gc);
-	//byVar.putVar(startp, countp, bfield_component_s3gc);
 	
 	NcVar bzVar = ncdf_file.addVar("Bz", ncFloat, dimVector);
 	bzVar.putAtt(UNITS,"nT");
 	output_variable_3d(startp, countp, grid.bfield_vcgc[2], bxVar);
-	//get_vector_component(grid.bfield_v3gc, 2, IsGeoGrid, bfield_component_s3gc);
-	//bzVar.putVar(startp, countp, bfield_component_s3gc);
 	
       }
       
