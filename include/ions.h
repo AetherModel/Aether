@@ -24,16 +24,8 @@ class Ions {
     
     int DoAdvect;
     
-    float *density_s3gc;
-    float *par_velocity_v3gc;
-    float *perp_velocity_v3gc;
-
-    float *temperature_s3gc;
-    
     // Sources and Losses:
 
-    float *ionization_s3gc;
-    
     fcube density_scgc;
     fcube par_velocity_vcgc;
     fcube perp_velocity_vcgc;
@@ -50,13 +42,7 @@ class Ions {
   };
 
   // bulk quantities (states):
-  float *density_s3gc;
   fcube density_scgc;
-
-  float *velocity_v3gc;
-  float *exb_v3gc;
-  float *ion_temperature_s3gc;
-  float *electron_temperature_s3gc;
 
   fcube ion_temperature_scgc;
   fcube electron_temperature_scgc;
