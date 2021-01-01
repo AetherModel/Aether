@@ -34,11 +34,6 @@ void vector_diff(float vect_in_1[3],
 		 float vect_in_2[3],
 		 float vect_out[3]);
 
-void get_vector_component(float *vector_in_v3gc,
-			  int iComponent,
-			  int IsGeoGrid,
-			  float *component_out_s3gc);
-
 
 #endif // AETHER_INCLUDE_TRANSFORM_H_
 
