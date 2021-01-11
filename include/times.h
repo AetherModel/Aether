@@ -1,8 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_TIMES_H_
-#define AETHER_INCLUDE_TIMES_H_
+#ifndef INCLUDE_TIMES_H_
+#define INCLUDE_TIMES_H_
 
 #include <vector>
 #include <string>
@@ -37,7 +37,7 @@ private:
   double current;
   double intermediate;
   double simulation;
-  long iStep;
+  int64_t iStep;
 
   float dt;
 
@@ -62,7 +62,6 @@ private:
   time_t sys_time_start;
   time_t sys_time_current;
   float walltime;
-
 };
 
-#endif // AETHER_INCLUDE_TIMES_H_
+#endif  // INCLUDE_TIMES_H_

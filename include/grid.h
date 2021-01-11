@@ -1,9 +1,11 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_GRID_H_
-#define AETHER_INCLUDE_GRID_H_
+#ifndef INCLUDE_GRID_H_
+#define INCLUDE_GRID_H_
 
+// The armadillo library is to allow the use of 3d cubes and other
+// array types, with array math built in. This eliminates loops!
 #include <armadillo>
 
 #include "inputs.h"
@@ -22,12 +24,12 @@ using namespace arma;
   1 - indication of whether variable is scalar (s) or vector (v)
   2 - physical dimensions:
       3 - 3d (e.g., lon, lat, alt or x, y, z)
-      
+
 
 
 For example:
   _s3gc : scalar variable, 3d, include ghost cells, cell centers
-  _31ne : 
+  _31ne :
 
 
  */
@@ -82,25 +84,25 @@ public:
   long get_nX();
   long get_nY();
   long get_nZ();
-  
+
   long get_nLons();
   long get_nLats();
   long get_nAlts();
 
   long get_nGCs();
-  
+
   // Armidillo Cube Versions:
   fcube geoLon_scgc, geoX_scgc;
   fcube geoLat_scgc, geoY_scgc;
   fcube geoAlt_scgc, geoZ_scgc;
-  
+
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   fcube magLon_scgc, magX_scgc;
   fcube magLat_scgc, magY_scgc;
   fcube magAlt_scgc, magZ_scgc;
   fcube magLocalTime_scgc;
-  
+
   std::string altitude_name = "Altitude";
   std::string altitude_unit = "meters";
 
@@ -109,7 +111,7 @@ public:
 
   std::string latitude_name = "Latitude";
   std::string latitude_unit = "radians";
-  
+
   // These are derived variables from the grid:
 
   // Switch to armadillo variables (float cubes):
@@ -123,10 +125,10 @@ public:
 
   fcube dalt_center_scgc;
   fcube dalt_lower_scgc;
-  
+
   std::vector<fcube> bfield_vcgc;
   fcube bfield_mag_scgc;
-  
+
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
   void calc_sza(Planets planet, Times time, Report &report);
@@ -139,12 +141,12 @@ public:
 
   int IsGeoGrid;
 
-  long nX, nLons; 
-  long nY, nLats; 
-  long nZ, nAlts; 
+  long nX, nLons;
+  long nY, nLats;
+  long nZ, nAlts;
 
   int nGCs; // number of ghostcells
-  
+
 };
 
-#endif // AETHER_INCLUDE_GRID_H_
+#endif  // INCLUDE_GRID_H_

@@ -1,4 +1,4 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #ifndef AETHER_INCLUDE_EUV_H_
@@ -23,14 +23,12 @@ public:
   int nLines;
 
   struct waveinfotype {
-
     std::string name;
     std::string to;
     std::string type;
     std::string units;
     std::string note;
     std::vector<float> values;
-
   };
 
   std::vector<waveinfotype> waveinfo;
@@ -61,9 +59,9 @@ public:
   // -------------------------------------------------------------------------
 
   int scale_from_1au(Planets planet, Times time);
-  
+
 private:
-  
+
   // --------------------------------------------------------------------------
   // Read in the EUV file that describes all of the wavelengths and
   // cross sections
@@ -76,10 +74,9 @@ private:
   // --------------------------------------------------------------------------
 
   int slot_euv(std::string item,
-	       std::string item2,
-	       std::vector<float> &values,
-	       Report report);
-  
+               std::string item2,
+               std::vector<float> &values,
+               Report report);
 };
 
-#endif // AETHER_INCLUDE_EUV_H_
+#endif  // AETHER_INCLUDE_EUV_H_

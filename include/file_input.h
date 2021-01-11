@@ -1,8 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_FILE_INPUT_H_
-#define AETHER_INCLUDE_FILE_INPUT_H_
+#ifndef INCLUDE_FILE_INPUT_H_
+#define INCLUDE_FILE_INPUT_H_
 
 #include <string>
 #include <fstream>
@@ -17,4 +17,4 @@ std::string strip_spaces(std::string instring);
 std::string read_string(std::ifstream &file_ptr, std::string hash);
 int read_int(std::ifstream &file_ptr, std::string hash);
 
-#endif // AETHER_INCLUDE_FILE_INPUT_H_
+#endif  // INCLUDE_FILE_INPUT_H_

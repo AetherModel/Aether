@@ -1,13 +1,11 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_INDICES_H_
-#define AETHER_INCLUDE_INDICES_H_
+#ifndef INCLUDE_INDICES_H_
+#define INCLUDE_INDICES_H_
 
 #include <vector>
 #include <string>
-
-
 
 class Indices {
 
@@ -23,10 +21,8 @@ class Indices {
  private:
 
   struct ind_time_pair {
-
     float index;
     double time;
-
   };
 
   std::vector<ind_time_pair> f107;
@@ -37,11 +33,10 @@ class Indices {
 
   // This is the general method for setting indices:
   int set_index(std::vector<double> time,
-		std::vector<float> indexarray,
-		std::vector<ind_time_pair> &index);
+                std::vector<float> indexarray,
+                std::vector<ind_time_pair> &index);
 
   float get_index(double time, std::vector<ind_time_pair> index);
-
 };
 
-#endif // AETHER_INCLUDE_INDICES_H_
+#endif // INCLUDE_INDICES_H_
