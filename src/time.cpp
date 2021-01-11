@@ -1,4 +1,4 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <math.h>
@@ -12,7 +12,7 @@
 #include "../include/time_conversion.h"
 
 // -----------------------------------------------------------------------------
-// Initialize the time variables
+// Instantiate the time variables
 // -----------------------------------------------------------------------------
 
 Times::Times() {
@@ -33,18 +33,16 @@ Times::Times() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+// This is to initialize the time variables with real times
 // -----------------------------------------------------------------------------
 
 void Times::set_times(std::vector<int> itime) {
-
   start = time_int_to_real(itime);
   current = start;
   iStep = -1;
   dt = 0;
   // This will initiate more variables:
   increment_time();
-  
 }
 
 // -----------------------------------------------------------------------------
@@ -73,7 +71,7 @@ void Times::calc_dt() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 double Times::get_current() {
@@ -81,7 +79,7 @@ double Times::get_current() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 double Times::get_end() {
@@ -89,7 +87,7 @@ double Times::get_end() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 std::string Times::get_YMD_HMS() {
@@ -97,7 +95,7 @@ std::string Times::get_YMD_HMS() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 double Times::get_intermediate() {
@@ -105,7 +103,7 @@ double Times::get_intermediate() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 float Times::get_dt() {
@@ -113,32 +111,29 @@ float Times::get_dt() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 float Times::get_orbittime() {
   return orbittime;
 }
 
-  
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 double Times::get_julian_day() {
   return julian_day;
 }
 
-  
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 void Times::set_end_time(std::vector<int> itime) {
   end = time_int_to_real(itime);
 }
 
-  
 // -----------------------------------------------------------------------------
 // Increment the time by dt and increment the iteration number (iStep)
 // -----------------------------------------------------------------------------
@@ -174,7 +169,7 @@ void Times::increment_time() {
   sYMD = std::string(tmp);
   sprintf(tmp, "%02d%02d%02d", hour, minute, second);
   sHMS = std::string(tmp);
-  
+
   // Calculate Julian Day (day of year):
   jDay = day_of_year(year, month, day);
 
@@ -182,20 +177,22 @@ void Times::increment_time() {
   julian_day = time_int_to_jday(iCurrent);
 
   // Calculate UT (in hours):
-  ut = float(iCurrent[3])    // hours
-    + float(iCurrent[4])/60.0    // minutes
-    + (float(iCurrent[5]) + float(iCurrent[6])/1000)/3600.0;
+  ut = static_cast<float>(iCurrent[3])    // hours
+    + static_cast<float>(iCurrent[4])/60.0    // minutes
+    + (static_cast<float>(iCurrent[5])
+       + static_cast<float>(iCurrent[6])/1000)/3600.0;
 
   // Calculate orbital parameters based on E Standish,
   // Solar System Dynamics, JPL,.
   // No constant orbital speed assumption
 
-  float day_number = 367.0*float(iCurrent[0])
-    - 7.0*(float(iCurrent[0])+(float(iCurrent[1])+9.0)/12.0)/4.0
-    + 275.0 * float(iCurrent[1])/9.0
-    + float(iCurrent[2])
+  float day_number = 367.0 * static_cast<float>(iCurrent[0])
+    - 7.0*(static_cast<float>(iCurrent[0])
+           + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
+    + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
+    + static_cast<float>(iCurrent[2])
     - 730531.5
-    + ut/24.0;
+    + ut / 24.0;
 
   orbittime = day_number/36525.0;
 
@@ -208,19 +205,24 @@ void Times::increment_time() {
 
 void Times::display() {
 
+  std::string units = " (s)";
   time(&sys_time_current);
-  walltime = double(sys_time_current) - double(sys_time_start);
-  //cout << "Elapsed walltime : " << walltime << "\n";
+  walltime =
+    static_cast<double>(sys_time_current) -
+    static_cast<double>(sys_time_start);
+  if (walltime > 120) {
+    if (walltime > 7200) {
+      walltime = walltime/3600.0;
+      units = " (h)";
+    } else {
+      walltime = walltime/60.0;
+      units = " (m)";
+    }
+  }
 
-  //cout << "current time (double) : " << current << "\n";
   std::cout << "Current Time : ";
-  for (int i=0;i<7;i++) std::cout << iCurrent[i] << " ";
-  std::cout << "\n";
-  // cout << "  (as julian day): " << julian_day << "\n";
-  // cout << "  (as julian day since j2000): " << julian_day-j2000 << "\n";
-
-  return;
-
+  display_itime(iCurrent);
+  std::cout << "Wall Time : " << walltime << units;
 }
 
 // -----------------------------------------------------------------------------
