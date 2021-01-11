@@ -6,6 +6,8 @@ LINK.CPP = g++
 AR = ar -rs
 
 FLAGS = -O3 -ffast-math -c -I/opt/local/include
+
+# Can use this version for no optimization and no fast math:
 # FLAGS = -c -I/opt/local/include
 
 .SUFFICES:
