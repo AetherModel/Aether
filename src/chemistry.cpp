@@ -49,7 +49,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
   int iErr = 0;
   reaction_type reaction;
 
-  report.print(1, "Reading Chemistry File : "+args.get_euv_file());
+  report.print(1, "Reading Chemistry File : "+args.get_chemistry_file());
 
   infile_ptr.open(args.get_chemistry_file());
 
@@ -67,15 +67,16 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
       if (nLines <= 2) {
         iErr = 1;
       } else {
-        // Skip 2 lines of headers!
 
         nReactions = 0;
 
+        // Skip 2 lines of headers!
         for (int iLine = 2; iLine < nLines; iLine++) {
           // Some final rows can have comments in them, so we want to
           // skip anything where the length of the string in column 2
           // is == 0:
           if (csv[iLine][1].length() > 0) {
+	    report.print(2, "interpreting chemistry line : "+csv[iLine][0]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
             if (reaction.nLosses > 0 && reaction.nSources > 0) {
@@ -137,10 +138,10 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction.rate = stof(line[7]);
 
   // Branching Ratio:
-  reaction.branching_ratio = stof(line[8]);
+  reaction.branching_ratio = stof(line[10]);
 
   // energy released as exo-thermic reaction:
-  reaction.energy = stof(line[9]);
+  reaction.energy = stof(line[11]);
 
   report.exit(function);
   return reaction;
