@@ -8,21 +8,27 @@
 #include <iostream>
 
 #include "../include/time_conversion.h"
+#include "../include/indices.h"
 
-int read_f107_file(std::string f107_file,
-                   std::vector<double> &time,
-                   std::vector<float> &f107) {
+index_file_output_struct read_f107_file(std::string f107_file,
+					Indices indices,
+					Report &report) {
 
   std::ifstream myFile;
+  index_file_output_struct f107_contents;
   int iErr;
 
-  iErr = 0;
+  std::string function = "read_f107_file";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  f107_contents.nTimes = 0;
+  f107_contents.nVars = 0;
 
   myFile.open(f107_file);
 
   if (!myFile.is_open()) {
     std::cout << "Could not open input file: " << f107_file << "!!!\n";
-    iErr = 1;
   } else {
 
     int IsFound = 0;
@@ -42,8 +48,14 @@ int read_f107_file(std::string f107_file,
 
     if (IsFound) {
 
+      f107_contents.nVars = 1;
+      f107_contents.var_names.push_back("F10.7");
+      f107_contents.index_id.push_back(indices.get_f107_index_id());
+      f107_contents.missing_values.push_back(1.0e32);
+      
       std::string tmp;
       std::vector<int> itime(7, 0);
+      std::vector<float> values;
 
       while (getline(myFile, line)) {
         std::stringstream ss(line);
@@ -64,13 +76,16 @@ int read_f107_file(std::string f107_file,
         itime[4] = stoi(tmp);
         itime[5] = 0;
         itime[6] = 0;
-        time.push_back(time_int_to_real(itime));
+        f107_contents.times.push_back(time_int_to_real(itime));
 
         // f107
         getline(ss, tmp, '"');
-        f107.push_back(stof(tmp));
+        values.push_back(stof(tmp));
+	f107_contents.nTimes++;
       }  // while
-
+      // Push the vector into a vector of vectors:
+      f107_contents.values.push_back(values);
+      
     } else {
       iErr = 1;
       std::cout << "Couldn't file line #yyyy-MM etc in file "
@@ -80,5 +95,6 @@ int read_f107_file(std::string f107_file,
     myFile.close();
   }
 
-  return iErr;
+  report.exit(function);
+  return f107_contents;
 }
