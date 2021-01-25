@@ -148,6 +148,22 @@ std::string Inputs::get_chemistry_file() {
 //
 // -----------------------------------------------------------------------
 
+int Inputs::get_number_of_omniweb_files() {
+  return omniweb_files.size();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_omniweb_files() {
+  return omniweb_files;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
 std::string Inputs::get_f107_file() {
   return f107_file;
 }
@@ -266,6 +282,15 @@ int Inputs::read(Times &time, Report &report) {
       }
 
       // ---------------------------
+      // #omniweb
+      // This can actually be called multiple times:
+      // ---------------------------
+
+      if (hash == "#omniweb") {
+        omniweb_files.push_back(read_string(infile_ptr, hash));
+      }
+
+      // ---------------------------
       // #planet
       // ---------------------------
 
@@ -286,7 +311,6 @@ int Inputs::read(Times &time, Report &report) {
         // comma separated values, with type, then dt:
         int nOutputs = csv.size();
         int iOutput;
-        std::cout << "output : " << nOutputs << "\n";
         if (nOutputs > 1) {
           type_output[0] = csv[0][0];
           dt_output[0] = stof(csv[0][1]);
