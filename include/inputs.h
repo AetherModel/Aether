@@ -25,6 +25,8 @@ public:
   std::string get_euv_model();
   std::string get_euv_file();
   std::string get_chemistry_file();
+  std::vector<std::string> get_omniweb_files();
+  int get_number_of_omniweb_files();
   std::string get_f107_file();
   std::string get_planet();
   std::string get_planetary_file();
@@ -56,6 +58,7 @@ private:
   std::string input_file = "aether.in";
   std::string euv_model = "euvac";
   std::string planetary_file = "UA/inputs/orbits.csv";
+  std::vector<std::string> omniweb_files;
   std::string planet = "earth";
   std::string f107_file = "";
   std::string planet_species_file = "";
