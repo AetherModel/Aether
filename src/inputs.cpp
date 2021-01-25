@@ -286,7 +286,6 @@ int Inputs::read(Times &time, Report &report) {
         // comma separated values, with type, then dt:
         int nOutputs = csv.size();
         int iOutput;
-        std::cout << "output : " << nOutputs << "\n";
         if (nOutputs > 1) {
           type_output[0] = csv[0][0];
           dt_output[0] = stof(csv[0][1]);
