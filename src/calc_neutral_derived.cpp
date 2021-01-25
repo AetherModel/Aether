@@ -291,7 +291,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
       dt = time.get_dt();
 
-      conduction1d = solver_conduction_new(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
+      conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
 
       // We want the sources to be in terms of dT/dt, while the
       // conduction actually solves for Tnew-Told, so divide by dt
@@ -330,6 +330,10 @@ void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
   int64_t nLats = heating_euv_scgc.n_cols;
   int64_t nAlts = heating_euv_scgc.n_slices;
 
+  fmat tau2d = heating_euv_scgc.slice(0);
+  fmat intensity2d = heating_euv_scgc.slice(0);
+  fmat ionization2d = heating_euv_scgc.slice(0);
+  
   for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
     for (iWave=0; iWave < euv.nWavelengths; iWave++) {
 
