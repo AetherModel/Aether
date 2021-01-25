@@ -38,6 +38,7 @@ Times::Times() {
 
 void Times::set_times(std::vector<int> itime) {
   start = time_int_to_real(itime);
+  restart = start;
   current = start;
   iStep = -1;
   dt = 0;
@@ -205,24 +206,44 @@ void Times::increment_time() {
 
 void Times::display() {
 
-  std::string units = " (s)";
+  std::string units = "s";
+  std::string remaining_units = "s";
   time(&sys_time_current);
   walltime =
     static_cast<double>(sys_time_current) -
     static_cast<double>(sys_time_start);
+
+  double elapsed_simulation_time = current - restart;
+  double total_simulation_time = end - restart;
+  float ratio_of_time = elapsed_simulation_time / total_simulation_time;
+  float total_walltime = walltime/ratio_of_time;
+  int remaining_walltime = total_walltime - walltime;
+
   if (walltime > 120) {
     if (walltime > 7200) {
       walltime = walltime/3600.0;
-      units = " (h)";
+      units = "h";
     } else {
       walltime = walltime/60.0;
-      units = " (m)";
+      units = "m";
     }
   }
 
-  std::cout << "Current Time : ";
-  display_itime(iCurrent);
+  if (remaining_walltime > 120) {
+    if (remaining_walltime > 7200) {
+      remaining_walltime = remaining_walltime/3600.0;
+      remaining_units = "h";
+    } else {
+      remaining_walltime = remaining_walltime/60.0;
+      remaining_units = "m";
+    }
+  }
+
   std::cout << "Wall Time : " << walltime << units;
+  std::cout << " (left : "
+	    << remaining_walltime << remaining_units << ")";
+  std::cout << "; Current Time : ";
+  display_itime(iCurrent);
 }
 
 // -----------------------------------------------------------------------------
