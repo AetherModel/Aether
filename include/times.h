@@ -32,7 +32,7 @@ public:
 private:
   
   // These variables are for keeping track of the time:
-  double start;
+  double start, restart;
   double end;
   double current;
   double intermediate;
