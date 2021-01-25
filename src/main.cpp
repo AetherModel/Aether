@@ -6,6 +6,8 @@
 #include "../include/times.h"
 #include "../include/inputs.h"
 #include "../include/report.h"
+#include "../include/indices.h"
+#include "../include/read_f107_file.h"
 
 #include "../include/neutrals.h"
 #include "../include/euv.h"
@@ -27,7 +29,8 @@ int main() {
   Euv euv(input, report);
   Planets planet(input, report);
   Indices indices(input);
-
+  iErr = read_and_store_indices(indices, input, report);
+  
   // Geo grid stuff:
   Grid gGrid(nGeoLonsG, nGeoLatsG, nGeoAltsG, nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
