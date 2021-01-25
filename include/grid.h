@@ -44,31 +44,31 @@ For example:
 
 // Scalars, 3D, Include Ghostcells, Cell Centers:
 #define ijk_geo_s3gc(i,j,k) \
-  ((i)*long(nGeoLatsG)*long(nGeoAltsG) + \
-   (j)*long(nGeoAltsG) + \
+  ((i)*int64_t(nGeoLatsG)*int64_t(nGeoAltsG) + \
+   (j)*int64_t(nGeoAltsG) + \
    (k))
 #define ijk_mag_s3gc(i,j,k) \
-  ((i)*long(nMagLatsG)*long(nGeoAltsG) + \
-   (j)*long(nMagAltsG) + \
+  ((i)*int64_t(nMagLatsG)*int64_t(nGeoAltsG) + \
+   (j)*int64_t(nMagAltsG) + \
    (k))
 
 // Scalars, 3D, Include Ghostcells, Cell Edges (Altitude):
 #define ijk_geo_s3ge3(i,j,k) \
-  ((i)*long(nGeoLatsG)*long(nGeoAltsG+1) + \
-   (j)*long(nGeoAltsG+1) + \
+  ((i)*int64_t(nGeoLatsG)*int64_t(nGeoAltsG+1) + \
+   (j)*int64_t(nGeoAltsG+1) + \
    (k));
 
 // Vectors, 3D, Include Ghostcells, Cell Centers:
 #define ijkl_geo_v3gc(i,j,k,l) \
-  ((i)*long(nGeoLatsG)*long(nGeoAltsG)*long(3) + \
-   (j)*long(nGeoAltsG)*long(3) + \
-   (k)*long(3) + \
+  ((i)*int64_t(nGeoLatsG)*int64_t(nGeoAltsG)*int64_t(3) + \
+   (j)*int64_t(nGeoAltsG)*int64_t(3) + \
+   (k)*int64_t(3) + \
    (l))
 // Vectors, 3D, Include Ghostcells, Cell Centers:
 #define ijkl_mag_v3gc(i,j,k,l) \
-  ((i)*long(nMagLatsG)*long(nMagAltsG)*long(3) + \
-   (j)*long(nMagAltsG)*long(3) + \
-   (k)*long(3) + \
+  ((i)*int64_t(nMagLatsG)*int64_t(nMagAltsG)*int64_t(3) + \
+   (j)*int64_t(nMagAltsG)*int64_t(3) + \
+   (k)*int64_t(3) + \
    (l))
 
 
@@ -79,17 +79,17 @@ public:
   int get_IsGeoGrid();
   void set_IsGeoGrid(int value);
 
-  long get_nPointsInGrid();
+  int64_t get_nPointsInGrid();
 
-  long get_nX();
-  long get_nY();
-  long get_nZ();
+  int64_t get_nX();
+  int64_t get_nY();
+  int64_t get_nZ();
 
-  long get_nLons();
-  long get_nLats();
-  long get_nAlts();
+  int64_t get_nLons();
+  int64_t get_nLats();
+  int64_t get_nAlts();
 
-  long get_nGCs();
+  int64_t get_nGCs();
 
   // Armidillo Cube Versions:
   fcube geoLon_scgc, geoX_scgc;
@@ -141,9 +141,9 @@ public:
 
   int IsGeoGrid;
 
-  long nX, nLons;
-  long nY, nLats;
-  long nZ, nAlts;
+  int64_t nX, nLons;
+  int64_t nY, nLats;
+  int64_t nZ, nAlts;
 
   int nGCs; // number of ghostcells
 
