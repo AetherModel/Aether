@@ -14,7 +14,7 @@
 
 std::string make_lower(std::string instring) {
   std::string outstring = instring;
-  int len = outstring.length();
+  int len = instring.length();
   for (int i = 0; i < len; i++)
     outstring[i] = tolower(outstring[i]);
   return outstring;
@@ -29,7 +29,7 @@ std::string strip_string_end(std::string instring) {
   int i;
   int iStart = -1;
   std::string outstring;
-  int len = outstring.length();
+  int len = instring.length();
   for (i = 0; i < len; i++) {
     if (instring[i] == ' ') {
       if (i > 0 && iStart == i-1) break;
@@ -51,7 +51,7 @@ std::string strip_string_end(std::string instring) {
 std::string strip_spaces(std::string instring) {
   int i;
   std::string outstring;
-  int len = outstring.length();
+  int len = instring.length();
   for (i = 0; i < len; i++) {
     if (instring[i] != ' ') {
       outstring = outstring+instring[i];
