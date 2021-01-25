@@ -79,17 +79,17 @@ public:
   int get_IsGeoGrid();
   void set_IsGeoGrid(int value);
 
-  long get_nPointsInGrid();
+  int64_t get_nPointsInGrid();
 
-  long get_nX();
-  long get_nY();
-  long get_nZ();
+  int64_t get_nX();
+  int64_t get_nY();
+  int64_t get_nZ();
 
-  long get_nLons();
-  long get_nLats();
-  long get_nAlts();
+  int64_t get_nLons();
+  int64_t get_nLats();
+  int64_t get_nAlts();
 
-  long get_nGCs();
+  int64_t get_nGCs();
 
   // Armidillo Cube Versions:
   fcube geoLon_scgc, geoX_scgc;
@@ -141,9 +141,9 @@ public:
 
   int IsGeoGrid;
 
-  long nX, nLons;
-  long nY, nLats;
-  long nZ, nAlts;
+  int64_t nX, nLons;
+  int64_t nY, nLats;
+  int64_t nZ, nAlts;
 
   int nGCs; // number of ghostcells
 
