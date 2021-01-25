@@ -13,11 +13,11 @@ using namespace arma;
 //  - The dx variable is assumed to be distance between the CURRENT cell center
 //    (i) and the cell center of the cell BELOW the current one (i-1).
 
-fvec solver_conduction_new(fvec value,
-                           fvec lambda,
-                           fvec front,
-                           float dt,
-                           fvec dx) {
+fvec solver_conduction(fvec value,
+		       fvec lambda,
+		       fvec front,
+		       float dt,
+		       fvec dx) {
 
   int64_t nPts = value.n_elem;
 
