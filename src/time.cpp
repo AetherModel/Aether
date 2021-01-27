@@ -57,6 +57,7 @@ void Times::set_times(std::vector<int> itime) {
 int Times::check_time_gate(float dt_check) {
   int DoThing = 0;
   if (current == start) DoThing = 1;
+  if (current == restart) DoThing = 1;
   if ( floor((simulation - dt) / dt_check) <
        floor(simulation / dt_check)) DoThing = 1;
   return DoThing;
@@ -216,7 +217,7 @@ void Times::display() {
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;
   float ratio_of_time = elapsed_simulation_time / total_simulation_time;
-  float total_walltime = walltime/ratio_of_time;
+  float total_walltime = walltime/(ratio_of_time+1e-6);
   int remaining_walltime = total_walltime - walltime;
 
   if (walltime > 120) {

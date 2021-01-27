@@ -50,6 +50,7 @@ public:
   grid_input_struct get_grid_inputs();
 
   int iVerbose;
+  int iTimingDepth;
 
 private:
 

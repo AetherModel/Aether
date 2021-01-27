@@ -20,6 +20,7 @@ Inputs::Inputs(Times &time, Report &report) {
   // Set some defaults:
 
   iVerbose = 0;
+  iTimingDepth = 3;
   euv_model = "euvac";
   planet = "Earth";
 
@@ -229,6 +230,8 @@ int Inputs::read(Times &time, Report &report) {
       if (hash == "#debug"  || hash == "#verbose") {
         iVerbose = read_int(infile_ptr, hash);
         report.set_verbose(iVerbose);
+	// Need to read in the timing depth somewhere
+        report.set_timing_depth(iTimingDepth);
       }
 
       // ---------------------------
