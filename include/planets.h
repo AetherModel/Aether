@@ -1,4 +1,4 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #ifndef AETHER_INCLUDE_PLANETS_H_
@@ -54,9 +54,10 @@ class Planets {
     float rates_nodelongitude;
 
     float planet_tilt;
+    // rotation_period, omega, and length of day are all related to each other
     float rotation_period;
-    float omega; // rotation frequency
-    float length_of_day; // this and rotation period are related to each other
+    float omega;
+    float length_of_day;
     double length_of_year;
     float longitude_jb2000;
     float longitude_offset;
@@ -81,7 +82,6 @@ class Planets {
     float ls;
 
     double update_time;
-
   };
 
   std::vector<planet_chars> planets;
@@ -89,7 +89,6 @@ class Planets {
   planet_chars planet;
 
   int read_file(Inputs args, Report report);
-
 };
 
-#endif // AETHER_INCLUDE_PLANETS_H_
+#endif  // INCLUDE_PLANETS_H_

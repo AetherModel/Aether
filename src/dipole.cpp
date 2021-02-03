@@ -1,4 +1,4 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <cmath>
@@ -12,22 +12,22 @@
 #include "../include/constants.h"
 
 bfield_info_type get_dipole(float lon,
-			    float lat,
-			    float alt,
-			    Planets planet,
-			    Inputs input,
-			    Report &report) {
+                            float lat,
+                            float alt,
+                            Planets planet,
+                            Inputs input,
+                            Report &report) {
 
   std::string function = "dipole";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
 
   bfield_info_type bfield_info;
-  
+
   float llr[3];
   float xyz[3];
   float radius = planet.get_radius(lat);
-  
+
   llr[0] = lon;
   llr[1] = lat;
   llr[2] = alt + radius;
@@ -53,14 +53,14 @@ bfield_info_type get_dipole(float lon,
   float yzpp2  = (pos_rot_zy[1]*pos_rot_zy[1] + pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
-		   pos_rot_zy[1]*pos_rot_zy[1] + 
-		   pos_rot_zy[2]*pos_rot_zy[2]);
+                   pos_rot_zy[1]*pos_rot_zy[1] +
+                   pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xypp = sqrt(xypp2);
   float xzpp = sqrt(xzpp2);
   float yzpp = sqrt(yzpp2);
   float xyzpp = sqrt(xyzpp2);
-  
+
   float normal_r = (radius / xyzpp);
   float r3 = normal_r * normal_r * normal_r;
 
@@ -70,7 +70,7 @@ bfield_info_type get_dipole(float lon,
   // surface. But, to simplify things to begin with (and make it
   // planet agnostic), we use the classic definition of L-Shell, which
   // is with respect to the planetary radius.
-  
+
   float cos_lat = xypp/xyzpp;
   float lShell = 1.0 / normal_r / (cos_lat * cos_lat);
 
@@ -85,17 +85,18 @@ bfield_info_type get_dipole(float lon,
   float b[3];
   b[0] = dipole_strength * r3 * 3 * pos_rot_zy[0] * pos_rot_zy[2] / xyzpp2;
   b[1] = dipole_strength * r3 * 3 * pos_rot_zy[2] * pos_rot_zy[1] / xyzpp2;
-  b[2] = dipole_strength * r3 / xyzpp2 * (2 * pos_rot_zy[2]*pos_rot_zy[2] - xypp2);
-  
+  b[2] = dipole_strength * r3 / xyzpp2 *
+    (2 * pos_rot_zy[2]*pos_rot_zy[2] - xypp2);
+
   float b_rot_y[3];
   float b_rot_yz[3];
-  float b_env[3]; // env = East, North, Vertical
+  float b_env[3];  // env = East, North, Vertical
 
   transform_rot_y(b, magnetic_pole_tilt, b_rot_y);
   transform_rot_z(b_rot_y, magnetic_pole_rotation, b_rot_yz);
 
   transform_vector_xyz_to_env(b_rot_yz, lon, lat, b_env);
-  
+
   bfield_info.b[0] = b_env[0];
   bfield_info.b[1] = b_env[1];
   bfield_info.b[2] = b_env[2];

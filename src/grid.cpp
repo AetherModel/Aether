@@ -1,47 +1,59 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <iostream>
+#include <armadillo>
 
 #include "../include/inputs.h"
 #include "../include/grid.h"
 #include "../include/sizes.h"
 
-Grid::Grid(int nX, int nY, int nZ) {
+using namespace arma;
 
-  long nTotalPoints = long(nX) * long(nY) * long(nZ);
+Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
-  geoLon_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoLat_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoAlt_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoX_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoY_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  geoZ_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  nX = nX_in; nLons = nX;
+  nY = nY_in; nLats = nY;
+  nZ = nZ_in; nAlts = nZ;
+  nGCs = nGCs_in;
 
-  magLon_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magLat_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magAlt_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magX_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magY_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  magZ_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  int64_t nTotalPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
 
-  magLocalTime_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  geoLon_scgc.set_size(nX, nY, nZ);
+  geoLat_scgc.set_size(nX, nY, nZ);
+  geoAlt_scgc.set_size(nX, nY, nZ);
 
-  radius_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  radius_sq_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  radius_inv_sq_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  geoX_scgc.set_size(nX, nY, nZ);
+  geoY_scgc.set_size(nX, nY, nZ);
+  geoZ_scgc.set_size(nX, nY, nZ);
 
-  gravity_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  magLon_scgc.set_size(nX, nY, nZ);
+  magLat_scgc.set_size(nX, nY, nZ);
+  magAlt_scgc.set_size(nX, nY, nZ);
 
-  sza_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  cos_sza_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  magX_scgc.set_size(nX, nY, nZ);
+  magY_scgc.set_size(nX, nY, nZ);
+  magZ_scgc.set_size(nX, nY, nZ);
 
-  bfield_v3gc = (float*) malloc( 3 * nTotalPoints * sizeof(float) );
-  bfield_mag_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
+  magLocalTime_scgc.set_size(nX, nY, nZ);
 
-  dalt_center_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  dalt_lower_s3gc = (float*) malloc( nTotalPoints * sizeof(float) );
-  
+  radius_scgc.set_size(nX, nY, nZ);
+  radius2_scgc.set_size(nX, nY, nZ);
+  radius2i_scgc.set_size(nX, nY, nZ);
+
+  dalt_center_scgc.set_size(nX, nY, nZ);
+  dalt_lower_scgc.set_size(nX, nY, nZ);
+
+  sza_scgc.set_size(nX, nY, nZ);
+  cos_sza_scgc.set_size(nX, nY, nZ);
+
+  fcube tmp(nX, nY, nZ);
+  tmp.zeros();
+  bfield_vcgc.push_back(tmp);  // x-component
+  bfield_vcgc.push_back(tmp);  // y-component
+  bfield_vcgc.push_back(tmp);  // z-component
+  bfield_mag_scgc.set_size(nX, nY, nZ);
+  bfield_mag_scgc.zeros();
 }
 
 int Grid::get_IsGeoGrid() {
@@ -52,11 +64,18 @@ void Grid::set_IsGeoGrid(int value) {
   IsGeoGrid = value;
 }
 
-long Grid::get_nPointsInGrid() {
-  long nPoints;
-  if (IsGeoGrid)
-    nPoints = long(nGeoLons) * long(nGeoLats) * long(nGeoAlts);
-  else
-    nPoints = long(nMagLons) * long(nMagLats) * long(nMagAlts);
+int64_t Grid::get_nPointsInGrid() {
+  int64_t nPoints;
+  nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
 }
+
+int64_t Grid::get_nX() { return nX; }
+int64_t Grid::get_nY() { return nY; }
+int64_t Grid::get_nZ() { return nZ; }
+
+int64_t Grid::get_nLons() { return nLons; }
+int64_t Grid::get_nLats() { return nLats; }
+int64_t Grid::get_nAlts() { return nAlts; }
+
+int64_t Grid::get_nGCs() { return nGCs; }

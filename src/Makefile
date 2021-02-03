@@ -5,8 +5,10 @@ COMPILE.CPP = g++
 LINK.CPP = g++
 AR = ar -rs
 
-# FLAGS = -O3 -ffast-math -c -I/opt/local/include
-FLAGS = -c -I/opt/local/include
+FLAGS = -O3 -ffast-math -c -I/opt/local/include
+
+# Can use this version for no optimization and no fast math:
+# FLAGS = -c -I/opt/local/include
 
 .SUFFICES:
 .SUFFICES: .cpp .o

@@ -1,8 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_INPUTS_H_
-#define AETHER_INCLUDE_INPUTS_H_
+#ifndef INCLUDE_INPUTS_H_
+#define INCLUDE_INPUTS_H_
 
 #include <vector>
 #include <string>
@@ -30,25 +30,23 @@ public:
   std::string get_planetary_file();
   std::string get_planet_species_file();
   std::string get_bfield_type();
-  
+
   // ------------------------------
   // Grid inputs:
 
   struct grid_input_struct {
-
     std::string alt_file;
     int IsUniformAlt;
     float alt_min;
     float dalt;
-
     float lat_min;
     float lat_max;
     float lon_min;
     float lon_max;
   };
 
-  grid_input_struct get_grid_inputs(); 
-  
+  grid_input_struct get_grid_inputs();
+
   int iVerbose;
 
 private:
@@ -63,16 +61,15 @@ private:
   std::string planet_species_file = "";
 
   std::string bfield = "none";
-  
+
   grid_input_struct grid_input;
-  
+
   float euv_heating_eff_neutrals;
   float euv_heating_eff_electrons;
 
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
   float dt_euv;
-
 };
 
-#endif // AETHER_INCLUDE_INPUTS_H_
+#endif  // INCLUDE_INPUTS_H_

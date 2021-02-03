@@ -1,53 +1,68 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_IONS_H_
-#define AETHER_INCLUDE_IONS_H_
+#ifndef INCLUDE_IONS_H_
+#define INCLUDE_IONS_H_
+
+#include <string>
+#include <vector>
+
+// The armadillo library is to allow the use of 3d cubes and other
+// array types, with array math built in. This eliminates loops!
+#include <armadillo>
 
 #include "inputs.h"
 #include "report.h"
 #include "grid.h"
 
+using namespace arma;
+
 class Ions {
 
  public:
 
-  struct species_chars {
+  // This struct contains all of the information needed for a single
+  // species of ion.  We will then have a vector of these species.
 
+  struct species_chars {
     std::string cName;
     float mass;
     int charge;
-    
-    int DoAdvect;
-    
-    float *density_s3gc;
-    float *par_velocity_v3gc;
-    float *perp_velocity_v3gc;
 
-    float *temperature_s3gc;
-    
+    int DoAdvect;
+
     // Sources and Losses:
 
-    float *ionization_s3gc;
-    
+    fcube density_scgc;
+    fcube par_velocity_vcgc;
+    fcube perp_velocity_vcgc;
+
+    fcube temperature_scgc;
+
+    // Sources and Losses:
+
+    fcube ionization_scgc;
+
+    fcube sources_scgc;
+    fcube losses_scgc;
   };
 
   // bulk quantities (states):
-  float *density_s3gc;
-  float *velocity_v3gc;
-  float *exb_v3gc;
-  float *ion_temperature_s3gc;
-  float *electron_temperature_s3gc;
+  fcube density_scgc;
 
+  fcube ion_temperature_scgc;
+  fcube electron_temperature_scgc;
+
+  // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;
-  
+
   // ------------------------------
   // Functions:
-  
-  Ions(Inputs input, Report report);
-  species_chars create_species();
+
+  Ions(Grid grid, Inputs input, Report report);
+  species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
-  void fill_electrons(Grid grid, Report &report);
+  void fill_electrons(Report &report);
 
 };
-#endif // AETHER_INCLUDE_NEUTRALS_H_
+#endif  // INCLUDE_IONS_H_

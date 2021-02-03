@@ -1,4 +1,4 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <vector>
@@ -25,13 +25,13 @@ Indices::Indices(Inputs args) {
     iErr = read_f107_file(file, time, f107array);
     if (iErr == 0)
       iErr = set_f107(time, f107array);
-    else std::cout << "ERROR in reading f107 file!!!\n";
+    else
+      std::cout << "ERROR in reading f107 file!!!\n";
   }
-
 }
 
 int Indices::set_f107(std::vector<double> time,
-		      std::vector<float> f107array) {
+                      std::vector<float> f107array) {
 
   int iErr = set_index(time, f107array, f107);
 
@@ -44,14 +44,14 @@ int Indices::set_f107(std::vector<double> time,
   // hours at a time
 
   double currenttime = time[0];
-  long nTimes = time.size(), itime = 0;
+  int64_t nTimes = time.size(), itime = 0;
   double eightone = 81.0 * 86400.0;
 
   ind_time_pair tmp;
 
   while (currenttime < time[nTimes-1]-eightone) {
 
-    long isub = itime, nSubs = 0;
+    int64_t isub = itime, nSubs = 0;
     double sumf107 = 0, sumtime = 0;
 
     while (time[isub] < currenttime + eightone) {
@@ -68,7 +68,6 @@ int Indices::set_f107(std::vector<double> time,
 
     itime++;
     currenttime = time[itime];
-
   }
 
   // Let's hold the last 81 days constant, which means we just put one
@@ -79,32 +78,25 @@ int Indices::set_f107(std::vector<double> time,
   f107a.push_back(tmp);
 
   return iErr;
-
 }
 
 float Indices:: get_f107(double time) {
-
   return get_index(time, f107);
-
 }
 
 float Indices:: get_f107a(double time) {
-
   return get_index(time, f107a);
-
 }
 
 float Indices::get_index(double time, std::vector<ind_time_pair> index) {
 
-  long iLow, iMid, iHigh;
+  int64_t iLow, iMid, iHigh;
 
   iLow = 0;
   iHigh = index.size()-1;
   iMid = (iHigh+iLow)/2;
 
   while (iHigh-iLow > 1) {
-
-    // cout << "top: " << iLow << " " << iMid << " " << iHigh << " " << index[iMid].time-time <<"\n";
 
     // Break if iMid <= time < iMid+1
     if (index[iMid].time == time) break;
@@ -117,9 +109,6 @@ float Indices::get_index(double time, std::vector<ind_time_pair> index) {
       iHigh = iMid;
       iMid = (iHigh+iLow)/2;
     }
-
-    // cout << "bot: " << iLow << " " << iMid << " " << iHigh << " " << index[iMid].time-time <<"\n";
-
   }
 
   // At this point, time should be between iMid and iMid+1:
@@ -128,12 +117,11 @@ float Indices::get_index(double time, std::vector<ind_time_pair> index) {
   float value = (1.0-x) * index[iMid].index + x * index[iMid+1].index;
 
   return value;
-
 }
 
 int Indices::set_index(std::vector<double> time,
-		       std::vector<float> indexarray,
-		       std::vector<ind_time_pair> &index) {
+                       std::vector<float> indexarray,
+                       std::vector<ind_time_pair> &index) {
 
   int iErr;
   ind_time_pair tmp;
@@ -142,15 +130,13 @@ int Indices::set_index(std::vector<double> time,
     std::cout << "In set_index. Size of time and index arrays don't match!\n";
     iErr = 1;
   } else {
-
-    for (int i=0; i<time.size(); i++) {
+    int64_t iSize = time.size();
+    for (int64_t i = 0; i < iSize; i++) {
       tmp.time = time[i];
       tmp.index = indexarray[i];
       index.push_back(tmp);
     }
-
   }
 
   return iErr;
-
 }

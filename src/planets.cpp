@@ -1,9 +1,10 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
 #include <math.h>
 #include <vector>
 #include <string>
 #include <iostream>
-#include <sstream> // std::stringstream
 #include <fstream>
 
 #include "../include/constants.h"
@@ -104,10 +105,8 @@ float Planets::get_mu() {
 // -----------------------------------------------------------------------------
 
 float Planets::get_star_to_planet_dist(Times time) {
-
   int iErr = update(time);
   return planet.star_planet_distance;
-
 }
 
 // -----------------------------------------------------------------------------
@@ -115,10 +114,8 @@ float Planets::get_star_to_planet_dist(Times time) {
 // -----------------------------------------------------------------------------
 
 float Planets::get_orbit_angle(Times time) {
-
   int iErr = update(time);
   return planet.orbit_angle;
-
 }
 
 // -----------------------------------------------------------------------------
@@ -126,10 +123,8 @@ float Planets::get_orbit_angle(Times time) {
 // -----------------------------------------------------------------------------
 
 float Planets::get_declination(Times time) {
-
   int iErr = update(time);
   return planet.declination;;
-
 }
 
 // -----------------------------------------------------------------------------
@@ -139,7 +134,7 @@ float Planets::get_declination(Times time) {
 int Planets::update(Times time) {
 
   int iErr = 0;
-  
+
   // Update planetary stuff once a minute:
   if (time.get_current() - planet.update_time > 60.0) {
 
@@ -186,10 +181,10 @@ int Planets::update(Times time) {
     float y_heliocentric = sma*sqrt(1-ecc*ecc)*sin(ecc_anomaly*dtor);
     float z_heliocentric = 0.0;
 
-    float true_anomaly = atan2(y_heliocentric,x_heliocentric)*rtod;
+    float true_anomaly = atan2(y_heliocentric, x_heliocentric)*rtod;
 
     planet.star_planet_distance = sqrt(x_heliocentric * x_heliocentric +
-				       y_heliocentric * y_heliocentric);
+                                       y_heliocentric * y_heliocentric);
 
     // convert to J2000 coordinates with x-axis aligned with vernal equinox so
     // we can get solar longitude in the coorect system.  We don't need z.
@@ -237,12 +232,10 @@ int Planets::update(Times time) {
     double left_over = (rotations - int(rotations)) * 360.0;
     // put into radians, so it is consistent with the rest of the code:
     planet.longitude_offset =
-      fmod(planet.longitude_jb2000 + left_over + 180.0,360.0) * dtor;
-
+      fmod(planet.longitude_jb2000 + left_over + 180.0, 360.0) * dtor;
   }
 
   return iErr;
-
 }
 
 int Planets::set_planet(Inputs args, Report report) {
@@ -250,12 +243,13 @@ int Planets::set_planet(Inputs args, Report report) {
   int iErr = 0;
   int IsFound = 0;
 
-  for (int i=0; i<planets.size(); i++) {
+  int iSize = planets.size();
+  for (int i = 0; i < iSize; i++) {
     if (planets[i].name == args.get_planet()) {
       IsFound = 1;
       planet.name = planets[i].name;
       if (report.test_verbose(2)) {
-	std::cout << "Planet set to : " << planet.name << "\n";
+        std::cout << "Planet set to : " << planet.name << "\n";
       }
       planet.semimajoraxis = planets[i].semimajoraxis;
       planet.eccentricity = planets[i].eccentricity;
@@ -275,38 +269,42 @@ int Planets::set_planet(Inputs args, Report report) {
       double a = planet.semimajoraxis * au_to_m;
       double loy = 2 * pi * sqrt(a*a*a/mu);
       if (abs(loy - planets[i].length_of_year)/loy > 0.01) {
-	std::cout << "Hmmm.... For some reason, the calculated length of year is different\n";
-	std::cout << "Read in : " << planet.length_of_year/seconds_per_day << " (days) \n";
-	std::cout << "Calculated from SMA : " << loy/seconds_per_day << " (days)\n";
-	std::cout << "Trusting SMA version!\n";
-	iErr = 1;
+        std::cout << "Hmmm.... For some reason, the calculated length ";
+        std::cout << "of year is different\n";
+        std::cout << "Read in : "
+                  << planet.length_of_year/seconds_per_day
+                  << " (days) \n";
+        std::cout << "Calculated from SMA : "
+                  << loy/seconds_per_day << " (days)\n";
+        std::cout << "Trusting SMA version!\n";
+        iErr = 1;
       }
       planet.length_of_year = loy;
       planet.length_of_day = planets[i].length_of_day;
       planet.longitude_jb2000 = planets[i].longitude_jb2000;
 
       float rotrate = 2*pi/planet.length_of_day*(1.0+1.0/(loy/seconds_per_day));
-      planet.omega = rotrate; // frequency (rad/s)
-      planet.rotation_period = 2*pi/rotrate; // (seconds)
+      planet.omega = rotrate;  // frequency (rad/s)
+      planet.rotation_period = 2*pi/rotrate;  // (seconds)
 
       planet.mass = planets[i].mass;
       planet.mu = planets[i].mass * gravitational_constant;
-      planet.equator_radius = planets[i].equator_radius * 1000.0; // km -> m
-      planet.polar_radius = planets[i].polar_radius * 1000.0; // km -> m
-      // Looking at Earth and Saturn, it seems like the Volumetric mean radius
-      // is at roughly 47 deg (cos(47)=0.68)
-      // Obviously an approximation...
+      planet.equator_radius = planets[i].equator_radius * 1000.0;  // km -> m
+      planet.polar_radius = planets[i].polar_radius * 1000.0;  // km -> m
+      // Looking at Earth and Saturn, it seems like the Volumetric
+      // mean radius is at roughly 47 deg (cos(47)=0.68) Obviously an
+      // approximation...
       planet.radius = 0.68 * planet.equator_radius + 0.32 * planet.polar_radius;
       if (report.test_verbose(2))
-	std::cout << "Planet Radius set to : "
-		  << planet.radius/1000.0 << " (km)\n";
+        std::cout << "Planet Radius set to : "
+                  << planet.radius/1000.0 << " (km)\n";
 
       planet.dipole_strength = planets[i].dipole_strength;
       planet.dipole_rotation = planets[i].dipole_rotation;
       planet.dipole_tilt = planets[i].dipole_tilt;
-      for (int j=0; j<3; j++)
-	planet.dipole_center[j] = planets[i].dipole_center[j];
-      
+      for (int j = 0; j < 3; j++)
+        planet.dipole_center[j] = planets[i].dipole_center[j];
+
       planet.update_time = -1e32;
 
       break;
@@ -315,12 +313,11 @@ int Planets::set_planet(Inputs args, Report report) {
 
   if (!IsFound) {
     std::cout << "Can't file planet " << args.get_planet()
-	      << " in planet file information!\n";
+              << " in planet file information!\n";
     iErr = 1;
   }
 
   return iErr;
-
 }
 
 int Planets::read_file(Inputs args, Report report) {
@@ -336,7 +333,7 @@ int Planets::read_file(Inputs args, Report report) {
 
   if (!myFile.is_open()) {
     std::cout << "Could not open planetary file : "
-	      << args.get_planetary_file() << "\n";
+              << args.get_planetary_file() << "\n";
     iErr = 1;
   } else {
 
@@ -347,57 +344,48 @@ int Planets::read_file(Inputs args, Report report) {
       int nLines = csv.size();
 
       if (nLines <= 2) {
-	iErr = 1;
+        iErr = 1;
       } else {
 
-	for (int iLine = 2; iLine < nLines; iLine++) {
+        for (int iLine = 2; iLine < nLines; iLine++) {
 
-	  // Some final rows can have comments in them, so we want to
-	  // skip anything where the length of the string in column 2
-	  // is == 0:
+          // Some final rows can have comments in them, so we want to
+          // skip anything where the length of the string in column 2
+          // is == 0:
 
-	  if (csv[iLine][1].length() > 0) {
-	  
-	    tmp.name = make_lower(csv[iLine][0]);
-	    tmp.semimajoraxis = stof(csv[iLine][1]);
-	    tmp.eccentricity = stof(csv[iLine][2]);
-	    tmp.inclination = stof(csv[iLine][3]);
-	    tmp.meanlongitude = stof(csv[iLine][4]);
-	    tmp.perihelionlongitude = stof(csv[iLine][5]);
-	    tmp.nodelongitude = stof(csv[iLine][6]);
-	    tmp.rates_semimajoraxis = stof(csv[iLine][7]);
-	    tmp.rates_eccentricity = stof(csv[iLine][8]);
-	    tmp.rates_inclination = stof(csv[iLine][9]);
-	    tmp.rates_meanlongitude = stof(csv[iLine][10]);
-	    tmp.rates_perihelionlongitude = stof(csv[iLine][11]);
-	    tmp.rates_nodelongitude = stof(csv[iLine][12]);
-	    tmp.length_of_day = stof(csv[iLine][13])*seconds_per_hour;
-	    tmp.length_of_year = stof(csv[iLine][14])*seconds_per_day;
-	    tmp.longitude_jb2000 = stof(csv[iLine][15]);
-	    tmp.mass = stof(csv[iLine][16]);
-	    tmp.equator_radius = stof(csv[iLine][17]);
-	    tmp.polar_radius = stof(csv[iLine][18]);
-	    tmp.planet_tilt = stof(csv[iLine][19])*dtor;
-	    tmp.dipole_strength = stof(csv[iLine][20]);
-	    tmp.dipole_rotation = stof(csv[iLine][21])*dtor;
-	    tmp.dipole_tilt = stof(csv[iLine][22])*dtor;
-	    for (int j=0; j<3; j++)
-	      tmp.dipole_center[j] = stof(csv[iLine][23+j]);
+          if (csv[iLine][1].length() > 0) {
+            tmp.name = make_lower(csv[iLine][0]);
+            tmp.semimajoraxis = stof(csv[iLine][1]);
+            tmp.eccentricity = stof(csv[iLine][2]);
+            tmp.inclination = stof(csv[iLine][3]);
+            tmp.meanlongitude = stof(csv[iLine][4]);
+            tmp.perihelionlongitude = stof(csv[iLine][5]);
+            tmp.nodelongitude = stof(csv[iLine][6]);
+            tmp.rates_semimajoraxis = stof(csv[iLine][7]);
+            tmp.rates_eccentricity = stof(csv[iLine][8]);
+            tmp.rates_inclination = stof(csv[iLine][9]);
+            tmp.rates_meanlongitude = stof(csv[iLine][10]);
+            tmp.rates_perihelionlongitude = stof(csv[iLine][11]);
+            tmp.rates_nodelongitude = stof(csv[iLine][12]);
+            tmp.length_of_day = stof(csv[iLine][13])*seconds_per_hour;
+            tmp.length_of_year = stof(csv[iLine][14])*seconds_per_day;
+            tmp.longitude_jb2000 = stof(csv[iLine][15]);
+            tmp.mass = stof(csv[iLine][16]);
+            tmp.equator_radius = stof(csv[iLine][17]);
+            tmp.polar_radius = stof(csv[iLine][18]);
+            tmp.planet_tilt = stof(csv[iLine][19])*dtor;
+            tmp.dipole_strength = stof(csv[iLine][20]);
+            tmp.dipole_rotation = stof(csv[iLine][21])*dtor;
+            tmp.dipole_tilt = stof(csv[iLine][22])*dtor;
+            for (int j = 0; j < 3; j++)
+              tmp.dipole_center[j] = stof(csv[iLine][23+j]);
 
-	    planets.push_back(tmp);
-
-	  }
-
-	}
-
-      }
-
-    }
-
+            planets.push_back(tmp);
+          }  // if length
+        }  // for iLine
+      }  // else nLines
+    }  // if good file
     myFile.close();
-
-  }
-
+  }  // else open file
   return iErr;
-
 }

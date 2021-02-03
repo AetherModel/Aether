@@ -1,3 +1,5 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
 #include <string>
 #include <iostream>
@@ -7,22 +9,22 @@
 
 
 // -----------------------------------------------------------------------
-// 
+// Initialize class Report
 // -----------------------------------------------------------------------
 
 Report::Report() {
-
   current_entry = "";
   nEntries = 0;
   iVerbose = 0;
   divider = ">";
   divider_length = divider.length();
-  iLevel = 0;  
-  
+  iLevel = 0;
 }
 
 // -----------------------------------------------------------------------
-// 
+// When the code enters a function, report this if the verbose level
+// is high enough, and record the system start time of the entry, so that
+// the run-time of the function can be recorded on exit.
 // -----------------------------------------------------------------------
 
 void Report::enter(std::string input, int &iFunction) {
@@ -34,10 +36,10 @@ void Report::enter(std::string input, int &iFunction) {
   int iEntry = -1;
 
   if (iFunction > -1)
-    if (current_entry == entries[iFunction].entry) 
+    if (current_entry == entries[iFunction].entry)
       iEntry = iFunction;
   if (iEntry == -1) {
-    for (int i=0; i < nEntries; i++) 
+    for (int i = 0; i < nEntries; i++)
       if (current_entry == entries[i].entry) iEntry = i;
   }
   if (iEntry == -1) {
@@ -61,51 +63,48 @@ void Report::enter(std::string input, int &iFunction) {
   iLevel++;
   entries[iEntry].iLevel = iLevel;
   iCurrentFunction = iEntry;
-  
-  print(iLevel,"Entering function : "+current_entry);
-  
+
+  print(iLevel, "Entering function : " + current_entry);
 }
 
 // -----------------------------------------------------------------------
-// 
+// This records the exit of the exit of the function, computing the
+// runtime of the function.
+// This assumes that the enter and exit functions are perfectly paired,
+// so that the enter function sets the iCurrentFunction variable.
 // -----------------------------------------------------------------------
 
 void Report::exit(std::string input) {
 
   int iEntry = -1;
   iEntry = iCurrentFunction;
-  //for (int i=0; i < nEntries; i++) 
-  //  if (current_entry == entries[i].entry) iEntry = i;
-  //std::cout << "iEntry : " << iEntry << " " << iCurrentFunction << " " << nEntries << "\n";
+
   if (iEntry == -1) {
     std::cout << "Report::exit Error!!! Could not find valid entry!\n";
     std::cout << "current_entry : " << current_entry << "\n";
   } else {
+    // Get current system time:
     unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    // Calculate the difference in times, do get the total timing:
     entries[iEntry].timing_total = entries[iEntry].timing_total +
       float(now - entries[iEntry].timing_start)/1000.0;
+
+    // Increment the total number of times that the function has been called:
     entries[iEntry].nTimes++;
 
-    // std::size_t pos = current_entry.find(input);
-    // if (pos == std::string::npos) {
-    //   std::cout << "Report::exit Error!!! Could not find input : " << input << "!\n";
-    //   std::cout << "   current_entry : " << current_entry << "\n";
-    // } else {
-    // current_entry = current_entry.substr(0,pos-divider_length);
-    current_entry = current_entry.substr(0,entries[iEntry].iStringPosBefore);
+    // Pop the current function off the stack:
+    current_entry = current_entry.substr(0, entries[iEntry].iStringPosBefore);
     iCurrentFunction = entries[iEntry].iLastEntry;
     iLevel--;
-    // }
   }
-  
 }
 
 // -----------------------------------------------------------------------
-// 
+// Loop through all reported functions and report their run times
 // -----------------------------------------------------------------------
 
 void Report::times() {
-
   std::cout << "Timing Summary :\n";
   for (int i=0; i < nEntries; i++) {
     std::cout << entries[i].entry << "\n";
@@ -114,43 +113,32 @@ void Report::times() {
     for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
     std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
   }
-
 }
 
 // -----------------------------------------------------------------------
-// 
+// Print string if verbose level is set high enough
 // -----------------------------------------------------------------------
 
 void Report::print(int iLevel, std::string output_string) {
-
-  if (iLevel <= iVerbose) {
-
-    for (int iL=0;iL<iLevel;iL++) std::cout << "=";
-    std::cout << "> " << output_string << "\n";
-    
-  }
-
+  if (test_verbose(iLevel)) std::cout << output_string << "\n";
 }
 
 // -----------------------------------------------------------------------
-// 
+// Test verbose level and print line starter if it is high enough
 // -----------------------------------------------------------------------
 
 int Report::test_verbose(int iLevel) {
-
   int iPass = 0;
   if (iLevel <= iVerbose) {
     iPass = 1;
-    for (int iL=0;iL<iLevel;iL++) std::cout << "=";
+    for (int iL = 0; iL < iLevel; iL++) std::cout << "=";
     std::cout << "> ";
   }
-
   return iPass;
-
 }
 
 // -----------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------
 
 void Report::set_verbose(int input) {
@@ -158,7 +146,7 @@ void Report::set_verbose(int input) {
 }
 
 // -----------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------
 
 int Report::get_verbose() {
