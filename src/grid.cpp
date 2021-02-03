@@ -22,6 +22,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
   geoAlt_scgc.set_size(nX, nY, nZ);
+  geoLocalTime_scgc.set_size(nX, nY, nZ);
 
   geoX_scgc.set_size(nX, nY, nZ);
   geoY_scgc.set_size(nX, nY, nZ);
@@ -54,6 +55,11 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   bfield_vcgc.push_back(tmp);  // z-component
   bfield_mag_scgc.set_size(nX, nY, nZ);
   bfield_mag_scgc.zeros();
+
+  GSE_XYZ_vcgc.push_back(tmp);  // x-component
+  GSE_XYZ_vcgc.push_back(tmp);  // y-component
+  GSE_XYZ_vcgc.push_back(tmp);  // z-component
+
 }
 
 int Grid::get_IsGeoGrid() {

@@ -24,15 +24,25 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   report.enter(function, iFunction);
 
   float lon_offset = planet.get_longitude_offset(time);
+  float declination = planet.get_declination(time);
   float sin_dec = planet.get_sin_dec(time);
   float cos_dec = planet.get_cos_dec(time);
 
-  fcube local_time3d = geoLon_scgc + lon_offset;
+  // Local time is in radians
+  geoLocalTime_scgc = geoLon_scgc + lon_offset;
   cos_sza_scgc =
     sin_dec * sin(geoLat_scgc) +
-    cos_dec * cos(geoLat_scgc) % cos(local_time3d-pi);
+    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc-pi);
   sza_scgc = acos(cos_sza_scgc);
 
+  // Compute GSE coordinates:
+  // 1. use latitude / local time to derive XYZ
+  // 2. rotate by declination to point x-axis towards the sun
+  GSE_XYZ_vcgc[0] = radius_scgc % cos(geoLocalTime_scgc-pi) % cos(geoLat_scgc);
+  GSE_XYZ_vcgc[1] = radius_scgc % sin(geoLocalTime_scgc-pi) % cos(geoLat_scgc);
+  GSE_XYZ_vcgc[2] = radius_scgc % sin(geoLat_scgc);
+  GSE_XYZ_vcgc = rotate_around_y_3d(GSE_XYZ_vcgc, -declination);
+  
   report.exit(function);
 }
 

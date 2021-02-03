@@ -95,13 +95,16 @@ public:
   fcube geoLon_scgc, geoX_scgc;
   fcube geoLat_scgc, geoY_scgc;
   fcube geoAlt_scgc, geoZ_scgc;
-
+  fcube geoLocalTime_scgc;
+  
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   fcube magLon_scgc, magX_scgc;
   fcube magLat_scgc, magY_scgc;
   fcube magAlt_scgc, magZ_scgc;
   fcube magLocalTime_scgc;
+
+  std::vector<fcube> GSE_XYZ_vcgc;
 
   std::string altitude_name = "Altitude";
   std::string altitude_unit = "meters";
