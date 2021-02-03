@@ -1,8 +1,8 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_CALC_CHEMISTRY_H_
-#define AETHER_INCLUDE_CALC_CHEMISTRY_H_
+#ifndef INCLUDE_CALC_CHEMISTRY_H_
+#define INCLUDE_CALC_CHEMISTRY_H_
 
 #include <vector>
 #include <string>
@@ -46,4 +46,4 @@ class Chemistry {
     float heat_electrons;
   };
 
-#endif  // AETHER_INCLUDE_CALC_CHEMISTRY_H_
+#endif  // INCLUDE_CALC_CHEMISTRY_H_
