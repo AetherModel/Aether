@@ -19,6 +19,10 @@ void transform_llr_to_xyz_3d(fcube lat3d,
                              fcube &y3d,
                              fcube &z3d);
 
+std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle);
+std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle);
+std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle);
+
 void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]);
 void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]);
 void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]);

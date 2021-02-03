@@ -66,6 +66,72 @@ void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]) {
 }
 
 // -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the z-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back( X * ca + Y *sa);
+  XYZ_out.push_back(-X * sa + Y *ca);
+  XYZ_out.push_back(Z);  
+
+  return XYZ_out;
+}
+
+// -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the y-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back(X * ca - Z *sa);
+  XYZ_out.push_back(Y);
+  XYZ_out.push_back(X * sa + Z *ca);
+
+  return XYZ_out;
+}
+
+// -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the x-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back(X);  
+  XYZ_out.push_back( Y * ca + Z *sa);
+  XYZ_out.push_back(-Y * sa + Z *ca);
+
+  return XYZ_out;
+}
+
+// -----------------------------------------------------------------------
 // Rotate around the z-axis
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
