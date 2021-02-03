@@ -24,18 +24,22 @@ using namespace arma;
   1 - indication of whether variable is scalar (s) or vector (v)
   2 - physical dimensions:
       3 - 3d (e.g., lon, lat, alt or x, y, z)
-
-
+      c - added this to indicate that it is an armadillo "cube"
+      In theory, there should be a 2 and 1, but I have not created any examples
+  3 - Whether there are ghost cells or not
+      g - ghostcells
+      n - no ghost cells. I have not created any of these yet.
+  4 - Whether the variable is defined at the center or edge
+      c - center
+      e - edge
 
 For example:
   _s3gc : scalar variable, 3d, include ghost cells, cell centers
-  _31ne :
-
+  _vcne : vector variable, cube (3d armadillo), no ghost cells, cell edges
+  _scgc : most common type, scalar, cube, ghost cells, cell centers
+  _vcgc : vector, cube, ghost, centers: vector<cube>
 
  */
-
-// scgc == scalar cube ghostcells at cell centers
-
 
 // These are mapping functions from 3d to 1d arrays. They have to be
 // pretty precise, which is a bit scary to me.
@@ -71,6 +75,9 @@ For example:
    (k)*long(3) + \
    (l))
 
+// ----------------------------------------------------------------------------
+// Grid class
+// ----------------------------------------------------------------------------
 
 class Grid {
 
