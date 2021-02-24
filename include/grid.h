@@ -104,6 +104,17 @@ public:
   fcube magAlt_scgc, magZ_scgc;
   fcube magLocalTime_scgc;
 
+  // These are the locations of the magnetic poles:
+  //  ll -> lat, lon, radius independent
+  fvec mag_pole_north_ll;
+  fvec mag_pole_south_ll;
+
+  // pole gse -> needs to be for each altitude, so we can compute
+  // magnetic local time. We want to use some GSE conversion function,
+  // so this type has to a vector of fcubes:
+  std::vector<fcube> mag_pole_north_gse;
+  std::vector<fcube> mag_pole_south_gse;
+  
   std::vector<fcube> GSE_XYZ_vcgc;
 
   std::string altitude_name = "Altitude";
@@ -135,6 +146,8 @@ public:
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
   void calc_sza(Planets planet, Times time, Report &report);
+  void calc_gse(Planets planet, Times time, Report &report);
+  void calc_mlt(Report &report);
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
   void init_geo_grid(Planets planet, Inputs input, Report &report);

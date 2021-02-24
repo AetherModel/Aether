@@ -60,6 +60,20 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   GSE_XYZ_vcgc.push_back(tmp);  // y-component
   GSE_XYZ_vcgc.push_back(tmp);  // z-component
 
+  mag_pole_north_ll.set_size(2);
+  mag_pole_south_ll.set_size(2);
+  mag_pole_north_ll.zeros();
+  mag_pole_south_ll.zeros();
+
+  fcube tmp_col(1,1,nZ);
+  mag_pole_north_gse.push_back(tmp_col);
+  mag_pole_north_gse.push_back(tmp_col);
+  mag_pole_north_gse.push_back(tmp_col);
+
+  mag_pole_south_gse.push_back(tmp_col);
+  mag_pole_south_gse.push_back(tmp_col);
+  mag_pole_south_gse.push_back(tmp_col);
+
 }
 
 int Grid::get_IsGeoGrid() {
