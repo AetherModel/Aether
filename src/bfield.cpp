@@ -7,6 +7,11 @@
 #include "../include/bfield.h"
 #include "../include/constants.h"
 
+// -----------------------------------------------------------------------------
+// This is the head bfield function that determines which bfield
+// to get, then gets it.
+// -----------------------------------------------------------------------------
+
 bfield_info_type get_bfield(float lon,
                             float lat,
                             float alt,
@@ -43,5 +48,44 @@ bfield_info_type get_bfield(float lon,
 
   report.exit(function);
   return bfield_info;
+}
+
+// -----------------------------------------------------------------------------
+// This function finds the magnetic pole in either the north or south
+// return values in radians!
+// -----------------------------------------------------------------------------
+
+fvec get_magnetic_pole(int IsNorth,
+		       Planets planet,
+		       Inputs input,
+		       Report &report) {
+
+  fvec lonlat(2, fill::zeros);
+
+  if (input.get_bfield_type() == "none") {
+    // No magnetic field, so set location to the geo pole:
+    lonlat(0) = 0.0;
+    if (IsNorth) {
+      lonlat(1) = pi/2.0;
+    } else {
+      lonlat(1) = -pi/2.0;
+    }
+  } else if (input.get_bfield_type() == "dipole") {
+    // This is an approximation right now, due to the fact that the
+    // pole on some planets (including Earth), have an offset, so the
+    // pole location should be altitude dependent.  For many planets,
+    // this is a very small error, but should be fixed at some point.
+    
+    float magnetic_pole_rotation = planet.get_dipole_rotation();
+    float magnetic_pole_tilt = planet.get_dipole_tilt();
+    if (IsNorth) {
+      lonlat(0) = magnetic_pole_rotation;
+      lonlat(1) = pi/2 - magnetic_pole_tilt;
+    } else {
+      lonlat(0) = 2*pi - magnetic_pole_rotation;
+      lonlat(1) = -pi/2 + magnetic_pole_tilt;
+    }
+  }
+  return lonlat;
 }
 
