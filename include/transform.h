@@ -12,13 +12,11 @@ using namespace arma;
 void copy_cube_to_array(fcube cube_in,
                         float *array_out);
 
-void transform_llr_to_xyz_3d(fcube lat3d,
-                             fcube lon3d,
-                             fcube r3d,
-                             fcube &x3d,
-                             fcube &y3d,
-                             fcube &z3d);
+void copy_vector_to_array(std::vector<float> vector_in,
+			  int64_t nElements,
+			  float *array_out);
 
+std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr);
 std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle);
 std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle);
 std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle);

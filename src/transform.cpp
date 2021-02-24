@@ -12,6 +12,21 @@ using namespace arma;
 
 
 // -----------------------------------------------------------------------
+// copy from c++ vector to c-native array
+// -----------------------------------------------------------------------
+
+void copy_vector_to_array(std::vector<float> vector_in,
+			  int64_t nElements,
+			  float *array_out) {
+  
+  for (int64_t i = 0; i < nElements; i++) {
+    array_out[i] = vector_in[i];
+  }
+  
+}
+
+
+// -----------------------------------------------------------------------
 // copy from armidillo cube to 3d c-native array
 // -----------------------------------------------------------------------
 
@@ -36,20 +51,17 @@ void copy_cube_to_array(fcube cube_in,
 
 
 // -----------------------------------------------------------------------
-// Transform Longitude, Latitude, Radius to X, Y, Z
+// Transform Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2]) to
+// X, Y, Z
 // Use armidillo cubes
 // -----------------------------------------------------------------------
 
-void transform_llr_to_xyz_3d(fcube lat3d,
-                             fcube lon3d,
-                             fcube r3d,
-                             fcube &x3d,
-                             fcube &y3d,
-                             fcube &z3d) {
-
-  x3d = r3d % cos(lat3d) % cos(lon3d);
-  y3d = r3d % cos(lat3d) % sin(lon3d);
-  z3d = r3d % sin(lat3d);
+std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr) {
+  std::vector<fcube> xyz;
+  xyz.push_back(llr[2] % cos(llr[1]) % cos(llr[0]));
+  xyz.push_back(llr[2] % cos(llr[1]) % sin(llr[0]));
+  xyz.push_back(llr[2] % sin(llr[1]));
+  return xyz;
 }
 
 // -----------------------------------------------------------------------
