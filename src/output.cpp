@@ -58,6 +58,7 @@ int output(Neutrals neutrals,
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  double time_array[1];
 
   std::string function = "output";
   static int iFunction = -1;
@@ -90,6 +91,8 @@ int output(Neutrals neutrals,
       NcDim latDim = ncdf_file.addDim("Latitude", nLats);
       NcDim altDim = ncdf_file.addDim("Altitude", nAlts);
 
+      NcDim timeDim = ncdf_file.addDim("Time", 1);
+      
       // Define the Coordinate Variables
 
       // Define the netCDF variables for the 3D data.
@@ -100,10 +103,12 @@ int output(Neutrals neutrals,
       dimVector.push_back(latDim);
       dimVector.push_back(altDim);
 
+      NcVar timeVar = ncdf_file.addVar("Time", ncDouble, timeDim);
       NcVar lonVar = ncdf_file.addVar("Longitude", ncFloat, dimVector);
       NcVar latVar = ncdf_file.addVar("Latitude", ncFloat, dimVector);
       NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, dimVector);
 
+      timeVar.putAtt(UNITS, "seconds");
       lonVar.putAtt(UNITS, "radians");
       latVar.putAtt(UNITS, "radians");
       altVar.putAtt(UNITS, "meters");
@@ -117,6 +122,11 @@ int output(Neutrals neutrals,
       countp.push_back(nLats);
       countp.push_back(nAlts);
 
+      // Output time:
+
+      time_array[0] = time.get_current();      
+      timeVar.putVar(time_array);
+      
       // Output longitude, latitude, altitude 3D arrays:
 
       output_variable_3d(startp, countp, grid.geoLon_scgc, lonVar);
@@ -191,6 +201,15 @@ int output(Neutrals neutrals,
                                          ncFloat, dimVector);
         mLonVar.putAtt(UNITS, "radians");
         output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
+
+	grid.calc_sza(planet, time, report);
+	grid.calc_gse(planet, time, report);
+	grid.calc_mlt(report);
+
+        NcVar mLTVar = ncdf_file.addVar("Magnetic Local Time",
+                                         ncFloat, dimVector);
+        mLTVar.putAtt(UNITS, "hours");
+        output_variable_3d(startp, countp, grid.magLocalTime_scgc, mLTVar);
 
         // Output magnetic field components:
 
