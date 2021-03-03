@@ -4,10 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "../include/neutrals.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
+#include "aether.h"
 
 void Neutrals::add_sources(Times time, Report &report) {
 
