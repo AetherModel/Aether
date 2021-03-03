@@ -4,15 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/constants.h"
-#include "../include/sizes.h"
-#include "../include/ions.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/earth.h"
-
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 //
