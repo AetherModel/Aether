@@ -5,8 +5,7 @@
 #include <vector>
 #include <armadillo>
 
-#include "../include/sizes.h"
-#include "../include/grid.h"
+#include "aether.h"
 
 using namespace arma;
 
@@ -215,39 +214,3 @@ void vector_diff(float vect_in_1[3],
   for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }
 
-// -----------------------------------------------------------------------
-// grab one component of a vector
-// -----------------------------------------------------------------------
-
-void get_vector_component(float *vector_in_v3gc,
-                          int iComponent,
-                          int IsGeoGrid,
-                          float *component_out_s3gc) {
-
-  int64_t nLons, nLats, nAlts, iLon, iLat, iAlt, index, indexv;
-
-  if (IsGeoGrid) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-        if (IsGeoGrid) {
-          index = ijk_geo_s3gc(iLon, iLat, iAlt);
-          indexv = ijkl_geo_v3gc(iLon, iLat, iAlt, iComponent);
-        } else {
-          index = ijk_mag_s3gc(iLon, iLat, iAlt);
-          indexv = ijkl_mag_v3gc(iLon, iLat, iAlt, iComponent);
-        }
-        component_out_s3gc[index] = vector_in_v3gc[indexv];
-      }
-    }
-  }
-}
