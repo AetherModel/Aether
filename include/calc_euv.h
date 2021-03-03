@@ -30,4 +30,10 @@ int calc_euv(Planets planet,
              Inputs args,
              Report &report);
 
+void calc_ionization_heating(Euv euv,
+			     Neutrals &neutrals,
+			     Ions &ions,
+			     Report &report);
+
+
 #endif  // INCLUDE_CALC_EUV_H_
