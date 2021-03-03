@@ -3,14 +3,7 @@
 
 #include <netcdf>
 
-#include "../include/neutrals.h"
-#include "../include/grid.h"
-#include "../include/times.h"
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/transform.h"
+#include "aether.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;
@@ -68,6 +61,10 @@ int output(Neutrals neutrals,
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
  
+      grid.calc_sza(planet, time, report);
+      grid.calc_gse(planet, time, report);
+      grid.calc_mlt(report);
+
       std::string time_string;
       std::string file_name;
       std::string file_ext = ".nc";
@@ -84,6 +81,7 @@ int output(Neutrals neutrals,
       file_name = file_pre + "_" + time_string + file_ext;
 
       // Create the file:
+      report.print(0,"Writing file : "+file_name);
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
@@ -159,6 +157,13 @@ int output(Neutrals neutrals,
                                          ncFloat, dimVector);
         tempVar.putAtt(UNITS, neutrals.temperature_unit);
         output_variable_3d(startp, countp, neutrals.temperature_scgc, tempVar);
+
+        // Output SZA
+        NcVar szaVar = ncdf_file.addVar("Solar Zenith Angle",
+					ncFloat, dimVector);
+        szaVar.putAtt(UNITS, "degrees");
+        output_variable_3d(startp, countp, grid.sza_scgc/dtor, szaVar);
+
       }
 
       // ----------------------------------------------
@@ -201,10 +206,6 @@ int output(Neutrals neutrals,
                                          ncFloat, dimVector);
         mLonVar.putAtt(UNITS, "radians");
         output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
-
-	grid.calc_sza(planet, time, report);
-	grid.calc_gse(planet, time, report);
-	grid.calc_mlt(report);
 
         NcVar mLTVar = ncdf_file.addVar("Magnetic Local Time",
                                          ncFloat, dimVector);
