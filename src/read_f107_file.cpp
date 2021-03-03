@@ -7,8 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/time_conversion.h"
-#include "../include/indices.h"
+#include "aether.h"
 
 index_file_output_struct read_f107_file(std::string f107_file,
 					Indices indices,
