@@ -3,15 +3,7 @@
 
 #include <iostream>
 
-#include "../include/sizes.h"
-
-#include "../include/chemistry.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/times.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/solvers.h"
+#include "aether.h"
 
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,
@@ -37,12 +29,14 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Initialize the sources and losses with EUV stuff:
   // ----------------------------------------------------------
 
+  // Neutrals have losses due to ionization
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     neutrals.neutrals[iSpecies].losses_scgc =
       neutrals.neutrals[iSpecies].ionization_scgc;
     neutrals.neutrals[iSpecies].sources_scgc.zeros();
   }
 
+  // Ions have sources due to ionization
   for (iSpecies=0; iSpecies < nIons; iSpecies++) {
     ions.species[iSpecies].losses_scgc.zeros();
     ions.species[iSpecies].sources_scgc =
