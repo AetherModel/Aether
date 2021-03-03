@@ -7,11 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/constants.h"
-#include "../include/planets.h"
-#include "../include/times.h"
-#include "../include/report.h"
-#include "../include/file_input.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Constructor (initiaze the class):
@@ -232,7 +228,7 @@ int Planets::update(Times time) {
     double left_over = (rotations - int(rotations)) * 360.0;
     // put into radians, so it is consistent with the rest of the code:
     planet.longitude_offset =
-      fmod(planet.longitude_jb2000 + left_over + 180.0, 360.0) * dtor;
+      fmod(planet.longitude_jb2000 + left_over, 360.0) * dtor;
   }
 
   return iErr;
