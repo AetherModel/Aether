@@ -3,17 +3,7 @@
 
 #include <iostream>
 
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/neutrals.h"
-#include "../include/euv.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/ions.h"
-#include "../include/chemistry.h"
-#include "../include/calc_euv.h"
-#include "../include/report.h"
-#include "../include/output.h"
+#include "aether.h"
 
 int advance(Planets &planet,
             Grid &gGrid,
@@ -32,7 +22,7 @@ int advance(Planets &planet,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  time.display();
+  if (time.check_time_gate(input.get_dt_report())) time.display();
 
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
@@ -56,7 +46,8 @@ int advance(Planets &planet,
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
 
   neutrals.set_bcs(report);
-
+  neutrals.fill_with_hydrostatic(gGrid, report);
+  
   time.increment_time();
 
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
