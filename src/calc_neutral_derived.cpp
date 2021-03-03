@@ -4,12 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/constants.h"
-#include "../include/neutrals.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/time.h"
-#include "../include/solvers.h"
+#include "aether.h"
 
 //----------------------------------------------------------------------
 //
@@ -152,7 +147,9 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
     xp3d = grid.radius_scgc / neutrals[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
     iAlt = nAlts-1;
-
+    
+    integral3d.fill(0.0);
+    
     integral3d.slice(iAlt) =
       neutrals[iSpecies].density_scgc.slice(iAlt) %
       neutrals[iSpecies].scale_height_scgc.slice(iAlt);
@@ -176,8 +173,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
     // Set chapman integrals to max in the lower ghostcells
 
-    for (int iAlt=0; iAlt < nGCs; iAlt++)
-      neutrals[iSpecies].chapman_scgc.slice(iAlt).fill(max_chapman);
+    neutrals[iSpecies].chapman_scgc.fill(max_chapman);
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
@@ -303,89 +299,3 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 }
 
 
-
-// -----------------------------------------------------------------------------
-// Calculate EUV driven ionization and heating rates
-// -----------------------------------------------------------------------------
-
-void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
-
-  int64_t iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
-  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
-  float tau, intensity, photoion;
-
-  float ionization;
-
-  std::string function = "calc_ionization_heating";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  // Zero out all source terms:
-
-  heating_euv_scgc.zeros();
-  for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-    neutrals[iSpecies].ionization_scgc.zeros();
-
-  int64_t nLons = heating_euv_scgc.n_rows;
-  int64_t nLats = heating_euv_scgc.n_cols;
-  int64_t nAlts = heating_euv_scgc.n_slices;
-
-  fmat tau2d = heating_euv_scgc.slice(0);
-  fmat intensity2d = heating_euv_scgc.slice(0);
-  fmat ionization2d = heating_euv_scgc.slice(0);
-
-  for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
-    for (iWave=0; iWave < euv.nWavelengths; iWave++) {
-
-      tau2d.zeros();
-
-      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-        if (neutrals[iSpecies].iEuvAbsId_ > -1) {
-          i_ = neutrals[iSpecies].iEuvAbsId_;
-          tau2d = tau2d +
-            euv.waveinfo[i_].values[iWave] *
-            neutrals[iSpecies].chapman_scgc.slice(iAlt);
-        }
-      }
-
-      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau2d);
-
-      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        // Calculate Photo-Absorbtion for each species and add them up:
-        i_ = neutrals[iSpecies].iEuvAbsId_;  // index of photo abs cross section
-        if (i_ > -1) {
-          heating_euv_scgc.slice(iAlt) = heating_euv_scgc.slice(iAlt) +
-            euv.wavelengths_energy[iWave] *
-            euv.waveinfo[i_].values[iWave] *  // cross section
-            (intensity2d %
-             neutrals[iSpecies].density_scgc.slice(iAlt) );
-        }
-
-        for (iIonization = 0;
-             iIonization < neutrals[iSpecies].nEuvIonSpecies;
-             iIonization++) {
-
-          i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
-
-          ionization2d =
-            euv.waveinfo[i_].values[iWave] *  // cross section
-            intensity2d %
-            neutrals[iSpecies].density_scgc.slice(iAlt);
-
-          neutrals[iSpecies].ionization_scgc.slice(iAlt) =
-            neutrals[iSpecies].ionization_scgc(iAlt) + ionization2d;
-
-          iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
-          ions.species[iIon].ionization_scgc.slice(iAlt) =
-            ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
-        }  // iIonization
-      }  // iSpecies
-    }  // iWave
-  }  // iAlt
-
-  heating_euv_scgc =
-    heating_efficiency * heating_euv_scgc / rho_scgc / Cv_scgc;
-
-  report.exit(function);
-  return;
-}
