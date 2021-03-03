@@ -1,19 +1,13 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_EUV_H_
-#define AETHER_INCLUDE_EUV_H_
+#ifndef INCLUDE_EUV_H_
+#define INCLUDE_EUV_H_
 
 #include <vector>
 #include <string>
 
-#include "inputs.h"
-#include "times.h"
-#include "indices.h"
-#include "planets.h"
-#include "grid.h"
-#include "ions.h"
-#include "report.h"
+#include "../include/aether.h"
 
 class Euv {
 
@@ -58,8 +52,14 @@ public:
   //
   // -------------------------------------------------------------------------
 
-  int scale_from_1au(Planets planet, Times time);
+  int scale_from_1au(Planets planet, Times time, Report report);
 
+  // -------------------------------------------------------------------------
+  //
+  // -------------------------------------------------------------------------
+
+  int pair_euv(Neutrals &neutrals, Ions ions, Report report);
+  
 private:
 
   // --------------------------------------------------------------------------
@@ -79,4 +79,4 @@ private:
                Report report);
 };
 
-#endif  // AETHER_INCLUDE_EUV_H_
+#endif  // INCLUDE_EUV_H_
