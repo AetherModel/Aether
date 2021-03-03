@@ -2,19 +2,14 @@
 // Full license can be found in License.md
 
 #include <iostream>
-#include <armadillo>
 
-#include "../include/inputs.h"
-#include "../include/grid.h"
-#include "../include/sizes.h"
-
-using namespace arma;
+#include "aether.h"
 
 Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
-  nX = nX_in; nLons = nX;
-  nY = nY_in; nLats = nY;
-  nZ = nZ_in; nAlts = nZ;
+  nX = nX_in + nGCs_in * 2; nLons = nX;
+  nY = nY_in + nGCs_in * 2; nLats = nY;
+  nZ = nZ_in + nGCs_in * 2; nAlts = nZ;
   nGCs = nGCs_in;
 
   int64_t nTotalPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
