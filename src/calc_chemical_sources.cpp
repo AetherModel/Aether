@@ -3,8 +3,7 @@
 
 #include <iostream>
 
-#include "../include/report.h"
-#include "../include/chemistry.h"
+#include "aether.h"
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
                                       Ions &ions,
