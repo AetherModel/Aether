@@ -7,8 +7,6 @@
 #include <vector>
 #include <string>
 
-#include "inputs.h"
-
 struct index_file_output_struct {
   std::vector<double> times;
   int64_t nTimes;
