@@ -6,11 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/inputs.h"
-#include "../include/indices.h"
-#include "../include/report.h"
-#include "../include/read_f107_file.h"
-#include "../include/time_conversion.h"
+#include "aether.h"
 
 // ----------------------------------------------------------------------
 //
