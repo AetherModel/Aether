@@ -132,10 +132,39 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
       output = stoi(line);
     }
     catch(...) {
-      std::cout << "Issue in read_inputs!\n";
+      std::cout << "Issue in read_integer!\n";
       std::cout << "In hash: ";
       std::cout << hash << "\n";
       std::cout << "Trying to read an integer, but got this: ";
+      std::cout << line << "\n";
+    }
+  }
+  return output;
+}
+
+// -------------------------------------------------------------------
+// Read a string, clean it up, and convert it to an float
+// -------------------------------------------------------------------
+
+float read_float(std::ifstream &file_ptr, std::string hash) {
+
+  std::string line = "";
+  float output = -1;
+
+  if (!file_ptr.is_open()) {
+    std::cout << "File is not open (read_float)!\n";
+    std::cout << "hash : " << hash << "\n";
+  } else {
+    getline(file_ptr, line);
+    line = strip_string_end(line);
+    try {
+      output = stoi(line);
+    }
+    catch(...) {
+      std::cout << "Issue in read_float!\n";
+      std::cout << "In hash: ";
+      std::cout << hash << "\n";
+      std::cout << "Trying to read a float, but got this: ";
       std::cout << line << "\n";
     }
   }
