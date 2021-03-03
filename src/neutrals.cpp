@@ -4,18 +4,8 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
-#include <armadillo>
 
-#include "../include/constants.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/earth.h"
-
-using namespace arma;
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 //  Create a single species by filling the species structure
@@ -271,13 +261,26 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-
-    neutrals[iSpecies].
-      density_scgc.slice(0).
+    neutrals[iSpecies].density_scgc.slice(0).
       fill(neutrals[iSpecies].lower_bc_density);
+  }
+  fill_with_hydrostatic(grid, report);
+
+  return iErr;
+}
+
+//----------------------------------------------------------------------
+// Fill With Hydrostatic Solution
+//----------------------------------------------------------------------
+
+void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
+
+  int64_t nAlts = grid.get_nAlts();
+
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
     // Integrate with hydrostatic equilibrium up:
-    for (iAlt = 1; iAlt < nAlts; iAlt++) {
+    for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       neutrals[iSpecies].scale_height_scgc.slice(iAlt) =
         boltzmanns_constant *
         temperature_scgc.slice(iAlt) /
@@ -289,9 +292,7 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
             neutrals[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
-
   calc_mass_density(report);
-  return iErr;
 }
 
 //----------------------------------------------------------------------
@@ -309,68 +310,14 @@ void Neutrals::set_bcs(Report &report) {
   // temperature_scgc.slice(nAlts-2).fill(800.0);
   // temperature_scgc.slice(nAlts-1).fill(800.0);
 
+  // Set the lower boundary condition:
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    neutrals[iSpecies].density_scgc.slice(0).
+      fill(neutrals[iSpecies].lower_bc_density);
+  }
+
   temperature_scgc.slice(nAlts-2) = temperature_scgc.slice(nAlts-3);
   temperature_scgc.slice(nAlts-1) = temperature_scgc.slice(nAlts-2);
 
   report.exit(function);
-}
-
-//----------------------------------------------------------------------
-// This code takes the EUV information that was read in from the EUV
-// file and tries to figure out which things are absorbtion/ionization
-// cross sections.  It does this by comparing the name of the neutral
-// species to the first column in the euv.csv file.  If it finds a
-// match, it then checks to see if it is an absorbtion or ionization
-// cross section.  If it is an ionization cs, then it tries to figure
-// out which ion it is producing (the "to" column).
-// ---------------------------------------------------------------------
-
-int Neutrals::pair_euv(Euv euv, Ions ions, Report report) {
-
-  int iErr = 0;
-
-  if (report.test_verbose(3)) std::cout << "Neutrals::pair_euv \n";
-
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-
-    if (report.test_verbose(5))
-      std::cout << neutrals[iSpecies].cName << "\n";
-
-    neutrals[iSpecies].iEuvAbsId_ = -1;
-    neutrals[iSpecies].nEuvIonSpecies = 0;
-
-    // Check each row to see if the first column "name" matches:
-    for (int iEuv=0; iEuv < euv.waveinfo.size(); iEuv++) {
-
-      if (report.test_verbose(6))
-        std::cout << "  " << euv.waveinfo[iEuv].name << "\n";
-
-      // if this matches...
-      if (neutrals[iSpecies].cName == euv.waveinfo[iEuv].name) {
-
-        // First see if we can find absorbtion:
-        if (euv.waveinfo[iEuv].type == "abs") {
-          if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
-          neutrals[iSpecies].iEuvAbsId_ = iEuv;
-        }
-
-        // Next see if we can find ionizations:
-        if (euv.waveinfo[iEuv].type == "ion") {
-
-          // Loop through the ions to see if names match:
-          for (int iIon = 0; iIon < nIons; iIon++) {
-            if (ions.species[iIon].cName == euv.waveinfo[iEuv].to) {
-              if (report.test_verbose(5))
-                std::cout << "  Found ionization!! --> "
-                          << ions.species[iIon].cName << "\n";
-              neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
-              neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
-              neutrals[iSpecies].nEuvIonSpecies++;
-            }  // if to
-          }  // iIon loop
-        }  // if ionization
-      }  // if species is name
-    }  // for iEuv
-  }  // for iSpecies
-  return iErr;
 }
