@@ -4,13 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/indices.h"
-#include "../include/euv.h"
-#include "../include/report.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
+#include "aether.h"
 
 int calc_euv(Planets planet,
              Grid grid,
@@ -33,9 +27,9 @@ int calc_euv(Planets planet,
     neutrals.calc_chapman(grid, report);
 
     iErr = euv.euvac(time, indices, report);
-    iErr = euv.scale_from_1au(planet, time);
+    iErr = euv.scale_from_1au(planet, time, report);
 
-    neutrals.calc_ionization_heating(euv, ions, report);
+    calc_ionization_heating(euv, neutrals, ions, report);
 
     report.exit(function);
   }
@@ -43,3 +37,99 @@ int calc_euv(Planets planet,
   return iErr;
 }
 
+// -----------------------------------------------------------------------------
+// Calculate EUV driven ionization and heating rates
+// -----------------------------------------------------------------------------
+
+void calc_ionization_heating(Euv euv,
+			     Neutrals &neutrals,
+			     Ions &ions,
+			     Report &report) {
+
+  int64_t iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
+  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
+  float tau, intensity, photoion;
+
+  float ionization;
+
+  std::string function = "calc_ionization_heating";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Zero out all source terms:
+
+  neutrals.heating_euv_scgc.zeros();
+  for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
+    neutrals.neutrals[iSpecies].ionization_scgc.zeros();
+
+  for (iSpecies=0; iSpecies < nIons; iSpecies++)
+    ions.species[iSpecies].ionization_scgc.zeros();
+
+  int64_t nLons = neutrals.heating_euv_scgc.n_rows;
+  int64_t nLats = neutrals.heating_euv_scgc.n_cols;
+  int64_t nAlts = neutrals.heating_euv_scgc.n_slices;
+
+  fmat tau2d = neutrals.heating_euv_scgc.slice(0);
+  fmat intensity2d = neutrals.heating_euv_scgc.slice(0);
+  fmat ionization2d = neutrals.heating_euv_scgc.slice(0);
+
+  for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
+    for (iWave=0; iWave < euv.nWavelengths; iWave++) {
+
+      tau2d.zeros();
+
+      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+        if (neutrals.neutrals[iSpecies].iEuvAbsId_ > -1) {
+          i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;
+          tau2d = tau2d +
+            euv.waveinfo[i_].values[iWave] *
+            neutrals.neutrals[iSpecies].chapman_scgc.slice(iAlt);
+        }
+      }
+
+      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau2d);
+
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        // Calculate Photo-Absorbtion for each species and add them up:
+	// index of photo abs cross section
+        i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;  
+        if (i_ > -1) {
+          neutrals.heating_euv_scgc.slice(iAlt) =
+	    neutrals.heating_euv_scgc.slice(iAlt) +
+            euv.wavelengths_energy[iWave] *
+            euv.waveinfo[i_].values[iWave] *  // cross section
+            (intensity2d %
+             neutrals.neutrals[iSpecies].density_scgc.slice(iAlt) );
+        }
+
+        for (iIonization = 0;
+             iIonization < neutrals.neutrals[iSpecies].nEuvIonSpecies;
+             iIonization++) {
+
+          i_ = neutrals.neutrals[iSpecies].iEuvIonId_[iIonization];
+
+          ionization2d =
+            euv.waveinfo[i_].values[iWave] *  // cross section
+            intensity2d %
+            neutrals.neutrals[iSpecies].density_scgc.slice(iAlt);
+
+          neutrals.neutrals[iSpecies].ionization_scgc.slice(iAlt) =
+            neutrals.neutrals[iSpecies].ionization_scgc(iAlt) + ionization2d;
+
+          iIon = neutrals.neutrals[iSpecies].iEuvIonSpecies_[iIonization];
+          ions.species[iIon].ionization_scgc.slice(iAlt) =
+            ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
+        }  // iIonization
+      }  // iSpecies
+    }  // iWave
+  }  // iAlt
+
+  neutrals.heating_euv_scgc =
+    neutrals.heating_efficiency *
+    neutrals.heating_euv_scgc /
+    neutrals.rho_scgc /
+    neutrals.Cv_scgc;
+
+  report.exit(function);
+  return;
+}
