@@ -16,10 +16,11 @@ COMPILE.CPP = g++
 LINK.CPP = g++
 AR = ar -rs
 
-# FLAGS = -O3 -ffast-math -c -I${INCLUDE_DIR}
-
 # Can use this version for no optimization and no fast math:
-FLAGS = -c -I${INCLUDE_DIR}
+#FLAGS = -c -I${INCLUDE_DIR} -I../include
+# Optimized:
+FLAGS = -O3 -ffast-math -c -I${INCLUDE_DIR} -I../include
+
 
 .SUFFICES:
 .SUFFICES: .cpp .o
