@@ -7,9 +7,6 @@
 #include <vector>
 #include <string>
 
-#include "times.h"
-#include "report.h"
-
 class Inputs {
 
 public:
@@ -18,6 +15,7 @@ public:
   int read(Times &time, Report &report);
   int get_verbose();
   float get_dt_euv();
+  float get_dt_report();
   float get_n_outputs();
   float get_dt_output(int iOutput);
   std::string get_type_output(int iOutput);
@@ -49,6 +47,10 @@ public:
 
   grid_input_struct get_grid_inputs();
 
+  int get_nLonsGeo();
+  int get_nLatsGeo();
+  int get_nAltsGeo();
+
   int iVerbose;
   int iTimingDepth;
 
@@ -66,7 +68,7 @@ private:
 
   std::string bfield = "none";
 
-  grid_input_struct grid_input;
+  grid_input_struct geo_grid_input;
 
   float euv_heating_eff_neutrals;
   float euv_heating_eff_electrons;
@@ -74,6 +76,11 @@ private:
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
   float dt_euv;
+  float dt_report;
+
+  int nLonsGeo;
+  int nLatsGeo;
+  int nAltsGeo;
 };
 
 #endif  // INCLUDE_INPUTS_H_
