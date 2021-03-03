@@ -6,13 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/sizes.h"
-#include "../include/constants.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/time_conversion.h"
-#include "../include/report.h"
+#include "aether.h"
 
 Inputs::Inputs(Times &time, Report &report) {
 
@@ -26,25 +20,29 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Grid Defaults:
-  grid_input.alt_file = "";
-  grid_input.IsUniformAlt = 1;
-  grid_input.alt_min = 100.0 * 1000.0;
-  grid_input.dalt = 5.0 * 1000.0;
+  geo_grid_input.alt_file = "";
+  geo_grid_input.IsUniformAlt = 1;
+  geo_grid_input.alt_min = 100.0 * 1000.0;
+  geo_grid_input.dalt = 5.0 * 1000.0;
 
-  if (nGeoLons == 1) {
-    grid_input.lon_min = 0.0;
-    grid_input.lon_max = 0.0;
+  nLonsGeo = 12;
+  nLatsGeo = 20;
+  nAltsGeo = 40;
+  
+  if (nLonsGeo == 1) {
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 0.0;
   } else {
-    grid_input.lon_min = 0.0;
-    grid_input.lon_max = 2.0*pi;
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 2.0*pi;
   }
 
-  if (nGeoLats == 1) {
-    grid_input.lat_min = 0.0;
-    grid_input.lat_max = 0.0;
+  if (nLatsGeo == 1) {
+    geo_grid_input.lat_min = 0.0;
+    geo_grid_input.lat_max = 0.0;
   } else {
-    grid_input.lat_min = -pi/2;
-    grid_input.lat_max = pi/2;
+    geo_grid_input.lat_min = -pi/2;
+    geo_grid_input.lat_max = pi/2;
   }
 
   euv_heating_eff_neutrals = 0.40;
@@ -53,7 +51,8 @@ Inputs::Inputs(Times &time, Report &report) {
   dt_output.push_back(300.0);
   type_output.push_back("states");
   dt_euv = 60.0;
-
+  dt_report = 60.0;
+  
   // ------------------------------------------------
   // Now read the input file:
   int iErr = read(time, report);
@@ -64,7 +63,7 @@ Inputs::Inputs(Times &time, Report &report) {
 // -----------------------------------------------------------------------
 
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
-  return grid_input;
+  return geo_grid_input;
 }
 
 // -----------------------------------------------------------------------
@@ -103,8 +102,32 @@ float Inputs::get_dt_euv() {
 //
 // -----------------------------------------------------------------------
 
+float Inputs::get_dt_report() {
+  return dt_report;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
 float Inputs::get_n_outputs() {
   return dt_output.size();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+int Inputs::get_nLonsGeo() {
+  return nLonsGeo;
+}
+
+int Inputs::get_nLatsGeo() {
+  return nLatsGeo;
+}
+
+int Inputs::get_nAltsGeo() {
+  return nAltsGeo;
 }
 
 // -----------------------------------------------------------------------
@@ -257,6 +280,46 @@ int Inputs::read(Times &time, Report &report) {
         if (report.test_verbose(3)) {
           std::cout << "Endtime : ";
           display_itime(iend);
+        }
+      }
+
+      // ---------------------------
+      // #geoblocksize
+      // ---------------------------
+
+      if (hash == "#geoblocksize") {
+        nLonsGeo = read_int(infile_ptr, hash);
+        nLatsGeo = read_int(infile_ptr, hash);
+        nAltsGeo = read_int(infile_ptr, hash);
+        if (report.test_verbose(3)) {
+          std::cout << "nLonsGeo : " << nLonsGeo << "\n";
+          std::cout << "nLatsGeo : " << nLatsGeo << "\n";
+          std::cout << "nAltsGeo : " << nAltsGeo << "\n";
+        }
+      }
+
+      // ---------------------------
+      // #geogrid
+      // ---------------------------
+
+      if (hash == "#geogrid") {
+	geo_grid_input.lon_min = read_float(infile_ptr, hash) * dtor;
+	geo_grid_input.lon_max = read_float(infile_ptr, hash) * dtor;
+	geo_grid_input.lat_min = read_float(infile_ptr, hash) * dtor;
+	geo_grid_input.lat_max = read_float(infile_ptr, hash) * dtor;
+	geo_grid_input.alt_min = read_float(infile_ptr, hash) * 1000.0;
+	geo_grid_input.dalt = read_float(infile_ptr, hash) * 1000.0;
+	geo_grid_input.IsUniformAlt = 1;
+        if (report.test_verbose(3)) {
+          std::cout << "lon min/max : "
+		    << geo_grid_input.lon_min
+		    << geo_grid_input.lon_max << "\n";
+          std::cout << "lat min/max : "
+		    << geo_grid_input.lat_min
+		    << geo_grid_input.lat_max << "\n";
+          std::cout << "alt min + dalt: "
+		    << geo_grid_input.alt_min
+		    << geo_grid_input.dalt << "\n";
         }
       }
 
