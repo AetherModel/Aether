@@ -1,11 +1,7 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include "../include/inputs.h"
-#include "../include/planets.h"
-#include "../include/report.h"
-#include "../include/bfield.h"
-#include "../include/constants.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // This is the head bfield function that determines which bfield
