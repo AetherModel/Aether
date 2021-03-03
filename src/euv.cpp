@@ -7,11 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/constants.h"
-#include "../include/inputs.h"
-#include "../include/indices.h"
-#include "../include/euv.h"
-#include "../include/report.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize EUV
@@ -169,6 +165,65 @@ int Euv::slot_euv(std::string item,
   return iErr;
 }
 
+//----------------------------------------------------------------------
+// This code takes the EUV information that was read in from the EUV
+// file and tries to figure out which things are absorbtion/ionization
+// cross sections.  It does this by comparing the name of the neutral
+// species to the first column in the euv.csv file.  If it finds a
+// match, it then checks to see if it is an absorbtion or ionization
+// cross section.  If it is an ionization cs, then it tries to figure
+// out which ion it is producing (the "to" column).
+// ---------------------------------------------------------------------
+
+int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
+
+  int iErr = 0;
+
+  if (report.test_verbose(3)) std::cout << "Euv::pair_euv \n";
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
+    if (report.test_verbose(5))
+      std::cout << neutrals.neutrals[iSpecies].cName << "\n";
+
+    neutrals.neutrals[iSpecies].iEuvAbsId_ = -1;
+    neutrals.neutrals[iSpecies].nEuvIonSpecies = 0;
+
+    // Check each row to see if the first column "name" matches:
+    for (int iEuv=0; iEuv < waveinfo.size(); iEuv++) {
+
+      if (report.test_verbose(6))
+        std::cout << "  " << waveinfo[iEuv].name << "\n";
+
+      // if this matches...
+      if (neutrals.neutrals[iSpecies].cName == waveinfo[iEuv].name) {
+
+        // First see if we can find absorbtion:
+        if (waveinfo[iEuv].type == "abs") {
+          if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
+          neutrals.neutrals[iSpecies].iEuvAbsId_ = iEuv;
+        }
+
+        // Next see if we can find ionizations:
+        if (waveinfo[iEuv].type == "ion") {
+
+          // Loop through the ions to see if names match:
+          for (int iIon = 0; iIon < nIons; iIon++) {
+            if (ions.species[iIon].cName == waveinfo[iEuv].to) {
+              if (report.test_verbose(5))
+                std::cout << "  Found ionization!! --> "
+                          << ions.species[iIon].cName << "\n";
+              neutrals.neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
+              neutrals.neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
+              neutrals.neutrals[iSpecies].nEuvIonSpecies++;
+            }  // if to
+          }  // iIon loop
+        }  // if ionization
+      }  // if species is name
+    }  // for iEuv
+  }  // for iSpecies
+  return iErr;
+}
 
 
 // --------------------------------------------------------------------------
@@ -176,10 +231,13 @@ int Euv::slot_euv(std::string item,
 // --------------------------------------------------------------------------
 
 int Euv::scale_from_1au(Planets planet,
-                        Times time) {
+                        Times time,
+			Report report) {
   int iErr = 0;
   float d = planet.get_star_to_planet_dist(time);
   float scale = 1.0 / (d*d);
+  if (report.test_verbose(7))
+    std::cout << "Scale from 1 AU : " << scale << "\n";
   for (int iWave = 0; iWave < nWavelengths; iWave++)
     wavelengths_intensity_top[iWave] = scale * wavelengths_intensity_1au[iWave];
   return iErr;
@@ -203,14 +261,7 @@ int Euv::euvac(Times time,
   float f107 = indices.get_f107(time.get_current());
   float f107a = indices.get_f107a(time.get_current());
 
-  f107 = 100.0;
-  f107a = 100.0;
-
-
   float mean_f107 = (f107 + f107a)/2.0;
-
-  if (report.test_verbose(7))
-    std::cout << "F107 & F107a : " << f107 << " " << f107a << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
     slope = 1.0 + euvac_afac[iWave] * (mean_f107 - 80.0);
@@ -218,7 +269,7 @@ int Euv::euvac(Times time,
     wavelengths_intensity_1au[iWave] = euvac_f74113[iWave] * slope * pcm2topm2;
   }
 
-  if (report.test_verbose(8)) {
+  if (report.test_verbose(7)) {
     std::cout << "EUVAC output : "
               << f107 << " " << f107a
               << " -> " << mean_f107 << "\n";
