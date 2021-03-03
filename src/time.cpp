@@ -7,9 +7,7 @@
 #include <iostream>
 #include <time.h>
 
-#include "../include/times.h"
-#include "../include/sizes.h"
-#include "../include/time_conversion.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Instantiate the time variables
@@ -213,7 +211,7 @@ void Times::display() {
   walltime =
     static_cast<double>(sys_time_current) -
     static_cast<double>(sys_time_start);
-
+  
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;
   float ratio_of_time = elapsed_simulation_time / total_simulation_time;
@@ -222,10 +220,10 @@ void Times::display() {
 
   if (walltime > 120) {
     if (walltime > 7200) {
-      walltime = walltime/3600.0;
+      walltime = int(walltime/3600.0);
       units = "h";
     } else {
-      walltime = walltime/60.0;
+      walltime = int(walltime/60.0);
       units = "m";
     }
   }
