@@ -6,10 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "../include/chemistry.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-#include "../include/file_input.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize chemistry class
@@ -80,6 +77,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
             if (reaction.nLosses > 0 && reaction.nSources > 0) {
+	      if (report.test_verbose(2)) display_reaction(reaction);
               reactions.push_back(reaction);
               nReactions++;
             }
@@ -138,10 +136,10 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction.rate = stof(line[7]);
 
   // Branching Ratio:
-  reaction.branching_ratio = stof(line[10]);
+  reaction.branching_ratio = stof(line[8]);
 
   // energy released as exo-thermic reaction:
-  reaction.energy = stof(line[11]);
+  reaction.energy = stof(line[9]);
 
   report.exit(function);
   return reaction;
