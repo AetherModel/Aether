@@ -4,14 +4,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "../include/inputs.h"
-#include "../include/constants.h"
-#include "../include/report.h"
-#include "../include/grid.h"
-#include "../include/sizes.h"
-#include "../include/planets.h"
-#include "../include/transform.h"
-#include "../include/bfield.h"
+#include "aether.h"
 
 // ---------------------------------------------------------------------------
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
@@ -30,9 +23,10 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
 
   // Local time is in radians
   geoLocalTime_scgc = geoLon_scgc + lon_offset;
+  geoLocalTime_scgc = geoLocalTime_scgc - 2*pi * floor(geoLocalTime_scgc/(2*pi));
   cos_sza_scgc =
     sin_dec * sin(geoLat_scgc) +
-    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc);
+    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - pi);
   sza_scgc = acos(cos_sza_scgc);
 
   report.exit(function);
