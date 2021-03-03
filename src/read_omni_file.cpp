@@ -7,11 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/time_conversion.h"
-#include "../include/indices.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/read_f107_file.h"
+#include "aether.h"
 
 index_file_output_struct read_omni_file(std::string omni_file,
 					Indices indices,
