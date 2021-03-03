@@ -74,7 +74,6 @@ def read_aether_one_file(file, vars):
 
     iVar = 0
     for var in vars:
-        print(iVar,var)
         data[iVar] = np.array(ncfile.variables[var])
         iVar = iVar + 1
     ncfile.close()

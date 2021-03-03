@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/python3
 
 # the Scientific Python netCDF 3 interface
 # http://dirac.cnrs-orleans.fr/ScientificPython/
@@ -15,7 +15,8 @@ import glob
 
 # open netCDF file for reading.
 
-filelist = sorted(glob.glob("3DALL*.nc"))
+#filelist = sorted(glob.glob("3DALL*.nc"))
+filelist = sorted(glob.glob("3DBFI*.nc"))
 file = filelist[-1];
 
 ncfile = Dataset(file,'r') 
@@ -32,24 +33,26 @@ nLats = len(lats[0,:,0])
 nAlts = len(lats[0,0,:])
 
 # temp = np.array(ncfile.variables['Temperature'])
-o = np.array(ncfile.variables['O'])
-o2p = np.array(ncfile.variables['O2+'])
-op = np.array(ncfile.variables['O+'])
-e = np.array(ncfile.variables['e-'])
+#o = np.array(ncfile.variables['O'])
+#o2p = np.array(ncfile.variables['O2+'])
+#op = np.array(ncfile.variables['O+'])
+#e = np.array(ncfile.variables['e-'])
 # maglat = np.array(ncfile.variables['Magnetic Latitude'])
-# maglon = np.array(ncfile.variables['Magnetic Longitude'])
+maglon = np.array(ncfile.variables['Magnetic Longitude'])
+mlt = np.array(ncfile.variables['Magnetic Local Time'])
 # bx = np.array(ncfile.variables['Bx'])
 # by = np.array(ncfile.variables['By'])
 # bz = np.array(ncfile.variables['Bz'])
 
 ncfile.close()
 
-iCut = 2
+iCut = 0
 
 # value = temp # np.log10(o)
-# value = maglon # np.log10(o)
+#value = maglon # np.log10(o)
+value = mlt
 #value = o2p
-value = e
+#value = e
 #value = np.log10(o)
 
 # Lat/Lon Cut:
@@ -89,7 +92,8 @@ minY = (yPos[ 1] + yPos[ 2])/2
 maxY = (yPos[-2] + yPos[-3])/2
 
 #cax = ax.pcolor(xPos, yPos, d2d, vmin=mini, vmax=maxi)#, shading='auto')
-cax = ax.pcolor(xPos, yPos, d2d, shading='auto')
+#cax = ax.pcolor(xPos, yPos, d2d, shading='auto')
+cax = ax.pcolor(xPos, yPos, d2d)
 ax.set_ylim([minY,maxY])
 ax.set_xlim([minX,maxX])
 

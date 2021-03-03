@@ -286,6 +286,8 @@ for file in filelist:
     
 
 AllData2D = np.array(AllData2D)
+if (args['IsLog']):
+    AllData2D = np.log10(AllData2D)
 if (args["winds"]):
     AllWindsX = np.array(AllWindsX)
     AllWindsY = np.array(AllWindsY)
@@ -302,7 +304,6 @@ if (Negative):
     maxi = np.max(abs(AllData2D))*1.05
     mini = -maxi
 
-print(AllData2D.shape)
 if (cut == 'alt'):
     maskNorth = ((yPos>45) & (yPos<90.0))
     maskSouth = ((yPos<-45) & (yPos>-90.0))
@@ -339,7 +340,6 @@ for time in AllTimes:
 
     ut = time.hour + time.minute/60.0 + time.second/3600.0
     shift = ut * 15.0
-    print(ut)
 
     fig = plt.figure(constrained_layout=False,
                      tight_layout=True, figsize=(10, 8.5))
@@ -348,7 +348,6 @@ for time in AllTimes:
     gs = GridSpec(nrows=2, ncols=2, wspace=0.0, left=0.0, right=0.9)
 
     norm = cm.colors.Normalize(vmax=mini, vmin=maxi)
-    print(mini)
     if (mini >= 0):
         cmap = cm.plasma
     else:
@@ -426,7 +425,6 @@ for time in AllTimes:
             pi = 3.14159
             ax3.set_xticks(np.arange(0,2*pi,pi/2))
             ax3.set_yticks(np.arange(10,50,10))
-
 
     print("Writing file : "+outfile)
     fig.savefig(outfile)
