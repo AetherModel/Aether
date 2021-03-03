@@ -4,12 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/inputs.h"
-#include "../include/planets.h"
-#include "../include/report.h"
-#include "../include/bfield.h"
-#include "../include/transform.h"
-#include "../include/constants.h"
+#include "aether.h"
 
 bfield_info_type get_dipole(float lon,
                             float lat,
