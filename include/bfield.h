@@ -6,13 +6,6 @@
 
 // The armadillo library is to allow the use of 3d cubes and other
 // array types, with array math built in. This eliminates loops!
-#include <armadillo>
-
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-
-using namespace arma;
 
 struct bfield_info_type {
   float b[3];
