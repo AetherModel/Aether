@@ -3,21 +3,7 @@
 
 #include <iostream>
 
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-#include "../include/indices.h"
-#include "../include/read_f107_file.h"
-
-#include "../include/neutrals.h"
-#include "../include/euv.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/sizes.h"
-#include "../include/ions.h"
-#include "../include/chemistry.h"
-#include "../include/output.h"
-#include "../include/advance.h"
+#include "aether.h"
 
 int main() {
 
@@ -25,6 +11,11 @@ int main() {
 
   Times time;
   Report report;
+
+  std::string function = "main";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
   Inputs input(time, report);
   Euv euv(input, report);
   Planets planet(input, report);
@@ -32,7 +23,9 @@ int main() {
   iErr = read_and_store_indices(indices, input, report);
   
   // Geo grid stuff:
-  Grid gGrid(nGeoLonsG, nGeoLatsG, nGeoAltsG, nGeoGhosts);
+  Grid gGrid(input.get_nLonsGeo(),
+	     input.get_nLatsGeo(),
+	     input.get_nAltsGeo(), nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
@@ -41,7 +34,7 @@ int main() {
 
   Neutrals neutrals(gGrid, input, report);
   Ions ions(gGrid, input, report);
-  neutrals.pair_euv(euv, ions, report);
+  euv.pair_euv(neutrals, ions, report);
 
   Chemistry chemistry(neutrals, ions, input, report);
 
@@ -79,6 +72,7 @@ int main() {
 
     // Do some coupling here. But we have no coupling to do. Sad.
   }
+  report.exit(function);
   report.times();
   return iErr;
 }
