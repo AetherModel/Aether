@@ -29,6 +29,8 @@ python3 -m pip cpplint
 python3 -m pip --user cpplint
 ```
 
+Using a linter in an editor is good too, although it has been found that these are not as good.  The linter in the 'atom' editor is ok, but you have to install the packages `linter` and `gcc-linter`. In atom, you can install the packages `whitespaces` and `tabs-to-spaces` to automatically remove whitespaces at the end of the lines, and convert tabs to spaces.
+
 ### Commit Styling
 
 The first line of the commit must be *at most* ~50 characters long and
