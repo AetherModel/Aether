@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <iostream>
-#include "../include/constants.h"
-#include "../include/time_conversion.h"
+
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // display time as a 7-element array
@@ -56,7 +56,9 @@ double time_int_to_real(std::vector<int> itime) {
 //
 // -----------------------------------------------------------------------------
 
-void time_real_to_int(double timereal, std::vector<int> &itime) {
+std::vector<int> time_real_to_int(double timereal) {
+
+  std::vector<int> itime;
 
   int nYears = static_cast<int>(timereal/seconds_per_year);
   int nLeaps = nYears/4;
@@ -122,6 +124,8 @@ void time_real_to_int(double timereal, std::vector<int> &itime) {
   itime[4] = nMinutes;
   itime[5] = nSeconds;
   itime[6] = nMillis;
+
+  return itime;
 }
 
 // -----------------------------------------------------------------------------
@@ -162,7 +166,7 @@ int test_time_routines() {
     std::cout << "Passes!!!\n";
   }
 
-  time_real_to_int(timecheck, itime);
+  itime = time_real_to_int(timecheck);
   display_itime(itime);
 
   itime[0] = 2000;

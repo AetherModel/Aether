@@ -7,14 +7,14 @@
 #include <iostream>
 #include <time.h>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Instantiate the time variables
 // -----------------------------------------------------------------------------
 
 Times::Times() {
-  
+
   iCurrent = {0, 0, 0, 0, 0, 0, 0};
   iStep = -1;
 
@@ -150,7 +150,7 @@ void Times::increment_time() {
   current += dt;
 
   // Convert current time to array:
-  time_real_to_int(current, iCurrent);
+  iCurrent = time_real_to_int(current);
 
   // Set named variables:
   year = iCurrent[0];
@@ -211,7 +211,7 @@ void Times::display() {
   walltime =
     static_cast<double>(sys_time_current) -
     static_cast<double>(sys_time_start);
-  
+
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;
   float ratio_of_time = elapsed_simulation_time / total_simulation_time;
@@ -220,10 +220,10 @@ void Times::display() {
 
   if (walltime > 120) {
     if (walltime > 7200) {
-      walltime = int(walltime/3600.0);
+      walltime = static_cast<int>(walltime/3600.0);
       units = "h";
     } else {
-      walltime = int(walltime/60.0);
+      walltime = static_cast<int>(walltime/60.0);
       units = "m";
     }
   }
@@ -240,7 +240,7 @@ void Times::display() {
 
   std::cout << "Wall Time : " << walltime << units;
   std::cout << " (left : "
-	    << remaining_walltime << remaining_units << ")";
+      << remaining_walltime << remaining_units << ")";
   std::cout << "; Current Time : ";
   display_itime(iCurrent);
 }

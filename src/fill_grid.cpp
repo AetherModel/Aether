@@ -4,7 +4,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // ---------------------------------------------------------------------------
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
@@ -17,13 +17,13 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   report.enter(function, iFunction);
 
   float lon_offset = planet.get_longitude_offset(time);
-  float declination = planet.get_declination(time);
   float sin_dec = planet.get_sin_dec(time);
   float cos_dec = planet.get_cos_dec(time);
 
   // Local time is in radians
   geoLocalTime_scgc = geoLon_scgc + lon_offset;
-  geoLocalTime_scgc = geoLocalTime_scgc - 2*pi * floor(geoLocalTime_scgc/(2*pi));
+  geoLocalTime_scgc =
+    geoLocalTime_scgc - 2*pi * floor(geoLocalTime_scgc/(2*pi));
   cos_sza_scgc =
     sin_dec * sin(geoLat_scgc) +
     cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - pi);
@@ -58,7 +58,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
   // Do the same thing for the magnetic poles:
 
   std::vector<fcube> lon_lat_radius_col;
-  fcube tmp_col(1,1,nZ);
+  fcube tmp_col(1, 1, nZ);
 
   // North:
   // Lon (converted to local time):
@@ -70,9 +70,9 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
   tmp_col.fill(mag_pole_north_ll[1]);
   lon_lat_radius_col.push_back(tmp_col);
   // Radius:
-  tmp_col.tube(0,0) = radius_scgc.tube(nX/2,nY/2);
+  tmp_col.tube(0, 0) = radius_scgc.tube(nX/2, nY/2);
   lon_lat_radius_col.push_back(tmp_col);
-  
+
   mag_pole_north_gse = transform_llr_to_xyz_3d(lon_lat_radius_col);
   mag_pole_north_gse = rotate_around_y_3d(mag_pole_north_gse, -declination);
 
@@ -107,7 +107,7 @@ void Grid::calc_mlt(Report &report) {
 
   // Need to blend north and south, so use the distance from the pole
   // To indicate which pole you should use for MLT:
-  
+
   // If you look throught the Earth from the north, the magnetic poles
   // in the north and south are on different sides of the Earth. If
   // you calculate MLT based on one pole, you get the wrong answer
@@ -132,7 +132,7 @@ void Grid::calc_mlt(Report &report) {
       (1.0 - dlat_north) * mag_pole_south_gse[1](0, 0, iZ);
     dx = GSE_XYZ_vcgc[0].slice(iZ) - x_blend;
     dy = GSE_XYZ_vcgc[1].slice(iZ) - y_blend;
-    
+
     mlt = (atan2(dy, dx) + 2*pi)/pi*12.0;
     magLocalTime_scgc.slice(iZ) = mlt - 24.0 * floor(mlt/24.0);
   }
@@ -188,7 +188,6 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
   int64_t iLon, iLat, iAlt;
 
-  float radius0;
   float mu = planet.get_mu();
 
   report.print(3, "starting fill_grid_radius");
@@ -217,7 +216,7 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
 void Grid::fill_grid(Planets planet, Report &report) {
 
-  int64_t iLon, iLat, iAlt;
+  int64_t iAlt;
 
   report.print(3, "starting fill_grid");
 
@@ -240,7 +239,7 @@ void Grid::fill_grid(Planets planet, Report &report) {
   lon_lat_radius.push_back(geoLat_scgc);
   lon_lat_radius.push_back(radius_scgc);
   std::vector<fcube> xyz;
-  
+
   xyz = transform_llr_to_xyz_3d(lon_lat_radius);
   geoX_scgc = xyz[0];
   geoY_scgc = xyz[0];

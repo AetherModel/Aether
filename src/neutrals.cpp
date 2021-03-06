@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 //  Create a single species by filling the species structure
@@ -13,7 +13,6 @@
 
 Neutrals::species_chars Neutrals::create_species(Grid grid) {
 
-  int64_t iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
   int64_t nLons = grid.get_nLons();
@@ -100,9 +99,12 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(input, report);
+  if (iErr > 0) std::cout << "Error reading planet file!" << '\n';
 
   // This specifies the initial conditions for the neutrals:
   iErr = initial_conditions(grid, input, report);
+  if (iErr > 0)
+    std::cout << "Error in setting neutral initial conditions!" << '\n';
 }
 
 // -----------------------------------------------------------------------------
@@ -173,8 +175,10 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
         std::vector<std::vector<std::string>> temps = read_csv(infile_ptr);
 
         int nTemps = temps.size()-1;
-        initial_temperatures = (float*) malloc(nTemps * sizeof(float) );
-        initial_altitudes = (float*) malloc(nTemps * sizeof(float) );
+        initial_temperatures =
+          static_cast<float*>(malloc(nTemps * sizeof(float)));
+        initial_altitudes =
+          static_cast<float*>(malloc(nTemps * sizeof(float)));
         for (int iTemp=0; iTemp < nTemps; iTemp++) {
           report.print(5, "reading initial temp alt " + temps[iTemp+1][0]);
           // convert altitudes from km to m
@@ -201,8 +205,8 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   int iErr = 0;
-  int64_t iDir, iLon, iLat, iAlt, index, iA, indexm;
-  float alt, r, H;
+  int64_t iLon, iLat, iAlt, iA;
+  float alt, r;
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -214,7 +218,6 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
-  int64_t nGCs = grid.get_nGCs();
 
   // Let's assume that the altitudes are not dependent on lat/lon:
 

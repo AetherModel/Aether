@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Constructor (initiaze the class):
@@ -26,6 +26,7 @@ Planets::Planets(Inputs args, Report report) {
 
 float Planets::get_longitude_offset(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.longitude_offset;
 }
 
@@ -35,6 +36,7 @@ float Planets::get_longitude_offset(Times time) {
 
 float Planets::get_sin_dec(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.sin_dec;
 }
 
@@ -44,6 +46,7 @@ float Planets::get_sin_dec(Times time) {
 
 float Planets::get_cos_dec(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.cos_dec;
 }
 
@@ -102,6 +105,7 @@ float Planets::get_mu() {
 
 float Planets::get_star_to_planet_dist(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.star_planet_distance;
 }
 
@@ -111,6 +115,7 @@ float Planets::get_star_to_planet_dist(Times time) {
 
 float Planets::get_orbit_angle(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.orbit_angle;
 }
 
@@ -120,6 +125,7 @@ float Planets::get_orbit_angle(Times time) {
 
 float Planets::get_declination(Times time) {
   int iErr = update(time);
+  if (iErr > 0) std::cout << "Error in setting time!" << '\n';
   return planet.declination;;
 }
 
@@ -175,9 +181,8 @@ int Planets::update(Times time) {
     // Get heliocentric coordinates, TrueAnomaly and sunplanetdistance
     float x_heliocentric = sma*(cos(ecc_anomaly*dtor)-ecc);
     float y_heliocentric = sma*sqrt(1-ecc*ecc)*sin(ecc_anomaly*dtor);
-    float z_heliocentric = 0.0;
 
-    float true_anomaly = atan2(y_heliocentric, x_heliocentric)*rtod;
+    //float true_anomaly = atan2(y_heliocentric, x_heliocentric)*rtod;
 
     planet.star_planet_distance = sqrt(x_heliocentric * x_heliocentric +
                                        y_heliocentric * y_heliocentric);
@@ -225,7 +230,7 @@ int Planets::update(Times time) {
     double deg_per_day = 360.0 / (planet.length_of_day/seconds_per_day);
     double deg_since_2000 = deg_per_day * nEarthDaysSince2000;
     double rotations = deg_since_2000/360.0;
-    double left_over = (rotations - int(rotations)) * 360.0;
+    double left_over = (rotations - static_cast<int>(rotations)) * 360.0;
     // put into radians, so it is consistent with the rest of the code:
     planet.longitude_offset =
       fmod(planet.longitude_jb2000 + left_over, 360.0) * dtor;

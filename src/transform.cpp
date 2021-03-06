@@ -3,27 +3,21 @@
 
 #include <math.h>
 #include <vector>
-#include <armadillo>
 
-#include "aether.h"
-
-using namespace arma;
-
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------
 // copy from c++ vector to c-native array
 // -----------------------------------------------------------------------
 
 void copy_vector_to_array(std::vector<float> vector_in,
-			  int64_t nElements,
-			  float *array_out) {
-  
+        int64_t nElements,
+        float *array_out) {
+
   for (int64_t i = 0; i < nElements; i++) {
     array_out[i] = vector_in[i];
   }
-  
 }
-
 
 // -----------------------------------------------------------------------
 // copy from armidillo cube to 3d c-native array
@@ -93,7 +87,7 @@ std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
 
   XYZ_out.push_back( X * ca + Y *sa);
   XYZ_out.push_back(-X * sa + Y *ca);
-  XYZ_out.push_back(Z);  
+  XYZ_out.push_back(Z);
 
   return XYZ_out;
 }
@@ -135,7 +129,7 @@ std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
   float ca = cos(angle);
   float sa = sin(angle);
 
-  XYZ_out.push_back(X);  
+  XYZ_out.push_back(X);
   XYZ_out.push_back( Y * ca + Z *sa);
   XYZ_out.push_back(-Y * sa + Z *ca);
 
@@ -213,4 +207,3 @@ void vector_diff(float vect_in_1[3],
                  float vect_out[3]) {
   for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }
-

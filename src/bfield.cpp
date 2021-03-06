@@ -1,7 +1,7 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // This is the head bfield function that determines which bfield
@@ -52,9 +52,9 @@ bfield_info_type get_bfield(float lon,
 // -----------------------------------------------------------------------------
 
 fvec get_magnetic_pole(int IsNorth,
-		       Planets planet,
-		       Inputs input,
-		       Report &report) {
+         Planets planet,
+         Inputs input,
+         Report &report) {
 
   fvec lonlat(2, fill::zeros);
 
@@ -71,7 +71,7 @@ fvec get_magnetic_pole(int IsNorth,
     // pole on some planets (including Earth), have an offset, so the
     // pole location should be altitude dependent.  For many planets,
     // this is a very small error, but should be fixed at some point.
-    
+
     float magnetic_pole_rotation = planet.get_dipole_rotation();
     float magnetic_pole_tilt = planet.get_dipole_tilt();
     if (IsNorth) {
@@ -84,4 +84,3 @@ fvec get_magnetic_pole(int IsNorth,
   }
   return lonlat;
 }
-

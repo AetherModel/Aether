@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
@@ -15,8 +15,7 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
-  int64_t iLon, iLat, iAlt, index;
-  float longitude, latitude, altitude;
+  int64_t iLon, iLat, iAlt;
 
   // Longitudes:
   // - Make a 1d vector
@@ -25,7 +24,7 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   float dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
   std::cout << "dlon : " << dlon/dtor << "\n";
   for (iLon=0; iLon < nLons; iLon++)
-    lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon; 
+    lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
 
   for (iLat=0; iLat < nLats; iLat++) {
     for (iAlt=0; iAlt < nAlts; iAlt++) {

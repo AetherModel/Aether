@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
@@ -11,8 +11,6 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   nY = nY_in + nGCs_in * 2; nLats = nY;
   nZ = nZ_in + nGCs_in * 2; nAlts = nZ;
   nGCs = nGCs_in;
-
-  int64_t nTotalPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
@@ -60,7 +58,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_north_ll.zeros();
   mag_pole_south_ll.zeros();
 
-  fcube tmp_col(1,1,nZ);
+  fcube tmp_col(1, 1, nZ);
   mag_pole_north_gse.push_back(tmp_col);
   mag_pole_north_gse.push_back(tmp_col);
   mag_pole_north_gse.push_back(tmp_col);

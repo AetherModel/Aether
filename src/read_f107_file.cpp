@@ -7,15 +7,14 @@
 #include <sstream>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 index_file_output_struct read_f107_file(std::string f107_file,
-					Indices indices,
-					Report &report) {
+          Indices indices,
+          Report &report) {
 
   std::ifstream myFile;
   index_file_output_struct f107_contents;
-  int iErr;
 
   std::string function = "read_f107_file";
   static int iFunction = -1;
@@ -47,11 +46,15 @@ index_file_output_struct read_f107_file(std::string f107_file,
 
     if (IsFound) {
 
+      if (IsAdjusted)
+        std::cout << "Need to NOT adjust F10.7, but that isn't included yet!!!"
+                  << '\n';
+
       f107_contents.nVars = 1;
       f107_contents.var_names.push_back("F10.7");
       f107_contents.index_id.push_back(indices.get_f107_index_id());
       f107_contents.missing_values.push_back(1.0e32);
-      
+
       std::string tmp;
       std::vector<int> itime(7, 0);
       std::vector<float> values;
@@ -80,13 +83,12 @@ index_file_output_struct read_f107_file(std::string f107_file,
         // f107
         getline(ss, tmp, '"');
         values.push_back(stof(tmp));
-	f107_contents.nTimes++;
+  f107_contents.nTimes++;
       }  // while
       // Push the vector into a vector of vectors:
       f107_contents.values.push_back(values);
-      
+
     } else {
-      iErr = 1;
       std::cout << "Couldn't file line #yyyy-MM etc in file "
                 << f107_file << "\n";
     }

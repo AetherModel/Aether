@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize chemistry class
@@ -20,8 +20,6 @@ Chemistry::Chemistry(Neutrals neutrals,
   std::string function = "Chemistry::Chemistry";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
-  int iErr = 0;
 
   read_chemistry_file(neutrals, ions, args, report);
 
@@ -73,11 +71,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           // skip anything where the length of the string in column 2
           // is == 0:
           if (csv[iLine][1].length() > 0) {
-	    report.print(2, "interpreting chemistry line : "+csv[iLine][0]);
+            report.print(2, "interpreting chemistry line : "+csv[iLine][0]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
             if (reaction.nLosses > 0 && reaction.nSources > 0) {
-	      if (report.test_verbose(2)) display_reaction(reaction);
+              if (report.test_verbose(2)) display_reaction(reaction);
               reactions.push_back(reaction);
               nReactions++;
             }

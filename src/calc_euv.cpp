@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 int calc_euv(Planets planet,
              Grid grid,
@@ -42,15 +42,12 @@ int calc_euv(Planets planet,
 // -----------------------------------------------------------------------------
 
 void calc_ionization_heating(Euv euv,
-			     Neutrals &neutrals,
-			     Ions &ions,
-			     Report &report) {
+           Neutrals &neutrals,
+           Ions &ions,
+           Report &report) {
 
-  int64_t iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
-  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
-  float tau, intensity, photoion;
-
-  float ionization;
+  int64_t iAlt, iWave, iSpecies;
+  int i_, iIon, iIonization;
 
   std::string function = "calc_ionization_heating";
   static int iFunction = -1;
@@ -65,8 +62,6 @@ void calc_ionization_heating(Euv euv,
   for (iSpecies=0; iSpecies < nIons; iSpecies++)
     ions.species[iSpecies].ionization_scgc.zeros();
 
-  int64_t nLons = neutrals.heating_euv_scgc.n_rows;
-  int64_t nLats = neutrals.heating_euv_scgc.n_cols;
   int64_t nAlts = neutrals.heating_euv_scgc.n_slices;
 
   fmat tau2d = neutrals.heating_euv_scgc.slice(0);
@@ -91,11 +86,11 @@ void calc_ionization_heating(Euv euv,
 
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
-	// index of photo abs cross section
-        i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;  
+        // index of photo abs cross section
+        i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;
         if (i_ > -1) {
           neutrals.heating_euv_scgc.slice(iAlt) =
-	    neutrals.heating_euv_scgc.slice(iAlt) +
+            neutrals.heating_euv_scgc.slice(iAlt) +
             euv.wavelengths_energy[iWave] *
             euv.waveinfo[i_].values[iWave] *  // cross section
             (intensity2d %

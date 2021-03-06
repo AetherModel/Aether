@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 int main() {
 
@@ -21,11 +21,11 @@ int main() {
   Planets planet(input, report);
   Indices indices(input);
   iErr = read_and_store_indices(indices, input, report);
-  
+
   // Geo grid stuff:
   Grid gGrid(input.get_nLonsGeo(),
-	     input.get_nLatsGeo(),
-	     input.get_nAltsGeo(), nGeoGhosts);
+       input.get_nLatsGeo(),
+       input.get_nAltsGeo(), nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 

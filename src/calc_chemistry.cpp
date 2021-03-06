@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,

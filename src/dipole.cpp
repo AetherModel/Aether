@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 bfield_info_type get_dipole(float lon,
                             float lat,
@@ -44,16 +44,12 @@ bfield_info_type get_dipole(float lon,
   transform_rot_y(pos_rot_z, -magnetic_pole_tilt, pos_rot_zy);
 
   float xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[1]*pos_rot_zy[1]);
-  float xzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[2]*pos_rot_zy[2]);
-  float yzpp2  = (pos_rot_zy[1]*pos_rot_zy[1] + pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
                    pos_rot_zy[1]*pos_rot_zy[1] +
                    pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xypp = sqrt(xypp2);
-  float xzpp = sqrt(xzpp2);
-  float yzpp = sqrt(yzpp2);
   float xyzpp = sqrt(xyzpp2);
 
   float normal_r = (radius / xyzpp);

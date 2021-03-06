@@ -1,9 +1,9 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include <armadillo>
 #include <iostream>
-using namespace arma;
+
+#include "../include/aether.h"
 
 // This code solves the conduction equation in 1D.
 // Some assumptions:
@@ -14,10 +14,10 @@ using namespace arma;
 //    (i) and the cell center of the cell BELOW the current one (i-1).
 
 fvec solver_conduction(fvec value,
-		       fvec lambda,
-		       fvec front,
-		       float dt,
-		       fvec dx) {
+           fvec lambda,
+           fvec front,
+           float dt,
+           fvec dx) {
 
   int64_t nPts = value.n_elem;
 

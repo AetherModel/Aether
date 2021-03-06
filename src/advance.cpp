@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 int advance(Planets &planet,
             Grid &gGrid,
@@ -47,7 +47,7 @@ int advance(Planets &planet,
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
-  
+
   time.increment_time();
 
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
@@ -55,4 +55,3 @@ int advance(Planets &planet,
   report.exit(function);
   return iErr;
 }
-

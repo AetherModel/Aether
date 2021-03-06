@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 //----------------------------------------------------------------------
 //
@@ -12,7 +12,7 @@
 
 void Neutrals::calc_mass_density(Report &report) {
 
-  int64_t iLon, iLat, iAlt, index, iSpecies;
+  int64_t iSpecies;
 
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
@@ -40,9 +40,7 @@ void Neutrals::calc_mass_density(Report &report) {
 
 void Neutrals::calc_specific_heat(Report &report) {
 
-  int64_t iLon, iLat, iAlt, index, iSpecies;
-
-  double t, p, r;
+  int64_t iSpecies;
 
   std::string function = "Neutrals::calc_specific_heat";
   static int iFunction = -1;
@@ -87,8 +85,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 
 void Neutrals::calc_chapman(Grid grid, Report &report) {
 
-  int64_t iAlt, iLon, iLat, index, indexp;
-  float H;  // scale height
+  int64_t iAlt, iLon, iLat;
 
   // This is all from Smith and Smith, JGR 1972, vol. 77, page 3592
   // "Numerical evaluation of chapman's grazing incidence integral ch(X,x)"
@@ -108,8 +105,8 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   double y, dy;
 
-  float Hp_up, Hp_dn, grad_hs, grad_xp, grad_in, Hg, Xg, in, int_g, int_p;
-  int64_t index_bottom, iindex, iindexp, iiAlt;
+  float grad_xp, grad_in, Xg, in, int_g, int_p;
+  int64_t iiAlt;
 
   std::string function = "Neutrals::calc_chapman";
   static int iFunction = -1;
@@ -147,9 +144,9 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
     xp3d = grid.radius_scgc / neutrals[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
     iAlt = nAlts-1;
-    
+
     integral3d.fill(0.0);
-    
+
     integral3d.slice(iAlt) =
       neutrals[iSpecies].density_scgc.slice(iAlt) %
       neutrals[iSpecies].scale_height_scgc.slice(iAlt);
@@ -205,17 +202,13 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
               while (radius1d(iiAlt-1) > y) iiAlt--;
               iiAlt--;
 
-              Hp_up = H1d(iiAlt+1);
-              Hp_dn = H1d(iiAlt);
-
               // make sure to use the proper cell spacing (iiAlt+1 & lower):
-              grad_hs = (Hp_up - Hp_dn) / dAlt1d(iiAlt+1);
               grad_xp = (xp1d(iiAlt+1) - xp1d(iiAlt)) / dAlt1d(iiAlt+1);
-              grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) / dAlt1d(iiAlt+1);
+              grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) /
+                        dAlt1d(iiAlt+1);
 
               // Linearly interpolate H and X:
               dy = y - radius1d(iiAlt);
-              Hg = Hp_dn + grad_hs * dy;
               Xg = xp1d(iiAlt) + grad_xp * dy;
               in = log_int1d(iiAlt) + grad_in * dy;
 
@@ -251,7 +244,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
   float dt;
 
-  int64_t iLon, iLat, iAlt, index;
+  int64_t iLon, iLat;
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
@@ -297,5 +290,3 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   }  // lon
   report.exit(function);
 }
-
-

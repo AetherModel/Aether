@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize EUV
@@ -190,7 +190,8 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
     neutrals.neutrals[iSpecies].nEuvIonSpecies = 0;
 
     // Check each row to see if the first column "name" matches:
-    for (int iEuv=0; iEuv < waveinfo.size(); iEuv++) {
+    int64_t nEuvs = waveinfo.size();
+    for (int64_t iEuv=0; iEuv < nEuvs; iEuv++) {
 
       if (report.test_verbose(6))
         std::cout << "  " << waveinfo[iEuv].name << "\n";
@@ -232,7 +233,7 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
 
 int Euv::scale_from_1au(Planets planet,
                         Times time,
-			Report report) {
+      Report report) {
   int iErr = 0;
   float d = planet.get_star_to_planet_dist(time);
   float scale = 1.0 / (d*d);

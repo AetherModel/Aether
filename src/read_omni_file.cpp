@@ -7,14 +7,13 @@
 #include <sstream>
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 index_file_output_struct read_omni_file(std::string omni_file,
-					Indices indices,
-					Report &report) {
+          Indices indices,
+          Report &report) {
 
   std::ifstream myFile;
-  int iErr;
 
   index_file_output_struct file_contents;
 
@@ -24,21 +23,18 @@ index_file_output_struct read_omni_file(std::string omni_file,
 
   file_contents.nTimes = 0;
   file_contents.nVars = 0;
-  
-  iErr = 0;
 
   myFile.open(omni_file);
 
   if (!myFile.is_open()) {
     std::cout << "Could not open input file: " << omni_file << "!!!\n";
-    iErr = 1;
   } else {
 
     int IsFound = 0;
     std::string line;
 
     std::size_t test;
-    
+
     // Read in the header. We can ignore this:
     while (getline(myFile, line)) {
       test = line.find("Selected parameters:");
@@ -52,10 +48,10 @@ index_file_output_struct read_omni_file(std::string omni_file,
     if (IsFound) {
 
       while (getline(myFile, line)) {
-	if (line.length() < 2) break;
-	// The first two characters are the variable number, third is space:
-	file_contents.var_names.push_back(line.substr(3));
-	file_contents.nVars++;
+        if (line.length() < 2) break;
+        // The first two characters are the variable number, third is space:
+        file_contents.var_names.push_back(line.substr(3));
+        file_contents.nVars++;
       }
 
       // Look up some characteristics of the variables by their names.
@@ -65,17 +61,17 @@ index_file_output_struct read_omni_file(std::string omni_file,
       std::vector<float> values_dummy;
       float single_value;
       for (int iVar = 0; iVar < file_contents.nVars; iVar++) {
-	std::string var = file_contents.var_names[iVar];
-	int index_id = pair_omniweb_index(var, indices);
-	float missing_value = get_omniweb_missing_value(var);
-	file_contents.index_id.push_back(index_id);
-	file_contents.missing_values.push_back(missing_value);
-	file_contents.values.push_back(values_dummy);
+        std::string var = file_contents.var_names[iVar];
+        int index_id = pair_omniweb_index(var, indices);
+        float missing_value = get_omniweb_missing_value(var);
+        file_contents.index_id.push_back(index_id);
+        file_contents.missing_values.push_back(missing_value);
+        file_contents.values.push_back(values_dummy);
       }
 
       std::vector<std::vector<std::string>> values_string = read_ssv(myFile);
-      std::vector<int> iTime(7,0);
-      
+      std::vector<int> iTime(7, 0);
+
       // The last thing we read was a blank line.  The next line should be
       // a header for the numbers to come.  We need to read this and
       // figure out if we have hourly values or minute values.  The only
@@ -88,35 +84,34 @@ index_file_output_struct read_omni_file(std::string omni_file,
 
       int64_t nTimes_tmp = values_string.size();
       for (int64_t iLine = 1; iLine < nTimes_tmp; iLine++) {
-	if (values_string[iLine].size() > 4) {
-	  // Year:
-	  iTime[0] = stoi(values_string[iLine][0]);
-	  // This is Day of Year, which can be set by saying that it is in
-	  // January:
-	  iTime[1] = 1;
-	  // Day of year:
-	  iTime[2] = stoi(values_string[iLine][1]);
-	  // Hour:
-	  iTime[3] = stoi(values_string[iLine][2]);
-	  if (iMinuteData) {
-	    iTime[4] = stoi(values_string[iLine][3]); // minute
-	  } else {
-	    iTime[4] = 0;
-	  }
-	  iTime[5] = 0;
-	  iTime[6] = 0;
-	  file_contents.times.push_back(time_int_to_real(iTime));
-	  file_contents.nTimes++;
-	  for (int iVar = 0; iVar < file_contents.nVars; iVar++) {
-	    single_value = stof(values_string[iLine][3+iMinuteData+iVar]);
-	    file_contents.values[iVar].push_back(single_value);
-	  }
-	} else {
-	  break;
-	}
-      }
-    } // IsFound
-
+        if (values_string[iLine].size() > 4) {
+          // Year:
+          iTime[0] = stoi(values_string[iLine][0]);
+          // This is Day of Year, which can be set by saying that it is in
+          // January:
+          iTime[1] = 1;
+          // Day of year:
+          iTime[2] = stoi(values_string[iLine][1]);
+          // Hour:
+          iTime[3] = stoi(values_string[iLine][2]);
+          if (iMinuteData) {
+            iTime[4] = stoi(values_string[iLine][3]);
+          } else {
+            iTime[4] = 0;
+          }
+          iTime[5] = 0;
+          iTime[6] = 0;
+          file_contents.times.push_back(time_int_to_real(iTime));
+          file_contents.nTimes++;
+          for (int iVar = 0; iVar < file_contents.nVars; iVar++) {
+            single_value = stof(values_string[iLine][3+iMinuteData+iVar]);
+            file_contents.values[iVar].push_back(single_value);
+          }
+        } else {
+          break;
+        }  // if/else
+      }  // for iLine
+    }   // IsFound
     myFile.close();
   }
 
@@ -189,7 +184,7 @@ int pair_omniweb_index(std::string var_name, Indices indices) {
   }
 
   return index;
-  
+
 }
 
 // ----------------------------------------------------------------------
@@ -257,5 +252,5 @@ float get_omniweb_missing_value(std::string var_name) {
   }
 
   return missing;
-  
+
 }

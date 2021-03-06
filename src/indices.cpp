@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 // ----------------------------------------------------------------------
 //
@@ -25,7 +25,7 @@ int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
 
   std::string f107_file = args.get_f107_file();
   if (f107_file.length() > 0) {
-    report.print(1,"Reading F107 File : "+f107_file);
+    report.print(1, "Reading F107 File : " + f107_file);
     index_file_output_struct f107_contents;
     f107_contents = read_f107_file(f107_file, indices, report);
     if (f107_contents.nTimes > 0) {
@@ -40,12 +40,12 @@ int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
   // Read in OMNIWeb files.
   // The user can enter as many as they would like:
   // ---------------------------------------------------
-  
+
   int nFiles = args.get_number_of_omniweb_files();
   if (nFiles > 0) {
     std::vector<std::string> omniweb_files = args.get_omniweb_files();
     for (int iFile = 0; iFile < nFiles; iFile++) {
-      report.print(1,"Reading OMNIWEB File : "+omniweb_files[iFile]);
+      report.print(1, "Reading OMNIWEB File : " + omniweb_files[iFile]);
 
       index_file_output_struct file_contents;
       file_contents = read_omni_file(omniweb_files[iFile], indices, report);
@@ -54,13 +54,13 @@ int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
       int nVars = file_contents.nVars;
 
       for (int iVar = 0; iVar < nVars ; iVar++) {
-	if (file_contents.index_id[iVar] > -1 &&
-	    file_contents.nTimes > 0) {
-	  indices.set_index(file_contents.index_id[iVar],
-			    file_contents.times,
-			    file_contents.values[iVar],
-			    file_contents.missing_values[iVar]);
-	}  // if
+  if (file_contents.index_id[iVar] > -1 &&
+      file_contents.nTimes > 0) {
+    indices.set_index(file_contents.index_id[iVar],
+          file_contents.times,
+          file_contents.values[iVar],
+          file_contents.missing_values[iVar]);
+  }  // if
       }  // for iVar
     }  // for iFile
   }  // if nFiles
@@ -76,7 +76,7 @@ int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
 Indices::Indices(Inputs args) {
 
   // Initialize the all_indices_arrays storage structure:
-  
+
   int iIndex;
   index_time_pair single_index;
   single_index.nValues = 0;
@@ -96,9 +96,9 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
   // The f107 array we can just file away:
 
   set_index(f107_,
-	    f107_contents.times,
-	    f107_contents.values[0],
-	    f107_contents.missing_values[0]);
+      f107_contents.times,
+      f107_contents.values[0],
+      f107_contents.missing_values[0]);
 
   // We want to set the 81-day average.  This is somewhat complicated,
   // since it seems like the f107 file does have exactly 24 hour
@@ -117,7 +117,7 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
 
   double sumf107 = 0, sumtime = 0;
   int64_t isub, nSubs;
-  
+
   while (currenttime < f107_contents.times[nTimes-1]-eightone) {
 
     sumf107 = 0.0;
@@ -125,7 +125,7 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
     nSubs = 0;
     isub = itime;
     while (f107_contents.times[isub] < currenttime + eightone &&
-	   f107_contents.values[0][isub] != f107_contents.missing_values[0]) {
+     f107_contents.values[0][isub] != f107_contents.missing_values[0]) {
       sumf107 += f107_contents.values[0][isub];
       sumtime += f107_contents.times[isub];
       isub++;
@@ -146,10 +146,10 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
   average_f107.push_back(sumf107/nSubs);
 
   set_index(f107a_,
-	    average_time,
-	    average_f107,
-	    f107_contents.missing_values[0]);
-  
+      average_time,
+      average_f107,
+      f107_contents.missing_values[0]);
+
   return;
 }
 
@@ -182,7 +182,7 @@ float Indices::get_index(double time, int index) {
     // Break if iMid <= time < iMid+1
     if (all_indices_arrays[index].times[iMid] == time) break;
     if (all_indices_arrays[index].times[iMid] <= time &&
-	all_indices_arrays[index].times[iMid+1] > time) break;
+  all_indices_arrays[index].times[iMid+1] > time) break;
     // Upper Half:
     if (all_indices_arrays[index].times[iMid] < time) {
       iLow = iMid;
@@ -196,9 +196,9 @@ float Indices::get_index(double time, int index) {
   // At this point, time should be between iMid and iMid+1:
 
   double dt = (all_indices_arrays[index].times[iMid+1] -
-	       all_indices_arrays[index].times[iMid]);
+         all_indices_arrays[index].times[iMid]);
   float x = (time - all_indices_arrays[index].times[iMid]) / dt;
-  
+
   float value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
     x * all_indices_arrays[index].values[iMid+1];
 
@@ -211,9 +211,9 @@ float Indices::get_index(double time, int index) {
 // ----------------------------------------------------------------------
 
 void Indices::set_index(int index,
-			std::vector<double> timearray,
-			std::vector<float> indexarray,
-			float missing) {
+      std::vector<double> timearray,
+      std::vector<float> indexarray,
+      float missing) {
 
   if (timearray.size() != indexarray.size()) {
     std::cout << "In set_index. Size of time and index arrays don't match!\n";
@@ -224,9 +224,9 @@ void Indices::set_index(int index,
     all_indices_arrays[index].nValues = 0;
     for (int64_t i = 0; i < iSize; i++) {
       if (indexarray[i] != missing) {
-	all_indices_arrays[index].times.push_back(timearray[i]);
-	all_indices_arrays[index].values.push_back(indexarray[i]);
-	all_indices_arrays[index].nValues++;
+  all_indices_arrays[index].times.push_back(timearray[i]);
+  all_indices_arrays[index].values.push_back(indexarray[i]);
+  all_indices_arrays[index].nValues++;
       }
     }
   }
@@ -239,36 +239,36 @@ void Indices::set_index(int index,
 // ----------------------------------------------------------------------
 
 void print_index_file_output_struct(index_file_output_struct
-				    contents) {
+            contents) {
 
-  std::vector<int> iTime(7,0);
+  std::vector<int> iTime(7, 0);
   int iVar;
-  
+
   std::cout << "Outputing content of index_file_output_struct : \n";
   std::cout << "nVars : " << contents.nVars << "\n";
   for (int iVar = 0; iVar < contents.nVars; iVar++)
     std::cout << "  var_names[" << iVar << "] : "
-	      << contents.var_names[iVar] << "\n";
+        << contents.var_names[iVar] << "\n";
   std::cout << "nTimes : " << contents.nTimes << "\n";
 
   for (int64_t iLine = 0; iLine < 3; iLine++) {
-    time_real_to_int(contents.times[iLine], iTime);
+    iTime = time_real_to_int(contents.times[iLine]);
     std::cout << "iLine " << iLine << ": ";
     display_itime(iTime);
-    for (iVar = 0; iVar < contents.nVars; iVar++) 
+    for (iVar = 0; iVar < contents.nVars; iVar++)
       std::cout << " " << contents.values[iLine][iVar];
     std::cout << "\n";
   }
   std::cout << "...\n...\n...\n";
   for (int64_t iLine = contents.nTimes-3; iLine < contents.nTimes; iLine++) {
-    time_real_to_int(contents.times[iLine], iTime);
+    iTime = time_real_to_int(contents.times[iLine]);
     std::cout << "iLine " << iLine << ": ";
     display_itime(iTime);
-    for (iVar = 0; iVar < contents.nVars; iVar++) 
+    for (iVar = 0; iVar < contents.nVars; iVar++)
       std::cout << " " << contents.values[iVar][iLine];
     std::cout << "\n";
   }
-  
+
 }
 
 int Indices::get_f107_index_id() { return f107_; }
@@ -284,4 +284,3 @@ int Indices::get_sw_t_index_id() { return sw_t_; }
 int Indices::get_ae_index_id() { return ae_; }
 int Indices::get_au_index_id() { return au_; }
 int Indices::get_al_index_id() { return al_; }
-

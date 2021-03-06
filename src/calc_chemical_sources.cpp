@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
                                       Ions &ions,
@@ -14,7 +14,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   report.enter(function, iFunction);
 
   int64_t iReaction, iLoss, iSource;
-  float change, rate;
+  float rate;
   int IsNeutral, id_;
 
   // This is make change the same size as the grid:
@@ -25,7 +25,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
     if (report.test_verbose(8)) display_reaction(reactions[iReaction]);
-    
+
     // First calculate reaction rate:
 
     rate = reactions[iReaction].rate;

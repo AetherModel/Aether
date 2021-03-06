@@ -1,8 +1,7 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include <armadillo>
-using namespace arma;
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------
 // This is a super-simple chemistry solver that takes an implicit time-step.

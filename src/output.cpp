@@ -3,7 +3,7 @@
 
 #include <netcdf>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;
@@ -20,7 +20,7 @@ void output_variable_3d(std::vector<size_t> count_start,
 
   iTotal = nX * nY * nZ;
 
-  float *tmp_s3gc = (float*) malloc(iTotal * sizeof(float));
+  float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
 
   for (iX = 0; iX < nX; iX++) {
     for (iY = 0; iY < nY; iY++) {
@@ -46,7 +46,6 @@ int output(Neutrals neutrals,
   int iErr = 0;
 
   int nOutputs = args.get_n_outputs();
-  int IsGeoGrid = grid.get_IsGeoGrid();
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -60,7 +59,7 @@ int output(Neutrals neutrals,
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
- 
+
       grid.calc_sza(planet, time, report);
       grid.calc_gse(planet, time, report);
       grid.calc_mlt(report);
@@ -81,7 +80,7 @@ int output(Neutrals neutrals,
       file_name = file_pre + "_" + time_string + file_ext;
 
       // Create the file:
-      report.print(0,"Writing file : "+file_name);
+      report.print(0, "Writing file : " + file_name);
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
@@ -90,7 +89,7 @@ int output(Neutrals neutrals,
       NcDim altDim = ncdf_file.addDim("Altitude", nAlts);
 
       NcDim timeDim = ncdf_file.addDim("Time", 1);
-      
+
       // Define the Coordinate Variables
 
       // Define the netCDF variables for the 3D data.
@@ -122,9 +121,9 @@ int output(Neutrals neutrals,
 
       // Output time:
 
-      time_array[0] = time.get_current();      
+      time_array[0] = time.get_current();
       timeVar.putVar(time_array);
-      
+
       // Output longitude, latitude, altitude 3D arrays:
 
       output_variable_3d(startp, countp, grid.geoLon_scgc, lonVar);
@@ -160,7 +159,7 @@ int output(Neutrals neutrals,
 
         // Output SZA
         NcVar szaVar = ncdf_file.addVar("Solar Zenith Angle",
-					ncFloat, dimVector);
+          ncFloat, dimVector);
         szaVar.putAtt(UNITS, "degrees");
         output_variable_3d(startp, countp, grid.sza_scgc/dtor, szaVar);
 
