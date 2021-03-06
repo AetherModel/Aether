@@ -4,15 +4,13 @@
 #include <iostream>
 #include <string>
 
-#include "aether.h"
+#include "../include/aether.h"
 
 void Neutrals::add_sources(Times time, Report &report) {
 
   std::string function = "add_sources";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
-  int64_t iLon, iLat, iAlt, index;
 
   float dt = time.get_dt();
 
