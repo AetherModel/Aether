@@ -14,10 +14,10 @@
 //    (i) and the cell center of the cell BELOW the current one (i-1).
 
 fvec solver_conduction(fvec value,
-           fvec lambda,
-           fvec front,
-           float dt,
-           fvec dx) {
+                       fvec lambda,
+                       fvec front,
+                       float dt,
+                       fvec dx) {
 
   int64_t nPts = value.n_elem;
 
