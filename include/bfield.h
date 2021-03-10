@@ -4,9 +4,6 @@
 #ifndef INCLUDE_BFIELD_H_
 #define INCLUDE_BFIELD_H_
 
-// The armadillo library is to allow the use of 3d cubes and other
-// array types, with array math built in. This eliminates loops!
-
 struct bfield_info_type {
   float b[3];
   float lon;
