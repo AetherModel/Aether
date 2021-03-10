@@ -8,7 +8,7 @@
 
 // Header file to define a bunch of physical constants
 
-const float avogadros_number = 6.02214086e23;  //
+const float avogadros_number = 6.02214086e23;  // per mole
 const float boltzmanns_constant = 1.38064852e-23;  // m2 kg /s2 /K
 const float mass_proton = 1.6726219e-27;  // kg
 const float amu = mass_proton;

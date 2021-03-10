@@ -4,62 +4,9 @@
 #ifndef INCLUDE_GRID_H_
 #define INCLUDE_GRID_H_
 
-// We need a naming convention for the variables that are defined on
-// the grid.  These could then match the formulas that are used to find
-// the given points on the grid.
-/*
-
-  _ - delimiter between main variable name and descriptor
-  1 - indication of whether variable is scalar (s) or vector (v)
-  2 - physical dimensions:
-      3 - 3d (e.g., lon, lat, alt or x, y, z)
-
-
-
-For example:
-  _s3gc : scalar variable, 3d, include ghost cells, cell centers
-  _31ne :
-
-
- */
-
-// scgc == scalar cube ghostcells at cell centers
-
-
-// These are mapping functions from 3d to 1d arrays. They have to be
-// pretty precise, which is a bit scary to me.
-//
-// Assume [Lon][Lat][Alt] layout
-
-// Scalars, 3D, Include Ghostcells, Cell Centers:
-//#define ijk_geo_s3gc(i,j,k) \
-//  ((i)*long(nGeoLatsG)*long(nGeoAltsG) + \
-//   (j)*long(nGeoAltsG) + \
-//   (k))
-//#define ijk_mag_s3gc(i,j,k) \
-//  ((i)*long(nMagLatsG)*long(nGeoAltsG) + \
-//   (j)*long(nMagAltsG) + \
-//   (k))
-//
-//// Scalars, 3D, Include Ghostcells, Cell Edges (Altitude):
-//#define ijk_geo_s3ge3(i,j,k) \
-//  ((i)*long(nGeoLatsG)*long(nGeoAltsG+1) + \
-//   (j)*long(nGeoAltsG+1) + \
-//   (k));
-//
-//// Vectors, 3D, Include Ghostcells, Cell Centers:
-//#define ijkl_geo_v3gc(i,j,k,l) \
-//  ((i)*long(nGeoLatsG)*long(nGeoAltsG)*long(3) + \
-//   (j)*long(nGeoAltsG)*long(3) + \
-//   (k)*long(3) + \
-//   (l))
-//// Vectors, 3D, Include Ghostcells, Cell Centers:
-//#define ijkl_mag_v3gc(i,j,k,l) \
-//  ((i)*long(nMagLatsG)*long(nMagAltsG)*long(3) + \
-//   (j)*long(nMagAltsG)*long(3) + \
-//   (k)*long(3) + \
-//   (l))
-
+// ----------------------------------------------------------------------------
+// Grid class
+// ----------------------------------------------------------------------------
 
 class Grid {
 
