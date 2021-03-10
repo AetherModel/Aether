@@ -11,11 +11,21 @@ from pylab import cm
 
 
 #-----------------------------------------------------------------------------
-# 
-#-----------------------------------------------------------------------------
 
 def read_gitm_header(file):
+    r""" Grab ancillary information from the GITM file
 
+    Parameters
+    ----------
+    file - name of the file to read and get header from
+
+    Returns
+    -------
+    header: A dictionary containing information about the netcdf file, such
+            as nLons, nLons, nAlts, nVars, variable names, time(s)
+
+    """
+    
     if (len(file) == 0):
 
         filelist = glob('./3DALL*.bin')
@@ -32,18 +42,15 @@ def read_gitm_header(file):
         filelist = glob(file[0])
         file = filelist[0]
             
-    header = {}
-    header["nFiles"] = len(filelist)
-    header["version"] = 0
-    header["nLons"] = 0
-    header["nLats"] = 0
-    header["nAlts"] = 0
-    header["nVars"] = 0
-    header["vars"] = []
-    header["time"] = []
-    header["filename"] = []
-
-    header["filename"].append(file)
+    header = {"nFiles": len(filelist), \
+              "version": 0.1, \
+              "nLons": 0, \
+              "nLats": 0, \
+              "nAlts": 0, \
+              "nVars": 0, \
+              "vars": [], \
+              "time": [], \
+              "filename": [file] }
 
     f=open(file, 'rb')
 
@@ -63,7 +70,8 @@ def read_gitm_header(file):
     (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
     # Read grid size information.
-    (header["nLons"],header["nLats"],header["nAlts"]) = unpack(endChar+'lll',f.read(recLen))
+    (header["nLons"],header["nLats"],header["nAlts"]) = \
+        unpack(endChar+'lll',f.read(recLen))
     (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
     # Read number of variables.
@@ -86,23 +94,32 @@ def read_gitm_header(file):
     return header
 
 #-----------------------------------------------------------------------------
-# 
-#-----------------------------------------------------------------------------
 
 def read_gitm_headers():
+    r""" Grab ancillary information from the GITM files
+
+    Parameters
+    ----------
+    None - does a glob to find files.
+
+    Returns
+    -------
+    header: A dictionary containing information about the netcdf file, such
+            as nLons, nLons, nAlts, nVars, variable names, time(s)
+
+    """
 
     filelist = sorted(glob('./3DALL*.bin'))
 
-    header = {}
-    header["nFiles"] = len(filelist)
-    header["version"] = 0
-    header["nLons"] = 0
-    header["nLats"] = 0
-    header["nAlts"] = 0
-    header["nVars"] = 0
-    header["vars"] = []
-    header["time"] = []
-    header["filename"] = []
+    header = {"nFiles": len(filelist), \
+              "version": 0.1, \
+              "nLons": 0, \
+              "nLats": 0, \
+              "nAlts": 0, \
+              "nVars": 0, \
+              "vars": [], \
+              "time": [], \
+              "filename": [] }
 
     for file in filelist:
 
@@ -126,7 +143,8 @@ def read_gitm_headers():
         (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
         # Read grid size information.
-        (header["nLons"],header["nLats"],header["nAlts"]) = unpack(endChar+'lll',f.read(recLen))
+        (header["nLons"],header["nLats"],header["nAlts"]) = \
+            unpack(endChar+'lll',f.read(recLen))
         (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
         # Read number of variables.
@@ -150,21 +168,32 @@ def read_gitm_headers():
     return header
 
 #-----------------------------------------------------------------------------
-# 
-#-----------------------------------------------------------------------------
 
 def read_gitm_one_file(file_to_read, vars_to_read=-1):
+    r""" Read list of variables from one GITM file
+
+    Parameters
+    ----------
+    file_to_read: GITM file to read
+    vars_to_read: list of variable NUMBERS to read
+
+    Returns
+    -------
+    data["time"]: datetime of the file
+    data[NUMBER]: data that is read in.
+                  NUMBER goes from 0 - number of vars read in (0-3 typical)
+    (Also include header information, as described above)
+    """
 
     print("Reading file : "+file_to_read)
 
-    data = {}
-    data["version"] = 0
-    data["nLons"] = 0
-    data["nLats"] = 0
-    data["nAlts"] = 0
-    data["nVars"] = 0
-    data["time"] = 0
-    data["vars"] = []
+    data = {"version": 0, \
+            "nLons": 0, \
+            "nLats": 0, \
+            "nAlts": 0, \
+            "nVars": 0, \
+            "time": 0, \
+            "vars": []}
 
     f=open(file_to_read, 'rb')
 
@@ -184,7 +213,8 @@ def read_gitm_one_file(file_to_read, vars_to_read=-1):
     (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
     # Read grid size information.
-    (data["nLons"],data["nLats"],data["nAlts"]) = unpack(endChar+'lll',f.read(recLen))
+    (data["nLons"],data["nLats"],data["nAlts"]) = \
+        unpack(endChar+'lll',f.read(recLen))
     (oldLen, recLen)=unpack(endChar+'2l',f.read(8))
 
     # Read number of variables.
@@ -211,7 +241,8 @@ def read_gitm_one_file(file_to_read, vars_to_read=-1):
     # Variable Names + start/stop byte
     # time + start/stop byte
 
-    iHeaderLength = 8 + 4+4 + 3*4 + 4+4 + 4 + 4+4 + data["nVars"]*40 + data["nVars"]*(4+4) + 7*4 + 4+4
+    iHeaderLength = 8 + 4+4 + 3*4 + 4+4 + 4 + 4+4 + \
+        data["nVars"]*40 + data["nVars"]*(4+4) + 7*4 + 4+4
 
     nTotal = data["nLons"]*data["nLats"]*data["nAlts"]
     iDataLength = nTotal*8 + 4+4
@@ -227,8 +258,4 @@ def read_gitm_one_file(file_to_read, vars_to_read=-1):
 
     return data
 
-
-#-----------------------------------------------------------------------------
-# 
-#-----------------------------------------------------------------------------
 

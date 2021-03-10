@@ -13,14 +13,27 @@ from gitm_routines import *
 from aether_routines import *
 import re
 import sys
+import os
 
 rtod = 180.0/3.141592
 
 #-----------------------------------------------------------------------------
-# 
-#-----------------------------------------------------------------------------
 
 def get_args(argv):
+    r""" Parse the arguements and set to a dictionary
+
+    Parameters
+    ----------
+    argv: arguments fed on the command line
+
+    Returns
+    -------
+    args: A dictionary containing information about arguements, such
+          as filelist, IsGitm, var (number), cut, diff (difference with
+          other plots), movie, ext (for movie), rate (framerate for movie),
+          tec, winds (plot with winds), alt (to plot), lat (to plot),
+          lon (to plot), IsLog, and help (display help)
+    """
 
     filelist = []
     IsLog = 0
@@ -34,7 +47,14 @@ def get_args(argv):
     winds = 0
     diff = 0
     IsGitm = 1
-    
+    movie = 0
+    rate = 30
+
+    if (os.name == "posix"):
+        ext = "mkv"
+    else:
+        ext = "mp4"
+        
     for arg in argv:
 
         IsFound = 0
@@ -51,6 +71,29 @@ def get_args(argv):
                 diff = 1
                 IsFound = 1
 
+            m = re.match(r'-mkv',arg)
+            if m:
+                ext = "mkv"
+                IsFound = 1
+
+            m = re.match(r'-mp4',arg)
+            if m:
+                ext = "mp4"
+                IsFound = 1
+                
+            m = re.match(r'-gif',arg)
+            if m:
+                ext = "gif"
+                IsFound = 1
+
+            m = re.match(r'-movie',arg)
+            if m:
+                movie = 1
+                IsFound = 1
+                m = re.match(r'=(.*)',arg)
+                if m:
+                    rate = int(m.group(1))
+
             m = re.match(r'-tec',arg)
             if m:
                 var = 34
@@ -60,6 +103,11 @@ def get_args(argv):
             m = re.match(r'-alt=(.*)',arg)
             if m:
                 alt = int(m.group(1))
+                IsFound = 1
+
+            m = re.match(r'-rate=(.*)',arg)
+            if m:
+                rate = int(m.group(1))
                 IsFound = 1
 
             m = re.match(r'-lat=(.*)',arg)
@@ -94,7 +142,7 @@ def get_args(argv):
 
             if IsFound==0 and not(arg==argv[0]):
                 filelist.append(arg)
-                m = re.match(r'.bin',arg)
+                m = re.match(r'(.*)bin',arg)
                 if m:
                     IsGitm = 1
                 else:
@@ -106,6 +154,9 @@ def get_args(argv):
             'var':var,
             'cut':cut,
             'diff':diff,
+            'movie':movie,
+            'ext':ext,
+            'rate':rate,
             'tec':tec,
             'help':help,
             'winds':winds,
@@ -193,6 +244,7 @@ AllAlts = []
 AllTimes = []
 
 j = 0
+iCut = -1
 for file in filelist:
 
     if (IsGitm):
@@ -226,6 +278,7 @@ for file in filelist:
             else:
                 iAlt = 0
             Alt = Alts[iAlt]
+            iCut = iAlt
             
         if (cut == 'lat'):
             xPos = Lons
@@ -240,6 +293,7 @@ for file in filelist:
                     while (Lats[iLat] < args["lat"]):
                         iLat=iLat+1
             Lat = Lats[iLat]
+            iCut = iLat
             
         if (cut == 'lon'):
             xPos = Lats
@@ -254,6 +308,7 @@ for file in filelist:
                     while (Lons[iLon] < args["lon"]):
                         iLon=iLon+1
             Lon = Lons[iLon]
+            iCut = iLon
                         
     AllTimes.append(data["time"])
     
@@ -334,13 +389,24 @@ minY = (yPos[ 1] + yPos[ 2])/2
 maxY = (yPos[-2] + yPos[-3])/2
 
 file = "var%2.2d_" % args["var"]
-file = file+cut
+file = file+cut+"%3.3d" % iCut
 
+IsMovie = args["movie"]
+
+if (IsMovie):
+    command = "rm -rf "+file
+    print(command)
+    os.system(command)
+    command = "mkdir "+file
+    print(command)
+    os.system(command)
+
+iter = 0
 for time in AllTimes:
 
     ut = time.hour + time.minute/60.0 + time.second/3600.0
     shift = ut * 15.0
-
+    
     fig = plt.figure(constrained_layout=False,
                      tight_layout=True, figsize=(10, 8.5))
 
@@ -353,13 +419,16 @@ for time in AllTimes:
     else:
         cmap = cm.bwr
 
-    d2d = np.transpose(AllData2D[i])
+    d2d = np.transpose(AllData2D[iter])
     if (args["winds"]):
-        Ux2d = np.transpose(AllWindsX[i])
-        Uy2d = np.transpose(AllWindsY[i])
+        Ux2d = np.transpose(AllWindsX[iter])
+        Uy2d = np.transpose(AllWindsY[iter])
 
     sTime = time.strftime('%y%m%d_%H%M%S')
-    outfile = file+'_'+sTime+'.png'
+    if (IsMovie):
+        outfile = file+"/image_%4.4d.png" % iter
+    else:
+        outfile = file+'_'+sTime+'.png'
 
     ax = fig.add_subplot(gs1[1, :2])
 
@@ -397,7 +466,7 @@ for time in AllTimes:
             ax2 = fig.add_subplot(gs[0, 0],projection='polar')
             r, theta = np.meshgrid(90.0-yPos[maskNorth], \
                                    (xPos+shift-90.0)*3.14159/180.0)
-            cax2 = ax2.pcolor(theta, r, AllData2D[i][:,maskNorth], \
+            cax2 = ax2.pcolor(theta, r, AllData2D[iter][:,maskNorth], \
                               vmin=miniN, vmax=maxiN, cmap=cmap)
             xlabels = ['', '12', '18', '00']
             ylabels = ['80', '70', '60', '50']
@@ -414,7 +483,7 @@ for time in AllTimes:
             r, theta = np.meshgrid(90.0+yPos[maskSouth], \
                                    (xPos+shift-90.0)*3.14159/180.0)
             ax3 = fig.add_subplot(gs[0, 1],projection='polar')
-            cax3 = ax3.pcolor(theta, r, AllData2D[i][:,maskSouth], \
+            cax3 = ax3.pcolor(theta, r, AllData2D[iter][:,maskSouth], \
                               vmin=miniS, vmax=maxiS, cmap=cmap)
             xlabels = ['', '12', '18', '00']
             ylabels = ['80', '70', '60', '50']
@@ -430,6 +499,17 @@ for time in AllTimes:
     fig.savefig(outfile)
     plt.close()
 
-    i=i+1
+    iter = iter + 1
 
+if (IsMovie):
 
+    rate = "%d" % args["rate"]
+
+    command = "/bin/rm -f " + file + "." + args["ext"]
+    print(command)
+    os.system(command)
+    
+    command = "ffmpeg -r " + rate + \
+        " -i " + file + "/image_%04d.png " + file + "." + args["ext"]
+    print(command)
+    os.system(command)
