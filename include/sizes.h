@@ -7,29 +7,12 @@
 // This is the file that defines the number of grid points in each
 // direction.  The entire code is based on these numbers, so you need
 // to recompile if you change these numbers.
+// 
+// These are temporary and will eventually be removed.
 
 // This is for the geographic grid:
 
 #define nGeoGhosts 2
-
-// int nGeoAlts = 60;
-// int nGeoAltsG = nGeoGhosts + nGeoAlts + nGeoGhosts;
-// int iGeoAltStart_ = nGeoGhosts; // Inclusive!!!
-// int iGeoAltEnd_ = nGeoGhosts + nGeoAlts - 1; // Inclusive!!!
-//#define nGeoAlts 60
-//#define nGeoAltsG nGeoGhosts + nGeoAlts + nGeoGhosts
-//#define iGeoAltStart_ nGeoGhosts // Inclusive!!!
-//#define iGeoAltEnd_ nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
-
-//#define nGeoLons 18
-//#define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
-//#define iGeoLonStart_ nGeoGhosts // Inclusive!!!
-//#define iGeoLonEnd_ nGeoGhosts + nGeoLons - 1 // Inclusive!!!
-//
-//#define nGeoLats 36
-//#define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
-//#define iGeoLatStart_ nGeoGhosts // Inclusive!!!
-//#define iGeoLatEnd_ nGeoGhosts + nGeoLats - 1 // Inclusive!!!
 
 // This is for the magnetic grid:
 
