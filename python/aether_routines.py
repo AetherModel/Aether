@@ -38,23 +38,20 @@ def read_aether_header(filelist):
               "time": [], \
               "filename": [filelist[-1]] }
     
-    ncfile = Dataset(filelist[-1], 'r')
-    header["nVars"] = 0
-    for var in ncfile.variables.values():
-        s = var.shape
-        if (len(s) == 3):
-            header["nLons"] = s[0]
-            header["nLats"] = s[1]
-            header["nAlts"] = s[2]
-            header["vars"].append(var.name)
-            header["nVars"] += 1
+    with Dataset(filelist[-1], 'r') as ncfile:
+        header["nVars"] = 0
+        for var in ncfile.variables.values():
+            if (len(var.shape) == 3):
+                header["nLons"] = var.shape[0]
+                header["nLats"] = var.shape[1]
+                header["nAlts"] = var.shape[2]
+                header["vars"].append(var.name)
+                header["nVars"] += 1
 
-    base = dt.datetime(1965, 1, 1, 0, 0, 0)
-    time = np.array(ncfile.variables['Time'])
-    current = base + dt.timedelta(seconds = time[0])
-    header["time"].append(current)
-            
-    ncfile.close()
+        base = dt.datetime(1965, 1, 1, 0, 0, 0)
+        time = np.array(ncfile.variables['Time'])
+        current = base + dt.timedelta(seconds=time[0])
+        header["time"].append(current)
 
     return header
     
