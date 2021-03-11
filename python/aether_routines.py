@@ -66,19 +66,22 @@ def read_aether_header(filelist):
 #-----------------------------------------------------------------------------
 
 def read_aether_one_file(file, vars):
-    r""" Read in list of variables from a single netCDF file
+    """ Read in list of variables from a single netCDF file
 
     Parameters
     ----------
-    file: netcdf file to read
-    vars: list of variable NAMES to read
+    file : str
+        Name of netCDF file to read
+    vars : list
+        List of desired variable names to read
 
     Returns
     -------
-    data["time"]: datetime of the file
-    data[NUMBER]: data that is read in.
-                  NUMBER goes from 0 - number of vars read in (0-3 typical)
-
+    data : dict
+        Dict with keys 'time', which contains a datetime object specifying the time of
+        the file and indices ranging from 0 to `len(vars) - 1`, corresponding to the
+        variable names in `vars` that holds arrays of the specified dat
+    
     """
 
     data = {}
