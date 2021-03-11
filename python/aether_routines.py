@@ -84,18 +84,14 @@ def read_aether_one_file(file, vars):
     
     """
 
-    data = {}
-    
-    ncfile = Dataset(file, 'r')
-
-    base = dt.datetime(1965, 1, 1, 0, 0, 0)
-    time = np.array(ncfile.variables['Time'])
-    current = base + dt.timedelta(seconds = time[0])
-    data["time"] = current
-
-    for iVar, var in enumerate(vars):
-        data[iVar] = np.array(ncfile.variables[var])
-    ncfile.close()
+    with Dataset(file, 'r') as ncfile:
+        # Save the data as numpy arrays, using variable index as a key
+        data = {i_var: np.array(ncfile.variables[var]) for i_var, var in enumerate(vars)}
+        
+        # Calculate the date and time for this data
+        base = dt.datetime(1965, 1, 1)
+        time = np.array(ncfile.variables['Time'])
+        data['time'] = base + dt.timedelta(seconds=time[0])
 
     return data
     
