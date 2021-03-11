@@ -12,8 +12,9 @@ def read_aether_header(filelist):
 
     Parameters
     ----------
-    filelist: a list of netcdf files. Really, only the last file is used.
-              also, the number of files is recorded.
+    filelist : list
+        A list of netcdf file names.  The number of files is recorded, but only the last
+        file is used.
 
     Returns
     -------
@@ -92,5 +93,4 @@ def read_aether_one_file(file, vars):
 
     return data
     
-
 
