@@ -28,7 +28,7 @@ def read_aether_header(filelist):
         time - list of datetimes with data
     """
 
-    header = {"nFiles": len(filelist), \
+    header = {"nFiles": len(filelist),
               "version": 0.1, \
               "nLons": 0, \
               "nLats": 0, \
