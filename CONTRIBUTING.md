@@ -31,10 +31,9 @@ python3 -m pip cpplint
 python3 -m pip --user cpplint
 ```
 
-Using a linter in an editor is good too, although it has been found
-that these are not as good.  The linter in the 'atom' editor is ok,
-but you have to install the packages `linter` and `gcc-linter`. In
-atom, you can install the packages `whitespaces` and `tabs-to-spaces`
+Using a linter in an editor is a good supplement, but not a replacement for the static linters. 
+The linter in the 'atom' editor requires that you install the `linter` and `gcc-linter` packages. 
+Atom also has additional packages `whitespaces` and `tabs-to-spaces`
 to automatically remove whitespaces at the end of the lines, and
 convert tabs to spaces.
 
