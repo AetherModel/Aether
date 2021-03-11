@@ -18,8 +18,14 @@ def read_aether_header(filelist):
 
     Returns
     -------
-    header: A dictionary containing information about the netcdf file, such
-            as nLons, nLons, nAlts, nVars, variable names, time(s)
+    header : dict
+        A dictionary containing header information from the netCDF files, including:
+        nFilles - number of files in list
+        nLons - number of longitude grids
+        nLats - number of latitude grids
+        nAlts - number of altitude grids
+        nVars - number of data variable names
+        time - list of datetimes with data
     """
 
     header = {"nFiles": len(filelist), \
@@ -93,4 +99,3 @@ def read_aether_one_file(file, vars):
 
     return data
     
-
