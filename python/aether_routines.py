@@ -5,7 +5,7 @@ import datetime as dt
 import numpy as np
 
 def read_aether_header(filelist):
-    r""" Grab ancillary information from the netcdf file
+    """ Obtain ancillary information from the netCDF file
 
     Get some ancillary information from the netcdf file.  This simply
     mirrors the gitm header info.
