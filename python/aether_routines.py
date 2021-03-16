@@ -55,15 +55,6 @@ def read_aether_header(filelist):
 
     return header
     
-#-----------------------------------------------------------------------------
-# Read in some variables from one file. Inputs:
-#   - file: netcdf file to read
-#   - vars: list of variable NAMES to read
-# Output:
-#   - data["time"]: datetime of the file
-#   - data[NUMBER]: data that is read in.
-#                   NUMBER does from 0 - number of vars read in (0-3 typical)
-#-----------------------------------------------------------------------------
 
 def read_aether_one_file(file, vars):
     """ Read in list of variables from a single netCDF file
