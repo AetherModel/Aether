@@ -23,10 +23,10 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   // Local time is in radians
   geoLocalTime_scgc = geoLon_scgc + lon_offset;
   geoLocalTime_scgc =
-    geoLocalTime_scgc - 2*pi * floor(geoLocalTime_scgc/(2*pi));
+    geoLocalTime_scgc - cTWOPI * floor(geoLocalTime_scgc/(cTWOPI));
   cos_sza_scgc =
     sin_dec * sin(geoLat_scgc) +
-    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - pi);
+    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - cPI);
   sza_scgc = acos(cos_sza_scgc);
 
   report.exit(function);
@@ -46,7 +46,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
   // 1. use latitude / local time to derive XYZ
   std::vector<fcube> lon_lat_radius;
   // -pi is used here, since +X is pointed towards sun:
-  lon_lat_radius.push_back(geoLocalTime_scgc-pi);
+  lon_lat_radius.push_back(geoLocalTime_scgc - cPI);
   lon_lat_radius.push_back(geoLat_scgc);
   lon_lat_radius.push_back(radius_scgc);
   GSE_XYZ_vcgc = transform_llr_to_xyz_3d(lon_lat_radius);
@@ -64,7 +64,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
   // Lon (converted to local time):
 
   float lon_offset = planet.get_longitude_offset(time);
-  tmp_col.fill(mag_pole_north_ll[0] + lon_offset - pi);
+  tmp_col.fill(mag_pole_north_ll[0] + lon_offset - cPI);
   lon_lat_radius_col.push_back(tmp_col);
   // Lat:
   tmp_col.fill(mag_pole_north_ll[1]);
@@ -78,7 +78,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
 
   // South:
   // Lon:
-  lon_lat_radius_col[0].fill(mag_pole_south_ll[0] + lon_offset - pi);
+  lon_lat_radius_col[0].fill(mag_pole_south_ll[0] + lon_offset - cPI);
   // Lat:
   lon_lat_radius_col[1].fill(mag_pole_south_ll[1]);
   // Radius is already filled.
@@ -125,7 +125,7 @@ void Grid::calc_mlt(Report &report) {
   // calculated and converted to an hour.
 
   for (int iZ = 0; iZ < nZ; iZ++) {
-    dlat_north = 1.0 - (pi/2.0-magLat_scgc.slice(iZ))/pi;
+    dlat_north = 1.0 - (cPI / 2.0-magLat_scgc.slice(iZ)) / cPI;
     x_blend = dlat_north * mag_pole_north_gse[0](0, 0, iZ) +
       (1.0 - dlat_north) * mag_pole_south_gse[0](0, 0, iZ);
     y_blend = dlat_north * mag_pole_north_gse[1](0, 0, iZ) +
@@ -133,7 +133,7 @@ void Grid::calc_mlt(Report &report) {
     dx = GSE_XYZ_vcgc[0].slice(iZ) - x_blend;
     dy = GSE_XYZ_vcgc[1].slice(iZ) - y_blend;
 
-    mlt = (atan2(dy, dx) + 2*pi)/pi*12.0;
+    mlt = (atan2(dy, dx) + cTWOPI) / cPI * 12.0;
     magLocalTime_scgc.slice(iZ) = mlt - 24.0 * floor(mlt/24.0);
   }
 

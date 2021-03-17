@@ -161,12 +161,12 @@ int output(Neutrals neutrals,
         for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
           if (report.test_verbose(3))
             std::cout << "Outputting Var : "
-                      << neutrals.neutrals[iSpecies].cName << "\n";
-          denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName,
+                      << neutrals.species[iSpecies].cName << "\n";
+          denVar.push_back(ncdf_file.addVar(neutrals.species[iSpecies].cName,
                                             ncFloat, dimVector));
           denVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
           output_variable_3d(startp, countp,
-                             neutrals.neutrals[iSpecies].density_scgc,
+                             neutrals.species[iSpecies].density_scgc,
                              denVar[iSpecies]);
         }
 
@@ -180,7 +180,7 @@ int output(Neutrals neutrals,
         NcVar szaVar = ncdf_file.addVar("Solar Zenith Angle",
           ncFloat, dimVector);
         szaVar.putAtt(UNITS, "degrees");
-        output_variable_3d(startp, countp, grid.sza_scgc/dtor, szaVar);
+        output_variable_3d(startp, countp, grid.sza_scgc * cRtoD, szaVar);
 
       }
 

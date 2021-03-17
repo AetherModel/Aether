@@ -28,7 +28,6 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   // - copy it into the 3d cube
   fvec lon1d(nLons);
   float dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
-  std::cout << "dlon : " << dlon/dtor << "\n";
   for (iLon=0; iLon < nLons; iLon++)
     lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
 
@@ -43,7 +42,6 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   // - copy it into the 3d cube
   fvec lat1d(nLats);
   float dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats-2*nGCs);
-  std::cout << "dlat : " << dlat/dtor << "\n";
   for (iLat=0; iLat < nLats; iLat++)
     lat1d(iLat) = grid_input.lat_min + (iLat-nGCs+0.5) * dlat;
 

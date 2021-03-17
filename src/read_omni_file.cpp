@@ -136,42 +136,42 @@ int pair_omniweb_index(std::string var_name, Indices indices) {
 
   test = var_name.find("BX");
   if (test != std::string::npos) {
-    index = indices.get_imf_bx_index_id();
+    index = indices.get_imfbx_index_id();
   }
 
   test = var_name.find("BY");
   if (test != std::string::npos) {
-    index = indices.get_imf_by_index_id();
+    index = indices.get_imfby_index_id();
   }
 
   test = var_name.find("BZ");
   if (test != std::string::npos) {
-    index = indices.get_imf_bz_index_id();
+    index = indices.get_imfbz_index_id();
   }
 
   test = var_name.find("Vx");
   if (test != std::string::npos) {
-    index = indices.get_sw_vx_index_id();
+    index = indices.get_swvx_index_id();
   }
 
   test = var_name.find("Vy");
   if (test != std::string::npos) {
-    index = indices.get_sw_vy_index_id();
+    index = indices.get_swvy_index_id();
   }
 
   test = var_name.find("Vz");
   if (test != std::string::npos) {
-    index = indices.get_sw_vz_index_id();
+    index = indices.get_swvz_index_id();
   }
 
   test = var_name.find("Proton Density");
   if (test != std::string::npos) {
-    index = indices.get_sw_n_index_id();
+    index = indices.get_swn_index_id();
   }
 
   test = var_name.find("Temperature");
   if (test != std::string::npos) {
-    index = indices.get_sw_t_index_id();
+    index = indices.get_swt_index_id();
   }
 
   test = var_name.find("AE-index");

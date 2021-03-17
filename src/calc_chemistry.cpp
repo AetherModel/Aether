@@ -36,9 +36,9 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
 
   // Neutrals have losses due to ionization
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals.neutrals[iSpecies].losses_scgc =
-      neutrals.neutrals[iSpecies].ionization_scgc;
-    neutrals.neutrals[iSpecies].sources_scgc.zeros();
+    neutrals.species[iSpecies].losses_scgc =
+      neutrals.species[iSpecies].ionization_scgc;
+    neutrals.species[iSpecies].sources_scgc.zeros();
   }
 
   // Ions have sources due to ionization
@@ -59,10 +59,10 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // ---------------------------------------------------------
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals.neutrals[iSpecies].density_scgc =
-      solver_chemistry(neutrals.neutrals[iSpecies].density_scgc,
-                       neutrals.neutrals[iSpecies].sources_scgc,
-                       neutrals.neutrals[iSpecies].losses_scgc,
+    neutrals.species[iSpecies].density_scgc =
+      solver_chemistry(neutrals.species[iSpecies].density_scgc,
+                       neutrals.species[iSpecies].sources_scgc,
+                       neutrals.species[iSpecies].losses_scgc,
                        dt);
   }
 

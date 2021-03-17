@@ -46,7 +46,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
       if (IsNeutral)
-        change3d = change3d % neutrals.neutrals[id_].density_scgc;
+        change3d = change3d % neutrals.species[id_].density_scgc;
       else
         change3d = change3d % ions.species[id_].density_scgc;
     }
@@ -56,8 +56,8 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
       if (IsNeutral)
-        neutrals.neutrals[id_].losses_scgc =
-          neutrals.neutrals[id_].losses_scgc + change3d;
+        neutrals.species[id_].losses_scgc =
+          neutrals.species[id_].losses_scgc + change3d;
       else
         ions.species[id_].losses_scgc =
           ions.species[id_].losses_scgc + change3d;
@@ -68,8 +68,8 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       IsNeutral = reactions[iReaction].sources_IsNeutral[iSource];
       id_ = reactions[iReaction].sources_ids[iSource];
       if (IsNeutral)
-        neutrals.neutrals[id_].sources_scgc =
-          neutrals.neutrals[id_].sources_scgc + change3d;
+        neutrals.species[id_].sources_scgc =
+          neutrals.species[id_].sources_scgc + change3d;
       else
         ions.species[id_].sources_scgc =
           ions.species[id_].sources_scgc + change3d;

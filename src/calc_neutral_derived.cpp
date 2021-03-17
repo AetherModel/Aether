@@ -27,12 +27,12 @@ void Neutrals::calc_mass_density(Report &report) {
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
-      neutrals[iSpecies].mass * neutrals[iSpecies].density_scgc;
-    density_scgc = density_scgc + neutrals[iSpecies].density_scgc;
+      species[iSpecies].mass * species[iSpecies].density_scgc;
+    density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
 
   mean_major_mass_scgc = rho_scgc / density_scgc;
-  pressure_scgc = boltzmanns_constant * density_scgc % temperature_scgc;
+  pressure_scgc = cKB * density_scgc % temperature_scgc;
 
   report.exit(function);
   return;
@@ -60,22 +60,22 @@ void Neutrals::calc_specific_heat(Report &report) {
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     Cv_scgc = Cv_scgc +
-      (neutrals[iSpecies].vibe - 2) *
-      neutrals[iSpecies].density_scgc *
-      boltzmanns_constant / neutrals[iSpecies].mass;
+      (species[iSpecies].vibe - 2) *
+      species[iSpecies].density_scgc *
+      cKB / species[iSpecies].mass;
     gamma_scgc = gamma_scgc +
-      neutrals[iSpecies].density_scgc / (neutrals[iSpecies].vibe-2);
+      species[iSpecies].density_scgc / (species[iSpecies].vibe-2);
     kappa_scgc = kappa_scgc +
-      neutrals[iSpecies].thermal_cond *
-      neutrals[iSpecies].density_scgc %
-      pow(temperature_scgc, neutrals[iSpecies].thermal_exp);
+      species[iSpecies].thermal_cond *
+      species[iSpecies].density_scgc %
+      pow(temperature_scgc, species[iSpecies].thermal_exp);
   }
 
   Cv_scgc = Cv_scgc / (2*density_scgc);
   gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
   kappa_scgc = kappa_scgc / density_scgc;
 
-  sound_scgc = sqrt(boltzmanns_constant *
+  sound_scgc = sqrt(cKB *
                     gamma_scgc %
                     temperature_scgc /
                     mean_major_mass_scgc);
@@ -145,24 +145,24 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
-    neutrals[iSpecies].scale_height_scgc =
-      boltzmanns_constant * temperature_scgc /
-      (neutrals[iSpecies].mass * grid.gravity_scgc);
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * grid.gravity_scgc);
 
-    xp3d = grid.radius_scgc / neutrals[iSpecies].scale_height_scgc;
+    xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
     iAlt = nAlts-1;
 
     integral3d.fill(0.0);
 
     integral3d.slice(iAlt) =
-      neutrals[iSpecies].density_scgc.slice(iAlt) %
-      neutrals[iSpecies].scale_height_scgc.slice(iAlt);
+      species[iSpecies].density_scgc.slice(iAlt) %
+      species[iSpecies].scale_height_scgc.slice(iAlt);
 
     for (iAlt = nAlts-1; iAlt >= 0; iAlt--) {
       if (iAlt < nAlts-1) {
         integral3d.slice(iAlt) = integral3d.slice(iAlt+1) +
-          neutrals[iSpecies].density_scgc.slice(iAlt) %
+          species[iSpecies].density_scgc.slice(iAlt) %
           grid.dalt_lower_scgc.slice(iAlt+1);
       }
     }
@@ -178,7 +178,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
     // Set chapman integrals to max in the lower ghostcells
 
-    neutrals[iSpecies].chapman_scgc.fill(max_chapman);
+    species[iSpecies].chapman_scgc.fill(max_chapman);
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
@@ -191,17 +191,17 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
         y1d = y3d.tube(iLon, iLat);
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
-        H1d = neutrals[iSpecies].scale_height_scgc.tube(iLon, iLat);
+        H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
 
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
           // This is on the dayside:
-          if (sza1d(iAlt) < pi/2 || sza1d(iAlt) > 3*pi/2) {
-            neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
-              integral1d(iAlt) * sqrt(0.5 * pi * xp1d(iAlt)) * erfcy1d(iAlt);
+          if (sza1d(iAlt) < cPI/2 || sza1d(iAlt) > 3*cPI/2) {
+            species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+              integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
           } else {
             // This is on the nghtside of the terminator:
 
-            y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-pi/2));
+            y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-cPI/2));
 
             // This sort of assumes that nGeoGhosts >= 2:
             if (y > radius1d(nGCs)) {
@@ -223,17 +223,17 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
               int_g = exp(in);
               int_p = integral1d(iAlt);
               // Equation (19) Smith & Smith
-              neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
-                sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+                sqrt(0.5 * cPI * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
-              if (neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
+              if (species[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
 		  max_chapman)
-                neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
+                species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
 
             } else {
               // This says that we are in the shadow of the planet:
 
-              neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
             }
           }
         }  // iAlt

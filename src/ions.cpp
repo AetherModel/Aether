@@ -126,12 +126,12 @@ int Ions::read_planet_file(Inputs input, Report report) {
           for (int iSpecies=0; iSpecies < nIons; iSpecies++) {
             report.print(5, "setting ion species " + lines[iSpecies+1][0]);
             species[iSpecies].cName = lines[iSpecies+1][0];
-            species[iSpecies].mass = stof(lines[iSpecies+1][1])*amu;
+            species[iSpecies].mass = stof(lines[iSpecies+1][1]) * cAMU;
             species[iSpecies].charge = stoi(lines[iSpecies+1][2]);
             species[iSpecies].DoAdvect = stoi(lines[iSpecies+1][3]);
           }
           species[nIons].cName = "e-";
-          species[nIons].mass = mass_electron;
+          species[nIons].mass = cME;
           species[nIons].charge = -1;
           species[nIons].DoAdvect = 0;
         }

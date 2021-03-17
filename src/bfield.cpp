@@ -19,15 +19,15 @@ bfield_info_type get_bfield(float lon,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (lat > pi/2) {
-    lat = twopi - lat;
-    lon = lon + pi;
-    if (lon > twopi) lon = lon - twopi;
+  if (lat > cPI/2) {
+    lat = cTWOPI - lat;
+    lon = lon + cPI;
+    if (lon > cTWOPI) lon = lon - cTWOPI;
   }
-  if (lat < -pi/2) {
-    lat = -twopi + lat;
-    lon = lon + pi;
-    if (lon > twopi) lon = lon - twopi;
+  if (lat < -cPI/2) {
+    lat = -cTWOPI + lat;
+    lon = lon + cPI;
+    if (lon > cTWOPI) lon = lon - cTWOPI;
   }
 
   bfield_info_type bfield_info;
@@ -62,9 +62,9 @@ fvec get_magnetic_pole(int IsNorth,
     // No magnetic field, so set location to the geo pole:
     lonlat(0) = 0.0;
     if (IsNorth) {
-      lonlat(1) = pi/2.0;
+      lonlat(1) = cPI/2.0;
     } else {
-      lonlat(1) = -pi/2.0;
+      lonlat(1) = -cPI/2.0;
     }
   } else if (input.get_bfield_type() == "dipole") {
     // This is an approximation right now, due to the fact that the
@@ -76,10 +76,10 @@ fvec get_magnetic_pole(int IsNorth,
     float magnetic_pole_tilt = planet.get_dipole_tilt();
     if (IsNorth) {
       lonlat(0) = magnetic_pole_rotation;
-      lonlat(1) = pi/2 - magnetic_pole_tilt;
+      lonlat(1) = cPI/2 - magnetic_pole_tilt;
     } else {
-      lonlat(0) = 2*pi - magnetic_pole_rotation;
-      lonlat(1) = -pi/2 + magnetic_pole_tilt;
+      lonlat(0) = cTWOPI - magnetic_pole_rotation;
+      lonlat(1) = -cPI/2 + magnetic_pole_tilt;
     }
   }
   return lonlat;

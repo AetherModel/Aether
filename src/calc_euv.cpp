@@ -64,7 +64,7 @@ void calc_ionization_heating(Euv euv,
 
   neutrals.heating_euv_scgc.zeros();
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-    neutrals.neutrals[iSpecies].ionization_scgc.zeros();
+    neutrals.species[iSpecies].ionization_scgc.zeros();
 
   for (iSpecies=0; iSpecies < nIons; iSpecies++)
     ions.species[iSpecies].ionization_scgc.zeros();
@@ -81,11 +81,11 @@ void calc_ionization_heating(Euv euv,
       tau2d.zeros();
 
       for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-        if (neutrals.neutrals[iSpecies].iEuvAbsId_ > -1) {
-          i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;
+        if (neutrals.species[iSpecies].iEuvAbsId_ > -1) {
+          i_ = neutrals.species[iSpecies].iEuvAbsId_;
           tau2d = tau2d +
             euv.waveinfo[i_].values[iWave] *
-            neutrals.neutrals[iSpecies].chapman_scgc.slice(iAlt);
+            neutrals.species[iSpecies].chapman_scgc.slice(iAlt);
         }
       }
 
@@ -94,31 +94,31 @@ void calc_ionization_heating(Euv euv,
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
         // index of photo abs cross section
-        i_ = neutrals.neutrals[iSpecies].iEuvAbsId_;
+        i_ = neutrals.species[iSpecies].iEuvAbsId_;
         if (i_ > -1) {
           neutrals.heating_euv_scgc.slice(iAlt) =
             neutrals.heating_euv_scgc.slice(iAlt) +
             euv.wavelengths_energy[iWave] *
             euv.waveinfo[i_].values[iWave] *  // cross section
             (intensity2d %
-             neutrals.neutrals[iSpecies].density_scgc.slice(iAlt) );
+             neutrals.species[iSpecies].density_scgc.slice(iAlt) );
         }
 
         for (iIonization = 0;
-             iIonization < neutrals.neutrals[iSpecies].nEuvIonSpecies;
+             iIonization < neutrals.species[iSpecies].nEuvIonSpecies;
              iIonization++) {
 
-          i_ = neutrals.neutrals[iSpecies].iEuvIonId_[iIonization];
+          i_ = neutrals.species[iSpecies].iEuvIonId_[iIonization];
 
           ionization2d =
             euv.waveinfo[i_].values[iWave] *  // cross section
             intensity2d %
-            neutrals.neutrals[iSpecies].density_scgc.slice(iAlt);
+            neutrals.species[iSpecies].density_scgc.slice(iAlt);
 
-          neutrals.neutrals[iSpecies].ionization_scgc.slice(iAlt) =
-            neutrals.neutrals[iSpecies].ionization_scgc(iAlt) + ionization2d;
+          neutrals.species[iSpecies].ionization_scgc.slice(iAlt) =
+            neutrals.species[iSpecies].ionization_scgc(iAlt) + ionization2d;
 
-          iIon = neutrals.neutrals[iSpecies].iEuvIonSpecies_[iIonization];
+          iIon = neutrals.species[iSpecies].iEuvIonSpecies_[iIonization];
           ions.species[iIon].ionization_scgc.slice(iAlt) =
             ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
         }  // iIonization

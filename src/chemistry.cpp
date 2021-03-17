@@ -166,7 +166,7 @@ void Chemistry::find_species_id(std::string name,
 
     // Check Neutrals:
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      if (name == neutrals.neutrals[iSpecies].cName) {
+      if (name == neutrals.species[iSpecies].cName) {
         id_ = iSpecies;
         IsNeutral = 1;
         break;

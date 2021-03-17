@@ -99,7 +99,7 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
 
   // The f107 array we can just file away:
 
-  set_index(f107_,
+  set_index(iF107_,
       f107_contents.times,
       f107_contents.values[0],
       f107_contents.missing_values[0]);
@@ -149,7 +149,7 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
   average_time.push_back(f107_contents.times[nTimes-1]);
   average_f107.push_back(sumf107/nSubs);
 
-  set_index(f107a_,
+  set_index(iF107A_,
       average_time,
       average_f107,
       f107_contents.missing_values[0]);
@@ -162,11 +162,11 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
 // ----------------------------------------------------------------------
 
 float Indices:: get_f107(double time) {
-  return get_index(time, f107_);
+  return get_index(time, iF107_);
 }
 
 float Indices:: get_f107a(double time) {
-  return get_index(time, f107a_);
+  return get_index(time, iF107A_);
 }
 
 // ----------------------------------------------------------------------
@@ -280,16 +280,16 @@ void print_index_file_output_struct(index_file_output_struct
 // to pair up which index goes with which variable
 // ----------------------------------------------------------------------
 
-int Indices::get_f107_index_id() { return f107_; }
-int Indices::get_f107a_index_id() { return f107a_; }
-int Indices::get_imf_bx_index_id() { return imf_bx_; }
-int Indices::get_imf_by_index_id() { return imf_by_; }
-int Indices::get_imf_bz_index_id() { return imf_bz_; }
-int Indices::get_sw_vx_index_id() { return sw_vx_; }
-int Indices::get_sw_vy_index_id() { return sw_vy_; }
-int Indices::get_sw_vz_index_id() { return sw_vz_; }
-int Indices::get_sw_n_index_id() { return sw_n_; }
-int Indices::get_sw_t_index_id() { return sw_t_; }
-int Indices::get_ae_index_id() { return ae_; }
-int Indices::get_au_index_id() { return au_; }
-int Indices::get_al_index_id() { return al_; }
+int Indices::get_f107_index_id() { return iF107_; }
+int Indices::get_f107a_index_id() { return iF107A_; }
+int Indices::get_imfbx_index_id() { return iIMFBX_; }
+int Indices::get_imfby_index_id() { return iIMFBY_; }
+int Indices::get_imfbz_index_id() { return iIMFBZ_; }
+int Indices::get_swvx_index_id() { return iSWVX_; }
+int Indices::get_swvy_index_id() { return iSWVY_; }
+int Indices::get_swvz_index_id() { return iSWVZ_; }
+int Indices::get_swn_index_id() { return iSWN_; }
+int Indices::get_swt_index_id() { return iSWT_; }
+int Indices::get_ae_index_id() { return iAE_; }
+int Indices::get_au_index_id() { return iAU_; }
+int Indices::get_al_index_id() { return iAL_; }

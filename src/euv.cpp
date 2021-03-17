@@ -31,10 +31,8 @@ Euv::Euv(Inputs args, Report report) {
     // This means we found both long and short wavelengths:
     if (!iErr) {
       for (int iWave = 0; iWave < nWavelengths; iWave++) {
-        ave = (wavelengths_short[iWave] + wavelengths_long[iWave])/2.0;
-        wavelengths_energy.push_back(planck_constant *
-                                     speed_light /
-                                     (ave * atom));
+        ave = (wavelengths_short[iWave] + wavelengths_long[iWave])/2.0 * cAtoM;
+        wavelengths_energy.push_back(cH * cC / ave);
         // We simply want to initialize these vectors to make them the
         // correct lenght:
         wavelengths_intensity_1au.push_back(0.0);
@@ -185,10 +183,10 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
     if (report.test_verbose(5))
-      std::cout << neutrals.neutrals[iSpecies].cName << "\n";
+      std::cout << neutrals.species[iSpecies].cName << "\n";
 
-    neutrals.neutrals[iSpecies].iEuvAbsId_ = -1;
-    neutrals.neutrals[iSpecies].nEuvIonSpecies = 0;
+    neutrals.species[iSpecies].iEuvAbsId_ = -1;
+    neutrals.species[iSpecies].nEuvIonSpecies = 0;
 
     // Check each row to see if the first column "name" matches:
     int64_t nEuvs = waveinfo.size();
@@ -198,12 +196,12 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
         std::cout << "  " << waveinfo[iEuv].name << "\n";
 
       // if this matches...
-      if (neutrals.neutrals[iSpecies].cName == waveinfo[iEuv].name) {
+      if (neutrals.species[iSpecies].cName == waveinfo[iEuv].name) {
 
         // First see if we can find absorbtion:
         if (waveinfo[iEuv].type == "abs") {
           if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
-          neutrals.neutrals[iSpecies].iEuvAbsId_ = iEuv;
+          neutrals.species[iSpecies].iEuvAbsId_ = iEuv;
         }
 
         // Next see if we can find ionizations:
@@ -215,9 +213,9 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
               if (report.test_verbose(5))
                 std::cout << "  Found ionization!! --> "
                           << ions.species[iIon].cName << "\n";
-              neutrals.neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
-              neutrals.neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
-              neutrals.neutrals[iSpecies].nEuvIonSpecies++;
+              neutrals.species[iSpecies].iEuvIonId_.push_back(iEuv);
+              neutrals.species[iSpecies].iEuvIonSpecies_.push_back(iIon);
+              neutrals.species[iSpecies].nEuvIonSpecies++;
             }  // if to
           }  // iIon loop
         }  // if ionization

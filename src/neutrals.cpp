@@ -60,7 +60,7 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
-    neutrals.push_back(tmp);
+    species.push_back(tmp);
   }
 
   // State variables:
@@ -157,13 +157,13 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 
           for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
             report.print(5, "setting neutral species " + lines[iSpecies+1][0]);
-            neutrals[iSpecies].cName = lines[iSpecies+1][0];
-            neutrals[iSpecies].mass = stof(lines[iSpecies+1][1])*amu;
-            neutrals[iSpecies].vibe = stof(lines[iSpecies+1][2]);
-            neutrals[iSpecies].thermal_cond = stof(lines[iSpecies+1][3]);
-            neutrals[iSpecies].thermal_exp = stof(lines[iSpecies+1][4]);
-            neutrals[iSpecies].DoAdvect = stoi(lines[iSpecies+1][5]);
-            neutrals[iSpecies].lower_bc_density = stof(lines[iSpecies+1][6]);
+            species[iSpecies].cName = lines[iSpecies+1][0];
+            species[iSpecies].mass = stof(lines[iSpecies+1][1]) * cAMU;
+            species[iSpecies].vibe = stof(lines[iSpecies+1][2]);
+            species[iSpecies].thermal_cond = stof(lines[iSpecies+1][3]);
+            species[iSpecies].thermal_exp = stof(lines[iSpecies+1][4]);
+            species[iSpecies].DoAdvect = stoi(lines[iSpecies+1][5]);
+            species[iSpecies].lower_bc_density = stof(lines[iSpecies+1][6]);
           }  // iSpecies
         }  // else size
       }  // #neutrals
@@ -264,8 +264,8 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals[iSpecies].density_scgc.slice(0).
-      fill(neutrals[iSpecies].lower_bc_density);
+    species[iSpecies].density_scgc.slice(0).
+      fill(species[iSpecies].lower_bc_density);
   }
   fill_with_hydrostatic(grid, report);
 
@@ -284,15 +284,13 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
-      neutrals[iSpecies].scale_height_scgc.slice(iAlt) =
-        boltzmanns_constant *
-        temperature_scgc.slice(iAlt) /
-        (neutrals[iSpecies].mass *
-         grid.gravity_scgc.slice(iAlt));
-      neutrals[iSpecies].density_scgc.slice(iAlt) =
-        neutrals[iSpecies].density_scgc.slice(iAlt-1) %
+      species[iSpecies].scale_height_scgc.slice(iAlt) =
+        cKB * temperature_scgc.slice(iAlt) /
+        (species[iSpecies].mass * grid.gravity_scgc.slice(iAlt));
+      species[iSpecies].density_scgc.slice(iAlt) =
+        species[iSpecies].density_scgc.slice(iAlt-1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
-            neutrals[iSpecies].scale_height_scgc.slice(iAlt));
+            species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
   calc_mass_density(report);
@@ -315,8 +313,8 @@ void Neutrals::set_bcs(Report &report) {
 
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals[iSpecies].density_scgc.slice(0).
-      fill(neutrals[iSpecies].lower_bc_density);
+    species[iSpecies].density_scgc.slice(0).
+      fill(species[iSpecies].lower_bc_density);
   }
 
   temperature_scgc.slice(nAlts-2) = temperature_scgc.slice(nAlts-3);

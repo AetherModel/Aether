@@ -94,10 +94,10 @@ int Inputs::read(Times &time, Report &report) {
       // ---------------------------
 
       if (hash == "#geogrid") {
-        geo_grid_input.lon_min = read_float(infile_ptr, hash) * dtor;
-        geo_grid_input.lon_max = read_float(infile_ptr, hash) * dtor;
-        geo_grid_input.lat_min = read_float(infile_ptr, hash) * dtor;
-        geo_grid_input.lat_max = read_float(infile_ptr, hash) * dtor;
+        geo_grid_input.lon_min = read_float(infile_ptr, hash) * cDtoR;
+        geo_grid_input.lon_max = read_float(infile_ptr, hash) * cDtoR;
+        geo_grid_input.lat_min = read_float(infile_ptr, hash) * cDtoR;
+        geo_grid_input.lat_max = read_float(infile_ptr, hash) * cDtoR;
         geo_grid_input.alt_min = read_float(infile_ptr, hash) * 1000.0;
         geo_grid_input.dalt = read_float(infile_ptr, hash) * 1000.0;
         geo_grid_input.IsUniformAlt = 1;

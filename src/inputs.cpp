@@ -39,15 +39,15 @@ Inputs::Inputs(Times &time, Report &report) {
     geo_grid_input.lon_max = 0.0;
   } else {
     geo_grid_input.lon_min = 0.0;
-    geo_grid_input.lon_max = 2.0*pi;
+    geo_grid_input.lon_max = 2.0*cPI;
   }
 
   if (nLatsGeo == 1) {
     geo_grid_input.lat_min = 0.0;
     geo_grid_input.lat_max = 0.0;
   } else {
-    geo_grid_input.lat_min = -pi/2;
-    geo_grid_input.lat_max = pi/2;
+    geo_grid_input.lat_min = -cPI/2;
+    geo_grid_input.lat_max = cPI/2;
   }
 
   euv_heating_eff_neutrals = 0.40;
