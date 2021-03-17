@@ -1,55 +1,43 @@
 # (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 # Full license can be found in License.md
 
-COMPILE.CPP = g++
-LINK.CPP = g++
-AR = ar -rs
-
-# FLAGS = -O3 -ffast-math -c -I/opt/local/include
-
-# Can use this version for no optimization and no fast math:
-FLAGS = -c -I/opt/local/include
+include Makefile.OS
 
 .SUFFICES:
 .SUFFICES: .cpp .o
 
-HEADERS = \
-	times.h\
-	constants.h\
-	inputs.h\
-	file_input.h
-
 CLASSES = \
-	time.o\
-	inputs.o\
+	chemistry.o\
 	euv.o\
-	indices.o\
-	planets.o\
 	grid.o\
-	neutrals.o\
+	indices.o\
+	inputs.o\
 	ions.o\
-	chemistry.o
+	neutrals.o\
+	planets.o\
+	time.o
 
 OBJECTS = \
-	time_conversion.o\
-	transform.o\
-	report.o\
-	file_input.o\
-	read_f107_file.o\
-	read_omni_file.o\
-	init_geo_grid.o\
-	fill_grid.o\
-	calc_neutral_derived.o\
-	calc_euv.o\
-	solver_conduction.o\
-	solver_chemistry.o\
-	advance.o\
 	add_sources.o\
-	output.o\
+	advance.o\
 	bfield.o\
-	dipole.o\
 	calc_chemistry.o\
-	calc_chemical_sources.o
+	calc_chemical_sources.o\
+	calc_euv.o\
+	calc_neutral_derived.o\
+	dipole.o\
+	file_input.o\
+	fill_grid.o\
+	init_geo_grid.o\
+	output.o\
+	read_f107_file.o\
+	read_input_file.o\
+	read_omni_file.o\
+	report.o\
+	solver_chemistry.o\
+	solver_conduction.o\
+	time_conversion.o\
+	transform.o
 
 MAIN = \
 	main.o
@@ -74,10 +62,10 @@ LIB: ${CLASSES} ${OBJECTS}
 
 
 Aether: ${MAIN} LIB
-	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L/opt/local/lib -lnetcdf-cxx4 #-lmsis
+	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L/opt/local/lib -lnetcdf-cxx4
 
 test: ${TEST} LIB
-	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib
+	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB}
 
 clean:
 	rm -f *~ core *.o *.exe *.a *.so *.d
