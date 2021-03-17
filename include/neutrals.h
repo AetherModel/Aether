@@ -67,7 +67,7 @@ class Neutrals {
   fcube gamma_scgc;
   fcube kappa_scgc;
 
-  std::vector<species_chars> neutrals;
+  std::vector<species_chars> species;
 
   float max_chapman = 1.0e26;
 
