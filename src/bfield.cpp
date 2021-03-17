@@ -52,9 +52,9 @@ bfield_info_type get_bfield(float lon,
 // -----------------------------------------------------------------------------
 
 fvec get_magnetic_pole(int IsNorth,
-         Planets planet,
-         Inputs input,
-         Report &report) {
+                       Planets planet,
+                       Inputs input,
+                       Report &report) {
 
   fvec lonlat(2, fill::zeros);
 
