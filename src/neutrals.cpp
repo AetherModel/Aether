@@ -308,9 +308,6 @@ void Neutrals::set_bcs(Report &report) {
 
   int64_t nAlts = temperature_scgc.n_slices;
 
-  // temperature_scgc.slice(nAlts-2).fill(800.0);
-  // temperature_scgc.slice(nAlts-1).fill(800.0);
-
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].density_scgc.slice(0).
