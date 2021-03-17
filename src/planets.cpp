@@ -184,7 +184,7 @@ int Planets::update(Times time) {
     float x_heliocentric = sma*(cos(ecc_anomaly * cDtoR) - ecc);
     float y_heliocentric = sma*sqrt(1-ecc*ecc)*sin(ecc_anomaly * cDtoR);
 
-    //float true_anomaly = atan2(y_heliocentric, x_heliocentric)*rtod;
+    float true_anomaly = atan2(y_heliocentric, x_heliocentric) * cRtoD;
 
     planet.star_planet_distance = sqrt(x_heliocentric * x_heliocentric +
                                        y_heliocentric * y_heliocentric);
