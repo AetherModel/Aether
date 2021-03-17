@@ -12,6 +12,9 @@ installed, but right now it is hardcoded to be in
 /opt/local/lib. Sorry. Also, the python code provided for
 visualization uses the netcdf library (netCDF4).
 
+2. The armadillo include files need to be placed somewhere that
+can be accessed by the Makefile.
+
 ## Quick Start:
 
 These are unix commands, assuming that you have access to a unix/linux
@@ -23,23 +26,25 @@ terminal. This has been tested on a MacBook Pro.
 
 3. git checkout develop
 
-4. Modify src/Makefile to point to the correct netcdf library (in LINK
-command near the bottom - may need to change the location and the name
-of the library, as well as the FLAGS variable at the top). Also, if
-you are using a different c++ compiler, you will need to change that
-at this time (top two variables).  We will fix this so that there is a
+4. Copy example Makefile.OSX/ubuntu and modify src/Makefile.OS to
+adjust compiler options and to point to the correct netcdf library and
+armadillo include file locations.  We will fix this so that there is a
 configuration script at some point.
 
-5. make (may throw warning about ../lib directory not found.)
+5. make 
 
 6. make rundir
 
 7. cd run
 
-8. ./aether.exe (should run 10 minutes with no issues).
+8. ./aether.exe (should run 1 hour of simulation with no issues).
 
-9. python ../python/read_python.py
+9. Make some plots:
 
-10. compare test.png to ../inputs/test.png to see if they are similar.
+../python/plot_model_results.py -var=24 3DALL_20110320_010000.nc -alt=110
+
+../python/plot_model_results.py -var=14 3DALL_20110320_010000.nc -alt=300
+
+10. compare png files to ../inputs/*.png to see if they are similar.
 
 
