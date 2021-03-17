@@ -5,6 +5,11 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// calculates the chemical reactions in the model by taking into account
+// EUV ionization and chemistry as this time
+// -----------------------------------------------------------------------------
+
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,
                                Times time,

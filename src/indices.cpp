@@ -9,7 +9,29 @@
 #include "../include/aether.h"
 
 // ----------------------------------------------------------------------
-//
+// Initialize the Indices class
+// ----------------------------------------------------------------------
+
+Indices::Indices(Inputs args) {
+
+  // Initialize the all_indices_arrays storage structure:
+
+  int iIndex;
+  index_time_pair single_index;
+  single_index.nValues = 0;
+  single_index.name = "Not set";
+  for (iIndex = 0; iIndex < nIndices; iIndex++) {
+    all_indices_arrays.push_back(single_index);
+  }
+
+}
+
+// ----------------------------------------------------------------------
+// Reads a bunch of different files and then stores all of the data
+// into the Indices class.
+// Files supported:
+//   - NOAA F10.7 files
+//   - OMNIWeb files
 // ----------------------------------------------------------------------
 
 int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
@@ -54,37 +76,19 @@ int read_and_store_indices(Indices &indices, Inputs args, Report &report) {
       int nVars = file_contents.nVars;
 
       for (int iVar = 0; iVar < nVars ; iVar++) {
-  if (file_contents.index_id[iVar] > -1 &&
-      file_contents.nTimes > 0) {
-    indices.set_index(file_contents.index_id[iVar],
-          file_contents.times,
-          file_contents.values[iVar],
-          file_contents.missing_values[iVar]);
-  }  // if
+	if (file_contents.index_id[iVar] > -1 &&
+	    file_contents.nTimes > 0) {
+	  indices.set_index(file_contents.index_id[iVar],
+			    file_contents.times,
+			    file_contents.values[iVar],
+			    file_contents.missing_values[iVar]);
+	}  // if
       }  // for iVar
     }  // for iFile
   }  // if nFiles
 
   report.exit(function);
   return iErr;
-}
-
-// ----------------------------------------------------------------------
-// Initialize
-// ----------------------------------------------------------------------
-
-Indices::Indices(Inputs args) {
-
-  // Initialize the all_indices_arrays storage structure:
-
-  int iIndex;
-  index_time_pair single_index;
-  single_index.nValues = 0;
-  single_index.name = "Not set";
-  for (iIndex = 0; iIndex < nIndices; iIndex++) {
-    all_indices_arrays.push_back(single_index);
-  }
-
 }
 
 // ----------------------------------------------------------------------
@@ -211,9 +215,9 @@ float Indices::get_index(double time, int index) {
 // ----------------------------------------------------------------------
 
 void Indices::set_index(int index,
-      std::vector<double> timearray,
-      std::vector<float> indexarray,
-      float missing) {
+			std::vector<double> timearray,
+			std::vector<float> indexarray,
+			float missing) {
 
   if (timearray.size() != indexarray.size()) {
     std::cout << "In set_index. Size of time and index arrays don't match!\n";
@@ -224,9 +228,9 @@ void Indices::set_index(int index,
     all_indices_arrays[index].nValues = 0;
     for (int64_t i = 0; i < iSize; i++) {
       if (indexarray[i] != missing) {
-  all_indices_arrays[index].times.push_back(timearray[i]);
-  all_indices_arrays[index].values.push_back(indexarray[i]);
-  all_indices_arrays[index].nValues++;
+	all_indices_arrays[index].times.push_back(timearray[i]);
+	all_indices_arrays[index].values.push_back(indexarray[i]);
+	all_indices_arrays[index].nValues++;
       }
     }
   }
@@ -270,6 +274,11 @@ void print_index_file_output_struct(index_file_output_struct
   }
 
 }
+
+// ----------------------------------------------------------------------
+// These return the index ids for various indices, allowing the user
+// to pair up which index goes with which variable
+// ----------------------------------------------------------------------
 
 int Indices::get_f107_index_id() { return f107_; }
 int Indices::get_f107a_index_id() { return f107a_; }

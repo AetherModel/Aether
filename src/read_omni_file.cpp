@@ -9,9 +9,14 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Read OMNIWeb File.  This doesn't match anything, just reads the file
+// and returns the variable names for matching somewhere else.
+// -----------------------------------------------------------------------------
+
 index_file_output_struct read_omni_file(std::string omni_file,
-          Indices indices,
-          Report &report) {
+					Indices indices,
+					Report &report) {
 
   std::ifstream myFile;
 
@@ -120,7 +125,8 @@ index_file_output_struct read_omni_file(std::string omni_file,
 }
 
 // ----------------------------------------------------------------------
-//
+// Since OMNIWeb files are "generic", we need to match which variable
+// name goes with which index.
 // ----------------------------------------------------------------------
 
 int pair_omniweb_index(std::string var_name, Indices indices) {
@@ -188,7 +194,8 @@ int pair_omniweb_index(std::string var_name, Indices indices) {
 }
 
 // ----------------------------------------------------------------------
-//
+// OMNIWeb files have different missing values for each different
+// variable.  A pain.  So, get the missing values from this list.
 // ----------------------------------------------------------------------
 
 float get_omniweb_missing_value(std::string var_name) {

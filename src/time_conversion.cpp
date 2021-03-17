@@ -53,12 +53,12 @@ double time_int_to_real(std::vector<int> itime) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Calculate year, month, day, hour, minute, second, msec from time as double
 // -----------------------------------------------------------------------------
 
 std::vector<int> time_real_to_int(double timereal) {
 
-  std::vector<int> itime;
+  std::vector<int> itime(7);
 
   int nYears = static_cast<int>(timereal/seconds_per_year);
   int nLeaps = nYears/4;
@@ -104,7 +104,6 @@ std::vector<int> time_real_to_int(double timereal) {
   int nSeconds = timeleft;
   int nMillis = static_cast<int>((timeleft -
                                   static_cast<double>(nSeconds)) * 1000.0);
-
   itime[0] = nYears + reference_year;
 
   // This is to get the month right.  We need to see if we are in a leap year.

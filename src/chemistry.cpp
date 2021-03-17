@@ -28,7 +28,7 @@ Chemistry::Chemistry(Neutrals neutrals,
 }
 
 // -----------------------------------------------------------------------------
-// Read chemistry file
+// Read chemistry CSV file
 // -----------------------------------------------------------------------------
 
 int Chemistry::read_chemistry_file(Neutrals neutrals,

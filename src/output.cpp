@@ -8,20 +8,32 @@
 using namespace netCDF;
 using namespace netCDF::exceptions;
 
+//----------------------------------------------------------------------
+// Output a given variable to the netCDF file.  The netCDF system
+// doesn't work with Armadillo cubes, so we have to transform the cube
+// to a C-array, and then output
+// ----------------------------------------------------------------------
+
 void output_variable_3d(std::vector<size_t> count_start,
                         std::vector<size_t> count_end,
                         fcube value,
                         NcVar variable) {
 
+  // Get the size of the cube:
+  
   int64_t nX = value.n_rows;
   int64_t nY = value.n_cols;
   int64_t nZ = value.n_slices;
   int64_t iX, iY, iZ, iTotal, index;
 
   iTotal = nX * nY * nZ;
-
+  
+  // Create a temporary c-array to use to output the variable
+  
   float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
 
+  // Move the data from the cube to the c-array
+  
   for (iX = 0; iX < nX; iX++) {
     for (iY = 0; iY < nY; iY++) {
       for (iZ = 0; iZ < nZ; iZ++) {
@@ -31,9 +43,16 @@ void output_variable_3d(std::vector<size_t> count_start,
     }
   }
 
+  // Output the data to the netCDF file
   variable.putVar(count_start, count_end, tmp_s3gc);
+
+  // delete the c-array
   free(tmp_s3gc);
 }
+
+//----------------------------------------------------------------------
+// Output the different file types to netCDF files. 
+//----------------------------------------------------------------------
 
 int output(Neutrals neutrals,
            Ions ions,

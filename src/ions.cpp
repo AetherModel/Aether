@@ -7,7 +7,7 @@
 #include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
-//
+// Initialize a single species for the ions
 // -----------------------------------------------------------------------------
 
 Ions::species_chars Ions::create_species(Grid grid) {
@@ -37,7 +37,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 }
 
 // -----------------------------------------------------------------------------
-//  Initialize ions
+//  Initialize Ions class
 // -----------------------------------------------------------------------------
 
 Ions::Ions(Grid grid, Inputs input, Report report) {
@@ -144,7 +144,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Calculate the electron density from the sum of all ion species
 // -----------------------------------------------------------------------------
 
 void Ions::fill_electrons(Report &report) {

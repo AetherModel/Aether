@@ -9,9 +9,13 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Read the F107 file produced by NOAA NDGC
+// -----------------------------------------------------------------------------
+
 index_file_output_struct read_f107_file(std::string f107_file,
-          Indices indices,
-          Report &report) {
+                                        Indices indices,
+                                        Report &report) {
 
   std::ifstream myFile;
   index_file_output_struct f107_contents;
@@ -83,7 +87,7 @@ index_file_output_struct read_f107_file(std::string f107_file,
         // f107
         getline(ss, tmp, '"');
         values.push_back(stof(tmp));
-  f107_contents.nTimes++;
+        f107_contents.nTimes++;
       }  // while
       // Push the vector into a vector of vectors:
       f107_contents.values.push_back(values);

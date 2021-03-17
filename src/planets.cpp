@@ -21,7 +21,7 @@ Planets::Planets(Inputs args, Report report) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the offset between the longitude and local time
 // -----------------------------------------------------------------------------
 
 float Planets::get_longitude_offset(Times time) {
@@ -31,7 +31,7 @@ float Planets::get_longitude_offset(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the sin of the planet's declination angle
 // -----------------------------------------------------------------------------
 
 float Planets::get_sin_dec(Times time) {
@@ -41,7 +41,7 @@ float Planets::get_sin_dec(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the cos of the planet's declination angle
 // -----------------------------------------------------------------------------
 
 float Planets::get_cos_dec(Times time) {
@@ -51,7 +51,7 @@ float Planets::get_cos_dec(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the radius of the planet as a function of latitude (meters)
 // -----------------------------------------------------------------------------
 
 float Planets::get_radius(float latitude) {
@@ -60,7 +60,7 @@ float Planets::get_radius(float latitude) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the rotation of the dipole (in radians, rotation in longitude)
 // -----------------------------------------------------------------------------
 
 float Planets::get_dipole_rotation() {
@@ -68,7 +68,8 @@ float Planets::get_dipole_rotation() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the tilt of the dipole away from the rotation axis of the
+// planet (radians)
 // -----------------------------------------------------------------------------
 
 float Planets::get_dipole_tilt() {
@@ -76,7 +77,7 @@ float Planets::get_dipole_tilt() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the strength of the dipole
 // -----------------------------------------------------------------------------
 
 float Planets::get_dipole_strength() {
@@ -84,7 +85,7 @@ float Planets::get_dipole_strength() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the location of the dipole center
 // -----------------------------------------------------------------------------
 
 std::vector<float> Planets::get_dipole_center() {
@@ -92,7 +93,7 @@ std::vector<float> Planets::get_dipole_center() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the mu of the planet (mass * gravitational constant)
 // -----------------------------------------------------------------------------
 
 float Planets::get_mu() {
@@ -100,7 +101,7 @@ float Planets::get_mu() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the distance from the star to the planet (meters)
 // -----------------------------------------------------------------------------
 
 float Planets::get_star_to_planet_dist(Times time) {
@@ -110,7 +111,7 @@ float Planets::get_star_to_planet_dist(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get planetary orbit angle (radians)
 // -----------------------------------------------------------------------------
 
 float Planets::get_orbit_angle(Times time) {
@@ -120,7 +121,7 @@ float Planets::get_orbit_angle(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get planetary declination (radians)
 // -----------------------------------------------------------------------------
 
 float Planets::get_declination(Times time) {
@@ -130,7 +131,8 @@ float Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Update lots of information about the planet, such as the location
+// declination, and offset to compute local time from longitude
 // -----------------------------------------------------------------------------
 
 int Planets::update(Times time) {
@@ -239,6 +241,11 @@ int Planets::update(Times time) {
   return iErr;
 }
 
+// -----------------------------------------------------------------------------
+// Set the specific planet that we are interested in simulating and
+// move the appropriate data over to the planet structure 
+// -----------------------------------------------------------------------------
+
 int Planets::set_planet(Inputs args, Report report) {
 
   int iErr = 0;
@@ -320,6 +327,11 @@ int Planets::set_planet(Inputs args, Report report) {
 
   return iErr;
 }
+
+// -----------------------------------------------------------------------------
+// Read the planetary characteristics file that contains all of the
+// information for all of the different planets.
+// -----------------------------------------------------------------------------
 
 int Planets::read_file(Inputs args, Report report) {
 

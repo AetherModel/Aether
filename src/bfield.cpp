@@ -47,8 +47,8 @@ bfield_info_type get_bfield(float lon,
 }
 
 // -----------------------------------------------------------------------------
-// This function finds the magnetic pole in either the north or south
-// return values in radians!
+// This function finds the magnetic pole in either the north or south.
+// Return values in radians!
 // -----------------------------------------------------------------------------
 
 fvec get_magnetic_pole(int IsNorth,

@@ -5,6 +5,11 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// main function to increment model states by one iteration. It needs
+// so many inputs because it alters all of the states in the model.
+// -----------------------------------------------------------------------------
+
 int advance(Planets &planet,
             Grid &gGrid,
             Times &time,

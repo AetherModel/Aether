@@ -6,9 +6,13 @@
 
 #include "../include/aether.h"
 
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+//  Calculate a bunch of derived products:
+//    - mass density
+//    - number density
+//    - mean major mass
+//    - pressure
+// ----------------------------------------------------------------------
 
 void Neutrals::calc_mass_density(Report &report) {
 
@@ -34,9 +38,13 @@ void Neutrals::calc_mass_density(Report &report) {
   return;
 }
 
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// Calculate a bunch of derived products:
+//   - Specific Heat at Constant Volume (Cv)
+//   - Gamma
+//   - Kappa
+//   - Speed of sound
+// ----------------------------------------------------------------------
 
 void Neutrals::calc_specific_heat(Report &report) {
 
@@ -218,7 +226,8 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
               neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
                 sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
-              if (neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) > max_chapman)
+              if (neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
+		  max_chapman)
                 neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
 
             } else {

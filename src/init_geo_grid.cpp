@@ -5,6 +5,12 @@
 
 #include "../include/aether.h"
 
+// ----------------------------------------------------------------------
+// Initialize the geographic grid.  At the moment, this is a simple
+// Lon/Lat/Alt grid.  The grid structure is general enough that each
+// of the lon, lat, and alt can be a function of the other variables.
+// ----------------------------------------------------------------------
+
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   std::string function = "Grid::init_geo_grid";

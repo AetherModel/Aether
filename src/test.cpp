@@ -4,6 +4,10 @@
 #include <iostream>
 
 #include "../include/aether.h"
+// -----------------------------------------------------------------------------
+// Main file for testing the Aether model.
+// This needs more work!
+// -----------------------------------------------------------------------------
 
 int main() {
 

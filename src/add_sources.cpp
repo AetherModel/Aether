@@ -6,6 +6,10 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Adds all of the sources to the states. Needs time to get dt.
+// -----------------------------------------------------------------------------
+
 void Neutrals::add_sources(Times time, Report &report) {
 
   std::string function = "add_sources";

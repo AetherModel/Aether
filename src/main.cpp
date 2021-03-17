@@ -5,6 +5,11 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Main file for the Aether model.  This is needed when Aether is not used
+// as a library in another code, such as the SWMF.
+// -----------------------------------------------------------------------------
+
 int main() {
 
   int iErr = 0;
@@ -12,30 +17,44 @@ int main() {
   Times time;
   Report report;
 
+  // Define the function and report:
   std::string function = "main";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  // Create inputs (reading the input file):
   Inputs input(time, report);
+
+  // Initialize the EUV system:
   Euv euv(input, report);
+
+  // Initialize the planet:
   Planets planet(input, report);
+
+  // Initialize the indices (and read the files):
   Indices indices(input);
   iErr = read_and_store_indices(indices, input, report);
 
-  // Geo grid stuff:
+  // Initialize Geographic grid:
   Grid gGrid(input.get_nLonsGeo(),
        input.get_nLatsGeo(),
        input.get_nAltsGeo(), nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
-  // Magnetic grid stuff:
+  // Initialize Magnetic grid:
   Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
+  // Initialize Neutrals on geographic grid:
   Neutrals neutrals(gGrid, input, report);
+
+  // Initialize Ions on geographic grid:
   Ions ions(gGrid, input, report);
+
+  // Once EUV, neutrals, and ions have been defined, pair cross sections
   euv.pair_euv(neutrals, ions, report);
 
+  // Initialize Chemical scheme (including reading file):
   Chemistry chemistry(neutrals, ions, input, report);
 
   // This is for the initial output.  If it is not a restart, this will go:
@@ -58,6 +77,7 @@ int main() {
 
     time.increment_intermediate(dt_couple);
 
+    // Increment until the intermediate time:
     while (time.get_current() < time.get_intermediate())
       iErr = advance(planet,
                      gGrid,

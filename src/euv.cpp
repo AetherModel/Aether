@@ -124,7 +124,8 @@ int Euv::read_file(Inputs args, Report report) {
 }
 
 // ---------------------------------------------------------------------------
-//
+// Match rows in EUV file to different types of things, such as cross
+// sections and spectra
 // ---------------------------------------------------------------------------
 
 int Euv::slot_euv(std::string item,
@@ -245,7 +246,7 @@ int Euv::scale_from_1au(Planets planet,
 }
 
 // --------------------------------------------------------------------------
-// EUVAC
+// Calculate EUVAC
 // --------------------------------------------------------------------------
 
 int Euv::euvac(Times time,

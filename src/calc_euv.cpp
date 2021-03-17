@@ -6,6 +6,13 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Runs through the steps of calculating the EUV energy deposition:
+//   - calculate chapman integrals
+//   - calculate EUV spectrum
+//   - calculate ionization and heating
+// -----------------------------------------------------------------------------
+
 int calc_euv(Planets planet,
              Grid grid,
              Times time,

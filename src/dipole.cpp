@@ -6,6 +6,11 @@
 
 #include "../include/aether.h"
 
+// -----------------------------------------------------------------------------
+// Calculate a tilted offset dipole field given the planetary
+// characteristics
+// -----------------------------------------------------------------------------
+
 bfield_info_type get_dipole(float lon,
                             float lat,
                             float alt,

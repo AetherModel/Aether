@@ -5,6 +5,10 @@
 
 #include "../include/aether.h"
 
+// --------------------------------------------------------------------------
+// Initialize Grid class
+// --------------------------------------------------------------------------
+
 Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
   nX = nX_in + nGCs_in * 2; nLons = nX;
@@ -69,19 +73,35 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
 }
 
+// --------------------------------------------------------------------------
+// Get whether the grid is a geographic grid (or magnetic - return 0)
+// --------------------------------------------------------------------------
+
 int Grid::get_IsGeoGrid() {
   return IsGeoGrid;
 }
 
+// --------------------------------------------------------------------------
+// Set whether the grid is a geographic grid (or magnetic - set to 0)
+// --------------------------------------------------------------------------
+
 void Grid::set_IsGeoGrid(int value) {
   IsGeoGrid = value;
 }
+
+// --------------------------------------------------------------------------
+// Get total number of grid points
+// --------------------------------------------------------------------------
 
 int64_t Grid::get_nPointsInGrid() {
   int64_t nPoints;
   nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
 }
+
+// --------------------------------------------------------------------------
+// Get a bunch of sizes within the grid
+// --------------------------------------------------------------------------
 
 int64_t Grid::get_nX() { return nX; }
 int64_t Grid::get_nY() { return nY; }

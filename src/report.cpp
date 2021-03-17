@@ -139,7 +139,7 @@ int Report::test_verbose(int iLevel) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Set the verbose level in the code.
 // -----------------------------------------------------------------------
 
 void Report::set_verbose(int input) {
@@ -147,7 +147,7 @@ void Report::set_verbose(int input) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Set the depth to report for timing at the end of the run
 // -----------------------------------------------------------------------
 
 void Report::set_timing_depth(int input) {
@@ -155,7 +155,7 @@ void Report::set_timing_depth(int input) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Get the verbose level
 // -----------------------------------------------------------------------
 
 int Report::get_verbose() {
