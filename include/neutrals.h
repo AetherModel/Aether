@@ -7,18 +7,7 @@
 #include <string>
 #include <vector>
 
-// The armadillo library is to allow the use of 3d cubes and other
-// array types, with array math built in. This eliminates loops!
-#include <armadillo>
-
-#include "grid.h"
-#include "euv.h"
-#include "time.h"
-#include "ions.h"
-#include "inputs.h"
-#include "report.h"
-
-using namespace arma;
+#include "aether.h"
 
 class Neutrals {
 
@@ -78,7 +67,7 @@ class Neutrals {
   fcube gamma_scgc;
   fcube kappa_scgc;
 
-  std::vector<species_chars> neutrals;
+  std::vector<species_chars> species;
 
   float max_chapman = 1.0e26;
 
@@ -111,11 +100,10 @@ class Neutrals {
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
   int initial_conditions(Grid grid, Inputs input, Report report);
-  int pair_euv(Euv euv, Ions ions, Report report);
+  void fill_with_hydrostatic(Grid grid, Report report);
   void calc_mass_density(Report &report);
   void calc_specific_heat(Report &report);
   void calc_chapman(Grid grid, Report &report);
-  void calc_ionization_heating(Euv euv, Ions &ions, Report &report);
   void calc_conduction(Grid grid, Times time, Report &report);
   void add_sources(Times time, Report &report);
   void set_bcs(Report &report);

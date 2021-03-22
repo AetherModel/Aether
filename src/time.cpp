@@ -7,16 +7,14 @@
 #include <iostream>
 #include <time.h>
 
-#include "../include/times.h"
-#include "../include/sizes.h"
-#include "../include/time_conversion.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Instantiate the time variables
 // -----------------------------------------------------------------------------
 
 Times::Times() {
-  
+
   iCurrent = {0, 0, 0, 0, 0, 0, 0};
   iStep = -1;
 
@@ -38,6 +36,7 @@ Times::Times() {
 
 void Times::set_times(std::vector<int> itime) {
   start = time_int_to_real(itime);
+  restart = start;
   current = start;
   iStep = -1;
   dt = 0;
@@ -56,6 +55,7 @@ void Times::set_times(std::vector<int> itime) {
 int Times::check_time_gate(float dt_check) {
   int DoThing = 0;
   if (current == start) DoThing = 1;
+  if (current == restart) DoThing = 1;
   if ( floor((simulation - dt) / dt_check) <
        floor(simulation / dt_check)) DoThing = 1;
   return DoThing;
@@ -71,7 +71,7 @@ void Times::calc_dt() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the current time as a double
 // -----------------------------------------------------------------------------
 
 double Times::get_current() {
@@ -79,7 +79,7 @@ double Times::get_current() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the end time as a double
 // -----------------------------------------------------------------------------
 
 double Times::get_end() {
@@ -87,7 +87,7 @@ double Times::get_end() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the current time as a string
 // -----------------------------------------------------------------------------
 
 std::string Times::get_YMD_HMS() {
@@ -95,7 +95,7 @@ std::string Times::get_YMD_HMS() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the intermediate stopping time
 // -----------------------------------------------------------------------------
 
 double Times::get_intermediate() {
@@ -103,7 +103,7 @@ double Times::get_intermediate() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the current dt
 // -----------------------------------------------------------------------------
 
 float Times::get_dt() {
@@ -111,7 +111,7 @@ float Times::get_dt() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the orbit time, needed to update planetary characteristics
 // -----------------------------------------------------------------------------
 
 float Times::get_orbittime() {
@@ -119,7 +119,7 @@ float Times::get_orbittime() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Get the julian day
 // -----------------------------------------------------------------------------
 
 double Times::get_julian_day() {
@@ -127,7 +127,7 @@ double Times::get_julian_day() {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Set the end time using a vector of year, month, day, hour, min, sec, msec
 // -----------------------------------------------------------------------------
 
 void Times::set_end_time(std::vector<int> itime) {
@@ -150,7 +150,7 @@ void Times::increment_time() {
   current += dt;
 
   // Convert current time to array:
-  time_real_to_int(current, iCurrent);
+  iCurrent = time_real_to_int(current);
 
   // Set named variables:
   year = iCurrent[0];
@@ -205,24 +205,44 @@ void Times::increment_time() {
 
 void Times::display() {
 
-  std::string units = " (s)";
+  std::string units = "s";
+  std::string remaining_units = "s";
   time(&sys_time_current);
   walltime =
     static_cast<double>(sys_time_current) -
     static_cast<double>(sys_time_start);
+
+  double elapsed_simulation_time = current - restart;
+  double total_simulation_time = end - restart;
+  float ratio_of_time = elapsed_simulation_time / total_simulation_time;
+  float total_walltime = walltime/(ratio_of_time+1e-6);
+  int remaining_walltime = total_walltime - walltime;
+
   if (walltime > 120) {
     if (walltime > 7200) {
-      walltime = walltime/3600.0;
-      units = " (h)";
+      walltime = static_cast<int>(walltime/3600.0);
+      units = "h";
     } else {
-      walltime = walltime/60.0;
-      units = " (m)";
+      walltime = static_cast<int>(walltime/60.0);
+      units = "m";
     }
   }
 
-  std::cout << "Current Time : ";
-  display_itime(iCurrent);
+  if (remaining_walltime > 120) {
+    if (remaining_walltime > 7200) {
+      remaining_walltime = remaining_walltime/3600.0;
+      remaining_units = "h";
+    } else {
+      remaining_walltime = remaining_walltime/60.0;
+      remaining_units = "m";
+    }
+  }
+
   std::cout << "Wall Time : " << walltime << units;
+  std::cout << " (left : "
+      << remaining_walltime << remaining_units << ")";
+  std::cout << "; Current Time : ";
+  display_itime(iCurrent);
 }
 
 // -----------------------------------------------------------------------------

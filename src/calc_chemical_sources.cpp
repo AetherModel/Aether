@@ -3,8 +3,14 @@
 
 #include <iostream>
 
-#include "../include/report.h"
-#include "../include/chemistry.h"
+#include "../include/aether.h"
+
+// -----------------------------------------------------------------------------
+// loops through all of the chemical reactions doing 3 things:
+//   1. Determine change (per unit time) of particles of loss
+//   2. Add this to sources (keeping track of ions v. neutrals)
+//   3. Add this to losses (keeping track of ions v. neutrals)
+// -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
                                       Ions &ions,
@@ -15,7 +21,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   report.enter(function, iFunction);
 
   int64_t iReaction, iLoss, iSource;
-  float change, rate;
+  float rate;
   int IsNeutral, id_;
 
   // This is make change the same size as the grid:
@@ -26,44 +32,44 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
     if (report.test_verbose(8)) display_reaction(reactions[iReaction]);
-    
-    // First calculate reaction rate:
+
+    // Zero calculate reaction rate:
 
     rate = reactions[iReaction].rate;
 
-    // Second calculate the amount of change:
+    // First calculate the amount of change:
+    //    Change is calculated as
+    //    reaction rate * loss den 1 * loss den 2 (* loss den 3 if needed)
 
     change3d.fill(rate);
     for (iLoss = 0; iLoss < reactions[iReaction].nLosses; iLoss++) {
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
       if (IsNeutral)
-        change3d = change3d % neutrals.neutrals[id_].density_scgc;
+        change3d = change3d % neutrals.species[id_].density_scgc;
       else
         change3d = change3d % ions.species[id_].density_scgc;
     }
 
-    // Third add change to the different consituents:
-
-    //  (a) First to losses:
+    // Second add change to the different consituents:
     for (iLoss = 0; iLoss < reactions[iReaction].nLosses; iLoss++) {
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
       if (IsNeutral)
-        neutrals.neutrals[id_].losses_scgc =
-          neutrals.neutrals[id_].losses_scgc + change3d;
+        neutrals.species[id_].losses_scgc =
+          neutrals.species[id_].losses_scgc + change3d;
       else
         ions.species[id_].losses_scgc =
           ions.species[id_].losses_scgc + change3d;
     }
 
-    //  (b) Second to sources:
+    // Third add change to the difference constituents:    
     for (iSource = 0; iSource < reactions[iReaction].nSources; iSource++) {
       IsNeutral = reactions[iReaction].sources_IsNeutral[iSource];
       id_ = reactions[iReaction].sources_ids[iSource];
       if (IsNeutral)
-        neutrals.neutrals[id_].sources_scgc =
-          neutrals.neutrals[id_].sources_scgc + change3d;
+        neutrals.species[id_].sources_scgc =
+          neutrals.species[id_].sources_scgc + change3d;
       else
         ions.species[id_].sources_scgc =
           ions.species[id_].sources_scgc + change3d;

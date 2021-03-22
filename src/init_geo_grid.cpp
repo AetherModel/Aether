@@ -2,16 +2,14 @@
 // Full license can be found in License.md
 
 #include <iostream>
-#include <armadillo>
 
-#include "../include/inputs.h"
-#include "../include/report.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/sizes.h"
-#include "../include/fill_grid.h"
+#include "../include/aether.h"
 
-using namespace arma;
+// ----------------------------------------------------------------------
+// Initialize the geographic grid.  At the moment, this is a simple
+// Lon/Lat/Alt grid.  The grid structure is general enough that each
+// of the lon, lat, and alt can be a function of the other variables.
+// ----------------------------------------------------------------------
 
 void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
@@ -23,16 +21,15 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
-  int64_t iLon, iLat, iAlt, index;
-  float longitude, latitude, altitude;
+  int64_t iLon, iLat, iAlt;
 
   // Longitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
   fvec lon1d(nLons);
-  float dlon = (grid_input.lon_max - grid_input.lon_min) / nGeoLons;
+  float dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
   for (iLon=0; iLon < nLons; iLon++)
-    lon1d(iLon) = (iLon-nGCs+0.5) * dlon;
+    lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
 
   for (iLat=0; iLat < nLats; iLat++) {
     for (iAlt=0; iAlt < nAlts; iAlt++) {
@@ -44,7 +41,7 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   // - Make a 1d vector
   // - copy it into the 3d cube
   fvec lat1d(nLats);
-  float dlat = (grid_input.lat_max - grid_input.lat_min) / nGeoLats;
+  float dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats-2*nGCs);
   for (iLat=0; iLat < nLats; iLat++)
     lat1d(iLat) = grid_input.lat_min + (iLat-nGCs+0.5) * dlat;
 

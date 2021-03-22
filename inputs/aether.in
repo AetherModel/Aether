@@ -34,19 +34,32 @@ earth
 
 #STARTTIME   this is the start time
 2011
-06
-21
-12
+03
+20
+00
 00
 00
 
 #endtime
 2011
-06
-21
-12
-10
+03
+20
+01
 00
+00
+
+#geoblocksize
+36
+36
+50
+
+#geogrid
+0
+360
+-90.0
+90.0
+100.0
+5.0
 
 #f107file
 UA/inputs/f107.txt
@@ -55,6 +68,11 @@ UA/inputs/f107.txt
 dipole
 
 #output
-states, 300.0
+states, 900.0
 bfield, 0.0
 
+#chemistry
+UA/inputs/chemistry_earth.csv
+
+omniweb
+omni_20110622.txt

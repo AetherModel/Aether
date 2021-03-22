@@ -15,6 +15,7 @@ public:
 
   Report();
   void set_verbose(int input);
+  void set_timing_depth(int input);
   void print(int iLevel, std::string output_string);
   int test_verbose(int iLevel);
   int get_verbose();
@@ -25,6 +26,7 @@ public:
 private:
 
   int iVerbose;
+  int iTimingDepth;
 
   struct item_struct {
     std::string entry;

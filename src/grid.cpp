@@ -2,26 +2,24 @@
 // Full license can be found in License.md
 
 #include <iostream>
-#include <armadillo>
 
-#include "../include/inputs.h"
-#include "../include/grid.h"
-#include "../include/sizes.h"
+#include "../include/aether.h"
 
-using namespace arma;
+// --------------------------------------------------------------------------
+// Initialize Grid class
+// --------------------------------------------------------------------------
 
 Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
-  nX = nX_in; nLons = nX;
-  nY = nY_in; nLats = nY;
-  nZ = nZ_in; nAlts = nZ;
+  nX = nX_in + nGCs_in * 2; nLons = nX;
+  nY = nY_in + nGCs_in * 2; nLats = nY;
+  nZ = nZ_in + nGCs_in * 2; nAlts = nZ;
   nGCs = nGCs_in;
-
-  int64_t nTotalPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
   geoAlt_scgc.set_size(nX, nY, nZ);
+  geoLocalTime_scgc.set_size(nX, nY, nZ);
 
   geoX_scgc.set_size(nX, nY, nZ);
   geoY_scgc.set_size(nX, nY, nZ);
@@ -54,21 +52,56 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   bfield_vcgc.push_back(tmp);  // z-component
   bfield_mag_scgc.set_size(nX, nY, nZ);
   bfield_mag_scgc.zeros();
+
+  GSE_XYZ_vcgc.push_back(tmp);  // x-component
+  GSE_XYZ_vcgc.push_back(tmp);  // y-component
+  GSE_XYZ_vcgc.push_back(tmp);  // z-component
+
+  mag_pole_north_ll.set_size(2);
+  mag_pole_south_ll.set_size(2);
+  mag_pole_north_ll.zeros();
+  mag_pole_south_ll.zeros();
+
+  fcube tmp_col(1, 1, nZ);
+  mag_pole_north_gse.push_back(tmp_col);
+  mag_pole_north_gse.push_back(tmp_col);
+  mag_pole_north_gse.push_back(tmp_col);
+
+  mag_pole_south_gse.push_back(tmp_col);
+  mag_pole_south_gse.push_back(tmp_col);
+  mag_pole_south_gse.push_back(tmp_col);
+
 }
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a geographic grid (or magnetic - return 0)
+// --------------------------------------------------------------------------
 
 int Grid::get_IsGeoGrid() {
   return IsGeoGrid;
 }
 
+// --------------------------------------------------------------------------
+// Set whether the grid is a geographic grid (or magnetic - set to 0)
+// --------------------------------------------------------------------------
+
 void Grid::set_IsGeoGrid(int value) {
   IsGeoGrid = value;
 }
+
+// --------------------------------------------------------------------------
+// Get total number of grid points
+// --------------------------------------------------------------------------
 
 int64_t Grid::get_nPointsInGrid() {
   int64_t nPoints;
   nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
 }
+
+// --------------------------------------------------------------------------
+// Get a bunch of sizes within the grid
+// --------------------------------------------------------------------------
 
 int64_t Grid::get_nX() { return nX; }
 int64_t Grid::get_nY() { return nY; }

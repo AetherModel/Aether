@@ -7,11 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/constants.h"
-#include "../include/inputs.h"
-#include "../include/indices.h"
-#include "../include/euv.h"
-#include "../include/report.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize EUV
@@ -35,10 +31,8 @@ Euv::Euv(Inputs args, Report report) {
     // This means we found both long and short wavelengths:
     if (!iErr) {
       for (int iWave = 0; iWave < nWavelengths; iWave++) {
-        ave = (wavelengths_short[iWave] + wavelengths_long[iWave])/2.0;
-        wavelengths_energy.push_back(planck_constant *
-                                     speed_light /
-                                     (ave * atom));
+        ave = (wavelengths_short[iWave] + wavelengths_long[iWave])/2.0 * cAtoM;
+        wavelengths_energy.push_back(cH * cC / ave);
         // We simply want to initialize these vectors to make them the
         // correct lenght:
         wavelengths_intensity_1au.push_back(0.0);
@@ -128,7 +122,8 @@ int Euv::read_file(Inputs args, Report report) {
 }
 
 // ---------------------------------------------------------------------------
-//
+// Match rows in EUV file to different types of things, such as cross
+// sections and spectra
 // ---------------------------------------------------------------------------
 
 int Euv::slot_euv(std::string item,
@@ -169,6 +164,66 @@ int Euv::slot_euv(std::string item,
   return iErr;
 }
 
+//----------------------------------------------------------------------
+// This code takes the EUV information that was read in from the EUV
+// file and tries to figure out which things are absorbtion/ionization
+// cross sections.  It does this by comparing the name of the neutral
+// species to the first column in the euv.csv file.  If it finds a
+// match, it then checks to see if it is an absorbtion or ionization
+// cross section.  If it is an ionization cs, then it tries to figure
+// out which ion it is producing (the "to" column).
+// ---------------------------------------------------------------------
+
+int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
+
+  int iErr = 0;
+
+  if (report.test_verbose(3)) std::cout << "Euv::pair_euv \n";
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
+    if (report.test_verbose(5))
+      std::cout << neutrals.species[iSpecies].cName << "\n";
+
+    neutrals.species[iSpecies].iEuvAbsId_ = -1;
+    neutrals.species[iSpecies].nEuvIonSpecies = 0;
+
+    // Check each row to see if the first column "name" matches:
+    int64_t nEuvs = waveinfo.size();
+    for (int64_t iEuv=0; iEuv < nEuvs; iEuv++) {
+
+      if (report.test_verbose(6))
+        std::cout << "  " << waveinfo[iEuv].name << "\n";
+
+      // if this matches...
+      if (neutrals.species[iSpecies].cName == waveinfo[iEuv].name) {
+
+        // First see if we can find absorbtion:
+        if (waveinfo[iEuv].type == "abs") {
+          if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
+          neutrals.species[iSpecies].iEuvAbsId_ = iEuv;
+        }
+
+        // Next see if we can find ionizations:
+        if (waveinfo[iEuv].type == "ion") {
+
+          // Loop through the ions to see if names match:
+          for (int iIon = 0; iIon < nIons; iIon++) {
+            if (ions.species[iIon].cName == waveinfo[iEuv].to) {
+              if (report.test_verbose(5))
+                std::cout << "  Found ionization!! --> "
+                          << ions.species[iIon].cName << "\n";
+              neutrals.species[iSpecies].iEuvIonId_.push_back(iEuv);
+              neutrals.species[iSpecies].iEuvIonSpecies_.push_back(iIon);
+              neutrals.species[iSpecies].nEuvIonSpecies++;
+            }  // if to
+          }  // iIon loop
+        }  // if ionization
+      }  // if species is name
+    }  // for iEuv
+  }  // for iSpecies
+  return iErr;
+}
 
 
 // --------------------------------------------------------------------------
@@ -176,17 +231,20 @@ int Euv::slot_euv(std::string item,
 // --------------------------------------------------------------------------
 
 int Euv::scale_from_1au(Planets planet,
-                        Times time) {
+                        Times time,
+      Report report) {
   int iErr = 0;
   float d = planet.get_star_to_planet_dist(time);
   float scale = 1.0 / (d*d);
+  if (report.test_verbose(7))
+    std::cout << "Scale from 1 AU : " << scale << "\n";
   for (int iWave = 0; iWave < nWavelengths; iWave++)
     wavelengths_intensity_top[iWave] = scale * wavelengths_intensity_1au[iWave];
   return iErr;
 }
 
 // --------------------------------------------------------------------------
-// EUVAC
+// Calculate EUVAC
 // --------------------------------------------------------------------------
 
 int Euv::euvac(Times time,
@@ -203,14 +261,7 @@ int Euv::euvac(Times time,
   float f107 = indices.get_f107(time.get_current());
   float f107a = indices.get_f107a(time.get_current());
 
-  f107 = 100.0;
-  f107a = 100.0;
-
-
   float mean_f107 = (f107 + f107a)/2.0;
-
-  if (report.test_verbose(7))
-    std::cout << "F107 & F107a : " << f107 << " " << f107a << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
     slope = 1.0 + euvac_afac[iWave] * (mean_f107 - 80.0);
@@ -218,7 +269,7 @@ int Euv::euvac(Times time,
     wavelengths_intensity_1au[iWave] = euvac_f74113[iWave] * slope * pcm2topm2;
   }
 
-  if (report.test_verbose(8)) {
+  if (report.test_verbose(7)) {
     std::cout << "EUVAC output : "
               << f107 << " " << f107a
               << " -> " << mean_f107 << "\n";

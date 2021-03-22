@@ -1,10 +1,11 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include <armadillo>
 #include <iostream>
-using namespace arma;
 
+#include "../include/aether.h"
+
+// -----------------------------------------------------------------------
 // This code solves the conduction equation in 1D.
 // Some assumptions:
 //  - Assume that lambda and front are scaled by radius squared!
@@ -12,6 +13,7 @@ using namespace arma;
 //  - At this point, the bottom BC is fixed, while the top BC is zero gradient
 //  - The dx variable is assumed to be distance between the CURRENT cell center
 //    (i) and the cell center of the cell BELOW the current one (i-1).
+// -----------------------------------------------------------------------
 
 fvec solver_conduction(fvec value,
                        fvec lambda,

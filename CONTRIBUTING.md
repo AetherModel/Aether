@@ -15,9 +15,11 @@ you have something that works.
 
 #### Linting
 
-For *C++* code make sure to use a static code checker like [cpplint](https://github.com/cpplint/cpplint) to check
-the code for any style issues before submitting.  For *Python*, [flake8](https://flake8.pycqa.org/en/latest/) is
-a good option.  Both of these may by installed using pip.
+For *C++* code make sure to use a static code checker like
+[cpplint](https://github.com/cpplint/cpplint) to check the code for
+any style issues before submitting.  For *Python*,
+[flake8](https://flake8.pycqa.org/en/latest/) is a good option.  Both
+of these may by installed using pip.
 
 To install `cpplint`
 
@@ -28,6 +30,12 @@ pip install cpplint
 python3 -m pip cpplint
 python3 -m pip --user cpplint
 ```
+
+Using a linter in an editor is a good supplement, but not a replacement for the static linters. 
+The linter in the 'atom' editor requires that you install the `linter` and `gcc-linter` packages. 
+Atom also has additional packages `whitespaces` and `tabs-to-spaces`
+to automatically remove whitespaces at the end of the lines, and
+convert tabs to spaces.
 
 ### Commit Styling
 
@@ -44,9 +52,10 @@ should start with either.
 - `REVERT:` Revert an earlier commit.
 - `MAINT:` For maintenance such as refactoring, typos, etc.
 
-The commit first line must be in *present* tense so that anyone picking a
-commit hash can easily read what they are enabling. For more information
-check out [conventional commit messages](https://www.conventionalcommits.org/en/v1.0.0/).
+The commit first line must be in *present* tense so that anyone
+picking a commit hash can easily read what they are enabling. For more
+information check out [conventional commit
+messages](https://www.conventionalcommits.org/en/v1.0.0/).
 
 For example,
 
@@ -64,15 +73,16 @@ Implemented hydrostatic density. (feature)
 
 ### Pull Requests
 
-Make sure you have linted and checked your code before asking for a pull
-request. Before requesting a review, ensure the pull request check list has
-been completed.  Another member must check the code and approve it before merge.
+Make sure you have linted and checked your code before asking for a
+pull request. Before requesting a review, ensure the pull request
+check list has been completed.  Another member must check the code and
+approve it before merge.
 
 Issues
 ------
 
-*Issues* are reporting bugs, feature requests, or goals for the project. In
-order to submit an issue make sure it follows the [issue
-template](.github/ISSUE_TEMPLATE).  Please search through the existing issues
-before submitting a new one, as someone else may have already come accross and
-reported the problem you've encountered.
+*Issues* are reporting bugs, feature requests, or goals for the
+project. In order to submit an issue make sure it follows the [issue
+template](.github/ISSUE_TEMPLATE).  Please search through the existing
+issues before submitting a new one, as someone else may have already
+come accross and reported the problem you've encountered.

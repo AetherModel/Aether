@@ -4,20 +4,19 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/constants.h"
-#include "../include/neutrals.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/time.h"
-#include "../include/solvers.h"
+#include "../include/aether.h"
 
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+//  Calculate a bunch of derived products:
+//    - mass density
+//    - number density
+//    - mean major mass
+//    - pressure
+// ----------------------------------------------------------------------
 
 void Neutrals::calc_mass_density(Report &report) {
 
-  int64_t iLon, iLat, iAlt, index, iSpecies;
+  int64_t iSpecies;
 
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
@@ -28,26 +27,28 @@ void Neutrals::calc_mass_density(Report &report) {
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
-      neutrals[iSpecies].mass * neutrals[iSpecies].density_scgc;
-    density_scgc = density_scgc + neutrals[iSpecies].density_scgc;
+      species[iSpecies].mass * species[iSpecies].density_scgc;
+    density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
 
   mean_major_mass_scgc = rho_scgc / density_scgc;
-  pressure_scgc = boltzmanns_constant * density_scgc % temperature_scgc;
+  pressure_scgc = cKB * density_scgc % temperature_scgc;
 
   report.exit(function);
   return;
 }
 
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// Calculate a bunch of derived products:
+//   - Specific Heat at Constant Volume (Cv)
+//   - Gamma
+//   - Kappa
+//   - Speed of sound
+// ----------------------------------------------------------------------
 
 void Neutrals::calc_specific_heat(Report &report) {
 
-  int64_t iLon, iLat, iAlt, index, iSpecies;
-
-  double t, p, r;
+  int64_t iSpecies;
 
   std::string function = "Neutrals::calc_specific_heat";
   static int iFunction = -1;
@@ -59,22 +60,22 @@ void Neutrals::calc_specific_heat(Report &report) {
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     Cv_scgc = Cv_scgc +
-      (neutrals[iSpecies].vibe - 2) *
-      neutrals[iSpecies].density_scgc *
-      boltzmanns_constant / neutrals[iSpecies].mass;
+      (species[iSpecies].vibe - 2) *
+      species[iSpecies].density_scgc *
+      cKB / species[iSpecies].mass;
     gamma_scgc = gamma_scgc +
-      neutrals[iSpecies].density_scgc / (neutrals[iSpecies].vibe-2);
+      species[iSpecies].density_scgc / (species[iSpecies].vibe-2);
     kappa_scgc = kappa_scgc +
-      neutrals[iSpecies].thermal_cond *
-      neutrals[iSpecies].density_scgc %
-      pow(temperature_scgc, neutrals[iSpecies].thermal_exp);
+      species[iSpecies].thermal_cond *
+      species[iSpecies].density_scgc %
+      pow(temperature_scgc, species[iSpecies].thermal_exp);
   }
 
   Cv_scgc = Cv_scgc / (2*density_scgc);
   gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
   kappa_scgc = kappa_scgc / density_scgc;
 
-  sound_scgc = sqrt(boltzmanns_constant *
+  sound_scgc = sqrt(cKB *
                     gamma_scgc %
                     temperature_scgc /
                     mean_major_mass_scgc);
@@ -92,8 +93,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 
 void Neutrals::calc_chapman(Grid grid, Report &report) {
 
-  int64_t iAlt, iLon, iLat, index, indexp;
-  float H;  // scale height
+  int64_t iAlt, iLon, iLat;
 
   // This is all from Smith and Smith, JGR 1972, vol. 77, page 3592
   // "Numerical evaluation of chapman's grazing incidence integral ch(X,x)"
@@ -113,8 +113,8 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   double y, dy;
 
-  float Hp_up, Hp_dn, grad_hs, grad_xp, grad_in, Hg, Xg, in, int_g, int_p;
-  int64_t index_bottom, iindex, iindexp, iiAlt;
+  float grad_xp, grad_in, Xg, in, int_g, int_p;
+  int64_t iiAlt;
 
   std::string function = "Neutrals::calc_chapman";
   static int iFunction = -1;
@@ -145,22 +145,24 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
-    neutrals[iSpecies].scale_height_scgc =
-      boltzmanns_constant * temperature_scgc /
-      (neutrals[iSpecies].mass * grid.gravity_scgc);
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * grid.gravity_scgc);
 
-    xp3d = grid.radius_scgc / neutrals[iSpecies].scale_height_scgc;
+    xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
     iAlt = nAlts-1;
 
+    integral3d.fill(0.0);
+
     integral3d.slice(iAlt) =
-      neutrals[iSpecies].density_scgc.slice(iAlt) %
-      neutrals[iSpecies].scale_height_scgc.slice(iAlt);
+      species[iSpecies].density_scgc.slice(iAlt) %
+      species[iSpecies].scale_height_scgc.slice(iAlt);
 
     for (iAlt = nAlts-1; iAlt >= 0; iAlt--) {
       if (iAlt < nAlts-1) {
         integral3d.slice(iAlt) = integral3d.slice(iAlt+1) +
-          neutrals[iSpecies].density_scgc.slice(iAlt) %
+          species[iSpecies].density_scgc.slice(iAlt) %
           grid.dalt_lower_scgc.slice(iAlt+1);
       }
     }
@@ -176,8 +178,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
     // Set chapman integrals to max in the lower ghostcells
 
-    for (int iAlt=0; iAlt < nGCs; iAlt++)
-      neutrals[iSpecies].chapman_scgc.slice(iAlt).fill(max_chapman);
+    species[iSpecies].chapman_scgc.fill(max_chapman);
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
@@ -190,17 +191,17 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
         y1d = y3d.tube(iLon, iLat);
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
-        H1d = neutrals[iSpecies].scale_height_scgc.tube(iLon, iLat);
+        H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
 
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
           // This is on the dayside:
-          if (sza1d(iAlt) < pi/2 || sza1d(iAlt) > 3*pi/2) {
-            neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
-              integral1d(iAlt) * sqrt(0.5 * pi * xp1d(iAlt)) * erfcy1d(iAlt);
+          if (sza1d(iAlt) < cPI/2 || sza1d(iAlt) > 3*cPI/2) {
+            species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+              integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
           } else {
             // This is on the nghtside of the terminator:
 
-            y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-pi/2));
+            y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-cPI/2));
 
             // This sort of assumes that nGeoGhosts >= 2:
             if (y > radius1d(nGCs)) {
@@ -209,33 +210,30 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
               while (radius1d(iiAlt-1) > y) iiAlt--;
               iiAlt--;
 
-              Hp_up = H1d(iiAlt+1);
-              Hp_dn = H1d(iiAlt);
-
               // make sure to use the proper cell spacing (iiAlt+1 & lower):
-              grad_hs = (Hp_up - Hp_dn) / dAlt1d(iiAlt+1);
               grad_xp = (xp1d(iiAlt+1) - xp1d(iiAlt)) / dAlt1d(iiAlt+1);
-              grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) / dAlt1d(iiAlt+1);
+              grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) /
+                        dAlt1d(iiAlt+1);
 
               // Linearly interpolate H and X:
               dy = y - radius1d(iiAlt);
-              Hg = Hp_dn + grad_hs * dy;
               Xg = xp1d(iiAlt) + grad_xp * dy;
               in = log_int1d(iiAlt) + grad_in * dy;
 
               int_g = exp(in);
               int_p = integral1d(iAlt);
               // Equation (19) Smith & Smith
-              neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
-                sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+                sqrt(0.5 * cPI * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
-              if (neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) > max_chapman)
-                neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
+              if (species[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
+		  max_chapman)
+                species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
 
             } else {
               // This says that we are in the shadow of the planet:
 
-              neutrals[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
             }
           }
         }  // iAlt
@@ -255,7 +253,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
   float dt;
 
-  int64_t iLon, iLat, iAlt, index;
+  int64_t iLon, iLat;
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
@@ -300,92 +298,4 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
     }  // lat
   }  // lon
   report.exit(function);
-}
-
-
-
-// -----------------------------------------------------------------------------
-// Calculate EUV driven ionization and heating rates
-// -----------------------------------------------------------------------------
-
-void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
-
-  int64_t iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
-  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
-  float tau, intensity, photoion;
-
-  float ionization;
-
-  std::string function = "calc_ionization_heating";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  // Zero out all source terms:
-
-  heating_euv_scgc.zeros();
-  for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-    neutrals[iSpecies].ionization_scgc.zeros();
-
-  int64_t nLons = heating_euv_scgc.n_rows;
-  int64_t nLats = heating_euv_scgc.n_cols;
-  int64_t nAlts = heating_euv_scgc.n_slices;
-
-  fmat tau2d = heating_euv_scgc.slice(0);
-  fmat intensity2d = heating_euv_scgc.slice(0);
-  fmat ionization2d = heating_euv_scgc.slice(0);
-  
-  for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
-    for (iWave=0; iWave < euv.nWavelengths; iWave++) {
-
-      tau2d.zeros();
-
-      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-        if (neutrals[iSpecies].iEuvAbsId_ > -1) {
-          i_ = neutrals[iSpecies].iEuvAbsId_;
-          tau2d = tau2d +
-            euv.waveinfo[i_].values[iWave] *
-            neutrals[iSpecies].chapman_scgc.slice(iAlt);
-        }
-      }
-
-      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau2d);
-
-      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        // Calculate Photo-Absorbtion for each species and add them up:
-        i_ = neutrals[iSpecies].iEuvAbsId_;  // index of photo abs cross section
-        if (i_ > -1) {
-          heating_euv_scgc.slice(iAlt) = heating_euv_scgc.slice(iAlt) +
-            euv.wavelengths_energy[iWave] *
-            euv.waveinfo[i_].values[iWave] *  // cross section
-            (intensity2d %
-             neutrals[iSpecies].density_scgc.slice(iAlt) );
-        }
-
-        for (iIonization = 0;
-             iIonization < neutrals[iSpecies].nEuvIonSpecies;
-             iIonization++) {
-
-          i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
-
-          ionization2d =
-            euv.waveinfo[i_].values[iWave] *  // cross section
-            intensity2d %
-            neutrals[iSpecies].density_scgc.slice(iAlt);
-
-          neutrals[iSpecies].ionization_scgc.slice(iAlt) =
-            neutrals[iSpecies].ionization_scgc(iAlt) + ionization2d;
-
-          iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
-          ions.species[iIon].ionization_scgc.slice(iAlt) =
-            ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
-        }  // iIonization
-      }  // iSpecies
-    }  // iWave
-  }  // iAlt
-
-  heating_euv_scgc =
-    heating_efficiency * heating_euv_scgc / rho_scgc / Cv_scgc;
-
-  report.exit(function);
-  return;
 }

@@ -6,10 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "../include/chemistry.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-#include "../include/file_input.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize chemistry class
@@ -24,8 +21,6 @@ Chemistry::Chemistry(Neutrals neutrals,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int iErr = 0;
-
   read_chemistry_file(neutrals, ions, args, report);
 
   report.exit(function);
@@ -33,7 +28,7 @@ Chemistry::Chemistry(Neutrals neutrals,
 }
 
 // -----------------------------------------------------------------------------
-// Read chemistry file
+// Read chemistry CSV file
 // -----------------------------------------------------------------------------
 
 int Chemistry::read_chemistry_file(Neutrals neutrals,
@@ -49,7 +44,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
   int iErr = 0;
   reaction_type reaction;
 
-  report.print(1, "Reading Chemistry File : "+args.get_euv_file());
+  report.print(1, "Reading Chemistry File : "+args.get_chemistry_file());
 
   infile_ptr.open(args.get_chemistry_file());
 
@@ -67,18 +62,20 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
       if (nLines <= 2) {
         iErr = 1;
       } else {
-        // Skip 2 lines of headers!
 
         nReactions = 0;
 
+        // Skip 2 lines of headers!
         for (int iLine = 2; iLine < nLines; iLine++) {
           // Some final rows can have comments in them, so we want to
           // skip anything where the length of the string in column 2
           // is == 0:
           if (csv[iLine][1].length() > 0) {
+            report.print(2, "interpreting chemistry line : "+csv[iLine][0]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
             if (reaction.nLosses > 0 && reaction.nSources > 0) {
+              if (report.test_verbose(2)) display_reaction(reaction);
               reactions.push_back(reaction);
               nReactions++;
             }
@@ -169,7 +166,7 @@ void Chemistry::find_species_id(std::string name,
 
     // Check Neutrals:
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      if (name == neutrals.neutrals[iSpecies].cName) {
+      if (name == neutrals.species[iSpecies].cName) {
         id_ = iSpecies;
         IsNeutral = 1;
         break;

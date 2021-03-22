@@ -6,13 +6,12 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/sizes.h"
-#include "../include/constants.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/time_conversion.h"
-#include "../include/report.h"
+#include "../include/aether.h"
+
+// -----------------------------------------------------------------------
+// Initialize the Inputs class.  This also sets some initial values.
+// The setting of initial values should probably be moved. 
+// -----------------------------------------------------------------------
 
 Inputs::Inputs(Times &time, Report &report) {
 
@@ -20,30 +19,35 @@ Inputs::Inputs(Times &time, Report &report) {
   // Set some defaults:
 
   iVerbose = 0;
+  iTimingDepth = 3;
   euv_model = "euvac";
   planet = "Earth";
 
   // ------------------------------------------------
   // Grid Defaults:
-  grid_input.alt_file = "";
-  grid_input.IsUniformAlt = 1;
-  grid_input.alt_min = 100.0 * 1000.0;
-  grid_input.dalt = 5.0 * 1000.0;
+  geo_grid_input.alt_file = "";
+  geo_grid_input.IsUniformAlt = 1;
+  geo_grid_input.alt_min = 100.0 * 1000.0;
+  geo_grid_input.dalt = 5.0 * 1000.0;
 
-  if (nGeoLons == 1) {
-    grid_input.lon_min = 0.0;
-    grid_input.lon_max = 0.0;
+  nLonsGeo = 12;
+  nLatsGeo = 20;
+  nAltsGeo = 40;
+
+  if (nLonsGeo == 1) {
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 0.0;
   } else {
-    grid_input.lon_min = 0.0;
-    grid_input.lon_max = 2.0*pi;
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 2.0*cPI;
   }
 
-  if (nGeoLats == 1) {
-    grid_input.lat_min = 0.0;
-    grid_input.lat_max = 0.0;
+  if (nLatsGeo == 1) {
+    geo_grid_input.lat_min = 0.0;
+    geo_grid_input.lat_max = 0.0;
   } else {
-    grid_input.lat_min = -pi/2;
-    grid_input.lat_max = pi/2;
+    geo_grid_input.lat_min = -cPI/2;
+    geo_grid_input.lat_max = cPI/2;
   }
 
   euv_heating_eff_neutrals = 0.40;
@@ -52,22 +56,24 @@ Inputs::Inputs(Times &time, Report &report) {
   dt_output.push_back(300.0);
   type_output.push_back("states");
   dt_euv = 60.0;
+  dt_report = 60.0;
 
   // ------------------------------------------------
   // Now read the input file:
   int iErr = read(time, report);
+  if (iErr > 0) std::cout << "Error in reading input file!\n";
 }
 
 // -----------------------------------------------------------------------
-//
+// Return characteristics of the grid that are entered by the user
 // -----------------------------------------------------------------------
 
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
-  return grid_input;
+  return geo_grid_input;
 }
 
 // -----------------------------------------------------------------------
-//
+// Return magnetic field type (dipole and none defined now.)
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_bfield_type() {
@@ -75,7 +81,7 @@ std::string Inputs::get_bfield_type() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return the EUV model used (EUVAC only option now)
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_model() {
@@ -83,7 +89,7 @@ std::string Inputs::get_euv_model() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return the heating efficiency of the neutrals for EUV
 // -----------------------------------------------------------------------
 
 float Inputs::get_euv_heating_eff_neutrals() {
@@ -91,7 +97,7 @@ float Inputs::get_euv_heating_eff_neutrals() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return how often to calculate EUV energy deposition
 // -----------------------------------------------------------------------
 
 float Inputs::get_dt_euv() {
@@ -99,7 +105,15 @@ float Inputs::get_dt_euv() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return how often to report progress of simulation
+// -----------------------------------------------------------------------
+
+float Inputs::get_dt_report() {
+  return dt_report;
+}
+
+// -----------------------------------------------------------------------
+// Return number of output types
 // -----------------------------------------------------------------------
 
 float Inputs::get_n_outputs() {
@@ -107,7 +121,23 @@ float Inputs::get_n_outputs() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return number of longitudes, latitudes, and altitudes in grid
+// -----------------------------------------------------------------------
+
+int Inputs::get_nLonsGeo() {
+  return nLonsGeo;
+}
+
+int Inputs::get_nLatsGeo() {
+  return nLatsGeo;
+}
+
+int Inputs::get_nAltsGeo() {
+  return nAltsGeo;
+}
+
+// -----------------------------------------------------------------------
+// Return how often to output a given output type
 // -----------------------------------------------------------------------
 
 float Inputs::get_dt_output(int iOutput) {
@@ -118,7 +148,7 @@ float Inputs::get_dt_output(int iOutput) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return the output type
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_type_output(int iOutput) {
@@ -129,7 +159,7 @@ std::string Inputs::get_type_output(int iOutput) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return EUV file name
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_file() {
@@ -137,7 +167,7 @@ std::string Inputs::get_euv_file() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return Chemistry file name
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_chemistry_file() {
@@ -145,7 +175,23 @@ std::string Inputs::get_chemistry_file() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return total number of OMNIWeb files to read
+// -----------------------------------------------------------------------
+
+int Inputs::get_number_of_omniweb_files() {
+  return omniweb_files.size();
+}
+
+// -----------------------------------------------------------------------
+// Return OMNIWeb file names as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_omniweb_files() {
+  return omniweb_files;
+}
+
+// -----------------------------------------------------------------------
+// Return F107 file to read
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_f107_file() {
@@ -153,7 +199,7 @@ std::string Inputs::get_f107_file() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return planet name
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
@@ -161,7 +207,7 @@ std::string Inputs::get_planet() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return file that contains (all) planetary characteristics
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planetary_file() {
@@ -169,140 +215,10 @@ std::string Inputs::get_planetary_file() {
 }
 
 // -----------------------------------------------------------------------
-//
+// Return planetary file name that describes the species and such for
+// a given planet
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet_species_file() {
   return planet_species_file;
-}
-
-// -----------------------------------------------------------------------
-// Read input file!
-// -----------------------------------------------------------------------
-
-int Inputs::read(Times &time, Report &report) {
-
-  int iErr;
-  std::string line, hash;
-  std::vector<int> itime(7, 0);
-
-  iErr = 0;
-
-  std::ifstream infile_ptr;
-  infile_ptr.open(input_file);
-
-  if (!infile_ptr.is_open()) {
-    std::cout << "Could not open input file: " << input_file << "!!!\n";
-    iErr = 1;
-  } else {
-
-    while (!infile_ptr.eof()) {
-
-      // ---------------------------
-      // Find the next hash:
-      // ---------------------------
-
-      hash = find_next_hash(infile_ptr);
-      if (report.test_verbose(3))
-        std::cout << "hash : -->" << hash << "<--\n";
-
-      // ---------------------------
-      // #debug or #verbose
-      // ---------------------------
-
-      if (hash == "#debug"  || hash == "#verbose") {
-        iVerbose = read_int(infile_ptr, hash);
-        report.set_verbose(iVerbose);
-      }
-
-      // ---------------------------
-      // #starttime
-      // ---------------------------
-
-      if (hash == "#starttime") {
-        std::vector<int> istart = read_itime(infile_ptr, hash);
-        if (istart[0] > 0) time.set_times(istart);
-        if (report.test_verbose(3)) {
-          std::cout << "Starttime : ";
-          display_itime(istart);
-        }
-      }
-
-      // ---------------------------
-      // #endtime
-      // ---------------------------
-
-      if (hash == "#endtime") {
-        std::vector<int> iend = read_itime(infile_ptr, hash);
-        if (iend[0] > 0) time.set_end_time(iend);
-        if (report.test_verbose(3)) {
-          std::cout << "Endtime : ";
-          display_itime(iend);
-        }
-      }
-
-      // ---------------------------
-      // #f107file
-      // ---------------------------
-
-      if (hash == "#f107file") {
-        f107_file = read_string(infile_ptr, hash);
-      }
-
-      // ---------------------------
-      // #bfield
-      // ---------------------------
-
-      if (hash == "#bfield") {
-        bfield = read_string(infile_ptr, hash);
-      }
-
-      // ---------------------------
-      // #chemistry
-      // ---------------------------
-
-      if (hash == "#chemistry") {
-        chemistry_file = read_string(infile_ptr, hash);
-      }
-
-      // ---------------------------
-      // #planet
-      // ---------------------------
-
-      if (hash == "#planet") {
-        planet = read_string(infile_ptr, hash);
-        if (report.test_verbose(3))
-          std::cout << "Setting planet to : " << planet << "\n";
-        if (planet_species_file.length() <= 1)
-          planet_species_file = "UA/inputs/"+planet+".in";
-      }
-
-      // ---------------------------
-      // #output
-      // ---------------------------
-
-      if (hash == "#output") {
-        std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
-        // comma separated values, with type, then dt:
-        int nOutputs = csv.size();
-        int iOutput;
-        if (nOutputs > 1) {
-          type_output[0] = csv[0][0];
-          dt_output[0] = stof(csv[0][1]);
-          for (iOutput = 1; iOutput < nOutputs; iOutput++) {
-            type_output.push_back(csv[iOutput][0]);
-            dt_output.push_back(stof(csv[iOutput][1]));
-          }
-          // Allow users to enter 0 for dt, so they only get the
-          // output at the beginning of the run:
-          for (iOutput = 0; iOutput < nOutputs; iOutput++)
-            if (dt_output[iOutput] <= 0.0) dt_output[iOutput] = 1.0e32;
-        } else {
-          std::cout << "Something wrong with #output. Need to report...\n";
-        }
-      }
-    }
-    infile_ptr.close();
-  }
-  return iErr;
 }

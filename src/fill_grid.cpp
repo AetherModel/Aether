@@ -4,18 +4,11 @@
 #include <iostream>
 #include <math.h>
 
-#include "../include/inputs.h"
-#include "../include/constants.h"
-#include "../include/report.h"
-#include "../include/grid.h"
-#include "../include/sizes.h"
-#include "../include/planets.h"
-#include "../include/transform.h"
-#include "../include/bfield.h"
+#include "../include/aether.h"
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 void Grid::calc_sza(Planets planet, Times time, Report &report) {
 
@@ -27,11 +20,122 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   float sin_dec = planet.get_sin_dec(time);
   float cos_dec = planet.get_cos_dec(time);
 
-  fcube local_time3d = geoLon_scgc + lon_offset;
+  // Local time is in radians
+  geoLocalTime_scgc = geoLon_scgc + lon_offset;
+  geoLocalTime_scgc =
+    geoLocalTime_scgc - cTWOPI * floor(geoLocalTime_scgc/(cTWOPI));
   cos_sza_scgc =
     sin_dec * sin(geoLat_scgc) +
-    cos_dec * cos(geoLat_scgc) % cos(local_time3d-pi);
+    cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - cPI);
   sza_scgc = acos(cos_sza_scgc);
+
+  report.exit(function);
+}
+
+// ---------------------------------------------------------------------------
+//  Fill in GSE Coordinates
+// ---------------------------------------------------------------------------
+
+void Grid::calc_gse(Planets planet, Times time, Report &report) {
+
+  std::string function = "Grid::calc_sza";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Compute GSE coordinates:
+  // 1. use latitude / local time to derive XYZ
+  std::vector<fcube> lon_lat_radius;
+  // -pi is used here, since +X is pointed towards sun:
+  lon_lat_radius.push_back(geoLocalTime_scgc - cPI);
+  lon_lat_radius.push_back(geoLat_scgc);
+  lon_lat_radius.push_back(radius_scgc);
+  GSE_XYZ_vcgc = transform_llr_to_xyz_3d(lon_lat_radius);
+  // 2. rotate by declination to point x-axis towards the sun
+  float declination = planet.get_declination(time);
+  GSE_XYZ_vcgc = rotate_around_y_3d(GSE_XYZ_vcgc, -declination);
+
+  // ---------------------------------------------------------------
+  // Do the same thing for the magnetic poles:
+
+  std::vector<fcube> lon_lat_radius_col;
+  fcube tmp_col(1, 1, nZ);
+
+  // North:
+  // Lon (converted to local time):
+
+  float lon_offset = planet.get_longitude_offset(time);
+  tmp_col.fill(mag_pole_north_ll[0] + lon_offset - cPI);
+  lon_lat_radius_col.push_back(tmp_col);
+  // Lat:
+  tmp_col.fill(mag_pole_north_ll[1]);
+  lon_lat_radius_col.push_back(tmp_col);
+  // Radius:
+  tmp_col.tube(0, 0) = radius_scgc.tube(nX/2, nY/2);
+  lon_lat_radius_col.push_back(tmp_col);
+
+  mag_pole_north_gse = transform_llr_to_xyz_3d(lon_lat_radius_col);
+  mag_pole_north_gse = rotate_around_y_3d(mag_pole_north_gse, -declination);
+
+  // South:
+  // Lon:
+  lon_lat_radius_col[0].fill(mag_pole_south_ll[0] + lon_offset - cPI);
+  // Lat:
+  lon_lat_radius_col[1].fill(mag_pole_south_ll[1]);
+  // Radius is already filled.
+  mag_pole_south_gse = transform_llr_to_xyz_3d(lon_lat_radius_col);
+  mag_pole_south_gse = rotate_around_y_3d(mag_pole_south_gse, -declination);
+
+  report.exit(function);
+}
+
+// ---------------------------------------------------------------------------
+//  Fill in Magnetic Local Time
+//    - This assumes that the GE coordinates have been calculated
+//      and filled in!
+// ---------------------------------------------------------------------------
+
+void Grid::calc_mlt(Report &report) {
+
+  std::string function = "Grid::calc_mlt";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  fmat dx(nX, nY), dy(nX, nY);
+  fmat dlat_north(nX, nY);
+  fmat mlt(nX, nY);
+  fmat x_blend(nX, nY), y_blend(nX, nY);
+
+  // Need to blend north and south, so use the distance from the pole
+  // To indicate which pole you should use for MLT:
+
+  // If you look throught the Earth from the north, the magnetic poles
+  // in the north and south are on different sides of the Earth. If
+  // you calculate MLT based on one pole, you get the wrong answer
+  // near the other pole, so you should calculate the MLT for each
+  // pole independently, and blend them near the equator.  This is
+  // hard.  So, the way that I solved the problem is that the
+  // locations of the poles (GSE X and Y, not Z) are blended, such
+  // that when you are near the north pole, the location is near the
+  // north (and south near south), and when you are close to the
+  // equator, the location of the pole is the average of the two
+  // pole locations.
+  // So, x_blend and y_blend are the X,Y locations of the poles, blended
+  // Then the dx and dy are calculated between each grid point and
+  // the blended pole location. Then the angle between x and y is
+  // calculated and converted to an hour.
+
+  for (int iZ = 0; iZ < nZ; iZ++) {
+    dlat_north = 1.0 - (cPI / 2.0-magLat_scgc.slice(iZ)) / cPI;
+    x_blend = dlat_north * mag_pole_north_gse[0](0, 0, iZ) +
+      (1.0 - dlat_north) * mag_pole_south_gse[0](0, 0, iZ);
+    y_blend = dlat_north * mag_pole_north_gse[1](0, 0, iZ) +
+      (1.0 - dlat_north) * mag_pole_south_gse[1](0, 0, iZ);
+    dx = GSE_XYZ_vcgc[0].slice(iZ) - x_blend;
+    dy = GSE_XYZ_vcgc[1].slice(iZ) - y_blend;
+
+    mlt = (atan2(dy, dx) + cTWOPI) / cPI * 12.0;
+    magLocalTime_scgc.slice(iZ) = mlt - 24.0 * floor(mlt/24.0);
+  }
 
   report.exit(function);
 }
@@ -68,6 +172,10 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
       }
     }
   }
+  int IsNorth = 1, IsSouth = 0;
+  mag_pole_north_ll = get_magnetic_pole(IsNorth, planet, input, report);
+  mag_pole_south_ll = get_magnetic_pole(IsSouth, planet, input, report);
+
   report.exit(function);
   return;
 }
@@ -80,7 +188,6 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
   int64_t iLon, iLat, iAlt;
 
-  float radius0;
   float mu = planet.get_mu();
 
   report.print(3, "starting fill_grid_radius");
@@ -109,11 +216,9 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
 void Grid::fill_grid(Planets planet, Report &report) {
 
-  int64_t iLon, iLat, iAlt;
+  int64_t iAlt;
 
   report.print(3, "starting fill_grid");
-
-  float xyz[3], llr[3];
 
   for (iAlt = 1; iAlt < nAlts-1; iAlt++) {
     dalt_center_scgc.slice(iAlt) =
@@ -129,6 +234,14 @@ void Grid::fill_grid(Planets planet, Report &report) {
   dalt_lower_scgc.slice(iAlt) =
     geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt-1);
 
-  transform_llr_to_xyz_3d(geoLon_scgc, geoLat_scgc, radius_scgc,
-                          geoX_scgc, geoY_scgc, geoZ_scgc);
+  std::vector<fcube> lon_lat_radius;
+  lon_lat_radius.push_back(geoLon_scgc);
+  lon_lat_radius.push_back(geoLat_scgc);
+  lon_lat_radius.push_back(radius_scgc);
+  std::vector<fcube> xyz;
+
+  xyz = transform_llr_to_xyz_3d(lon_lat_radius);
+  geoX_scgc = xyz[0];
+  geoY_scgc = xyz[0];
+  geoZ_scgc = xyz[0];
 }

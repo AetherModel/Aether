@@ -4,30 +4,19 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/constants.h"
-#include "../include/sizes.h"
-#include "../include/ions.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/earth.h"
-
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
-//
+// Initialize a single species for the ions
 // -----------------------------------------------------------------------------
 
 Ions::species_chars Ions::create_species(Grid grid) {
 
-  int64_t iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
-
-  int64_t iTotal = int64_t(nLons) * int64_t(nLats) * int64_t(nAlts);
 
   // Constants:
   tmp.DoAdvect = 0;
@@ -48,7 +37,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 }
 
 // -----------------------------------------------------------------------------
-//  Initialize ions
+//  Initialize Ions class
 // -----------------------------------------------------------------------------
 
 Ions::Ions(Grid grid, Inputs input, Report report) {
@@ -57,10 +46,7 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
 
-  int64_t iTotal = int64_t(nLons) * int64_t(nLats) * int64_t(nAlts);
-
   species_chars tmp;
-  int iErr;
 
   report.print(2, "Initializing Ions");
 
@@ -88,7 +74,8 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   tmp.losses_scgc.zeros();
 
   // This gets a bunch of the species-dependent characteristics:
-  iErr = read_planet_file(input, report);
+  int iErr = read_planet_file(input, report);
+  if (iErr > 0) std::cout << "Error in reading planet file!" << '\n';
 }
 
 // -----------------------------------------------------------------------------
@@ -116,7 +103,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
     while (!IsDone) {
 
       hash = find_next_hash(infile_ptr);
-      
+
       if (report.test_verbose(4))
         std::cout << "hash : -->" << hash << "<--\n";
 
@@ -139,12 +126,12 @@ int Ions::read_planet_file(Inputs input, Report report) {
           for (int iSpecies=0; iSpecies < nIons; iSpecies++) {
             report.print(5, "setting ion species " + lines[iSpecies+1][0]);
             species[iSpecies].cName = lines[iSpecies+1][0];
-            species[iSpecies].mass = stof(lines[iSpecies+1][1])*amu;
+            species[iSpecies].mass = stof(lines[iSpecies+1][1]) * cAMU;
             species[iSpecies].charge = stoi(lines[iSpecies+1][2]);
             species[iSpecies].DoAdvect = stoi(lines[iSpecies+1][3]);
           }
           species[nIons].cName = "e-";
-          species[nIons].mass = mass_electron;
+          species[nIons].mass = cME;
           species[nIons].charge = -1;
           species[nIons].DoAdvect = 0;
         }
@@ -157,7 +144,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Calculate the electron density from the sum of all ion species
 // -----------------------------------------------------------------------------
 
 void Ions::fill_electrons(Report &report) {

@@ -7,13 +7,7 @@
 #include <vector>
 #include <string>
 
-#include "inputs.h"
-#include "times.h"
-#include "indices.h"
-#include "planets.h"
-#include "grid.h"
-#include "ions.h"
-#include "report.h"
+#include "../include/aether.h"
 
 class Euv {
 
@@ -58,8 +52,14 @@ public:
   //
   // -------------------------------------------------------------------------
 
-  int scale_from_1au(Planets planet, Times time);
+  int scale_from_1au(Planets planet, Times time, Report report);
 
+  // -------------------------------------------------------------------------
+  //
+  // -------------------------------------------------------------------------
+
+  int pair_euv(Neutrals &neutrals, Ions ions, Report report);
+  
 private:
 
   // --------------------------------------------------------------------------

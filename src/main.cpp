@@ -3,19 +3,12 @@
 
 #include <iostream>
 
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
+#include "../include/aether.h"
 
-#include "../include/neutrals.h"
-#include "../include/euv.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/sizes.h"
-#include "../include/ions.h"
-#include "../include/chemistry.h"
-#include "../include/output.h"
-#include "../include/advance.h"
+// -----------------------------------------------------------------------------
+// Main file for the Aether model.  This is needed when Aether is not used
+// as a library in another code, such as the SWMF.
+// -----------------------------------------------------------------------------
 
 int main() {
 
@@ -23,23 +16,45 @@ int main() {
 
   Times time;
   Report report;
-  Inputs input(time, report);
-  Euv euv(input, report);
-  Planets planet(input, report);
-  Indices indices(input);
 
-  // Geo grid stuff:
-  Grid gGrid(nGeoLonsG, nGeoLatsG, nGeoAltsG, nGeoGhosts);
+  // Define the function and report:
+  std::string function = "main";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Create inputs (reading the input file):
+  Inputs input(time, report);
+
+  // Initialize the EUV system:
+  Euv euv(input, report);
+
+  // Initialize the planet:
+  Planets planet(input, report);
+
+  // Initialize the indices (and read the files):
+  Indices indices(input);
+  iErr = read_and_store_indices(indices, input, report);
+
+  // Initialize Geographic grid:
+  Grid gGrid(input.get_nLonsGeo(),
+       input.get_nLatsGeo(),
+       input.get_nAltsGeo(), nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
-  // Magnetic grid stuff:
+  // Initialize Magnetic grid:
   Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
+  // Initialize Neutrals on geographic grid:
   Neutrals neutrals(gGrid, input, report);
-  Ions ions(gGrid, input, report);
-  neutrals.pair_euv(euv, ions, report);
 
+  // Initialize Ions on geographic grid:
+  Ions ions(gGrid, input, report);
+
+  // Once EUV, neutrals, and ions have been defined, pair cross sections
+  euv.pair_euv(neutrals, ions, report);
+
+  // Initialize Chemical scheme (including reading file):
   Chemistry chemistry(neutrals, ions, input, report);
 
   // This is for the initial output.  If it is not a restart, this will go:
@@ -62,6 +77,7 @@ int main() {
 
     time.increment_intermediate(dt_couple);
 
+    // Increment until the intermediate time:
     while (time.get_current() < time.get_intermediate())
       iErr = advance(planet,
                      gGrid,
@@ -76,6 +92,7 @@ int main() {
 
     // Do some coupling here. But we have no coupling to do. Sad.
   }
+  report.exit(function);
   report.times();
   return iErr;
 }

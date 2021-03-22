@@ -4,12 +4,12 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/inputs.h"
-#include "../include/planets.h"
-#include "../include/report.h"
-#include "../include/bfield.h"
-#include "../include/transform.h"
-#include "../include/constants.h"
+#include "../include/aether.h"
+
+// -----------------------------------------------------------------------------
+// Calculate a tilted offset dipole field given the planetary
+// characteristics
+// -----------------------------------------------------------------------------
 
 bfield_info_type get_dipole(float lon,
                             float lat,
@@ -49,16 +49,12 @@ bfield_info_type get_dipole(float lon,
   transform_rot_y(pos_rot_z, -magnetic_pole_tilt, pos_rot_zy);
 
   float xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[1]*pos_rot_zy[1]);
-  float xzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[2]*pos_rot_zy[2]);
-  float yzpp2  = (pos_rot_zy[1]*pos_rot_zy[1] + pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
                    pos_rot_zy[1]*pos_rot_zy[1] +
                    pos_rot_zy[2]*pos_rot_zy[2]);
 
   float xypp = sqrt(xypp2);
-  float xzpp = sqrt(xzpp2);
-  float yzpp = sqrt(yzpp2);
   float xyzpp = sqrt(xyzpp2);
 
   float normal_r = (radius / xyzpp);

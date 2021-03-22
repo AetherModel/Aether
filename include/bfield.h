@@ -4,15 +4,16 @@
 #ifndef INCLUDE_BFIELD_H_
 #define INCLUDE_BFIELD_H_
 
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-
 struct bfield_info_type {
   float b[3];
   float lon;
   float lat;
 };
+
+fvec get_magnetic_pole(int IsNorth,
+		       Planets planet,
+		       Inputs input,
+		       Report &report);
 
 bfield_info_type get_bfield(float lon,
                             float lat,
@@ -28,11 +29,4 @@ bfield_info_type get_dipole(float lon,
                             Inputs input,
                             Report &report);
 
-bfield_info_type get_dipole(float lon,
-                            float lat,
-                            float alt,
-                            Planets planet,
-                            Inputs input,
-                            Report &report);
-
-#endif // INCLUDE_EUV_H_
+#endif // INCLUDE_BFIELD_H_

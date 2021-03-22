@@ -3,13 +3,21 @@
 
 #include <math.h>
 #include <vector>
-#include <armadillo>
 
-#include "../include/sizes.h"
-#include "../include/grid.h"
+#include "../include/aether.h"
 
-using namespace arma;
+// -----------------------------------------------------------------------
+// copy from c++ vector to c-native array
+// -----------------------------------------------------------------------
 
+void copy_vector_to_array(std::vector<float> vector_in,
+        int64_t nElements,
+        float *array_out) {
+
+  for (int64_t i = 0; i < nElements; i++) {
+    array_out[i] = vector_in[i];
+  }
+}
 
 // -----------------------------------------------------------------------
 // copy from armidillo cube to 3d c-native array
@@ -36,20 +44,17 @@ void copy_cube_to_array(fcube cube_in,
 
 
 // -----------------------------------------------------------------------
-// Transform Longitude, Latitude, Radius to X, Y, Z
+// Transform Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2]) to
+// X, Y, Z
 // Use armidillo cubes
 // -----------------------------------------------------------------------
 
-void transform_llr_to_xyz_3d(fcube lat3d,
-                             fcube lon3d,
-                             fcube r3d,
-                             fcube &x3d,
-                             fcube &y3d,
-                             fcube &z3d) {
-
-  x3d = r3d % cos(lat3d) % cos(lon3d);
-  y3d = r3d % cos(lat3d) % sin(lon3d);
-  z3d = r3d % sin(lat3d);
+std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr) {
+  std::vector<fcube> xyz;
+  xyz.push_back(llr[2] % cos(llr[1]) % cos(llr[0]));
+  xyz.push_back(llr[2] % cos(llr[1]) % sin(llr[0]));
+  xyz.push_back(llr[2] % sin(llr[1]));
+  return xyz;
 }
 
 // -----------------------------------------------------------------------
@@ -63,6 +68,72 @@ void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]) {
   xyz_out[0] = llr_in[2] * cos(llr_in[1]) * cos(llr_in[0]);
   xyz_out[1] = llr_in[2] * cos(llr_in[1]) * sin(llr_in[0]);
   xyz_out[2] = llr_in[2] * sin(llr_in[1]);
+}
+
+// -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the z-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back( X * ca + Y *sa);
+  XYZ_out.push_back(-X * sa + Y *ca);
+  XYZ_out.push_back(Z);
+
+  return XYZ_out;
+}
+
+// -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the y-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back(X * ca - Z *sa);
+  XYZ_out.push_back(Y);
+  XYZ_out.push_back(X * sa + Z *ca);
+
+  return XYZ_out;
+}
+
+// -----------------------------------------------------------------------
+// Rotate 3D array (cube) around the x-axis
+//  - Angle needs to be in radians!!!
+// -----------------------------------------------------------------------
+
+std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
+
+  fcube X = XYZ_in[0];
+  fcube Y = XYZ_in[1];
+  fcube Z = XYZ_in[2];
+  std::vector<fcube> XYZ_out;
+
+  float ca = cos(angle);
+  float sa = sin(angle);
+
+  XYZ_out.push_back(X);
+  XYZ_out.push_back( Y * ca + Z *sa);
+  XYZ_out.push_back(-Y * sa + Z *ca);
+
+  return XYZ_out;
 }
 
 // -----------------------------------------------------------------------
@@ -135,41 +206,4 @@ void vector_diff(float vect_in_1[3],
                  float vect_in_2[3],
                  float vect_out[3]) {
   for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
-}
-
-// -----------------------------------------------------------------------
-// grab one component of a vector
-// -----------------------------------------------------------------------
-
-void get_vector_component(float *vector_in_v3gc,
-                          int iComponent,
-                          int IsGeoGrid,
-                          float *component_out_s3gc) {
-
-  int64_t nLons, nLats, nAlts, iLon, iLat, iAlt, index, indexv;
-
-  if (IsGeoGrid) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-        if (IsGeoGrid) {
-          index = ijk_geo_s3gc(iLon, iLat, iAlt);
-          indexv = ijkl_geo_v3gc(iLon, iLat, iAlt, iComponent);
-        } else {
-          index = ijk_mag_s3gc(iLon, iLat, iAlt);
-          indexv = ijkl_mag_v3gc(iLon, iLat, iAlt, iComponent);
-        }
-        component_out_s3gc[index] = vector_in_v3gc[indexv];
-      }
-    }
-  }
 }

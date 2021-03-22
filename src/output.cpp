@@ -3,32 +3,37 @@
 
 #include <netcdf>
 
-#include "../include/neutrals.h"
-#include "../include/grid.h"
-#include "../include/times.h"
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/transform.h"
+#include "../include/aether.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;
+
+//----------------------------------------------------------------------
+// Output a given variable to the netCDF file.  The netCDF system
+// doesn't work with Armadillo cubes, so we have to transform the cube
+// to a C-array, and then output
+// ----------------------------------------------------------------------
 
 void output_variable_3d(std::vector<size_t> count_start,
                         std::vector<size_t> count_end,
                         fcube value,
                         NcVar variable) {
 
+  // Get the size of the cube:
+  
   int64_t nX = value.n_rows;
   int64_t nY = value.n_cols;
   int64_t nZ = value.n_slices;
   int64_t iX, iY, iZ, iTotal, index;
 
   iTotal = nX * nY * nZ;
+  
+  // Create a temporary c-array to use to output the variable
+  
+  float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
 
-  float *tmp_s3gc = (float*) malloc(iTotal * sizeof(float));
-
+  // Move the data from the cube to the c-array
+  
   for (iX = 0; iX < nX; iX++) {
     for (iY = 0; iY < nY; iY++) {
       for (iZ = 0; iZ < nZ; iZ++) {
@@ -38,9 +43,16 @@ void output_variable_3d(std::vector<size_t> count_start,
     }
   }
 
+  // Output the data to the netCDF file
   variable.putVar(count_start, count_end, tmp_s3gc);
+
+  // delete the c-array
   free(tmp_s3gc);
 }
+
+//----------------------------------------------------------------------
+// Output the different file types to netCDF files. 
+//----------------------------------------------------------------------
 
 int output(Neutrals neutrals,
            Ions ions,
@@ -53,11 +65,11 @@ int output(Neutrals neutrals,
   int iErr = 0;
 
   int nOutputs = args.get_n_outputs();
-  int IsGeoGrid = grid.get_IsGeoGrid();
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  double time_array[1];
 
   std::string function = "output";
   static int iFunction = -1;
@@ -66,7 +78,11 @@ int output(Neutrals neutrals,
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
- 
+
+      grid.calc_sza(planet, time, report);
+      grid.calc_gse(planet, time, report);
+      grid.calc_mlt(report);
+
       std::string time_string;
       std::string file_name;
       std::string file_ext = ".nc";
@@ -83,12 +99,15 @@ int output(Neutrals neutrals,
       file_name = file_pre + "_" + time_string + file_ext;
 
       // Create the file:
+      report.print(0, "Writing file : " + file_name);
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
       NcDim lonDim = ncdf_file.addDim("Longitude", nLons);
       NcDim latDim = ncdf_file.addDim("Latitude", nLats);
       NcDim altDim = ncdf_file.addDim("Altitude", nAlts);
+
+      NcDim timeDim = ncdf_file.addDim("Time", 1);
 
       // Define the Coordinate Variables
 
@@ -100,10 +119,12 @@ int output(Neutrals neutrals,
       dimVector.push_back(latDim);
       dimVector.push_back(altDim);
 
+      NcVar timeVar = ncdf_file.addVar("Time", ncDouble, timeDim);
       NcVar lonVar = ncdf_file.addVar("Longitude", ncFloat, dimVector);
       NcVar latVar = ncdf_file.addVar("Latitude", ncFloat, dimVector);
       NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, dimVector);
 
+      timeVar.putAtt(UNITS, "seconds");
       lonVar.putAtt(UNITS, "radians");
       latVar.putAtt(UNITS, "radians");
       altVar.putAtt(UNITS, "meters");
@@ -116,6 +137,11 @@ int output(Neutrals neutrals,
       countp.push_back(nLons);
       countp.push_back(nLats);
       countp.push_back(nAlts);
+
+      // Output time:
+
+      time_array[0] = time.get_current();
+      timeVar.putVar(time_array);
 
       // Output longitude, latitude, altitude 3D arrays:
 
@@ -135,12 +161,12 @@ int output(Neutrals neutrals,
         for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
           if (report.test_verbose(3))
             std::cout << "Outputting Var : "
-                      << neutrals.neutrals[iSpecies].cName << "\n";
-          denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName,
+                      << neutrals.species[iSpecies].cName << "\n";
+          denVar.push_back(ncdf_file.addVar(neutrals.species[iSpecies].cName,
                                             ncFloat, dimVector));
           denVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
           output_variable_3d(startp, countp,
-                             neutrals.neutrals[iSpecies].density_scgc,
+                             neutrals.species[iSpecies].density_scgc,
                              denVar[iSpecies]);
         }
 
@@ -149,6 +175,13 @@ int output(Neutrals neutrals,
                                          ncFloat, dimVector);
         tempVar.putAtt(UNITS, neutrals.temperature_unit);
         output_variable_3d(startp, countp, neutrals.temperature_scgc, tempVar);
+
+        // Output SZA
+        NcVar szaVar = ncdf_file.addVar("Solar Zenith Angle",
+          ncFloat, dimVector);
+        szaVar.putAtt(UNITS, "degrees");
+        output_variable_3d(startp, countp, grid.sza_scgc * cRtoD, szaVar);
+
       }
 
       // ----------------------------------------------
@@ -191,6 +224,11 @@ int output(Neutrals neutrals,
                                          ncFloat, dimVector);
         mLonVar.putAtt(UNITS, "radians");
         output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
+
+        NcVar mLTVar = ncdf_file.addVar("Magnetic Local Time",
+                                         ncFloat, dimVector);
+        mLTVar.putAtt(UNITS, "hours");
+        output_variable_3d(startp, countp, grid.magLocalTime_scgc, mLTVar);
 
         // Output magnetic field components:
 

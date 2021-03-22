@@ -61,9 +61,26 @@ std::string strip_spaces(std::string instring) {
 }
 
 // -------------------------------------------------------------------
-//
-//
+// strip spaces out of the string.
 // -------------------------------------------------------------------
+
+std::string replace_spaces_with_commas(std::string instring) {
+  int i;
+  std::string outstring;
+  int len = instring.length();
+  i = 0;
+  while (i < len) {
+    if (instring[i] != ' ') {
+      outstring = outstring+instring[i];
+      i++;
+    } else {
+      outstring = outstring+',';
+      i++;
+      while (i < len && instring[i] == ' ') i++;
+    }
+  }
+  return outstring;
+}
 
 // -------------------------------------------------------------------
 // Read a string, clean it up, and report error if length is 0
@@ -110,10 +127,39 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
       output = stoi(line);
     }
     catch(...) {
-      std::cout << "Issue in read_inputs!\n";
+      std::cout << "Issue in read_integer!\n";
       std::cout << "In hash: ";
       std::cout << hash << "\n";
       std::cout << "Trying to read an integer, but got this: ";
+      std::cout << line << "\n";
+    }
+  }
+  return output;
+}
+
+// -------------------------------------------------------------------
+// Read a string, clean it up, and convert it to an float
+// -------------------------------------------------------------------
+
+float read_float(std::ifstream &file_ptr, std::string hash) {
+
+  std::string line = "";
+  float output = -1;
+
+  if (!file_ptr.is_open()) {
+    std::cout << "File is not open (read_float)!\n";
+    std::cout << "hash : " << hash << "\n";
+  } else {
+    getline(file_ptr, line);
+    line = strip_string_end(line);
+    try {
+      output = stoi(line);
+    }
+    catch(...) {
+      std::cout << "Issue in read_float!\n";
+      std::cout << "In hash: ";
+      std::cout << hash << "\n";
+      std::cout << "Trying to read a float, but got this: ";
       std::cout << line << "\n";
     }
   }
@@ -144,6 +190,24 @@ std::string find_next_hash(std::ifstream &file_ptr) {
 }
 
 // -------------------------------------------------------------------
+// This takes a string with comma separated values and returns a
+// vector of values.  Basically, it is one row of a CSV file.
+// -------------------------------------------------------------------
+
+std::vector<std::string> parse_csv_row_into_vector(std::string line) {
+
+  std::vector<std::string> row;
+  std::string col;
+  std::stringstream ss(line);
+
+  while (getline(ss, col, ',')) {
+    row.push_back(col);
+  }
+
+  return row;
+}
+
+// -------------------------------------------------------------------
 // This can read a generic comma separated value file
 // This is somewhat generic in that it can read from the current
 // position to the first line that is blank, so it can be used
@@ -165,22 +229,42 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {
     // number of columns is the same in each row.  If that is not the
     // case, then bad stuff happens.  I need to add more debugging
     // stuff in here.
-    int IsFirstTime = 1;
     while (getline(file_ptr, line) && line.length() > 1) {
       line = strip_string_end(line);
       line = strip_spaces(line);
-      std::stringstream ss(line);
-      int j = 0;
-      while (getline(ss, col, ',')) {
-        if (IsFirstTime) {
-          row.push_back(col);
-        } else {
-          row[j] = col;
-        }
-        j++;
-      }
+      row = parse_csv_row_into_vector(line);
       data.push_back(row);
-      IsFirstTime = 0;
+    }
+  }
+  return data;
+}
+
+// -------------------------------------------------------------------
+// This can read a generic SPACE separated value file
+// This is somewhat generic in that it can read from the current
+// position to the first line that is blank, so it can be used
+// multiple times per file.
+// Returns a 2D array of strings.
+// -------------------------------------------------------------------
+
+std::vector<std::vector<std::string>> read_ssv(std::ifstream &file_ptr) {
+
+  std::vector<std::vector<std::string>> data;
+  std::vector<std::string> row;
+  std::string line, col;
+  line = "  ";
+
+  if (!file_ptr.is_open()) {
+    std::cout << "File is not open (read_ssv)!\n";
+  } else {
+    // This assumes that the SSV file's layout is perfect - that the
+    // number of columns is the same in each row.  If that is not the
+    // case, then bad stuff happens.  I need to add more debugging
+    // stuff in here.
+    while (getline(file_ptr, line) && line.length() > 1) {
+      line = replace_spaces_with_commas(line);
+      row = parse_csv_row_into_vector(line);
+      data.push_back(row);
     }
   }
   return data;

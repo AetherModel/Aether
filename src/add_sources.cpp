@@ -4,18 +4,17 @@
 #include <iostream>
 #include <string>
 
-#include "../include/neutrals.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
+#include "../include/aether.h"
+
+// -----------------------------------------------------------------------------
+// Adds all of the sources to the states. Needs time to get dt.
+// -----------------------------------------------------------------------------
 
 void Neutrals::add_sources(Times time, Report &report) {
 
   std::string function = "add_sources";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
-  int64_t iLon, iLat, iAlt, index;
 
   float dt = time.get_dt();
 

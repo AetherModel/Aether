@@ -3,15 +3,12 @@
 
 #include <iostream>
 
-#include "../include/sizes.h"
+#include "../include/aether.h"
 
-#include "../include/chemistry.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/times.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/solvers.h"
+// -----------------------------------------------------------------------------
+// calculates the chemical reactions in the model by taking into account
+// EUV ionization and chemistry as this time
+// -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,
@@ -37,12 +34,14 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Initialize the sources and losses with EUV stuff:
   // ----------------------------------------------------------
 
+  // Neutrals have losses due to ionization
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals.neutrals[iSpecies].losses_scgc =
-      neutrals.neutrals[iSpecies].ionization_scgc;
-    neutrals.neutrals[iSpecies].sources_scgc.zeros();
+    neutrals.species[iSpecies].losses_scgc =
+      neutrals.species[iSpecies].ionization_scgc;
+    neutrals.species[iSpecies].sources_scgc.zeros();
   }
 
+  // Ions have sources due to ionization
   for (iSpecies=0; iSpecies < nIons; iSpecies++) {
     ions.species[iSpecies].losses_scgc.zeros();
     ions.species[iSpecies].sources_scgc =
@@ -60,10 +59,10 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // ---------------------------------------------------------
 
   for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    neutrals.neutrals[iSpecies].density_scgc =
-      solver_chemistry(neutrals.neutrals[iSpecies].density_scgc,
-                       neutrals.neutrals[iSpecies].sources_scgc,
-                       neutrals.neutrals[iSpecies].losses_scgc,
+    neutrals.species[iSpecies].density_scgc =
+      solver_chemistry(neutrals.species[iSpecies].density_scgc,
+                       neutrals.species[iSpecies].sources_scgc,
+                       neutrals.species[iSpecies].losses_scgc,
                        dt);
   }
 

@@ -4,18 +4,8 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
-#include <armadillo>
 
-#include "../include/constants.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/earth.h"
-
-using namespace arma;
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
 //  Create a single species by filling the species structure
@@ -23,7 +13,6 @@ using namespace arma;
 
 Neutrals::species_chars Neutrals::create_species(Grid grid) {
 
-  int64_t iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
   int64_t nLons = grid.get_nLons();
@@ -71,7 +60,7 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
-    neutrals.push_back(tmp);
+    species.push_back(tmp);
   }
 
   // State variables:
@@ -110,9 +99,12 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(input, report);
+  if (iErr > 0) std::cout << "Error reading planet file!" << '\n';
 
   // This specifies the initial conditions for the neutrals:
   iErr = initial_conditions(grid, input, report);
+  if (iErr > 0)
+    std::cout << "Error in setting neutral initial conditions!" << '\n';
 }
 
 // -----------------------------------------------------------------------------
@@ -165,13 +157,13 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 
           for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
             report.print(5, "setting neutral species " + lines[iSpecies+1][0]);
-            neutrals[iSpecies].cName = lines[iSpecies+1][0];
-            neutrals[iSpecies].mass = stof(lines[iSpecies+1][1])*amu;
-            neutrals[iSpecies].vibe = stof(lines[iSpecies+1][2]);
-            neutrals[iSpecies].thermal_cond = stof(lines[iSpecies+1][3]);
-            neutrals[iSpecies].thermal_exp = stof(lines[iSpecies+1][4]);
-            neutrals[iSpecies].DoAdvect = stoi(lines[iSpecies+1][5]);
-            neutrals[iSpecies].lower_bc_density = stof(lines[iSpecies+1][6]);
+            species[iSpecies].cName = lines[iSpecies+1][0];
+            species[iSpecies].mass = stof(lines[iSpecies+1][1]) * cAMU;
+            species[iSpecies].vibe = stof(lines[iSpecies+1][2]);
+            species[iSpecies].thermal_cond = stof(lines[iSpecies+1][3]);
+            species[iSpecies].thermal_exp = stof(lines[iSpecies+1][4]);
+            species[iSpecies].DoAdvect = stoi(lines[iSpecies+1][5]);
+            species[iSpecies].lower_bc_density = stof(lines[iSpecies+1][6]);
           }  // iSpecies
         }  // else size
       }  // #neutrals
@@ -183,8 +175,10 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
         std::vector<std::vector<std::string>> temps = read_csv(infile_ptr);
 
         int nTemps = temps.size()-1;
-        initial_temperatures = (float*) malloc(nTemps * sizeof(float) );
-        initial_altitudes = (float*) malloc(nTemps * sizeof(float) );
+        initial_temperatures =
+          static_cast<float*>(malloc(nTemps * sizeof(float)));
+        initial_altitudes =
+          static_cast<float*>(malloc(nTemps * sizeof(float)));
         for (int iTemp=0; iTemp < nTemps; iTemp++) {
           report.print(5, "reading initial temp alt " + temps[iTemp+1][0]);
           // convert altitudes from km to m
@@ -211,8 +205,8 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   int iErr = 0;
-  int64_t iDir, iLon, iLat, iAlt, index, iA, indexm;
-  float alt, r, H;
+  int64_t iLon, iLat, iAlt, iA;
+  float alt, r;
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -224,7 +218,6 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
-  int64_t nGCs = grid.get_nGCs();
 
   // Let's assume that the altitudes are not dependent on lat/lon:
 
@@ -271,27 +264,36 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   // Set the lower boundary condition:
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].density_scgc.slice(0).
+      fill(species[iSpecies].lower_bc_density);
+  }
+  fill_with_hydrostatic(grid, report);
 
-    neutrals[iSpecies].
-      density_scgc.slice(0).
-      fill(neutrals[iSpecies].lower_bc_density);
+  return iErr;
+}
+
+//----------------------------------------------------------------------
+// Fill With Hydrostatic Solution
+//----------------------------------------------------------------------
+
+void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
+
+  int64_t nAlts = grid.get_nAlts();
+
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
     // Integrate with hydrostatic equilibrium up:
-    for (iAlt = 1; iAlt < nAlts; iAlt++) {
-      neutrals[iSpecies].scale_height_scgc.slice(iAlt) =
-        boltzmanns_constant *
-        temperature_scgc.slice(iAlt) /
-        (neutrals[iSpecies].mass *
-         grid.gravity_scgc.slice(iAlt));
-      neutrals[iSpecies].density_scgc.slice(iAlt) =
-        neutrals[iSpecies].density_scgc.slice(iAlt-1) %
+    for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+      species[iSpecies].scale_height_scgc.slice(iAlt) =
+        cKB * temperature_scgc.slice(iAlt) /
+        (species[iSpecies].mass * grid.gravity_scgc.slice(iAlt));
+      species[iSpecies].density_scgc.slice(iAlt) =
+        species[iSpecies].density_scgc.slice(iAlt-1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
-            neutrals[iSpecies].scale_height_scgc.slice(iAlt));
+            species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
-
   calc_mass_density(report);
-  return iErr;
 }
 
 //----------------------------------------------------------------------
@@ -306,71 +308,14 @@ void Neutrals::set_bcs(Report &report) {
 
   int64_t nAlts = temperature_scgc.n_slices;
 
-  // temperature_scgc.slice(nAlts-2).fill(800.0);
-  // temperature_scgc.slice(nAlts-1).fill(800.0);
+  // Set the lower boundary condition:
+  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].density_scgc.slice(0).
+      fill(species[iSpecies].lower_bc_density);
+  }
 
   temperature_scgc.slice(nAlts-2) = temperature_scgc.slice(nAlts-3);
   temperature_scgc.slice(nAlts-1) = temperature_scgc.slice(nAlts-2);
 
   report.exit(function);
-}
-
-//----------------------------------------------------------------------
-// This code takes the EUV information that was read in from the EUV
-// file and tries to figure out which things are absorbtion/ionization
-// cross sections.  It does this by comparing the name of the neutral
-// species to the first column in the euv.csv file.  If it finds a
-// match, it then checks to see if it is an absorbtion or ionization
-// cross section.  If it is an ionization cs, then it tries to figure
-// out which ion it is producing (the "to" column).
-// ---------------------------------------------------------------------
-
-int Neutrals::pair_euv(Euv euv, Ions ions, Report report) {
-
-  int iErr = 0;
-
-  if (report.test_verbose(3)) std::cout << "Neutrals::pair_euv \n";
-
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-
-    if (report.test_verbose(5))
-      std::cout << neutrals[iSpecies].cName << "\n";
-
-    neutrals[iSpecies].iEuvAbsId_ = -1;
-    neutrals[iSpecies].nEuvIonSpecies = 0;
-
-    // Check each row to see if the first column "name" matches:
-    for (int iEuv=0; iEuv < euv.waveinfo.size(); iEuv++) {
-
-      if (report.test_verbose(6))
-        std::cout << "  " << euv.waveinfo[iEuv].name << "\n";
-
-      // if this matches...
-      if (neutrals[iSpecies].cName == euv.waveinfo[iEuv].name) {
-
-        // First see if we can find absorbtion:
-        if (euv.waveinfo[iEuv].type == "abs") {
-          if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
-          neutrals[iSpecies].iEuvAbsId_ = iEuv;
-        }
-
-        // Next see if we can find ionizations:
-        if (euv.waveinfo[iEuv].type == "ion") {
-
-          // Loop through the ions to see if names match:
-          for (int iIon = 0; iIon < nIons; iIon++) {
-            if (ions.species[iIon].cName == euv.waveinfo[iEuv].to) {
-              if (report.test_verbose(5))
-                std::cout << "  Found ionization!! --> "
-                          << ions.species[iIon].cName << "\n";
-              neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
-              neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
-              neutrals[iSpecies].nEuvIonSpecies++;
-            }  // if to
-          }  // iIon loop
-        }  // if ionization
-      }  // if species is name
-    }  // for iEuv
-  }  // for iSpecies
-  return iErr;
 }

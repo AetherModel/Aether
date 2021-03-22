@@ -7,7 +7,6 @@
 
 #include "../include/report.h"
 
-
 // -----------------------------------------------------------------------
 // Initialize class Report
 // -----------------------------------------------------------------------
@@ -107,11 +106,13 @@ void Report::exit(std::string input) {
 void Report::times() {
   std::cout << "Timing Summary :\n";
   for (int i=0; i < nEntries; i++) {
-    std::cout << entries[i].entry << "\n";
-    for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
-    std::cout << "nTimes called : " << entries[i].nTimes << "\n";
-    for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
-    std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
+    if (entries[i].iLevel <= iTimingDepth) {
+      std::cout << entries[i].entry << "\n";
+      for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+      std::cout << "nTimes called : " << entries[i].nTimes << "\n";
+      for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+      std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
+    }
   }
 }
 
@@ -138,7 +139,7 @@ int Report::test_verbose(int iLevel) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Set the verbose level in the code.
 // -----------------------------------------------------------------------
 
 void Report::set_verbose(int input) {
@@ -146,7 +147,15 @@ void Report::set_verbose(int input) {
 }
 
 // -----------------------------------------------------------------------
-//
+// Set the depth to report for timing at the end of the run
+// -----------------------------------------------------------------------
+
+void Report::set_timing_depth(int input) {
+  iTimingDepth = input;
+}
+
+// -----------------------------------------------------------------------
+// Get the verbose level
 // -----------------------------------------------------------------------
 
 int Report::get_verbose() {
