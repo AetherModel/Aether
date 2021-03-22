@@ -45,13 +45,6 @@ MAIN = \
 TEST = \
 	test.o
 
-#DEPS := $(OBJS:.o=.d)
-#
-#-include $(DEPS)
-#
-#%.o: %.cpp
-#	$(COMPILE.CPP) $(FLAGS) -MMD -c -o $@ $<
-
 .cpp.o: ${HEADERS}
 	${COMPILE.CPP} ${FLAGS} $<
 
@@ -62,10 +55,10 @@ LIB: ${CLASSES} ${OBJECTS}
 
 
 Aether: ${MAIN} LIB
-	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L/opt/local/lib -lnetcdf-cxx4
+	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
 
 test: ${TEST} LIB
-	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB}
+	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
 
 clean:
 	rm -f *~ core *.o *.exe *.a *.so *.d

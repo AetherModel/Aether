@@ -5,7 +5,11 @@ COMPILE.CPP = g++
 LINK.CPP = g++
 AR = ar -rs
 
-FLAGS = -O3 -ffast-math -c -I/usr/include -I../include
+INCLUDE_DIR = /usr/include
+LIB_DIR = /usr/lib/x86_64-linux-gnu
+NETCDF = netcdf_c++4
+
+FLAGS = -O3 -ffast-math -c -I${INCLUDE_DIR} -I../include
 
 # Can use this version for no optimization and no fast math:
-# FLAGS = -c -I/opt/local/include
+# FLAGS = -c -I${INCLUDE_DIR} -I../include
