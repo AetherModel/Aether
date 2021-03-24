@@ -1,237 +1,274 @@
 #!/usr/bin/env python
+""" Standard model visualization routines
+"""
 
 from glob import glob
-from datetime import datetime
-from datetime import timedelta
-from struct import unpack
-import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.dates as dates
-from matplotlib.gridspec import GridSpec
-from pylab import cm
-from gitm_routines import *
-from aether_routines import *
+import numpy as np
+import os
 import re
 import sys
-import os
 
-rtod = 180.0/3.141592
+
+import gitm_routines
+import aether_routines
+
 
 #-----------------------------------------------------------------------------
-
-def get_args(argv):
-    r""" Parse the arguements and set to a dictionary
+def get_help(file_vars=None):
+    """ Provide string explaining how to run the command line interface
 
     Parameters
     ----------
-    argv: arguments fed on the command line
+    file_vars : list or NoneType
+        List of file variables or None to exclude this output (default=None)
 
     Returns
     -------
-    args: A dictionary containing information about arguements, such
-          as filelist, IsGitm, var (number), cut, diff (difference with
-          other plots), movie, ext (for movie), rate (framerate for movie),
-          tec, winds (plot with winds), alt (to plot), lat (to plot),
-          lon (to plot), IsLog, and help (display help)
+    help_str : str
+        String with formatted help statement
+
     """
 
-    filelist = []
-    IsLog = 0
-    var = 15
-    alt = 400.0
-    lon = -100.0
-    lat = -100.0
-    tec = 0
-    cut = 'alt'
-    help = 0
-    winds = 0
-    diff = 0
-    IsGitm = 1
-    movie = 0
-    rate = 30
+    help_str = 'Usage:\n{:s} -[flags] [filenames]\n'.format(__name__)
+    help_str += 'Flags:\n'
+    help_str += '       -help : print this message, include filename for '
+    help_str += 'variable names and indices\n'
+    help_str += '       -var=number : index of variable to plot\n'
+    help_str += '       -cut=alt, lat, or lon : which cut you would like\n'
+    help_str += '       -alt=number : alt in km or grid number (closest)\n'
+    help_str += '       -lat=number : latitude in degrees (closest)\n'
+    help_str += '       -lon=number: longitude in degrees (closest)\n'
+    help_str += '       -log : plot the log of the variable\n'
+    help_str += '       -winds : overplot winds\n'
+    help_str += '       -tec : plot the TEC variable\n'
+    help_str += '       -movie=number : provide a positive frame rate to '
+    help_str += 'create a movie\n'
+    help_str += '       -ext=str : figure or movie extension\n'
+    help_str += 'At end, list the files you want to plot. This code should '
+    help_str += 'work with either GITM files (*.bin) or Aether netCDF files '
+    help_str += '(*.nc)'
 
-    if (os.name == "posix"):
-        ext = "mkv"
-    else:
-        ext = "mp4"
-        
-    for arg in argv:
+    if file_vars is not None:
+        help_str += "File Variables (index, name):\n"
+        for ivar, var in enumerate(file_vars):
+            help_str += "               ({:d}, {:s})\n".format(ivar, var)
 
-        IsFound = 0
+    return help_str
 
-        if (not IsFound):
 
-            m = re.match(r'-var=(.*)',arg)
-            if m:
-                var = int(m.group(1))
-                IsFound = 1
+def get_command_line_args(argv):
+    """ Parse the arguements and set to a dictionary
 
-            m = re.match(r'-diff',arg)
-            if m:
-                diff = 1
-                IsFound = 1
+    Parameters
+    ----------
+    argv : list
+        List of arguments fed on the command line
 
-            m = re.match(r'-mkv',arg)
-            if m:
-                ext = "mkv"
-                IsFound = 1
+    Returns
+    -------
+    args : dict
+        A dictionary containing information about arguements, including:
+        filelist (list of filenames), gitm (flag that is true for GITM input,
+        determined by examining filelist naming convention),
+        var (variable index to plot), cut (coordinate to hold constant),
+        diff (difference with other plots),
+        movie (framerate for movie, which is > 0 if a movie is desired),
+        ext (output extension), winds (flag to plot with winds),
+        alt (to plot), lat (to plot), lon (to plot),
+        log (flag to use log scale), and help (flag to display help)
 
-            m = re.match(r'-mp4',arg)
-            if m:
-                ext = "mp4"
-                IsFound = 1
-                
-            m = re.match(r'-gif',arg)
-            if m:
-                ext = "gif"
-                IsFound = 1
+    """
+    # Initialize the arguments to their default values
+    args = {'filelist': [], 'log': False, 'var': 15, 'alt': 400,
+            'lon': np.nan, 'lat': np.nan, 'cut': 'alt', 'help': False,
+            'winds': False, 'diff': False, 'gitm': False, 'movie': 0,
+            'ext': 'png'}
 
-            m = re.match(r'-movie',arg)
-            if m:
-                movie = 1
-                IsFound = 1
-                m = re.match(r'=(.*)',arg)
-                if m:
-                    rate = int(m.group(1))
+    arg_type = {'filelist': list, 'log': bool, 'var': int, 'alt': int,
+                'lon': float, 'lat': float, 'cut': str, 'help': bool,
+                'winds': bool, 'diff': bool, 'gitm': bool,
+                'movie': int, 'ext': str}
 
-            m = re.match(r'-tec',arg)
-            if m:
-                var = 34
-                tec = 1
-                IsFound = 1
+    # Cycle through all arguments except the first, saving input
+    for arg in argv[1:]:
+        # Treat the file list and formatting seperately
+        if arg.find('-') == 0:
+            # This is not a filename, remove the dash to get the key
+            split_arg = arg.split('=')
+            akey = split_arg[0][1:]
 
-            m = re.match(r'-alt=(.*)',arg)
-            if m:
-                alt = int(m.group(1))
-                IsFound = 1
+            # Get the argument value as the desired type
+            if akey not in arg_type.keys():
+                raise ValueError(''.join(['unknown command line input, ',
+                                          arg, ', try -help for details']))
 
-            m = re.match(r'-rate=(.*)',arg)
-            if m:
-                rate = int(m.group(1))
-                IsFound = 1
-
-            m = re.match(r'-lat=(.*)',arg)
-            if m:
-                lat = int(m.group(1))
-                IsFound = 1
-
-            m = re.match(r'-lon=(.*)',arg)
-            if m:
-                lon = int(m.group(1))
-                IsFound = 1
-
-            m = re.match(r'-cut=(.*)',arg)
-            if m:
-                cut = m.group(1)
-                IsFound = 1
-
-            m = re.match(r'-alog',arg)
-            if m:
-                IsLog = 1
-                IsFound = 1
-
-            m = re.match(r'-h',arg)
-            if m:
-                help = 1
-                IsFound = 1
-
-            m = re.match(r'-wind',arg)
-            if m:
-                winds = 1
-                IsFound = 1
-
-            if IsFound==0 and not(arg==argv[0]):
-                filelist.append(arg)
-                m = re.match(r'(.*)bin',arg)
-                if m:
-                    IsGitm = 1
+            if len(split_arg) == 0:
+                if arg_type[akey] == bool:
+                    arg_val = True
                 else:
-                    IsGitm = 0
+                    raise ValueError('expected equality after flag {:}'.format(
+                        akey))
+            else:
+                if arg_type[akey] == int:
+                    arg_val = int(split_arg[1])
+                elif arg_type[akey] == float:
+                    arg_val] = float(split_arg[1])
+                elif arg_type[akey] == str:
+                    arg_val = split_arg[1]
+                else:
+                    # This is boolean input
+                    try:
+                        arg_val = bool(int(split_arg[1]))
+                    except ValueError:
+                        # Str raises "invalid literal for int() with base 10"
+                        if lower(split_arg[1])).find('t') == 0:
+                            arg_val = True
+                        elif lower(split_arg[1])).find('f') == 0:
+                            arg_val = False
+                        else:
+                            raise ValueError(''.join(['expected boolean input',
+                                                      ' for ', akey]))
 
-                    
-    args = {'filelist':filelist,
-            'IsGitm':IsGitm,
-            'var':var,
-            'cut':cut,
-            'diff':diff,
-            'movie':movie,
-            'ext':ext,
-            'rate':rate,
-            'tec':tec,
-            'help':help,
-            'winds':winds,
-            'alt':alt,
-            'lat':lat,
-            'lon':lon,
-            'IsLog':IsLog}
+            # Assign the output
+            if akey.find('tec') == 0:
+                args['var'] = 34
+            else:
+                args[akey] = arg_val
+        else:
+            # Save the filenames
+            args['filelist'].append(arg)
+
+            gitm = arg.find('bin') == len(arg) - 3
+
+            if len(args['filelist']) == 1:
+                args['gitm'] = gitm
+            elif gitm != args['gitm']:
+                raise ValueError('input files are of a mixed type')
+
+    # Update default movie extention for POSIX systems
+    if args['movie'] > 0 and args['ext'] == 'png':
+        if (os.name == "posix"):
+            args['ext'] = "mkv"
+        else:
+            args['ext'] = "mp4"
 
     return args
 
-#-----------------------------------------------------------------------------
-#-----------------------------------------------------------------------------
-# Main Code!
-#-----------------------------------------------------------------------------
-#-----------------------------------------------------------------------------
 
-args = get_args(sys.argv)
+def setup_movie_dir(movie_dir, overwrite=True):
+    """Set up a directory for movie files
 
-IsGitm = args['IsGitm']
+    Parameters
+    ----------
+    movie_dir : str
+        Output filename with directory, but no extention
+    overwrite : bool
+        Overwrite an existing movie of the same name (default=True)
 
-if (IsGitm):
-    header = read_gitm_header(args["filelist"])
-else:
-    header = read_aether_header(args["filelist"])
+    Returns
+    -------
+    img_names : str
+        Image name formatting string
 
-if (args["var"] >= header["nVars"]):
-    print('You asked for a variable that doesnt exist!!!')
-    args["help"] = 1
+    """
     
-if (args["help"]):
+    # Test the output directory for existence and existing image files
+    if os.path.isdir(movie_dir):
+        oldfiles = glob(os.path.join(movie_dir, "image_????.png"))
+        if len(oldfiles) > 0:
+            if overwrite:
+                for ofile in oldfiles:
+                    os.remove(ofile)
+            else:
+                raise IOError('files present in movie directory: {:}'.format(
+                    movie_dir))
+    else:
+        os.makedirs(movie_dir)
 
-    print('Usage : ')
-    print('gitm_plot_one_alt.py -var=N -tec -winds -cut=alt,lat,lon') 
-    print('                     -alt=alt -lat=lat -lon=lon -alog ')
-    print('                     -help [*.bin or a file]')
-    print('   -help : print this message')
-    print('   -var=number : number is variable to plot')
-    print('   -cut=alt,lat,lon : which cut you would like')
-    print('   -alt=altitude : can be either alt in km or grid number (closest)')
-    print('   -lat=latitude : latitude in degrees (closest)')
-    print('   -lon=longitude: longitude in degrees (closest)')
-    print('   -alog : plot the log of the variable')
-    print('   -winds: overplot winds')
-    print('   At end, list the files you want to plot')
-    print('   This code should work with GITM files (*.bin) and')
-    print('   Aether netCDF files (*.nc)')
+    # Create the movie image naming string
+    img_names = os.path.join(movie_dir, "image_{:04d}.png")
+
+    return img_names
+
+
+def save_movie(fileroot, ext='mp4', rate=30, overwrite=True):
+    """Save the output as a movie
+
+    Parameters
+    ----------
+    fileroot : str
+        Output filename with directory, but no extention
+    ext : str
+        Movie extention (default='mp4')
+    rate : int
+        Movie frame rate (default=30)
+    overwrite : bool
+        Overwrite an existing movie of the same name (default=True)
+
+    Notes
+    -----
+    Uses ffmpeg to create the movie, this must be installed for success
+
+    """
+    # Construct the output filenames
+    outfile = ".".join(fileroot, ext)
+    image_files = os.path.join(fileroot, 'image_%04d.png')
     
-    iVar = 0
-    for var in header["vars"]:
-        print(iVar,var)
-        iVar=iVar+1
+    # Test the output file
+    if os.path.isfile(outfile):
+        if overwrite:
+            os.remove(outfile)
+        else:
+            raise IOError('movie file {:} already exists'.format(outfile))
 
-    exit()
+    # Construct the movie commannd
+    command = "ffmpeg -r {:d} -i {:s} {:s}".format(rate, image_files, outfile)
+    os.system(command)
+    return
 
-        
-filelist = args["filelist"]
-nFiles = len(filelist)
 
-cut = args["cut"]
+def main():
+    # Get the input arguments
+    args = get_args(sys.argv)
 
-vars = [0,1,2]
-vars.append(args["var"])
+    if args['help'] and len(args['filelist']) == 0:
+        help_str = get_help()
+        print(help_str)
+        return
+
+    # Read the file header
+    if args['gitm']:
+        header = gitm_routines.read_gitm_header(args["filelist"])
+    else:
+        header = aether_routines.read_aether_header(args["filelist"])
+
+    # If help is requested for a specific file, return it here
+    if args['help']:
+        help_str = get_help(header['vars'])
+        print(help_str)
+        return
+
+    if args["var"] >= header["nVars"]:
+        raise ValueError("requested variable doesn't exist: {:d}>{:d}".format(
+            args["var"], header["nVars"]))
+
+    # Define the plotting inputs
+    plot_vars = [0, 1, 2, args["var"]]
 
 if (args["winds"]):
-    if (cut=='alt'):
+    if (args['cut']=='alt'):
         iUx_ = 16
         iUy_ = 17
-    if (cut=='lat'):
+    if (args['cut']=='lat'):
         iUx_ = 16
         iUy_ = 18
-    if (cut=='lon'):
+    if (args['cut']=='lon'):
         iUx_ = 17
         iUy_ = 18
-    vars.append(iUx_)
-    vars.append(iUy_)
+    plot_vars.append(iUx_)
+    plot_vars.append(iUy_)
     AllWindsX = []
     AllWindsY = []
 
@@ -245,24 +282,24 @@ AllTimes = []
 
 j = 0
 iCut = -1
-for file in filelist:
+for file in args['filelist']:
 
-    if (IsGitm):
-        data = read_gitm_one_file(file, vars)
+    if args['gitm']:
+        data = read_gitm_one_file(file, plot_vars)
         iVar_ = args["var"]
     else:
         if (j == 0):
             VarList = []
-            for v in vars:
+            for v in plot_vars:
                 VarList.append(header["vars"][v])
         data = read_aether_one_file(file, VarList)
         iVar_ = 3
     if (j == 0):
         [nLons, nLats, nAlts] = data[0].shape
         Alts = data[2][0][0]/1000.0;
-        Lons = data[0][:,0,0]*rtod;
-        Lats = data[1][0,:,0]*rtod;
-        if (cut == 'alt'):
+        Lons = np.degreed(data[0][:,0,0])
+        Lats = np.degreed(data[1][0,:,0])
+        if (args['cut'] == 'alt'):
             xPos = Lons
             yPos = Lats
             if (len(Alts) > 1):
@@ -280,7 +317,7 @@ for file in filelist:
             Alt = Alts[iAlt]
             iCut = iAlt
             
-        if (cut == 'lat'):
+        if (args['cut'] == 'lat'):
             xPos = Lons
             yPos = Alts
             if (args["lat"] < Lats[1]):
@@ -295,7 +332,7 @@ for file in filelist:
             Lat = Lats[iLat]
             iCut = iLat
             
-        if (cut == 'lon'):
+        if (args['cut'] == 'lon'):
             xPos = Lats
             yPos = Alts
             if (args["lon"] < Lons[1]):
@@ -321,20 +358,20 @@ for file in filelist:
             iAlt=iAlt+1
         AllData2D.append(tec/1e16)
     else:
-        if (cut == 'alt'):
+        if (args['cut'] == 'alt'):
             AllData2D.append(data[iVar_][:,:,iAlt])
-        if (cut == 'lat'):
+        if (args['cut'] == 'lat'):
             AllData2D.append(data[iVar_][:,iLat,:])
-        if (cut == 'lon'):
+        if (args['cut'] == 'lon'):
             AllData2D.append(data[iVar_][iLon,:,:])
         if (args["winds"]):
-            if (cut == 'alt'):
+            if (args['cut'] == 'alt'):
                 AllWindsX.append(data[iUx_][:,:,iAlt])
                 AllWindsY.append(data[iUy_][:,:,iAlt])
-            if (cut == 'lat'):
+            if (args['cut'] == 'lat'):
                 AllWindsX.append(data[iUx_][:,iLat,:])
                 AllWindsY.append(data[iUy_][:,iLat,:])
-            if (cut == 'lon'):
+            if (args['cut'] == 'lon'):
                 AllWindsX.append(data[iUx_][iLon,:,:])
                 AllWindsY.append(data[iUy_][iLon,:,:])
     j=j+1
@@ -359,7 +396,7 @@ if (Negative):
     maxi = np.max(abs(AllData2D))*1.05
     mini = -maxi
 
-if (cut == 'alt'):
+if (args['cut'] == 'alt'):
     maskNorth = ((yPos>45) & (yPos<90.0))
     maskSouth = ((yPos<-45) & (yPos>-90.0))
     DoPlotNorth = np.max(maskNorth)
@@ -389,17 +426,12 @@ minY = (yPos[ 1] + yPos[ 2])/2
 maxY = (yPos[-2] + yPos[-3])/2
 
 file = "var%2.2d_" % args["var"]
-file = file+cut+"%3.3d" % iCut
+file = file+args['cut']+"%3.3d" % iCut
 
-IsMovie = args["movie"]
-
-if (IsMovie):
-    command = "rm -rf "+file
-    print(command)
-    os.system(command)
-    command = "mkdir "+file
-    print(command)
-    os.system(command)
+if args['movies'] > 0:
+    img_file_fmt = setup_movie_dir(file)
+else:
+    img_file_fmt = "".join(file, '_', "{:}.", args['ext'])
 
 iter = 0
 for time in AllTimes:
@@ -410,25 +442,23 @@ for time in AllTimes:
     fig = plt.figure(constrained_layout=False,
                      tight_layout=True, figsize=(10, 8.5))
 
-    gs1 = GridSpec(nrows=2, ncols=2, wspace=0.0, hspace=0)
-    gs = GridSpec(nrows=2, ncols=2, wspace=0.0, left=0.0, right=0.9)
+    gs1 = mpl.gridspec.GridSpec(nrows=2, ncols=2, wspace=0.0, hspace=0)
+    gs = mpl.gridspec.GridSpec(nrows=2, ncols=2, wspace=0.0, left=0.0,
+                               right=0.9)
 
-    norm = cm.colors.Normalize(vmax=mini, vmin=maxi)
+    norm = mpl.cm.colors.Normalize(vmax=mini, vmin=maxi)
     if (mini >= 0):
-        cmap = cm.plasma
+        cmap = mpl.cm.plasma
     else:
-        cmap = cm.bwr
+        cmap = mpl.cm.bwr
 
     d2d = np.transpose(AllData2D[iter])
     if (args["winds"]):
         Ux2d = np.transpose(AllWindsX[iter])
         Uy2d = np.transpose(AllWindsY[iter])
 
-    sTime = time.strftime('%y%m%d_%H%M%S')
-    if (IsMovie):
-        outfile = file+"/image_%4.4d.png" % iter
-    else:
-        outfile = file+'_'+sTime+'.png'
+    fmt_input = iter if args['movie'] > 0 else time.strftime('%y%m%d_%H%M%S')
+    outfile = img_file_fmt.format(fmt_input)
 
     ax = fig.add_subplot(gs1[1, :2])
 
@@ -439,18 +469,18 @@ for time in AllTimes:
     ax.set_ylim([minY,maxY])
     ax.set_xlim([minX,maxX])
 
-    if (cut == 'alt'):
+    if (args['cut'] == 'alt'):
         ax.set_ylabel('Latitude (deg)')
         ax.set_xlabel('Longitude (deg)')
         title = time.strftime('%b %d, %Y %H:%M:%S')+'; Alt : '+"%.2f" % Alt + ' km'
         ax.set_aspect(1.0)
 
-    if (cut == 'lat'):
+    if (args['cut'] == 'lat'):
         ax.set_xlabel('Longitude (deg)')
         ax.set_ylabel('Altitude (km)')
         title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lat : '+"%.2f" % Lat + ' km'
 
-    if (cut == 'lon'):
+    if (args['cut'] == 'lon'):
         ax.set_xlabel('Latitude (deg)')
         ax.set_ylabel('Altitude (km)')
         title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lon : '+"%.2f" % Lon + ' km'
@@ -459,7 +489,7 @@ for time in AllTimes:
     cbar = fig.colorbar(cax, ax=ax, shrink = 0.75, pad=0.02)
     cbar.set_label(Var,rotation=90)
 
-    if (cut == 'alt'):
+    if (args['cut'] == 'alt'):
         
         if (DoPlotNorth):
             # Top Left Graph Northern Hemisphere
@@ -501,15 +531,5 @@ for time in AllTimes:
 
     iter = iter + 1
 
-if (IsMovie):
-
-    rate = "%d" % args["rate"]
-
-    command = "/bin/rm -f " + file + "." + args["ext"]
-    print(command)
-    os.system(command)
-    
-    command = "ffmpeg -r " + rate + \
-        " -i " + file + "/image_%04d.png " + file + "." + args["ext"]
-    print(command)
-    os.system(command)
+if args['movie'] > 0:
+    save_movie(file, ext=args['ext'], rate=args['movie'])
