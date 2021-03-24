@@ -10,7 +10,7 @@ mv Aether Aether.test_from_scrath
 cd Aether.test_from_scrath
 
 # 1. Change the line below to set the BRANCH to test:
-git checkout indices
+git checkout electrodynamics
 
 # 2. Change the line before to set the OS to test:
 cd src ; rm -f Makefile.OS ; cp Makefile.ubuntu Makefile.OS ; cd ..
