@@ -9,7 +9,7 @@ import os
 
 from aetherpy.io import read_routines
 from aetherpy.utils import inputs
-from aetherpy.plot import movie_routines 
+from aetherpy.plot import data_prep, movie_routines
 
 
 #-----------------------------------------------------------------------------
@@ -177,162 +177,113 @@ def main():
     # Define the plotting inputs
     plot_vars = [0, 1, 2, args["var"]]
 
-if (args["winds"]):
-    if (args['cut']=='alt'):
-        iUx_ = 16
-        iUy_ = 17
-    if (args['cut']=='lat'):
-        iUx_ = 16
-        iUy_ = 18
-    if (args['cut']=='lon'):
-        iUx_ = 17
-        iUy_ = 18
-    plot_vars.append(iUx_)
-    plot_vars.append(iUy_)
-    AllWindsX = []
-    AllWindsY = []
+    # Update plotting variables to include the wind, if desired
+    if args["winds"]:
+        plot_vars.append(16 if args['cut'] in ['alt', 'lat'] else 17)
+        plot_vars.append(18 if args['cut'] in ['lat', 'lon'] else 17)
+        all_winds_x = []
+        all_winds_y = []
 
-Var = header["vars"][args["var"]]
+    # Prepare to load the desired file data
+    var = header["vars"][args["var"]]
+    ivar = args["var"]
 
-iVar_ = args["var"]
+    all_2dim_data = []
+    all_times = []
 
-AllData2D = []
-AllAlts = []
-AllTimes = []
+    icut = -1
+    for j, filename in enumerate(args['filelist']):
+        # Read in the data file
+        if args['gitm']:
+            data = read_routines.read_gitm_file(filename, plot_vars)
+            ivar = args["var"]
+        else:
+            if j == 0:
+                var_list = []
+                for pvar in plot_vars:
+                    var_list.append(header["vars"][pvar])
+            data = read_routines.read_aether_file(filename, var_list)
+            ivar = 3
 
-j = 0
-iCut = -1
-for file in args['filelist']:
+        # For the first file, initialize the necessary plotting data
+        if j == 0:
+            nlons, nlats, nalts = data[0].shape
 
-    if args['gitm']:
-        data = read_gitm_one_file(file, plot_vars)
-        iVar_ = args["var"]
-    else:
-        if (j == 0):
-            VarList = []
-            for v in plot_vars:
-                VarList.append(header["vars"][v])
-        data = read_aether_one_file(file, VarList)
-        iVar_ = 3
-    if (j == 0):
-        [nLons, nLats, nAlts] = data[0].shape
-        Alts = data[2][0][0]/1000.0;
-        Lons = np.degreed(data[0][:,0,0])
-        Lats = np.degreed(data[1][0,:,0])
-        if (args['cut'] == 'alt'):
-            xPos = Lons
-            yPos = Lats
-            if (len(Alts) > 1):
-                if (args["alt"] < 50):
-                    iAlt = args["alt"]
-                else:
-                    if (args["alt"] > Alts[nAlts-3]):
-                        iAlt = nAlts-3
-                    else:
-                        iAlt = 2
-                        while (Alts[iAlt] < args["alt"]):
-                            iAlt=iAlt+1
-            else:
-                iAlt = 0
-            Alt = Alts[iAlt]
-            iCut = iAlt
-            
-        if (args['cut'] == 'lat'):
-            xPos = Lons
-            yPos = Alts
-            if (args["lat"] < Lats[1]):
-                iLat = int(nLats/2)
-            else:
-                if (args["lat"] > Lats[nLats-2]):
-                    iLat = int(nLats/2)
-                else:
-                    iLat = 2
-                    while (Lats[iLat] < args["lat"]):
-                        iLat=iLat+1
-            Lat = Lats[iLat]
-            iCut = iLat
-            
-        if (args['cut'] == 'lon'):
-            xPos = Lats
-            yPos = Alts
-            if (args["lon"] < Lons[1]):
-                iLon = int(nLons/2)
-            else:
-                if (args["lon"] > Lons[nLons-2]):
-                    iLon = int(nLons/2)
-                else:
-                    iLon = 2
-                    while (Lons[iLon] < args["lon"]):
-                        iLon=iLon+1
-            Lon = Lons[iLon]
-            iCut = iLon
-                        
-    AllTimes.append(data["time"])
+            # Get 1D arrays for the coordinates
+            alts = data[2][0][0] / 1000.0;  # Convert from m to km
+            lons = np.degrees(data[0][:, 0, 0])  # Convert from rad to deg
+            lats = np.degrees(data[1][0, :, 0])  # Convert from rad to deg
+
+            # Find the desired index to cut along to get a 2D slice
+            icut, x_pos, y_pos, z_val = data_prep.get_cut_index(
+                lons, lats, alts, args[args['cut']], args['cut'])
+
+              # HERE          
+    all_times.append(data["time"])
     
     if (args["tec"]):
-        iAlt = 2
-        tec = np.zeros((nLons, nLats))
-        for Alt in Alts:
-            if (iAlt > 0 and iAlt < nAlts-3):
-                tec = tec + data[iVar_][:,:,iAlt] * (Alts[iAlt+1]-Alts[iAlt-1])/2 * 1000.0
-            iAlt=iAlt+1
-        AllData2D.append(tec/1e16)
+        ialt = 2
+        tec = np.zeros((nlons, nlats))
+        for alt in alts:
+            if (ialt > 0 and ialt < nalts-3):
+                tec = tec + data[ivar][:,:,ialt] * (alts[ialt+1]-alts[ialt-1])/2 * 1000.0
+            ialt=ialt+1
+        all_2dim_data.append(tec/1e16)
     else:
         if (args['cut'] == 'alt'):
-            AllData2D.append(data[iVar_][:,:,iAlt])
+            all_2dim_data.append(data[ivar][:,:,ialt])
         if (args['cut'] == 'lat'):
-            AllData2D.append(data[iVar_][:,iLat,:])
+            all_2dim_data.append(data[ivar][:,ilat,:])
         if (args['cut'] == 'lon'):
-            AllData2D.append(data[iVar_][iLon,:,:])
+            all_2dim_data.append(data[ivar][ilon,:,:])
         if (args["winds"]):
             if (args['cut'] == 'alt'):
-                AllWindsX.append(data[iUx_][:,:,iAlt])
-                AllWindsY.append(data[iUy_][:,:,iAlt])
+                all_winds_x.append(data[iUx_][:,:,ialt])
+                all_winds_y.append(data[iUy_][:,:,ialt])
             if (args['cut'] == 'lat'):
-                AllWindsX.append(data[iUx_][:,iLat,:])
-                AllWindsY.append(data[iUy_][:,iLat,:])
+                all_winds_x.append(data[iUx_][:,ilat,:])
+                all_winds_y.append(data[iUy_][:,ilat,:])
             if (args['cut'] == 'lon'):
-                AllWindsX.append(data[iUx_][iLon,:,:])
-                AllWindsY.append(data[iUy_][iLon,:,:])
-    j=j+1
+                all_winds_x.append(data[iUx_][ilon,:,:])
+                all_winds_y.append(data[iUy_][ilon,:,:])
     
 
-AllData2D = np.array(AllData2D)
+all_2dim_data = np.array(all_2dim_data)
 if (args['IsLog']):
-    AllData2D = np.log10(AllData2D)
+    all_2dim_data = np.log10(all_2dim_data)
 if (args["winds"]):
-    AllWindsX = np.array(AllWindsX)
-    AllWindsY = np.array(AllWindsY)
+    all_winds_x = np.array(all_winds_x)
+    all_winds_y = np.array(all_winds_y)
 
 Negative = 0
 
-maxi  = np.max(AllData2D)*1.01
-mini  = np.min(AllData2D)*0.99
+maxi  = np.max(all_2dim_data)*1.01
+mini  = np.min(all_2dim_data)*0.99
 
 if (mini < 0):
     Negative = 1
 
 if (Negative):
-    maxi = np.max(abs(AllData2D))*1.05
+    maxi = np.max(abs(all_2dim_data))*1.05
     mini = -maxi
 
 if (args['cut'] == 'alt'):
-    maskNorth = ((yPos>45) & (yPos<90.0))
-    maskSouth = ((yPos<-45) & (yPos>-90.0))
+    maskNorth = ((y_pos>45) & (y_pos<90.0))
+    maskSouth = ((y_pos<-45) & (y_pos>-90.0))
     DoPlotNorth = np.max(maskNorth)
     DoPlotSouth = np.max(maskSouth)
     if (DoPlotNorth):
-        maxiN = np.max(abs(AllData2D[:,:,maskNorth]))*1.05
+        maxiN = np.max(abs(all_2dim_data[:,:,maskNorth]))*1.05
         if (Negative):
             miniN = -maxiN
         else:
-            miniN = np.min(AllData2D[:,:,maskNorth])*0.95
+            miniN = np.min(all_2dim_data[:,:,maskNorth])*0.95
     if (DoPlotSouth):
-        maxiS = np.max(abs(AllData2D[:,:,maskSouth]))*1.05
+        maxiS = np.max(abs(all_2dim_data[:,:,maskSouth]))*1.05
         if (Negative):
             miniS = -maxiS
         else:
-            miniS = np.min(AllData2D[:,:,maskSouth])*0.95
+            miniS = np.min(all_2dim_data[:,:,maskSouth])*0.95
     
 dr = (maxi-mini)/31
 levels = np.arange(mini, maxi, dr)
@@ -340,21 +291,21 @@ levels = np.arange(mini, maxi, dr)
 i = 0
 
 # Define plot range:
-minX = (xPos[ 1] + xPos[ 2])/2
-maxX = (xPos[-2] + xPos[-3])/2
-minY = (yPos[ 1] + yPos[ 2])/2
-maxY = (yPos[-2] + yPos[-3])/2
+minX = (x_pos[ 1] + x_pos[ 2])/2
+maxX = (x_pos[-2] + x_pos[-3])/2
+minY = (y_pos[ 1] + y_pos[ 2])/2
+maxY = (y_pos[-2] + y_pos[-3])/2
 
-file = "var%2.2d_" % args["var"]
-file = file+args['cut']+"%3.3d" % iCut
+filename = "var%2.2d_" % args["var"]
+filename = filename+args['cut']+"%3.3d" % icut
 
 if args['movies'] > 0:
-    img_file_fmt = movie_routines.setup_movie_dir(file)
+    img_file_fmt = movie_routines.setup_movie_dir(filename)
 else:
-    img_file_fmt = "".join(file, '_', "{:}.", args['ext'])
+    img_file_fmt = "".join(filename, '_', "{:}.", args['ext'])
 
 iter = 0
-for time in AllTimes:
+for time in all_times:
 
     ut = time.hour + time.minute/60.0 + time.second/3600.0
     shift = ut * 15.0
@@ -372,51 +323,51 @@ for time in AllTimes:
     else:
         cmap = mpl.cm.bwr
 
-    d2d = np.transpose(AllData2D[iter])
+    d2d = np.transpose(all_2dim_data[iter])
     if (args["winds"]):
-        Ux2d = np.transpose(AllWindsX[iter])
-        Uy2d = np.transpose(AllWindsY[iter])
+        Ux2d = np.transpose(all_winds_x[iter])
+        Uy2d = np.transpose(all_winds_y[iter])
 
     fmt_input = iter if args['movie'] > 0 else time.strftime('%y%m%d_%H%M%S')
     outfile = img_file_fmt.format(fmt_input)
 
     ax = fig.add_subplot(gs1[1, :2])
 
-    cax = ax.pcolor(xPos, yPos, d2d, vmin=mini, vmax=maxi, cmap=cmap)
+    cax = ax.pcolor(x_pos, y_pos, d2d, vmin=mini, vmax=maxi, cmap=cmap)
 
     if (args["winds"]):
-        ax.quiver(xPos,yPos,Ux2d,Uy2d)
+        ax.quiver(x_pos,y_pos,Ux2d,Uy2d)
     ax.set_ylim([minY,maxY])
     ax.set_xlim([minX,maxX])
 
     if (args['cut'] == 'alt'):
         ax.set_ylabel('Latitude (deg)')
         ax.set_xlabel('Longitude (deg)')
-        title = time.strftime('%b %d, %Y %H:%M:%S')+'; Alt : '+"%.2f" % Alt + ' km'
+        title = time.strftime('%b %d, %Y %H:%M:%S')+'; alt : '+"%.2f" % z_val + ' km'
         ax.set_aspect(1.0)
 
     if (args['cut'] == 'lat'):
         ax.set_xlabel('Longitude (deg)')
         ax.set_ylabel('Altitude (km)')
-        title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lat : '+"%.2f" % Lat + ' km'
+        title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lat : '+"%.2f" % z_val + ' km'
 
     if (args['cut'] == 'lon'):
         ax.set_xlabel('Latitude (deg)')
         ax.set_ylabel('Altitude (km)')
-        title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lon : '+"%.2f" % Lon + ' km'
+        title = time.strftime('%b %d, %Y %H:%M:%S')+'; Lon : '+"%.2f" % z_val + ' km'
 
     ax.set_title(title)
     cbar = fig.colorbar(cax, ax=ax, shrink = 0.75, pad=0.02)
-    cbar.set_label(Var,rotation=90)
+    cbar.set_label(var,rotation=90)
 
     if (args['cut'] == 'alt'):
         
         if (DoPlotNorth):
             # Top Left Graph Northern Hemisphere
             ax2 = fig.add_subplot(gs[0, 0],projection='polar')
-            r, theta = np.meshgrid(90.0-yPos[maskNorth], \
-                                   (xPos+shift-90.0)*3.14159/180.0)
-            cax2 = ax2.pcolor(theta, r, AllData2D[iter][:,maskNorth], \
+            r, theta = np.meshgrid(90.0-y_pos[maskNorth], \
+                                   (x_pos+shift-90.0)*3.14159/180.0)
+            cax2 = ax2.pcolor(theta, r, all_2dim_data[iter][:,maskNorth], \
                               vmin=miniN, vmax=maxiN, cmap=cmap)
             xlabels = ['', '12', '18', '00']
             ylabels = ['80', '70', '60', '50']
@@ -430,10 +381,10 @@ for time in AllTimes:
             
         if (DoPlotSouth):
             # Top Right Graph Southern Hemisphere
-            r, theta = np.meshgrid(90.0+yPos[maskSouth], \
-                                   (xPos+shift-90.0)*3.14159/180.0)
+            r, theta = np.meshgrid(90.0+y_pos[maskSouth], \
+                                   (x_pos+shift-90.0)*3.14159/180.0)
             ax3 = fig.add_subplot(gs[0, 1],projection='polar')
-            cax3 = ax3.pcolor(theta, r, AllData2D[iter][:,maskSouth], \
+            cax3 = ax3.pcolor(theta, r, all_2dim_data[iter][:,maskSouth], \
                               vmin=miniS, vmax=maxiS, cmap=cmap)
             xlabels = ['', '12', '18', '00']
             ylabels = ['80', '70', '60', '50']
@@ -452,4 +403,4 @@ for time in AllTimes:
     iter = iter + 1
 
 if args['movie'] > 0:
-    movie_routines.save_movie(file, ext=args['ext'], rate=args['movie'])
+    movie_routines.save_movie(filename, ext=args['ext'], rate=args['movie'])
