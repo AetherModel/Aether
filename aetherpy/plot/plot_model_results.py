@@ -2,20 +2,19 @@
 """ Standard model visualization routines
 """
 
-from glob import glob
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import re
-import sys
 
-
-import gitm_routines
-import aether_routines
+from aetherpy.io import read_routines
+from aetherpy.utils import inputs
+from aetherpy.plot import movie_routines 
 
 
 #-----------------------------------------------------------------------------
+# Define the support routines
+
 def get_help(file_vars=None):
     """ Provide string explaining how to run the command line interface
 
@@ -92,7 +91,7 @@ def get_command_line_args(argv):
                 'movie': int, 'ext': str}
 
     # Cycle through all arguments except the first, saving input
-    for arg in argv[1:]:
+    for arg in argv:
         # Treat the file list and formatting seperately
         if arg.find('-') == 0:
             # This is not a filename, remove the dash to get the key
@@ -119,17 +118,7 @@ def get_command_line_args(argv):
                     arg_val = split_arg[1]
                 else:
                     # This is boolean input
-                    try:
-                        arg_val = bool(int(split_arg[1]))
-                    except ValueError:
-                        # Str raises "invalid literal for int() with base 10"
-                        if lower(split_arg[1])).find('t') == 0:
-                            arg_val = True
-                        elif lower(split_arg[1])).find('f') == 0:
-                            arg_val = False
-                        else:
-                            raise ValueError(''.join(['expected boolean input',
-                                                      ' for ', akey]))
+                    arg_val = inputs.bool_string(split_arg[1])
 
             # Assign the output
             if akey.find('tec') == 0:
@@ -157,81 +146,12 @@ def get_command_line_args(argv):
     return args
 
 
-def setup_movie_dir(movie_dir, overwrite=True):
-    """Set up a directory for movie files
-
-    Parameters
-    ----------
-    movie_dir : str
-        Output filename with directory, but no extention
-    overwrite : bool
-        Overwrite an existing movie of the same name (default=True)
-
-    Returns
-    -------
-    img_names : str
-        Image name formatting string
-
-    """
-    
-    # Test the output directory for existence and existing image files
-    if os.path.isdir(movie_dir):
-        oldfiles = glob(os.path.join(movie_dir, "image_????.png"))
-        if len(oldfiles) > 0:
-            if overwrite:
-                for ofile in oldfiles:
-                    os.remove(ofile)
-            else:
-                raise IOError('files present in movie directory: {:}'.format(
-                    movie_dir))
-    else:
-        os.makedirs(movie_dir)
-
-    # Create the movie image naming string
-    img_names = os.path.join(movie_dir, "image_{:04d}.png")
-
-    return img_names
-
-
-def save_movie(fileroot, ext='mp4', rate=30, overwrite=True):
-    """Save the output as a movie
-
-    Parameters
-    ----------
-    fileroot : str
-        Output filename with directory, but no extention
-    ext : str
-        Movie extention (default='mp4')
-    rate : int
-        Movie frame rate (default=30)
-    overwrite : bool
-        Overwrite an existing movie of the same name (default=True)
-
-    Notes
-    -----
-    Uses ffmpeg to create the movie, this must be installed for success
-
-    """
-    # Construct the output filenames
-    outfile = ".".join(fileroot, ext)
-    image_files = os.path.join(fileroot, 'image_%04d.png')
-    
-    # Test the output file
-    if os.path.isfile(outfile):
-        if overwrite:
-            os.remove(outfile)
-        else:
-            raise IOError('movie file {:} already exists'.format(outfile))
-
-    # Construct the movie commannd
-    command = "ffmpeg -r {:d} -i {:s} {:s}".format(rate, image_files, outfile)
-    os.system(command)
-    return
-
+#-----------------------------------------------------------------------------
+# Define the main routine
 
 def main():
     # Get the input arguments
-    args = get_args(sys.argv)
+    args = get_command_line_args(inputs.process_command_line_input())
 
     if args['help'] and len(args['filelist']) == 0:
         help_str = get_help()
@@ -240,9 +160,9 @@ def main():
 
     # Read the file header
     if args['gitm']:
-        header = gitm_routines.read_gitm_header(args["filelist"])
+        header = read_routines.read_gitm_header(args["filelist"])
     else:
-        header = aether_routines.read_aether_header(args["filelist"])
+        header = aether_routines.read_aether_headers(args["filelist"])
 
     # If help is requested for a specific file, return it here
     if args['help']:
@@ -250,9 +170,9 @@ def main():
         print(help_str)
         return
 
-    if args["var"] >= header["nVars"]:
+    if args["var"] >= len(header["vars"]):
         raise ValueError("requested variable doesn't exist: {:d}>{:d}".format(
-            args["var"], header["nVars"]))
+            args["var"], len(header["vars"])))
 
     # Define the plotting inputs
     plot_vars = [0, 1, 2, args["var"]]
@@ -429,7 +349,7 @@ file = "var%2.2d_" % args["var"]
 file = file+args['cut']+"%3.3d" % iCut
 
 if args['movies'] > 0:
-    img_file_fmt = setup_movie_dir(file)
+    img_file_fmt = movie_routines.setup_movie_dir(file)
 else:
     img_file_fmt = "".join(file, '_', "{:}.", args['ext'])
 
@@ -532,4 +452,4 @@ for time in AllTimes:
     iter = iter + 1
 
 if args['movie'] > 0:
-    save_movie(file, ext=args['ext'], rate=args['movie'])
+    movie_routines.save_movie(file, ext=args['ext'], rate=args['movie'])
