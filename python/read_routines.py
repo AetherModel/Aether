@@ -40,7 +40,7 @@ def read_aether_header(filelist, find=-1):
     header = {"nfiles": len(filelist), "version": 0.1, "nlons": 0, "nlats": 0,
               "nalts": 0, "nvars": 0, "vars": [], "time": [],
               "filename": [filelist[find]]}
-    
+
     with Dataset(filelist[find], 'r') as ncfile:
         header["nvars"] = 0
         for var in ncfile.variables.values():
@@ -55,7 +55,7 @@ def read_aether_header(filelist, find=-1):
         header["time"].append(epoch_to_datetime(time[0]))
 
     return header
-    
+
 
 def read_aether_file(filename, file_vars):
     """ Read in list of variables from a netCDF file
@@ -80,10 +80,9 @@ def read_aether_file(filename, file_vars):
         # Save the data as numpy arrays, using variable index as a key
         data = {i_var: np.array(ncfile.variables[var])
                 for i_var, var in enumerate(file_vars)}
-        
+
         # Calculate the date and time for this data
         time = np.array(ncfile.variables['Time'])
         data['time'] = epoch_to_datetime(time[0])
 
     return data
-    
