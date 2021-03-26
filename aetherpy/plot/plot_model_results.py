@@ -191,7 +191,6 @@ def main():
     all_2dim_data = []
     all_times = []
 
-    icut = -1
     for j, filename in enumerate(args['filelist']):
         # Read in the data file
         if args['gitm']:
@@ -207,54 +206,41 @@ def main():
 
         # For the first file, initialize the necessary plotting data
         if j == 0:
-            nlons, nlats, nalts = data[0].shape
-
             # Get 1D arrays for the coordinates
-            alts = data[2][0][0] / 1000.0;  # Convert from m to km
+            alts = data[2][0][0] / 1000.0  # Convert from m to km
             lons = np.degrees(data[0][:, 0, 0])  # Convert from rad to deg
             lats = np.degrees(data[1][0, :, 0])  # Convert from rad to deg
 
             # Find the desired index to cut along to get a 2D slice
-            icut, x_pos, y_pos, z_val = data_prep.get_cut_index(
+            icut, cut_data, x_pos, y_pos, z_val = data_prep.get_cut_index(
                 lons, lats, alts, args[args['cut']], args['cut'])
 
-              # HERE          
-    all_times.append(data["time"])
-    
-    if (args["tec"]):
-        ialt = 2
-        tec = np.zeros((nlons, nlats))
-        for alt in alts:
-            if (ialt > 0 and ialt < nalts-3):
-                tec = tec + data[ivar][:,:,ialt] * (alts[ialt+1]-alts[ialt-1])/2 * 1000.0
-            ialt=ialt+1
-        all_2dim_data.append(tec/1e16)
-    else:
-        if (args['cut'] == 'alt'):
-            all_2dim_data.append(data[ivar][:,:,ialt])
-        if (args['cut'] == 'lat'):
-            all_2dim_data.append(data[ivar][:,ilat,:])
-        if (args['cut'] == 'lon'):
-            all_2dim_data.append(data[ivar][ilon,:,:])
-        if (args["winds"]):
-            if (args['cut'] == 'alt'):
-                all_winds_x.append(data[iUx_][:,:,ialt])
-                all_winds_y.append(data[iUy_][:,:,ialt])
-            if (args['cut'] == 'lat'):
-                all_winds_x.append(data[iUx_][:,ilat,:])
-                all_winds_y.append(data[iUy_][:,ilat,:])
-            if (args['cut'] == 'lon'):
-                all_winds_x.append(data[iUx_][ilon,:,:])
-                all_winds_y.append(data[iUy_][ilon,:,:])
-    
 
-all_2dim_data = np.array(all_2dim_data)
-if (args['IsLog']):
-    all_2dim_data = np.log10(all_2dim_data)
-if (args["winds"]):
-    all_winds_x = np.array(all_winds_x)
-    all_winds_y = np.array(all_winds_y)
+        # Save the time data
+        all_times.append(data["time"])
 
+        # Save the z-axis data
+        if args["tec"]:
+            all_2dim_data.append(data_prep.calc_tec(alts, data[ivar], 2, -4))
+        else:
+            all_2dim_data.append(data[ivar][cut_data])
+
+            if (args["winds"]):
+                all_winds_x.append(data[plot_vars[-1]][cut_data])
+                all_winds_y.append(data[plot_vars[-1]][cut_data])
+
+    # Convert data list to a numpy array
+    all_2dim_data = np.array(all_2dim_data)
+
+    if args["winds"]:
+        all_winds_x = np.array(all_winds_x)
+        all_winds_y = np.array(all_winds_y)
+
+    # If desired, take the log of the data
+    if args['log']:
+        all_2dim_data = np.log10(all_2dim_data)
+
+# HERE
 Negative = 0
 
 maxi  = np.max(all_2dim_data)*1.01
