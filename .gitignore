@@ -9,3 +9,6 @@
 
 # Run directories
 run*
+
+# Python extras
+__pycache__
