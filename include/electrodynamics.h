@@ -32,6 +32,9 @@ class Electrodynamics {
   void set_ae(float value);
   void set_kp(float value);
   
+  /**************************************************************
+   * 
+   **/
   fmat get_potential(Report report);
   fmat get_eflux(Report report);
   fmat get_avee(Report report);
