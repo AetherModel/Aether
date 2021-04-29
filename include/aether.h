@@ -26,6 +26,8 @@ using namespace arma;
 
 #include "bfield.h"
 
+#include "electrodynamics.h"
+
 #include "euv.h"
 #include "calc_euv.h"
 #include "chemistry.h"

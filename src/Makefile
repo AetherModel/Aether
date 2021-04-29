@@ -36,6 +36,7 @@ OBJECTS = \
 	report.o\
 	solver_chemistry.o\
 	solver_conduction.o\
+	solver_interpolation.o\
 	time_conversion.o\
 	transform.o
 
