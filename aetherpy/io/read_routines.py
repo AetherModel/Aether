@@ -47,7 +47,7 @@ def read_aether_headers(filelist, finds=-1):
 
     # Ensure the filelist is array-like, allowing slicing of input
     file_list = np.asarray(filelist)
-    header['filename'] = list(file_list[finds])
+    header['filename'] = file_list
 
     # Read the header info from the desired files
     for filename in header['filename']:
@@ -80,8 +80,8 @@ def read_aether_headers(filelist, finds=-1):
                                        'variables in file ', filename]))
 
             # Add the time for this file
-            header["time"].append(
-                epoch_to_datetime(ncfile.variables['Time'][0]))
+            t = np.double(ncfile.variables['Time'][0])
+            header["time"].append(epoch_to_datetime(t))
 
     return header
 
