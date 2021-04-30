@@ -134,8 +134,9 @@ def calc_time_shift(utime):
         Time shift in degrees
 
     """
-    uth = utime.hour + (utime.minute + (utime.second + ut.microsecond * 1.0e-6)
-                        / 60.0) / 60.0
+    uth = utime.hour + \
+        (utime.minute + \
+         (utime.second + utime.microsecond * 1.0e-6) / 60.0) / 60.0
     shift = uth * 15.0
 
     return shift
