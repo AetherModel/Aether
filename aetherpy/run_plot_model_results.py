@@ -84,11 +84,12 @@ def get_command_line_args(argv):
 
     """
     # Initialize the arguments to their default values
-    args = {'filelist': [], 'log': False, 'var': 15, 'alt': 400,
+    args = {'filelist': [], 'log': False, 'var': 15, 'alt': 400, 'tec': False,
             'lon': np.nan, 'lat': np.nan, 'cut': 'alt', 'winds': False,
             'diff': False, 'gitm': False, 'movie': 0, 'ext': 'png'}
 
     arg_type = {'filelist': list, 'log': bool, 'var': int, 'alt': int,
+                'tec': bool,
                 'lon': float, 'lat': float, 'cut': str, 'help': bool,
                 'winds': bool, 'diff': bool, 'gitm': bool, 'tec': bool,
                 'movie': int, 'ext': str}
@@ -168,7 +169,8 @@ def plot_model_results():
     if args['gitm']:
         header = read_routines.read_gitm_headers(args["filelist"])
     else:
-        header = read_routines.read_aether_headers(args["filelist"])
+        files = args["filelist"]
+        header = read_routines.read_aether_headers(files)
 
     # If help is requested for a specific file, return it here
     if args['help']:
@@ -286,10 +288,10 @@ def plot_model_results():
     # Prepare the output filename
     filename = "var{:02d}_{:s}{:03d}".format(args["var"], args['cut'], icut)
 
-    if args['movies'] > 0:
+    if args['movie'] > 0:
         img_file_fmt = movie_routines.setup_movie_dir(filename)
     else:
-        img_file_fmt = "".join(filename, '_', "{:}.", args['ext'])
+        img_file_fmt = filename+'_{:}.'+args['ext']
 
     # Create a plot for each time
     for itime, utime in enumerate(all_times):
@@ -302,7 +304,7 @@ def plot_model_results():
                                    right=0.9)
         ax = fig.add_subplot(gs1[1, :2])
 
-        # Plot the main data
+        # Plot the global data set (square plot at bottom if three plots):
         con = ax.pcolor(x_pos, y_pos, all_2dim_data[itime].transpose(),
                         vmin=mini, vmax=maxi, cmap=cmap)
 
