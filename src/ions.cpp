@@ -164,3 +164,30 @@ void Ions::fill_electrons(Report &report) {
   report.exit(function);
   return;
 }
+
+//----------------------------------------------------------------------
+// return the index of the requested species
+// This will return -1 if the species is not found or name is empty
+// Will return nIons for electrons
+//----------------------------------------------------------------------
+
+int Ions::get_species_id(std::string name, Report &report) {
+
+  std::string function = "Ions::get_species_id";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iSpecies;
+  int id_ = -1;
+
+  if (name.length() > 0) {
+    for (iSpecies = 0; iSpecies <= nIons; iSpecies++)
+      if (name == species[iSpecies].cName) {
+        id_ = iSpecies;
+        break;
+      }
+  }
+
+  return id_;
+}
+  
