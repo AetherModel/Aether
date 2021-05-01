@@ -159,30 +159,15 @@ void Chemistry::find_species_id(std::string name,
   report.enter(function, iFunction);
 
   int iSpecies;
-
-  id_ = -1;
   IsNeutral = -1;
-  if (name.length() > 0) {
-
-    // Check Neutrals:
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      if (name == neutrals.species[iSpecies].cName) {
-        id_ = iSpecies;
-        IsNeutral = 1;
-        break;
-      }
-
-    if (id_ == -1) {
-      // Check Ions:
-      for (iSpecies = 0; iSpecies <= nIons; iSpecies++)
-        if (name == ions.species[iSpecies].cName) {
-          id_ = iSpecies;
-          IsNeutral = 0;
-          break;
-        }
-    }
+  
+  id_ = neutrals.get_species_id(name, report);
+  if (id_ > -1) {
+    IsNeutral = 1;
+  } else {
+    id_ = ions.get_species_id(name, report);
   }
-
+  
   report.exit(function);
   return;
 }
