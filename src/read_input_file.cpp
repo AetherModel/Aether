@@ -139,6 +139,14 @@ int Inputs::read(Times &time, Report &report) {
       }
 
       // ---------------------------
+      // #collisions
+      // ---------------------------
+
+      if (hash == "#collisions") {
+        collision_file = read_string(infile_ptr, hash);
+      }
+
+      // ---------------------------
       // #omniweb
       // This can actually be called multiple times:
       // ---------------------------
