@@ -29,6 +29,7 @@ public:
   std::string get_planet();
   std::string get_planetary_file();
   std::string get_planet_species_file();
+  std::string get_collision_file();
   std::string get_bfield_type();
 
   // ------------------------------
@@ -58,6 +59,8 @@ private:
 
   std::string euv_file = "UA/inputs/euv.csv";
   std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
+  std::string collision_file =
+    "UA/inputs/ion_neutral_collision_frequencies.csv";
   std::string input_file = "aether.in";
   std::string euv_model = "euvac";
   std::string planetary_file = "UA/inputs/orbits.csv";
