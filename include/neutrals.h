@@ -27,7 +27,6 @@ class Neutrals {
 
     std::vector<float> diff0;
     std::vector<float> diff_exp;
-    std::vector<float> neutral_ion;
 
     float thermal_cond;
     float thermal_exp;
@@ -68,7 +67,7 @@ class Neutrals {
   fcube kappa_scgc;
 
   std::vector<species_chars> species;
-
+  
   float max_chapman = 1.0e26;
 
   // Source terms:
@@ -107,6 +106,7 @@ class Neutrals {
   void calc_conduction(Grid grid, Times time, Report &report);
   void add_sources(Times time, Report &report);
   void set_bcs(Report &report);
+  int get_species_id(std::string name, Report &report);
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
