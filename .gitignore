@@ -8,4 +8,7 @@
 *#
 
 # Run directories
-run*
+run/
+
+# Python extras
+__pycache__
