@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['kmtom_17',['kmtom',['../constants_8h.html#a99bafef083dfb7e9ac41e40411712dca',1,'constants.h']]]
+  ['reaction_5ftype_18',['reaction_type',['../structChemistry_1_1reaction__type.html',1,'Chemistry']]],
+  ['report_19',['Report',['../classReport.html',1,'']]]
 ];

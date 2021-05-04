@@ -1,0 +1,63 @@
+\hypertarget{namespaceaetherpy_1_1run__plot__model__results}{}\doxysection{aetherpy.\+run\+\_\+plot\+\_\+model\+\_\+results Namespace Reference}
+\label{namespaceaetherpy_1_1run__plot__model__results}\index{aetherpy.run\_plot\_model\_results@{aetherpy.run\_plot\_model\_results}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceaetherpy_1_1run__plot__model__results_adacbc8260164ba97981c3fb8183cdee5}{get\+\_\+help}} (file\+\_\+vars=None)
+\item 
+def \mbox{\hyperlink{namespaceaetherpy_1_1run__plot__model__results_ad3e3a42068104f3ec8f8a803593e027a}{get\+\_\+command\+\_\+line\+\_\+args}} (argv)
+\item 
+\mbox{\Hypertarget{namespaceaetherpy_1_1run__plot__model__results_a39ab39fa543ec7acb24c228c61cdf166}\label{namespaceaetherpy_1_1run__plot__model__results_a39ab39fa543ec7acb24c228c61cdf166}} 
+def {\bfseries plot\+\_\+model\+\_\+results} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Standard model visualization routines
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceaetherpy_1_1run__plot__model__results_ad3e3a42068104f3ec8f8a803593e027a}\label{namespaceaetherpy_1_1run__plot__model__results_ad3e3a42068104f3ec8f8a803593e027a}} 
+\index{aetherpy.run\_plot\_model\_results@{aetherpy.run\_plot\_model\_results}!get\_command\_line\_args@{get\_command\_line\_args}}
+\index{get\_command\_line\_args@{get\_command\_line\_args}!aetherpy.run\_plot\_model\_results@{aetherpy.run\_plot\_model\_results}}
+\doxysubsubsection{\texorpdfstring{get\_command\_line\_args()}{get\_command\_line\_args()}}
+{\footnotesize\ttfamily def aetherpy.\+run\+\_\+plot\+\_\+model\+\_\+results.\+get\+\_\+command\+\_\+line\+\_\+args (\begin{DoxyParamCaption}\item[{}]{argv }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Parse the arguements and set to a dictionary
+
+Parameters
+----------
+argv : list
+    List of arguments fed on the command line
+
+Returns
+-------
+args : dict
+    A dictionary containing information about arguements, including:
+    filelist (list of filenames), gitm (flag that is true for GITM input,
+    determined by examining filelist naming convention),
+    var (variable index to plot), cut (coordinate to hold constant),
+    diff (difference with other plots),
+    movie (framerate for movie, which is > 0 if a movie is desired),
+    ext (output extension), winds (flag to plot with winds),
+    alt (to plot), lat (to plot), lon (to plot),
+    log (flag to use log scale), and help (flag to display help)\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceaetherpy_1_1run__plot__model__results_adacbc8260164ba97981c3fb8183cdee5}\label{namespaceaetherpy_1_1run__plot__model__results_adacbc8260164ba97981c3fb8183cdee5}} 
+\index{aetherpy.run\_plot\_model\_results@{aetherpy.run\_plot\_model\_results}!get\_help@{get\_help}}
+\index{get\_help@{get\_help}!aetherpy.run\_plot\_model\_results@{aetherpy.run\_plot\_model\_results}}
+\doxysubsubsection{\texorpdfstring{get\_help()}{get\_help()}}
+{\footnotesize\ttfamily def aetherpy.\+run\+\_\+plot\+\_\+model\+\_\+results.\+get\+\_\+help (\begin{DoxyParamCaption}\item[{}]{file\+\_\+vars = {\ttfamily None} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Provide string explaining how to run the command line interface
+
+Parameters
+----------
+file_vars : list or NoneType
+    List of file variables or None to exclude this output (default=None)
+
+Returns
+-------
+help_str : str
+    String with formatted help statement\end{DoxyVerb}
+ 
