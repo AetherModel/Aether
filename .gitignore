@@ -6,3 +6,9 @@
 # Backup files for editors:
 *~
 *#
+
+# Run directories
+run/
+
+# Python extras
+__pycache__

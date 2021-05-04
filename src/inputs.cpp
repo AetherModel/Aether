@@ -1,179 +1,224 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 
-#include "../include/sizes.h"
-#include "../include/constants.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
+#include "../include/aether.h"
 
-Inputs::Inputs(Times &time) {
+// -----------------------------------------------------------------------
+// Initialize the Inputs class.  This also sets some initial values.
+// The setting of initial values should probably be moved. 
+// -----------------------------------------------------------------------
 
-  int iErr;
-
-  iErr = 0;
+Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Set some defaults:
 
-  iVerbose = 3;
-  euv_file="euv.csv";
-  planetary_file = "orbits.csv";
-  euv_model="euvac";
+  iVerbose = 0;
+  iTimingDepth = 3;
+  euv_model = "euvac";
   planet = "Earth";
 
   // ------------------------------------------------
   // Grid Defaults:
-  IsUniformAlt = 1;
-  alt_min = 100.0 * 1000.0;
-  dalt = 5.0 * 1000.0;
+  geo_grid_input.alt_file = "";
+  geo_grid_input.IsUniformAlt = 1;
+  geo_grid_input.alt_min = 100.0 * 1000.0;
+  geo_grid_input.dalt = 5.0 * 1000.0;
 
-  IsUniformAlt = 0;
-  alt_min = 100.0 * 1000.0;
-  dalt = 0.33;
+  nLonsGeo = 12;
+  nLatsGeo = 20;
+  nAltsGeo = 40;
 
-  if (nGeoLons == 1) {
-    lon_min = 0.0;
-    lon_max = 0.0;
+  if (nLonsGeo == 1) {
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 0.0;
   } else {
-    lon_min = 0.0;
-    lon_max = 2.0*pi;
+    geo_grid_input.lon_min = 0.0;
+    geo_grid_input.lon_max = 2.0*cPI;
   }
 
-  if (nGeoLats == 1) {
-    lat_min = 0.0;
-    lat_max = 0.0;
+  if (nLatsGeo == 1) {
+    geo_grid_input.lat_min = 0.0;
+    geo_grid_input.lat_max = 0.0;
   } else {
-    lat_min = -pi;
-    lat_max = pi;
+    geo_grid_input.lat_min = -cPI/2;
+    geo_grid_input.lat_max = cPI/2;
   }
 
   euv_heating_eff_neutrals = 0.40;
   euv_heating_eff_electrons = 0.05;
 
   dt_output.push_back(300.0);
+  type_output.push_back("states");
   dt_euv = 60.0;
+  dt_report = 60.0;
 
   // ------------------------------------------------
   // Now read the input file:
-  iErr = read(time);
-  
+  int iErr = read(time, report);
+  if (iErr > 0) std::cout << "Error in reading input file!\n";
 }
 
-int Inputs::read(Times &time) {
+// -----------------------------------------------------------------------
+// Return characteristics of the grid that are entered by the user
+// -----------------------------------------------------------------------
 
-  int iErr;
-  std::string line, hash;
-  std::vector<int> itime(7,0);
+Inputs::grid_input_struct Inputs::get_grid_inputs() {
+  return geo_grid_input;
+}
 
-  iErr = 0;
+// -----------------------------------------------------------------------
+// Return magnetic field type (dipole and none defined now.)
+// -----------------------------------------------------------------------
 
-  std::ifstream infile_ptr;
-  infile_ptr.open(input_file);
+std::string Inputs::get_bfield_type() {
+  return bfield;
+}
 
-  if (!infile_ptr.is_open()) {
-    std::cout << "Could not open input file: " << input_file << "!!!\n";
-    iErr = 1;
-  } else {
+// -----------------------------------------------------------------------
+// Return the EUV model used (EUVAC only option now)
+// -----------------------------------------------------------------------
 
-    // while (getline(infile_ptr,line)) {
-    while (!infile_ptr.eof()) {
+std::string Inputs::get_euv_model() {
+  return euv_model;
+}
 
-      hash = find_next_hash(infile_ptr);
+// -----------------------------------------------------------------------
+// Return the heating efficiency of the neutrals for EUV
+// -----------------------------------------------------------------------
 
-      iErr = 0;
+float Inputs::get_euv_heating_eff_neutrals() {
+  return euv_heating_eff_neutrals;
+}
 
-      // ---------------------------
-      // #starttime
-      // ---------------------------
+// -----------------------------------------------------------------------
+// Return how often to calculate EUV energy deposition
+// -----------------------------------------------------------------------
 
-      if (hash=="#starttime") {
-	for (int i=0; i<6; i++) {
-	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
-	  else iErr = 1;
-	}
-	itime[6] = 0;
-	if (iErr == 0) {
-	  time.set_times(itime);
-	} else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#starttime\n";
-	  std::cout << "year     (int)\n";
-	  std::cout << "month    (int)\n";
-	  std::cout << "day      (int)\n";
-	  std::cout << "hour     (int)\n";
-	  std::cout << "min      (int)\n";
-	  std::cout << "sec      (int)\n";
-	}
+float Inputs::get_dt_euv() {
+  return dt_euv;
+}
 
-      }
+// -----------------------------------------------------------------------
+// Return how often to report progress of simulation
+// -----------------------------------------------------------------------
 
-      // ---------------------------
-      // #endtime
-      // ---------------------------
+float Inputs::get_dt_report() {
+  return dt_report;
+}
 
-      if (hash=="#endtime") {
-	for (int i=0; i<6; i++) {
-	  if (getline(infile_ptr,line)) itime[i] = stoi(line);
-	  else iErr = 1;
-	}
-	itime[6] = 0;
-	if (iErr == 0) time.set_end_time(itime);
-	else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#endtime\n";
-	  std::cout << "year     (int)\n";
-	  std::cout << "month    (int)\n";
-	  std::cout << "day      (int)\n";
-	  std::cout << "hour     (int)\n";
-	  std::cout << "min      (int)\n";
-	  std::cout << "sec      (int)\n";
-	}
+// -----------------------------------------------------------------------
+// Return number of output types
+// -----------------------------------------------------------------------
 
-      }
+float Inputs::get_n_outputs() {
+  return dt_output.size();
+}
 
-      // ---------------------------
-      // #f107file
-      // ---------------------------
+// -----------------------------------------------------------------------
+// Return number of longitudes, latitudes, and altitudes in grid
+// -----------------------------------------------------------------------
 
-      if (hash=="#f107file") {
-	if (getline(infile_ptr,f107_file)) {
-	  DoReadF107File = 1;
-	} else {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#f107file\n";
-	  std::cout << "f107_file     (string)\n";
-	}
-      }
+int Inputs::get_nLonsGeo() {
+  return nLonsGeo;
+}
 
-      // ---------------------------
-      // #f107file
-      // ---------------------------
+int Inputs::get_nLatsGeo() {
+  return nLatsGeo;
+}
 
-      if (hash=="#planet") {
-	getline(infile_ptr,planet);
-	// This will never happen....
-	if (iErr > 0) {
-	  std::cout << "Issue in read_inputs!\n";
-	  std::cout << "Should be:\n";
-	  std::cout << "#planet\n";
-	  std::cout << "planet     (string)\n";
-	}
-      }
+int Inputs::get_nAltsGeo() {
+  return nAltsGeo;
+}
 
-    }
+// -----------------------------------------------------------------------
+// Return how often to output a given output type
+// -----------------------------------------------------------------------
 
-    infile_ptr.close();
+float Inputs::get_dt_output(int iOutput) {
+  float value = 0.0;
+  int iSize = dt_output.size();
+  if (iOutput < iSize) value = dt_output[iOutput];
+  return value;
+}
 
-  }
+// -----------------------------------------------------------------------
+// Return the output type
+// -----------------------------------------------------------------------
 
-  return iErr;
+std::string Inputs::get_type_output(int iOutput) {
+  std::string value = "";
+  int iSize = dt_output.size();
+  if (iOutput < iSize) value = type_output[iOutput];
+  return value;
+}
 
+// -----------------------------------------------------------------------
+// Return EUV file name
+// -----------------------------------------------------------------------
 
+std::string Inputs::get_euv_file() {
+  return euv_file;
+}
+
+// -----------------------------------------------------------------------
+// Return Chemistry file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_chemistry_file() {
+  return chemistry_file;
+}
+
+// -----------------------------------------------------------------------
+// Return total number of OMNIWeb files to read
+// -----------------------------------------------------------------------
+
+int Inputs::get_number_of_omniweb_files() {
+  return omniweb_files.size();
+}
+
+// -----------------------------------------------------------------------
+// Return OMNIWeb file names as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_omniweb_files() {
+  return omniweb_files;
+}
+
+// -----------------------------------------------------------------------
+// Return F107 file to read
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_f107_file() {
+  return f107_file;
+}
+
+// -----------------------------------------------------------------------
+// Return planet name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_planet() {
+  return planet;
+}
+
+// -----------------------------------------------------------------------
+// Return file that contains (all) planetary characteristics
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_planetary_file() {
+  return planetary_file;
+}
+
+// -----------------------------------------------------------------------
+// Return planetary file name that describes the species and such for
+// a given planet
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_planet_species_file() {
+  return planet_species_file;
 }

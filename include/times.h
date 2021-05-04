@@ -1,8 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_TIMES_H_
-#define AETHER_INCLUDE_TIMES_H_
+#ifndef INCLUDE_TIMES_H_
+#define INCLUDE_TIMES_H_
 
 #include <vector>
 #include <string>
@@ -17,16 +17,27 @@ public:
   void display();
   void set_times(std::vector<int> itime);
   void set_end_time(std::vector<int> itime);
+  double get_current();
+  double get_end();
+  std::string get_YMD_HMS();
+  double get_intermediate();
+  float get_dt();
+  float get_orbittime();
+  double get_julian_day();
+
+  int check_time_gate(float dt_check);
+
+  void calc_dt();
   
 private:
   
   // These variables are for keeping track of the time:
-  double start;
+  double start, restart;
   double end;
   double current;
   double intermediate;
   double simulation;
-  long iStep;
+  int64_t iStep;
 
   float dt;
 
@@ -51,7 +62,6 @@ private:
   time_t sys_time_start;
   time_t sys_time_current;
   float walltime;
-
 };
 
-#endif // AETHER_INCLUDE_TIMES_H_
+#endif  // INCLUDE_TIMES_H_

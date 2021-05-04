@@ -1,24 +1,78 @@
+(c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+Full license can be found in License.md
 
-#test1
+This is a sample input file for the Aether model.
 
+Some things to know about this:
 
-#test2
+1. The code ignores all lines until it finds a hashtag (#) with a
+command after it (#command).
 
-#starttime
+2. After the #command, there are inputs that have to be in a specific
+format. You can read the manual to see all of the commands and the
+format of the command.
+
+3. Most commands have defaults. If you don't want to change the default,
+you don't have to include the command.
+
+4. If there are more than two spaces in a line, the code ignores
+everything after those two spaces.  That way you can put comments on
+the lines.
+
+5. Everything is turned into lower case, so use whatever case you
+want.
+
+6. We are working on making things so that you can enter them as comma
+separated values or a row of values (e.g., times can be year, month,
+day, etc, or year\n month\n day\n etc...)
+
+#debug
+1    iVerbose
+
+#planet
+earth
+
+#STARTTIME   this is the start time
 2011
 03
-21
-12
+20
+00
 00
 00
 
 #endtime
 2011
 03
-21
-13
+20
+01
 00
 00
 
+#geoblocksize
+36
+36
+50
+
+#geogrid
+0
+360
+-90.0
+90.0
+100.0
+5.0
+
 #f107file
-f107.txt
+UA/inputs/f107.txt
+
+#bfield
+dipole
+
+#output
+states, 900.0
+bfield, 0.0
+
+#chemistry
+UA/inputs/chemistry_earth.csv
+
+omniweb
+omni_20110622.txt

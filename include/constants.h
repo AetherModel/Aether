@@ -1,5 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
+
+#ifndef INCLUDE_CONSTANTS_H_
+#define INCLUDE_CONSTANTS_H_
 
 /*! \file constants.h
     \brief Physical consants.
@@ -7,91 +10,125 @@
     Contains constants used around the code.
 */
 
-#ifndef AETHER_INCLUDE_CONSTANTS_H_
-#define AETHER_INCLUDE_CONSTANTS_H_
+#include <vector>
 
-#include <cmath>  // For standard constants
+// -------------------------------------------------------------------------
+// Header file to define a bunch of constants
+// -------------------------------------------------------------------------
 
-// Header file to define a bunch of physical constants
 
-const float avogadros_number = 6.02214086e23; //!< Avogadros Number
+// -------------------------------------------------------------------------
+// Physical Constants
+//   - Naming standards:
+//     - Names start with a "c" to indicate they are constants
+//     - Names should be all CAPS (except for "c" at start)
+//     - Should use common abbreviations for names and not whole names
+// -------------------------------------------------------------------------
 
-const float boltzmanns_constant = 1.38064852e-23; //!< Avogadros Number
+// avogadros_number (per mole)
+const float cNA = 6.02214086e23;
 
-const float mass_proton = 1.6726219e-27; //!< Boltzmann's Constant in \f$ m^2 kg s^{-2} K^{-1} \f$
+// boltzmanns_constant (m2 kg /s2 /K)
+const float cKB = 1.38064852e-23;
 
-const float amu = mass_proton; //!< Proton Mass in kg
+// Universal Gas Constant (J/K/mol)
+const float cR = cNA * cKB;
 
-const float mass_electron = 9.1094e-31; //!< Atomic Mass Unit in kg
+// Mass of a proton (kg)
+const float cMP = 1.6726219e-27;
 
-const float planck_constant = 6.6261e-34; //!< Electron mass in kg
+// Atomic Mass Unit (kk)
+const float cAMU = cMP;
 
-const float element_charge = 1.6022e-19; //!< Planck's Constant in Js
+// Mass of an electron (kg)
+const float cME = 9.1094e-31;
 
-const float speed_light = 2.9979e8; //!< Unit charge in C or \f$ J eV{-1} \f$
+// Plancks Constant (Js)
+const float cH = 6.6261e-34;
 
-const float univ_gas_constant = avogadros_number*boltzmanns_constant; //!< Speed of light in m/s
+// Elemental Charge (C (J/eV))
+const float cE = 1.6022e-19;
 
-const float r_gas = univ_gas_constant*1.0E+07; //!< Universal gas constant in \f$ J mol^{-1} K^{-1} \f$
+// Speed of Light (m/s)
+const float cC = 2.9979e8;
 
-const float pi = 3.141592653589793; //!< Universal gas constant in \f$ erg mol^{-1} K^{-1}
-
-const float twopi = 2*pi; //!< \f$ \pi \f$
-
-const float dtor = pi/180.0; //!< \f$ 2 \pi \f$
-
-const float rtod = 180.0/pi; //!< Coefficient of degrees to radians
-
-const float p00 = 1.0e5; //!< Coefficient of radians to degrees
-
-const float T00 = 273.0; //!< Atmospheric pressure in Pa
-
-const float SpecificHeatVolume = 3./2.; //!< Room temperature in K
-
-const float SpecificHeatPressure = SpecificHeatVolume + 1.0; //!< Volume ratio
-
-const float gamma_const = SpecificHeatPressure/SpecificHeatVolume; //!< Pressure ratio
-
-// A bunch of constants for converting time between seconds and arrays:
-// --------------------------------------------------------------------
-
-const std::vector<int> days_of_month {31,28,31,30,31,30,31,31,30,31,30,31}; //!< \f$ \gamma \f$
-
-const int reference_year = 1965; //!< List of days in indexed month.
-
-const double julian_day_of_reference = 2438762.0; //!< Year to start calculating leap years
-
-const double j2000 = 2451545.0; //!< Julian Day Number
-
-const double seconds_per_year = 31536000.0; //!< Julian Day on 2000-01-01T00:00
-
-const double seconds_per_day = 86400.0; //!< Seconds in a year
-
-const double seconds_per_hour = 3600.0; //!< Seconds in a day
-
-const double seconds_per_minute = 60.0; //!< Seconds in an hour
-
-// Conversion
-// ----------
-
-const float mtokm = 1.0/1000.0; //!< Seconds in a minute
-
-const float kmtom = 1000.0; //!< Coefficient of meters to kilometers
-
-const float pcm3topm3 = 1e6; //!< Coefficient of kilometers to meters
-
-const float pcm2topm2 = 1e4; //!< Coefficient of \f$ cm^{-3} \f$ to \f$ m^{-3} \f$
-
-const float pcmtopm = 100.0; //!< Coefficient of \f$ cm^{-2} \f$ to \f$ m^{-2} \f$
-
-const float atom = 1.0e-10; //!< Coefficient of \f$ cm^{-1} \f$ to \f$ m^{-1} \f$
-
+// -------------------------------------------------------------------------
 // Stellar constants:
+// -------------------------------------------------------------------------
 
-const float au_to_m = 1.495978707e11; //!< Coefficient of angstrom to m
+// gravitational_constant (m3/kg/s2)
+const float cG = 6.67408e-11;
 
-const float gravitational_constant = 6.67408e-11; //!< Coefficient Au to m
+// This is for our sun (solar mass in kg):
+const float cMSOL = 1.989e30;
 
-const float solar_mass = 1.989e30; //!< Solar Mass Unit
+// -------------------------------------------------------------------------
+// Some constants for time
+// -------------------------------------------------------------------------
 
-#endif // AETHER_INCLUDE_CONSTANTS_H_
+const std::vector<int> cDAYS {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const int cREFYEAR = 1965;
+const double cREFJULIAN = 2438762.0;
+const double cJULIAN2000 = 2451545.0;
+
+// -------------------------------------------------------------------------
+// Some Constants for Angles
+// -------------------------------------------------------------------------
+
+const float cPI = 3.141592653589793;
+const float cTWOPI = 2*cPI;
+
+// -------------------------------------------------------------------------
+// Conversion Constants:
+// - Naming standards:
+//   - Names start with a "c" to indicate they are constants
+//   - Names have a lower-case "to" in them to indicate conversion
+//   - Names are all UPPER CASE otherwise
+// -------------------------------------------------------------------------
+
+const float cDtoR = cPI/180.0;
+const float cRtoD = 180.0/cPI;
+
+// -------------------------------------------------------------------------
+// converting time between seconds and other units of time:
+// -------------------------------------------------------------------------
+
+// Years <-> Seconds:
+const double cYtoS = 31536000.0;
+const double cStoY = 1.0 / cYtoS;
+
+// Days <-> Seconds:
+const double cDtoS = 86400.0;
+const double cStoD = 1.0 / cDtoS;
+
+// Hours <-> Seconds:
+const double cHtoS = 3600.0;
+const double cStoH = 1.0 / cHtoS;
+
+// Minutes <-> Seconds:
+const double cMtoS = 60.0;
+const double cStoM = 1.0 / cMtoS;
+
+// MilliSeconds <-> Seconds:
+const double cMStoS = 1.0/1000.0;
+const double cStoMS = 1000.0;
+
+// -------------------------------------------------------------------------
+// converting lengths between meters and other units of measurement:
+// -------------------------------------------------------------------------
+
+// kilometer <-> meter:
+const float cKMtoM = 1000.0;
+const float cMtoKM = 1.0 / cKMtoM;
+
+// Angstrom <-> Meter
+const float cAtoM = 1.0e-10;
+
+// AU <-> Meter
+const float cAUtoM = 1.495978707e11;
+
+const float pcm3topm3 = 1e6;  // /cm3 to /m3
+const float pcm2topm2 = 1e4;  // /cm2 to /m2
+const float pcmtopm = 100.0;  // /cm to /m
+
+#endif  // INCLUDE_CONSTANTS_H_
