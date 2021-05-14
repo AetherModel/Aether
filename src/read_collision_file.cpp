@@ -77,12 +77,64 @@ void read_collision_file(Neutrals &neutrals,
 
     }
     infile_ptr.close();
-    // We should add something here to check the tables:
-    // - Need to see if the nu_in exists for each ion species
-    // - Need to make sure that if there is a resonant Nu, it exists
-
+    check_collision_frequncies(ions, neutrals, report);
   }
   report.exit(function);
+  return;
+}
+
+// -----------------------------------------------------------------------------
+// Check the nu_in and resonant_nu_in arrays to see if they are consistent
+// -----------------------------------------------------------------------------
+
+void check_collision_frequncies(Ions ions,
+				Neutrals neutrals,
+				Report &report) {
+
+  // Report out the table, if verbose is high enough:
+  
+  if (report.test_verbose(0)) {
+    std::cout << "nu_in table:\n";
+    for (int iIon = 0; iIon < nIons; iIon++) {
+      if (ions.species[iIon].nu_ion_neutral.size() > 0) {
+	for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
+	  std::cout << ions.species[iIon].cName << " -> ";
+	  std::cout << neutrals.species[iNeutral].cName << " = ";
+	  if (ions.species[iIon].nu_is_resonant[iNeutral]) {
+	    std::cout << "Resonant! => Checking Resonant Arrays\n";
+	    if (ions.species[iIon].nu_in_res_coef1.size() < 1) {
+	      std::cout << "  --> There are no resonants for this ion!!\n";
+	    } else {
+	      if (ions.species[iIon].nu_in_res_coef1[iNeutral] == 0) {
+		std::cout << "  --> resonant coef is 0!!\n";
+	      } else {
+		std::cout << "  temp min : "
+			  << ions.species[iIon].nu_in_res_temp_min[iNeutral]
+			  << "\n";
+		std::cout << "  coef 1 : "
+			  << ions.species[iIon].nu_in_res_coef1[iNeutral]
+			  << "\n";
+		std::cout << "  coef 2 : "
+			  << ions.species[iIon].nu_in_res_coef2[iNeutral]
+			  << "\n";
+		std::cout << "  Tn ratios (Tn & Ti): "
+			  << ions.species[iIon].nu_in_res_tn_frac[iNeutral]
+			  << " "
+			  << ions.species[iIon].nu_in_res_ti_frac[iNeutral]
+			  << "\n";
+	      }
+	    }
+	  } else {
+	    std::cout << ions.species[iIon].nu_ion_neutral[iNeutral] << "\n";
+	  }
+	}
+      } else {
+	std::cout << ions.species[iIon].cName
+		  << " has no collision frequencies! \n";
+      }
+    }
+  }
+
   return;
 }
 
@@ -162,28 +214,6 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
     }
   }
 
-  // Report out the table, if verbose is high enough:
-  
-  if (report.test_verbose(0)) {
-    std::cout << "nu_in table:\n";
-    for (int iIon = 0; iIon < nIons; iIon++) {
-      if (ions.species[iIon].nu_ion_neutral.size() > 0) {
-	for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
-	  std::cout << ions.species[iIon].cName << " -> ";
-	  std::cout << neutrals.species[iNeutral].cName << " = ";
-	  if (ions.species[iIon].nu_is_resonant[iNeutral]) {
-	    std::cout << "Resonant!\n";
-	  } else {
-	    std::cout << ions.species[iIon].nu_ion_neutral[iNeutral] << "\n";
-	  }
-	}
-      } else {
-	std::cout << ions.species[iIon].cName
-		  << " has no collision frequencies! \n";
-      }
-    }
-  }
-  
   report.exit(function);
   return;
 }
