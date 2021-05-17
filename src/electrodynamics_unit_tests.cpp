@@ -63,7 +63,6 @@ fmat get_interpolation_indices(fmat vals, fvec search){
     return res;
 }
 
-
 //integer indices
 bool test1(){
     fmat vals = { {1, 3},

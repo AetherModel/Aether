@@ -86,4 +86,3 @@ std::string read_in_string(FILE *infile) {
   return value;
   
 }
-

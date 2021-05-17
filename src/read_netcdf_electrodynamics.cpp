@@ -10,7 +10,6 @@
 using namespace netCDF;
 //g++ read_netcdf_electrodynamics.cpp -o -std=c++11
 
-
 //done with binary currently, not netcdf
 void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename, Report &report){
     int reclen;

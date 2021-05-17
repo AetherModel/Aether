@@ -12,7 +12,6 @@ using namespace std;
 
 // g++ electrodynamics.cpp -o -std=c++11
 
-
 void Electrodynamics::set_time(double time, Report &report){
     std::string function = "Electrodynamics::set_time";
     static int iFunction = -1;
