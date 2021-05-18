@@ -38,7 +38,10 @@ cax = ax.pcolor(theta, r, eflux2d, \
 ax.contour(theta, r, pot2d, 6, colors = 'k')
 cbar = fig.colorbar(cax)
 
-fig.savefig('amie_test.png')
+i = file.find('.bin')
+outfile = file[0:i]+".png"
+
+fig.savefig(outfile)
 plt.close()
 
 

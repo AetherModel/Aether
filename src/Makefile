@@ -30,6 +30,7 @@ OBJECTS = \
 	fill_grid.o\
 	init_geo_grid.o\
 	output.o\
+	read_collision_file.o\
 	read_f107_file.o\
 	read_input_file.o\
 	read_omni_file.o\

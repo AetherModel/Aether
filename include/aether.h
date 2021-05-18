@@ -31,6 +31,7 @@ using namespace arma;
 #include "euv.h"
 #include "calc_euv.h"
 #include "chemistry.h"
+#include "read_collision_file.h"
 #include "output.h"
 #include "advance.h"
 

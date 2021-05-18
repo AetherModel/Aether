@@ -31,6 +31,17 @@ class Ions {
 
     int DoAdvect;
 
+    std::vector<float> nu_ion_neutral;
+    std::vector<bool> nu_is_resonant;
+    std::vector<float> nu_ion_ion;
+    std::vector<float> nu_ion_electron;
+
+    std::vector<float> nu_in_res_temp_min;
+    std::vector<float> nu_in_res_coef1;
+    std::vector<float> nu_in_res_coef2;
+    std::vector<float> nu_in_res_tn_frac;
+    std::vector<float> nu_in_res_ti_frac;
+    
     // Sources and Losses:
 
     fcube density_scgc;
@@ -69,6 +80,7 @@ class Ions {
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
   void fill_electrons(Report &report);
+  int get_species_id(std::string name, Report &report);
 
 };
 #endif  // INCLUDE_IONS_H_

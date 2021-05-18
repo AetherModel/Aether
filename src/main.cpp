@@ -57,6 +57,9 @@ int main() {
   // Initialize Chemical scheme (including reading file):
   Chemistry chemistry(neutrals, ions, input, report);
 
+  // Read in the collision frequencies and other diffusion coefficients:
+  read_collision_file(neutrals, ions, input, report);
+  
   // This is for the initial output.  If it is not a restart, this will go:
   if (time.check_time_gate(input.get_dt_output(0))) {
     iErr = output(neutrals, ions, gGrid, time, planet, input, report);
