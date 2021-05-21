@@ -222,3 +222,12 @@ std::string Inputs::get_planetary_file() {
 std::string Inputs::get_planet_species_file() {
   return planet_species_file;
 }
+
+// -----------------------------------------------------------------------
+// Return directory to write output files to.
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_output_directory() {
+  return output_directory;
+}
+

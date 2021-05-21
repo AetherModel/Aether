@@ -22,6 +22,7 @@ public:
   float get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
+  std::string get_output_directory();
   std::string get_chemistry_file();
   std::vector<std::string> get_omniweb_files();
   int get_number_of_omniweb_files();
@@ -75,6 +76,10 @@ private:
 
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
+  std::string output_directory = "UA/output";
+  std::string restart_out_directory = "UA/restartOut";
+  std::string restart_in_directory = "UA/restartIn";
+
   float dt_euv;
   float dt_report;
 

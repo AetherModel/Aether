@@ -47,8 +47,123 @@ void output_variable_3d(std::vector<size_t> count_start,
 }
 */
 
+
+
 //----------------------------------------------------------------------
-// Output the different file types to netCDF files. 
+// Write header files. Supported types:
+// 1. neutrals: Lon/Lat/Alt + nSpecies + temp
+// 2. ions: Lon/Lat/Alt + nIons + [e-]
+// 3. states: Lon/Lat/Alt + nSpecies + temp + nIons + [e-]
+//----------------------------------------------------------------------
+
+int write_header(std::string file_name,
+		 std::string type_output,
+		 Neutrals neutrals,
+		 Ions ions,
+		 Grid grid,
+		 Times time,
+		 Planets planet) {
+
+  int iErr = 0;
+  std::ofstream header;
+  header.open(file_name);
+
+  // Everything gets lon/lat/alt:
+  int nVars = 3;  
+  
+  if (type_output == "neutrals" ||
+      type_output == "states")
+    nVars = nVars + nSpecies + 1;
+
+  if (type_output == "ions" ||
+      type_output == "states")
+    nVars = nVars + nIons + 1;
+  
+  if (type_output == "bfield")
+    nVars = nVars + 6;
+
+  header << "\n";
+  header << "BLOCKS\n";
+  header << "1\n";
+  header << "1\n";
+  header << "1\n";
+
+  header << "\n";
+  header << "TIME\n";
+  std::vector<int> iCurrent = time.get_iCurrent();
+  for (int i = 0; i < 7; i++) header << iCurrent[i] << "\n";
+
+  header << "\n";
+  header << "VERSION\n";
+  header << "0.10\n";
+
+  header << "\n";
+  header << "NUMERICAL VALUES\n";
+  header << nVars << " nVars\n";
+  header << grid.get_nX() << " nLons\n";
+  header << grid.get_nY() << " nLats\n";
+  header << grid.get_nZ() << " nAlts\n";
+
+  header << "\n";
+  header << "VARIABLE LIST\n";
+  header << "1 Longitude (radians)\n";
+  header << "2 Latitude (radians)\n";
+  header << "3 Altitude (m)\n";
+
+  int iVar = 4;
+  if (type_output == "neutrals" ||
+      type_output == "states") {
+    
+    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+      header << iVar << " "
+	     << neutrals.species[iSpecies].cName << " "
+	     << "(" << neutrals.density_unit << ")\n";
+      iVar++;
+    }
+
+    header << iVar << " "
+	   << neutrals.temperature_name << " "
+	   << neutrals.temperature_unit << "\n";
+    iVar++;
+  }    
+
+  if (type_output == "ions" ||
+      type_output == "states") {
+    
+    for (int iSpecies=0; iSpecies < nIons+1; iSpecies++) {
+      header << iVar << " "
+	     << ions.species[iSpecies].cName << " "
+	     << neutrals.density_unit << "\n";
+      iVar++;
+    }
+
+  }
+
+  if (type_output == "bfield") {
+    header << iVar << " Magnetic Latitude (radians)\n";
+    iVar++;
+    header << iVar << " Magnetic Longitude (radians)\n";
+    iVar++;
+    header << iVar << " Magnetic Local Time (hours)\n";
+    iVar++;
+    header << iVar << " Beast (nT)\n";
+    iVar++;
+    header << iVar << " Bnorth (nT)\n";
+    iVar++;
+    header << iVar << " Bvertical (nT)\n";
+    iVar++;
+  }
+
+  header << "\n";
+  header << "END\n";
+  header << "\n";
+
+  header.close();
+  return iErr;
+}
+
+//----------------------------------------------------------------------
+// Output the different file types to binary files. 
 //----------------------------------------------------------------------
 
 int output(Neutrals neutrals,
@@ -82,22 +197,31 @@ int output(Neutrals neutrals,
 
       std::string time_string;
       std::string file_name;
-      std::string file_ext = ".bin";
-      std::string UNITS = "units";
       std::string file_pre;
 
       std::string type_output = args.get_type_output(iOutput);
+      std::string output_dir = args.get_output_directory();
 
       if (type_output == "neutrals") file_pre = "3DNEU";
       if (type_output == "states") file_pre = "3DALL";
       if (type_output == "bfield") file_pre = "3DBFI";
 
       time_string = time.get_YMD_HMS();
-      file_name = file_pre + "_" + time_string + file_ext;
+      std::string file_ext = ".header";
+      file_name = output_dir + "/" + file_pre + "_" + time_string + file_ext;
 
       // Create the file:
       report.print(0, "Writing file : " + file_name);
 
+      iErr = write_header(file_name,
+			  type_output,
+			  neutrals,
+			  ions,
+			  grid,
+			  time,
+			  planet);
+      
+      
       /*
       NcFile ncdf_file(file_name, NcFile::replace);
 
