@@ -4,6 +4,12 @@
 #ifndef INCLUDE_CONSTANTS_H_
 #define INCLUDE_CONSTANTS_H_
 
+/*! \file constants.h
+    \brief Physical consants.
+    
+    Contains constants used around the code.
+*/
+
 #include <vector>
 
 // -------------------------------------------------------------------------
@@ -124,6 +130,5 @@ const float cAUtoM = 1.495978707e11;
 const float pcm3topm3 = 1e6;  // /cm3 to /m3
 const float pcm2topm2 = 1e4;  // /cm2 to /m2
 const float pcmtopm = 100.0;  // /cm to /m
-
 
 #endif  // INCLUDE_CONSTANTS_H_
