@@ -31,6 +31,7 @@ public:
   std::string get_planet_species_file();
   std::string get_collision_file();
   std::string get_bfield_type();
+  std::string get_electrodynamics_file();
 
   // ------------------------------
   // Grid inputs:
@@ -68,6 +69,7 @@ private:
   std::string planet = "earth";
   std::string f107_file = "";
   std::string planet_species_file = "";
+  std::string electrodynamics_file = "";
 
   std::string bfield = "none";
 

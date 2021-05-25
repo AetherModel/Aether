@@ -17,6 +17,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
+            Electrodynamics &electrodynamics
             Indices &indices,
             Inputs &input,
             Report &report) {
@@ -43,6 +44,8 @@ int advance(Planets &planet,
                   indices,
                   input,
                   report);
+
+  ions.potential = electrodynamics.get_electrodynamics(gGrid.magLat_scgc, gGrid.magLocalTime_scgc, report);
 
   neutrals.calc_conduction(gGrid, time, report);
 

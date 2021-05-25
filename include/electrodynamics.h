@@ -44,6 +44,29 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
+     \brief used in advance to get potential
+
+
+     \param magLat magnetic latitude
+
+     \param magLocalTime magnetic local time
+
+     \param report reporting
+   **/
+  fcube get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
+
+  /**************************************************************
+     \brief Gets interpolation indices
+
+     Performs 2d interpolation over search vector to get indices
+
+     \param vals the 2d array that needs indices
+     \param search The vector of values to interpolate over  
+   **/
+
+  fmat get_interpolation_indices(fmat vals, fvec search);
+
+  /**************************************************************
      \brief Sets time needed for electrodynamics
 
      Internally, if there is a file read, this function:
@@ -55,6 +78,7 @@ class Electrodynamics {
      \param time the time requested.
      \param report Need to pass Report class, so reporting can occur  
    **/
+  
   void set_time(double time, Report &report);
 
   /**************************************************************
@@ -138,7 +162,7 @@ class Electrodynamics {
      applicable)
 
      This function does the following:
-     - creates an empty potential matrix to return
+     - creates an empty potential matrix ok, I see to return
      - Loops through the grids in priority order calling set_values
        with the potentials in the grids
 

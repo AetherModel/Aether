@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <netcdf>
-#include "read_netcdf_electrodynamics.cpp"
 #include "../include/electrodynamics.h"
 #include "../include/report.h"
 #include <vector>
@@ -11,6 +10,61 @@ using namespace std;
 //using namespace netCDF::exceptions;
 
 // g++ electrodynamics.cpp -o -std=c++11
+
+//Initialize Electrodynamics
+
+Electrodynamics::Electrodynamics(Inputs input, Report &report){
+    read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
+}
+
+//this is the update rotuine, needs to be added to the .h file and completed
+//to be used in advance.cpp
+
+fcube Electrodynamics::get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report){
+    fcube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
+    pot.zeros();
+    fmat e_potentials = input_electrodynamics[0].potential_current;
+    for (int i = 0; i < magLat.n_slices; ++i){
+        set_grid(magLat.slice(i), magLocalTime.slice(i), report);
+        fmat potentialSlice(magLat.n_rows, magLat.n_cols);
+        potentialSlice.zeros();
+        for (int r = 0; r < potentialSlice.n_rows; ++r){
+            for (int c = 0; c < potentialSlice.n_cols; ++c){
+                float h_pos = input_electrodynamics[0].mlts_indices(r, c);
+                float v_pos = input_electrodynamics[0].lats_indices(r, c);
+                int r_start, c_start;
+                if (h_pos < 0){
+                    c_start = 0;
+                }
+                else if (h_pos >= magLat.n_cols-1){
+                    c_start = magLat.n_cols-2;
+                }
+                else {
+                    c_start = h_pos;
+                }
+                if (v_pos < 0){
+                    r_start = 0;
+                }
+                else if (v_pos >= magLat.n_rows-1){
+                    r_start = magLat.n_rows-2;
+                }
+                else {
+                    r_start = v_pos;
+                }
+                float first_row_slope = e_potentials(r_start, c_start + 1) - e_potentials(r_start, c_start);
+                float second_row_slope = e_potentials(r_start + 1, c_start + 1) - e_potentials(r_start + 1, c_start);
+                float first_row_val = e_potentials(r_start, c_start) + first_row_slope * (h_pos - c_start);
+                float second_row_val = e_potentials(r_start + 1, c_start) + second_row_slope * (h_pos - c_start);
+                //time to vertically linear interpolate these two values
+                float vertical_slope = second_row_val - first_row_val;
+                float final_value = first_row_val + vertical_slope * (v_pos - r_start); 
+                potentialSlice(r, c) = final_value;
+            }
+        }
+        pot.slice(i) = potentialSlice;
+    }
+    return pot;
+}
 
 void Electrodynamics::set_time(double time, Report &report){
     std::string function = "Electrodynamics::set_time";
@@ -61,7 +115,7 @@ void Electrodynamics::set_time(double time, Report &report){
     x = (intime - times[iMid]) / dt;
 
     interpolation_index = iMid + x;
-
+    time_index = interpolation_index;
     // If we have read in a file, we need to create interpolation indices here:
 
     // Please look at the function Indices::get_index to find the
