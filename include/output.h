@@ -4,12 +4,7 @@
 #ifndef INCLUDE_OUTPUT_H_
 #define INCLUDE_OUTPUT_H_
 
-#include "../include/neutrals.h"
-#include "../include/grid.h"
-#include "../include/times.h"
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
+#include "../include/aether.h"
 
 int output(Neutrals neutrals,
            Ions ions,
