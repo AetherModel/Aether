@@ -9,24 +9,22 @@
 // Output a given variable to the binary file. 
 // ----------------------------------------------------------------------
 
-/*
-void output_variable_3d(std::vector<size_t> count_start,
-                        std::vector<size_t> count_end,
-                        fcube value,
-                        NcVar variable) {
+
+void output_variable_3d(std::ofstream &binary,
+                        fcube value) {
 
   // Get the size of the cube:
   
   int64_t nX = value.n_rows;
   int64_t nY = value.n_cols;
   int64_t nZ = value.n_slices;
-  int64_t iX, iY, iZ, iTotal, index;
+  int64_t iX, iY, iZ, index;
 
-  iTotal = nX * nY * nZ;
-  
+  int64_t nPts = nX * nY * nZ;
+  int64_t iTotalSize = nPts * sizeof(float);
+
   // Create a temporary c-array to use to output the variable
-  
-  float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
+  float *tmp_s3gc = static_cast<float*>(malloc(iTotalSize));
 
   // Move the data from the cube to the c-array
   
@@ -39,15 +37,62 @@ void output_variable_3d(std::vector<size_t> count_start,
     }
   }
 
-  // Output the data to the netCDF file
-  variable.putVar(count_start, count_end, tmp_s3gc);
+  // Output the data to the binary file
+  binary.write((char *) tmp_s3gc, iTotalSize);  
 
   // delete the c-array
   free(tmp_s3gc);
 }
-*/
 
+//----------------------------------------------------------------------
+// Figure out which variables to the binary file. 
+// ----------------------------------------------------------------------
 
+int write_binary_all_3d(std::string file_name,
+			std::string type_output,
+			Neutrals neutrals,
+			Ions ions,
+			Grid grid,
+			Times time,
+			Planets planet) {
+
+  int iErr = 0;
+  std::ofstream binary;
+  binary.open(file_name, ios::binary | ios::out);
+
+  // Everything gets (geo) lon/lat/alt:
+  output_variable_3d(binary, grid.geoLon_scgc);
+  output_variable_3d(binary, grid.geoLat_scgc);
+  output_variable_3d(binary, grid.geoAlt_scgc);
+  
+  // Neutral States
+  if (type_output == "neutrals" ||
+      type_output == "states") {    
+    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
+      output_variable_3d(binary, neutrals.species[iSpecies].density_scgc);
+    output_variable_3d(binary, neutrals.temperature_scgc);
+  }
+
+  // Ion States:
+  if (type_output == "ions" ||
+      type_output == "states") {
+    for (int iSpecies=0; iSpecies < nIons+1; iSpecies++) 
+      output_variable_3d(binary, ions.species[iSpecies].density_scgc);
+  }
+
+  // Magnetic Field Variables:
+  if (type_output == "bfield") {
+    output_variable_3d(binary, grid.magLat_scgc);
+    output_variable_3d(binary, grid.magLon_scgc);
+    output_variable_3d(binary, grid.magLocalTime_scgc);
+    for (int iComp=0; iComp < 3; iComp++) 
+      output_variable_3d(binary, grid.bfield_vcgc[iComp]);
+  }
+
+  binary.close();
+  return iErr;
+  
+}
 
 //----------------------------------------------------------------------
 // Write header files. Supported types:
@@ -220,6 +265,20 @@ int output(Neutrals neutrals,
 			  grid,
 			  time,
 			  planet);
+      
+      file_ext = ".bin";
+      file_name = output_dir + "/" + file_pre + "_" + time_string + file_ext;
+
+      // Create the file:
+      report.print(0, "Writing file : " + file_name);
+
+      iErr = write_binary_all_3d(file_name,
+				 type_output,
+				 neutrals,
+				 ions,
+				 grid,
+				 time,
+				 planet);
       
       
       /*
