@@ -53,7 +53,6 @@ MY_LIB = libAether.a
 LIB: ${CLASSES} ${OBJECTS}
 	${AR} ${MY_LIB} ${CLASSES} ${OBJECTS}
 
-
 Aether: ${MAIN} LIB
 	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
 
