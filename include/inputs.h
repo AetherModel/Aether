@@ -69,7 +69,7 @@ private:
   std::string planet = "earth";
   std::string f107_file = "";
   std::string planet_species_file = "";
-  std::string electrodynamics_file = "";
+  std::string electrodynamics_file = "UA/inputs/test_ed.bin";
 
   std::string bfield = "none";
 

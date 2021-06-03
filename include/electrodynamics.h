@@ -44,7 +44,7 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
-     \brief used in advance to get potential
+     \brief used in advance.cpp to get potential, eflux, avee
 
 
      \param magLat magnetic latitude
@@ -53,7 +53,7 @@ class Electrodynamics {
 
      \param report reporting
    **/
-  fcube get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
+  std::tuple<fcube, fmat, fmat> get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Gets interpolation indices
@@ -168,7 +168,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_potential(Report &report);
+  fcube get_potential(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D electron energy flux on specified grid
@@ -184,7 +184,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_eflux(Report &report);
+  fmat get_eflux(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D electron average energy on specified grid
@@ -200,7 +200,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_avee(Report &report);
+  fmat get_avee(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D ion energy flux on specified grid
@@ -429,10 +429,7 @@ class Electrodynamics {
      \param values_old the output of this function for the last grid
   **/  
   
-  fmat get_values(fmat values_current,
-		  fmat lats_indices,
-		  fmat mlts_indices,
-		  fmat values_old);
+  fmat get_values(fmat matToInterpolateOn, int rows, int cols);
 };
 
 #endif // INCLUDE_ELECTRODYNAMICS_H_
