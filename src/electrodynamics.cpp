@@ -14,7 +14,7 @@ using namespace std;
 //Initialize Electrodynamics
 
 Electrodynamics::Electrodynamics(Inputs input, Report &report){
-    read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
+    read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report); 
 }
 
 fcube Electrodynamics::get_potential(fcube magLat, fcube magLocalTime, Report &report){
@@ -87,10 +87,30 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols){
 //average energy and eflux energy as well call to get_values
 
 std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report){
-    fcube pot = get_potential(magLat, magLocalTime, report);
-    fmat eflux = get_eflux(magLat, magLocalTime, report);
-    fmat avee = get_avee(magLat, magLocalTime, report);
+    fcube pot;
+    fmat eflux;
+    fmat avee;
+    if (!input_electrodynamics.empty()){
+        pot = get_potential(magLat, magLocalTime, report);
+        eflux = get_eflux(magLat, magLocalTime, report);
+        avee = get_avee(magLat, magLocalTime, report);
+    }
+    else{
+        pot.set_size(magLat.n_rows, magLat.n_cols, magLat.n_slices);
+        pot.zeros();
+        eflux.set_size(magLat.n_rows, magLat.n_cols);
+        eflux.zeros();
+        avee.set_size(magLat.n_rows, magLat.n_cols);
+        avee.ones();
+    }
     return std::make_tuple(pot, eflux, avee);
+}
+
+bool Electrodynamics::check_times(double inputStartTime, double inputEndTime){
+    std::vector<double> e_times = input_electrodynamics[0].times;
+    int iLow = 0;
+    int iHigh = e_times.size()-1;
+    return !(inputStartTime > e_times[iHigh] || inputEndTime < e_times[iLow]);
 }
 
 void Electrodynamics::set_time(double time, Report &report){

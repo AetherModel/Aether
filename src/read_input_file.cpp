@@ -156,6 +156,14 @@ int Inputs::read(Times &time, Report &report) {
       }
 
       // ---------------------------
+      // #electrodynamics
+      // ---------------------------
+
+      if (hash == "#electrodynamics") {
+        electrodynamics_file = read_string(infile_ptr, hash);
+      } 
+
+      // ---------------------------
       // #planet
       // ---------------------------
 

@@ -60,8 +60,13 @@ int main() {
   // Read in the collision frequencies and other diffusion coefficients:
   read_collision_file(neutrals, ions, input, report);
 
-  // Initialize electrodynamics
+  // Initialize electrodynamics and check if electrodynamics times works with input time
   Electrodynamics electrodynamics(input, report);
+  bool times_are_aligned = electrodynamics.check_times(time.get_current(), time.get_end());
+  if (!times_are_aligned){
+    iErr = 1;
+    return iErr;
+  }
   
   // This is for the initial output.  If it is not a restart, this will go:
   if (time.check_time_gate(input.get_dt_output(0))) {

@@ -91,6 +91,9 @@ std::string read_in_string(FILE *infile) {
 
 //done with binary currently, not netcdf
 void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename, Report &report){
+    if (filename == ""){
+      return;
+    }
     int reclen;
     int nLats, nMlts, nTimes, nVars;
     std::vector<double> real_times;
@@ -99,7 +102,6 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename, Rep
     ion_energy_flux_struct, ion_average_energy_struct;
 
     std::cout << filename << "\n";
-
     FILE *infile;
 
     char* char_arr;

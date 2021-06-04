@@ -44,6 +44,18 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
+     \brief used in main.cpp to ensure electrodynamics times and
+      aether input times match up. Returns false if times are
+      misaligned, true if they are aligned
+
+     \param inputStartTime input file starting time
+
+     \param inputEndTime input file ending time
+   **/
+
+  bool check_times(double inputStartTime, double inputEndTime);
+  
+  /**************************************************************
      \brief used in advance.cpp to get potential, eflux, avee
 
 
@@ -53,6 +65,7 @@ class Electrodynamics {
 
      \param report reporting
    **/
+
   std::tuple<fcube, fmat, fmat> get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************

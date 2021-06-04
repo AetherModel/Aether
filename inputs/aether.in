@@ -74,5 +74,8 @@ bfield, 0.0
 #chemistry
 UA/inputs/chemistry_earth.csv
 
-omniweb
+#omniweb
 omni_20110622.txt
+
+#electrodynamics
+UA/inputs/test_ed.bin
