@@ -17,6 +17,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
+            Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
             Report &report) {
@@ -43,6 +44,12 @@ int advance(Planets &planet,
                   indices,
                   input,
                   report);
+
+  electrodynamics.set_time(time.get_current(), report);
+  auto electrodynamics_values = electrodynamics.get_electrodynamics(gGrid.magLat_scgc, gGrid.magLocalTime_scgc, report);
+  ions.potential = std::get<0>(electrodynamics_values);
+  ions.eflux = std::get<1>(electrodynamics_values);
+  ions.avee = std::get<2>(electrodynamics_values);
 
   neutrals.calc_conduction(gGrid, time, report);
 

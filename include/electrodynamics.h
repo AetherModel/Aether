@@ -44,6 +44,42 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
+     \brief used in main.cpp to ensure electrodynamics times and
+      aether input times match up. Returns false if times are
+      misaligned, true if they are aligned
+
+     \param inputStartTime input file starting time
+
+     \param inputEndTime input file ending time
+   **/
+
+  bool check_times(double inputStartTime, double inputEndTime);
+  
+  /**************************************************************
+     \brief used in advance.cpp to get potential, eflux, avee
+
+
+     \param magLat magnetic latitude
+
+     \param magLocalTime magnetic local time
+
+     \param report reporting
+   **/
+
+  std::tuple<fcube, fmat, fmat> get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
+
+  /**************************************************************
+     \brief Gets interpolation indices
+
+     Performs 2d interpolation over search vector to get indices
+
+     \param vals the 2d array that needs indices
+     \param search The vector of values to interpolate over  
+   **/
+
+  fmat get_interpolation_indices(fmat vals, fvec search);
+
+  /**************************************************************
      \brief Sets time needed for electrodynamics
 
      Internally, if there is a file read, this function:
@@ -55,6 +91,7 @@ class Electrodynamics {
      \param time the time requested.
      \param report Need to pass Report class, so reporting can occur  
    **/
+  
   void set_time(double time, Report &report);
 
   /**************************************************************
@@ -138,13 +175,13 @@ class Electrodynamics {
      applicable)
 
      This function does the following:
-     - creates an empty potential matrix to return
+     - creates an empty potential matrix ok, I see to return
      - Loops through the grids in priority order calling set_values
        with the potentials in the grids
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_potential(Report &report);
+  fcube get_potential(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D electron energy flux on specified grid
@@ -160,7 +197,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_eflux(Report &report);
+  fmat get_eflux(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D electron average energy on specified grid
@@ -176,7 +213,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_avee(Report &report);
+  fmat get_avee(fcube magLat, fcube magLocalTime, Report &report);
 
   /**************************************************************
      \brief Get 2D ion energy flux on specified grid
@@ -405,10 +442,7 @@ class Electrodynamics {
      \param values_old the output of this function for the last grid
   **/  
   
-  fmat get_values(fmat values_current,
-		  fmat lats_indices,
-		  fmat mlts_indices,
-		  fmat values_old);
+  fmat get_values(fmat matToInterpolateOn, int rows, int cols);
 };
 
 #endif // INCLUDE_ELECTRODYNAMICS_H_

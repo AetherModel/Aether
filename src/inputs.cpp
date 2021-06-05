@@ -230,3 +230,7 @@ std::string Inputs::get_planetary_file() {
 std::string Inputs::get_planet_species_file() {
   return planet_species_file;
 }
+
+std::string Inputs::get_electrodynamics_file(){
+  return electrodynamics_file;
+}
