@@ -72,7 +72,7 @@ class Ions {
   std::vector<fcube> exb;
   fmat eflux;
   fmat avee;
-  
+
   // ------------------------------
   // Functions:
 

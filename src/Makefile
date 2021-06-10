@@ -1,13 +1,14 @@
 # (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 # Full license can be found in License.md
 
-include Makefile.OS
+include Makefile.OSX
 
 .SUFFICES:
 .SUFFICES: .cpp .o
 
 CLASSES = \
 	chemistry.o\
+	electrodynamics.o\
 	euv.o\
 	grid.o\
 	indices.o\
@@ -33,6 +34,7 @@ OBJECTS = \
 	read_collision_file.o\
 	read_f107_file.o\
 	read_input_file.o\
+	read_netcdf_electrodynamics.o\
 	read_omni_file.o\
 	report.o\
 	solver_chemistry.o\

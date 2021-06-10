@@ -4,6 +4,7 @@
 #ifndef INCLUDE_ADVANCE_H_
 #define INCLUDE_ADVANCE_H_
 
+#include "../include/electrodynamics.h"
 #include "../include/times.h"
 #include "../include/inputs.h"
 #include "../include/neutrals.h"
@@ -12,6 +13,7 @@
 #include "../include/planets.h"
 #include "../include/ions.h"
 
+
 int advance(Planets &planet,
             Grid &gGrid,
             Times &time,
@@ -19,6 +21,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
+            Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &args,
             Report &report);
