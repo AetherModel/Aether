@@ -20,7 +20,7 @@ def write_swmf_imf_file(data, fileout):
     fp.write("#START\n".encode())
     
     i = 0
-    while (np.abs(data["vx"][i]) < 10000.0):
+    while (np.abs(data["vx"][i]) > 10000.0):
         i += 1
     
     vx0 = data["vx"][i]
