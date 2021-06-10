@@ -6,7 +6,10 @@ from datetime import datetime
 from datetime import timedelta
 from amie_routines import *
 from omniweb import *
+from kyoto import *
 import sys
+import matplotlib.pyplot as plt
+import matplotlib.dates as dates
 
 # ------------------------------------------------------------------------
 # These are stolen from Angeline's code
@@ -103,6 +106,9 @@ def get_command_line_args(argv):
             'real': True,
             'south': False,
             'tcv': False,
+            'substorm': False,
+            'ions': False,
+            'move': False,
             'cusp': False}
 
     arg_type = {'startdate': str,
@@ -112,6 +118,9 @@ def get_command_line_args(argv):
                 'real': bool,
                 'south': bool,
                 'tcv': bool,
+                'substorm': bool,
+                'ions': bool,
+                'move': bool,
                 'cusp': bool}
     
     # If there is input, set default help to False
@@ -154,7 +163,7 @@ def get_command_line_args(argv):
 # make the OCFLB
 # ------------------------------------------------------------------------
 
-def make_ocflb(mlts, by, bz, DoAddVar, phase):
+def make_ocflb(mlts, by, bz, DoAddVar, phase, substorm, move):
 
     mltsR = mlts * np.pi / 12.0
 
@@ -190,24 +199,106 @@ def make_ocflb(mlts, by, bz, DoAddVar, phase):
         
         by_deflection_amp = magnitude_by * np.cos(2*np.pi * mlts/Period + phase)
         by_deflection_amp = by_deflection_amp * np.exp(-np.abs(mlts-loc)/HalfWidthMLT)
+
+    if (substorm > -1000.0):
+        # let's push the OCFLB poleward a bit during the substorm
+        offset_amp = np.abs(substorm) * ocflb_lat_deflection_amp * 2.0
+        # The center of the push should move from 23 to 21 MLT during expansion:
+        if ((substorm < 0.0) and (move)):
+            x = np.abs(substorm)
+            center = (x * 22.0 + (1.0-x) * 24.0)
+        else:
+            center = 22.0
+        # print("substorm: ", substorm, center)
+        ss_deflection = offset_amp * \
+            ((np.cos((mlts-center) * np.pi/12.0) + 1)/2.0)**6
+    else:
+        ss_deflection = 0.0
         
     ocflb = ocflb0 \
         - ocflb_lat_deflection_amp * np.cos(mltsR) \
-        + by_deflection_amp
+        + by_deflection_amp \
+        + ss_deflection
 
     return ocflb
     
 # ------------------------------------------------------------------------
+# Define characteristics of a substorm
+# ------------------------------------------------------------------------
+
+def define_substorm_characteristics(mlts, lats, ae, ocflbBase, substorm, IsPot, move):
+
+    mltsR = mlts * np.pi / 12.0
+    r = 90.0 - lats
+    t2d, r2d = np.meshgrid(mltsR, r)
+
+
+#    if (DoAddVar):
+#        magnitude = 1.5 * np.abs(np.sin(np.arctan2(by, bz)))
+#        if (by > 0.0):
+#            loc = 8.0
+#        else:
+#            loc = 16.0
+#        HalfWidthMLT = 3.0
+#
+#        Period = 1000.0 / (111.0 * np.cos(ocflb0*np.pi/180.0) * 15.0)
+#        
+#        by_deflection_amp = magnitude_by * np.cos(2*np.pi * mlts/Period + phase)
+#        by_deflection_amp = by_deflection_amp * np.exp(-np.abs(mlts-loc)/HalfWidthMLT)
+
+    
+    if (substorm > -1000):
+    
+        tau_eflux = 2.0 + ae/100.0 * 0.35 # how the thickness of the aurora grows
+
+        if ((substorm < 0.0) and (move)):
+            x = np.abs(substorm)
+            center = (x * 22.0 + (1.0-x) * 24.0) * np.pi / 12.0
+        else:
+            center = 22.0 * np.pi / 12.0
+
+        diff = (t2d - center) 
+        value = ((np.cos(diff) + 1)/2.0)**10
+        ind = value > 0.5
+        value[ind] = 0.5
+        value = value * 2.0
+
+        tau_eflux_mlts = tau_eflux * (0.5 + 1.5 * (np.cos(mltsR)+1.0))/3.5
+
+        # shift equatorward
+        shift_mlts = -tau_eflux * 0.75
+        nLats = len(lats)
+        tau = np.zeros(nLats)
+        for i, ocflb in enumerate(ocflbBase):
+            tau_ef = tau_eflux_mlts[i]
+            shift = shift_mlts
+            dist = lats - (ocflb + shift)
+            tau[dist >= 0.0] = tau_eflux_mlts[i] * (1.0 + IsPot * 1.00)
+            tau[dist < 0.0] = tau_eflux_mlts[i] * (0.75 + IsPot * 0.50)
+            fac = np.exp(-abs(dist**4/tau**4))
+            value[:,i] = value[:,i] * fac
+        
+    else:
+
+        value = r2d * 0.0
+
+    return value
+
+        
+# ------------------------------------------------------------------------
 # make the aurora
 # ------------------------------------------------------------------------
 
-def make_electron_aurora(mlts, lats, ae, ocflbBase):
+def make_electron_aurora(mlts, lats, ae, ocflbBase, substorm, move):
 
-    amp_eflux = 2.0 + ae/50.0 * 0.75 # how brightness changes with AE
-    amp_avee = 2.5 + ae/1000.0 * 4.0 # Aurora energy increases slightly
+    ssvalue = define_substorm_characteristics(mlts, lats, ae, ocflbBase, substorm, 0, move)
+    ssvalue_avee = define_substorm_characteristics(mlts, lats, ae, ocflbBase, substorm, 1, move)
+    
+    amp_eflux = 3.0 + ae/150.0 * 0.75 # how brightness changes with AE
+    amp_avee = 2.5 + ae/1000.0 # Aurora energy increases slightly
 
     # half e-folding widths:
-    tau_eflux = 2.0 + ae/50.0 * 0.25 # how the thickness of the aurora grows
+    tau_eflux = 2.0 + ae/200.0 * 0.25 # how the thickness of the aurora grows
     tau_avee = tau_eflux * 2
 
     mltsR = mlts * np.pi / 12.0
@@ -218,36 +309,97 @@ def make_electron_aurora(mlts, lats, ae, ocflbBase):
 
     tau_eflux_mlts = tau_eflux * (0.5 + 1.5 * (np.cos(mltsR)+1.0))/3.5
 
-    # shift by 0 @ 18, and full at 06
-    rot = (mlts-6.0)*np.pi/12
-    shift_mlts = -tau_eflux * ((np.cos(rot)+1.0)/2.0)
+    # shift equatorward
+    shift_mlts = -tau_eflux * 0.75
     nLats = len(lats)
     tau = np.zeros(nLats)
     for i, ocflb in enumerate(ocflbBase):
         tau_ef = tau_eflux_mlts[i]
-        shift = shift_mlts[i]
+        shift = shift_mlts
         dist = lats - (ocflb + shift)
-        tau[dist >= 0.0] = tau_eflux_mlts[i]
-        tau[dist < 0.0] = tau_eflux_mlts[i] * 2.0
+        tau[dist >= 0.0] = tau_eflux_mlts[i] * 1.5
+        tau[dist < 0.0] = tau_eflux_mlts[i] * 0.75
         fac = np.exp(-abs(dist**4/tau**4))
         eflux[:,i] = eflux[:,i] * fac
 
         fac = np.exp(-abs(dist**2/tau_avee**2))
         avee[:,i] = avee[:,i] * fac
-        
+
+    eflux = eflux + ssvalue * ae/25.0
+
+    ssavee = 2.5 + ae/1000.0 * 4.0 # Aurora energy increases slightly
+    aveess = ssvalue_avee * ssavee
+    avee[aveess > avee] = aveess[aveess > avee]
+    
+    return eflux, avee
+    
+# ------------------------------------------------------------------------
+# make the ION aurora
+# ------------------------------------------------------------------------
+
+def make_ion_aurora(mlts, lats, ae, ocflbBase, dst):
+
+    dstp = -dst
+    if (dstp < 0):
+        dstp = 0.0
+    
+    # eflux is 0 mW/m2 + another 10 for every 200 nT change in Dst?
+    amp_eflux = 0.0 + Dst/100.0 * 10.0 # how brightness changes with Dst
+
+    # average energy is 40 keV + another 5 keV for every 200 nT change in Dst?
+    amp_avee = 30.0 + dstp/200.0 * 5.0 # Aurora energy increases slightly
+
+    # half e-folding width for the electron aurora
+    tau_electron_eflux = 2.0 + ae/200.0 * 0.25 # how the thickness of the aurora grows
+
+    # half e-folding width for the ion aurora
+    tau_eflux = 3.0 + dstp/200.0 # how the thickness of the aurora grows
+    tau_avee = tau_eflux * 2.0
+    
+    mltsR = mlts * np.pi / 12.0
+    r = 90.0 - lats
+    t2d, r2d = np.meshgrid(mltsR, r)
+
+    eflux = amp_eflux * (np.cos(t2d)+2.0)/3.0
+    avee = amp_avee * (np.cos(t2d)+5.0)/6.0
+
+    # this is the baseline electron stuff, so don't change
+    tau_electron_eflux_mlts = tau_electron_eflux * (0.5 + 1.5 * (np.cos(mltsR)+1.0))/3.5
+
+    # shift equatorward
+    shift_mlts = -tau_electron_eflux * 2.0 - tau_eflux * 0.75
+    nLats = len(lats)
+    tau = np.zeros(nLats)
+    for i, ocflb in enumerate(ocflbBase):
+        tau_ef = tau_eflux_mlts[i]
+        shift = shift_mlts
+        dist = lats - (ocflb + shift)
+        # poleward of the center:
+        tau[dist >= 0.0] = tau_eflux_mlts[i] * 1.0
+        # equatorward of the center:
+        tau[dist < 0.0] = tau_eflux_mlts[i] * 1.0
+        fac = np.exp(-abs(dist**4/tau**4))
+        eflux[:,i] = eflux[:,i] * fac
+
+        fac = np.exp(-abs(dist**2/tau_avee**2))
+        avee[:,i] = avee[:,i] * fac
+
     return eflux, avee
     
 # ------------------------------------------------------------------------
 # make potential
 # ------------------------------------------------------------------------
 
-def make_potential(mlts, lats, by, bz, ocflbBase):
+def make_potential(mlts, lats, by, bz, ae, ocflbBase, substorm, move):
+
+    ssvalue = define_substorm_characteristics(mlts, lats, ae, ocflbBase, substorm, 1, move)
 
     ocflb0 = np.mean(ocflbBase)
     
     # Do everything is kV, then transform to V at end
-    amp_bz = -10.0
+    amp_bz = -7.5
     amp_by = -5.0
+    amp_ae = -30.0 * ae / 500.0 
     by_sharpen = (25.0 - np.abs(by)) / 25.0
     tau_potential_base = 7.0 * np.sqrt(by_sharpen)
 
@@ -256,7 +408,6 @@ def make_potential(mlts, lats, by, bz, ocflbBase):
     nMlts = len(mlts)
     nLats = len(lats)
     
-    #potential = np.zeros([nMlts, nLats])
     potential = np.zeros([nLats, nMlts])
 
     # By drives a single cell that is centered at a location that
@@ -283,8 +434,8 @@ def make_potential(mlts, lats, by, bz, ocflbBase):
         potential_bz = 0.0 * t2d
     potential_visc = -1.0 * amp_bz * np.sin(t2d)
 
-    shifted = t2d - 1.0 * np.pi / 12.0
-    potential_harang = amp_bz * ((np.cos(shifted)+1.0)/2.0)**3.0
+    shifted = t2d - 23.0 * np.pi / 12.0
+    potential_harang = 2.0 * amp_bz * ((np.cos(shifted)+1.0)/2.0)**3.0
     
     tau = np.zeros(nLats)
     for i, ocflb in enumerate(ocflbBase):
@@ -302,16 +453,122 @@ def make_potential(mlts, lats, by, bz, ocflbBase):
             fac = fac * by_sharpen
         potential_bz[:,i] = potential_bz[:,i] * fac
 
-        fac = np.exp(-2.0 * dist**2 / tau**2)
+        fac = np.exp(-2.0 * (dist + tau_potential_base*0.75)**2 / (tau*1.25)**2)
         potential_harang[:,i] = potential_harang[:,i] * fac
         
+
+    potential_ss = ssvalue * amp_ae
+    
     potential = (potential_by + \
                  potential_bz + \
+                 potential_ss + \
                  potential_harang + \
                  potential_visc) * 1000.0
 
     return potential
 
+
+# ------------------------------------------------------------------------
+# This detects substorms based on the Newell and Gjerloev [2011] criteria
+# A substorm onset occurs at T0, when:
+#  al[T0+1] - al[T0] < -15
+#  al[T0+2] - al[T0] < -30
+#  al[T0+3] - al[T0] < -45
+#  sum(al(T0 + i=4 to 30))/26 - al[T0] < -100
+# ------------------------------------------------------------------------
+
+def detect_substorms(al):
+
+    nPts = len(al)
+    substorm = np.zeros(nPts) - 1000.0
+
+    IsSubstorm = 0
+    HasPeaked = 0
+    IsDone = 0
+    iTStart = -1
+    iTPeak = -1
+    iT0 = 0
+    while (iT0 < nPts-30):
+        al_base = al[iT0]
+        ind = np.arange(iT0+4, iT0+31)
+        al_mean = np.mean(al[ind])
+        if ((al[iT0 + 1] - al_base < -15.0) and
+            (al[iT0 + 2] - al_base < -30.0) and
+            (al[iT0 + 3] - al_base < -45.0) and
+            (al_mean - al_base < -100.0)):
+            # This means that there is a substorm
+            IsSubstorm = 1
+            HasPeaked = 0
+            IsDone = 0
+            iTStart = iT0
+            iTPeak = -1
+            iTEnd = -1
+
+            iEnd = iT0 + 60
+            if (iEnd > nPts):
+                iEnd = nPts
+            ind = np.arange(iT0, iEnd)
+            mini = np.min(al[ind])
+            for i in ind:
+                if (al[i] == mini):
+                    iTPeak = i
+
+            iEnd = iTPeak + 120
+            if (iEnd > nPts):
+                iEnd = nPts
+            ind = np.arange(iTPeak, iEnd)
+            maxi = np.max(al[ind])
+            for i in ind:
+                if (al[i] == maxi):
+                    iTEnd = i
+            
+            if ((iTPeak - iT0 > 20) and (iTEnd - iTPeak > 20)):
+
+                print("Substorm Start @ ", iT0)
+                print("         Peak  @ ", iTPeak)
+                print("         End   @ ", iTEnd)
+                
+                di = (iTPeak - iT0)
+                # this is the percentage of the way from the start to the peak:
+                # put this as a negative to indicate expansion phase:
+                for i in np.arange(iT0, iTPeak+1):
+                    substorm[i] = -(i-iT0) / di
+
+                # this is the percentage of the way from the peak to the end:
+                di = (iTEnd - iTPeak)
+                for i in np.arange(iTPeak, iTEnd+1):
+                    substorm[i] = 1.0 - (i-iTPeak) / di
+
+            iT0 = iTEnd
+
+        iT0 = iT0 + 1
+
+    return substorm
+
+# ------------------------------------------------------------------------      
+# smooth function                                                               
+# ------------------------------------------------------------------------      
+
+def smooth(times, values, dt):
+
+    values = np.array(values)
+    smoothed = np.array(values)
+
+    iL = 0
+    iH = 0
+    n = len(times)
+    for i, t in enumerate(times):
+        tlow = t - dt
+        thigh = t + dt
+        while ((times[iL] < tlow) & (iH < n-1)):
+            iL = iL+1
+        while ((times[iH] < thigh) & (iH < n-1)):
+            iH = iH+1
+        iM = np.arange(iL,iH)
+        v = values[iM]
+        smoothed[i] = np.mean(v)
+
+    return smoothed
 
 # ------------------------------------------------------------------------
 # main code
@@ -320,16 +577,15 @@ def make_potential(mlts, lats, by, bz, ocflbBase):
 # Get the input arguments
 args = get_command_line_args(process_command_line_input())
 
-print(args)
+move = args["move"]
 
 if (args["real"]):
+
     results = download_omni_data(args["startdate"], args["enddate"], "-all")
     omniDirty = parse_omni_data(results)
     omni = clean_omni(omniDirty)
     basetime = dt.datetime.strptime(args["startdate"],"%Y%m%d")
     endtime = dt.datetime.strptime(args["enddate"],"%Y%m%d")
-    print(basetime)
-    print(endtime)
 
     xp = []
     for t in omni["times"]:
@@ -340,16 +596,47 @@ if (args["real"]):
     dt_in_sec = args["dt"]*60.0
     totaltime = (endtime - basetime).total_seconds()
     alltimes = np.arange(0.0, totaltime+dt_in_sec, dt_in_sec)
+
+    dt = 15.0 * 60.0
+    omni_smoothed_bz = smooth(xp, omni["bz"], dt)
     
     bx = np.interp(alltimes, xp, omni["bx"])
     by = np.interp(alltimes, xp, omni["by"])
     bz = np.interp(alltimes, xp, omni["bz"])
     vx = np.abs(np.interp(alltimes, xp, omni["vx"]))
 
+    bzs = np.interp(alltimes, xp, omni_smoothed_bz)    
+    
     ae = np.interp(alltimes, xp, omni["ae"])
     al = np.interp(alltimes, xp, omni["al"])
     au = np.interp(alltimes, xp, omni["au"])
 
+    # --------------------------------------
+    # If we have to get Dst, do the same thing:
+    # --------------------------------------
+
+    ions = args["ions"]
+    if (ions):
+        # This blindly assumes that the kyoto Dst exists....
+        dstfile = download_kyoto_dst(args["startdate"])
+        kyoto = parse_kyoto_dst(dstfile, args["startdate"])
+
+        xp = []
+        for t in kyoto["times"]:
+            xp.append((t-basetime).total_seconds())
+        dst = np.interp(alltimes, xp, kyoto["dst"])
+    
+    if (args["substorm"]):
+        dt_omni = (omni["times"][1] - omni["times"][0]).total_seconds()
+        if (dt_omni != 60.0):
+            print("In order to run with a substorm, dt for omni needs to be 60s")
+            exit()
+        substorm_omni = detect_substorms(np.array(omni["al"]))
+        substorm = np.interp(alltimes, xp, substorm_omni)
+
+    else:
+        substorm = np.zeros(len(al)) - 1000.0
+            
 else:
 
     dt = 1.0/60.0
@@ -383,8 +670,6 @@ mlts = np.arange(0.0, 24.0+dMlt, dMlt)
 
 theta2d, r2d = np.meshgrid(mlts * np.pi/12.0 - np.pi/2.0, 90.0 - lats)
 area = 111.0 * 111.0 * 1000.0 * 1000.0 * np.sin(r2d*np.pi/180.0)
-print(area)
-
 
 data = {}
 
@@ -396,14 +681,19 @@ data["lats"] = lats
 data["mlts"] = mlts
 
 data["times"] = []
-for t in alltimes:
-    data["times"].append(basetime + timedelta(seconds = t))
+#for t in alltimes:
+#    data["times"].append(basetime + timedelta(seconds = t))
 
 data["imf"] = []
 data["ae"] = []
 data["dst"] = []
 data["hp"] = []
 data["cpcp"] = []
+
+hparray = []
+bzarray = []
+byarray = []
+aearray = []
 
 data["Vars"] = ['Potential (kV)', \
                 'Total Energy Flux (ergs/cm2/s)', \
@@ -431,15 +721,25 @@ for i in np.arange(0,nTimes):
     byNow = by[i]
     if (args["south"]):
         byNow = -byNow
+
+    aeCurrent = ae[i]
+    aesat = 1000.0 * (1-np.exp(-aeCurrent/500.0))
+    if (aesat < aeCurrent):
+        aeCurrent = aesat
     
-    ocflb = make_ocflb(mlts, byNow, bz[i], DoAddVarOCFLB, phase)
-    pot2d = make_potential(mlts, lats, byNow, bz[i], ocflb)
-    eflux2d,avee2d = make_electron_aurora(mlts, lats, ae[i], ocflb)
+    ocflb = make_ocflb(mlts, byNow, bzs[i], DoAddVarOCFLB, phase, substorm[i], move)
+    pot2d = make_potential(mlts, lats, byNow, bz[i], aeCurrent, ocflb, substorm[i], move)
+    eflux2d, avee2d = make_electron_aurora(mlts, lats, aeCurrent, ocflb, substorm[i], move)
+    if (ions):
+        ionEflux2d, ionAvee2d = make_ion_aurora(mlts, lats, aeCurrent, ocflb, dst)
 
     power = eflux2d/1000.0 * area # In Watts
     hp = np.sum(power)/1.0e9 # In GW
 
-    print(ut, by[i], bz[i], ae[i], hp)
+    ionpower = ionEflux2d/1000.0 * area
+    ionHp = np.sum(ionPower)/1.0e9 # in GW
+
+    # print(ut, int(by[i]), int(bz[i]), int(ae[i]), int(hp))
         
     #  ; IMF should be (nTimes,4) - V, Bx, By, Bz
     #  ; AE  (nTimes, 4) - AL, AU, AE, AEI?
@@ -448,10 +748,14 @@ for i in np.arange(0,nTimes):
     #  ; CPCP (nTimes) - CPCP (kV)
 
     data["imf"].append([vx[i], bx[i], by[i], bz[i]])
+    bzarray.append(bz[i])
+    byarray.append(by[i])
     # These are all bad values for now....
     data["ae"].append([al[i], au[i], ae[i], 0.0])
+    aearray.append(ae[i])
     data["dst"].append([0.0, 0.0])
     data["hp"].append([hp, 0.0])
+    hparray.append(hp)
     data["cpcp"].append((np.max(pot2d) - np.min(pot2d))/1000.0)
 
     cPot = data["Vars"][0]
@@ -469,3 +773,42 @@ if (args["outfile"].find(".nc") > 0):
 else:
     # Write out in old AMIE format:
     amie_write_binary(args["outfile"], data)
+
+
+fig = plt.figure(figsize = (10,10))
+zeros = np.array(bz) * 0.0
+
+ax = fig.add_subplot(511)
+ax.plot(data["times"], bzarray)
+ax.plot(data["times"], zeros, 'k:')
+ax.set_ylabel('IMF Bz (nT)')
+ax.set_xlim(data["times"][0],data["times"][-1])
+
+ax = fig.add_subplot(512)
+ax.plot(data["times"], byarray)
+ax.plot(data["times"], zeros, 'k:')
+ax.set_ylabel('IMF By (nT)')
+ax.set_xlim(data["times"][0],data["times"][-1])
+
+ax = fig.add_subplot(514)
+ax.plot(data["times"], hparray)
+#ax.plot(times, zeros, 'k:')
+ax.set_ylabel('Hemispheric Power (GW)')
+ax.set_xlim(data["times"][0],data["times"][-1])
+
+ax = fig.add_subplot(513)
+ax.plot(data["times"], aearray)
+#ax.plot(times, zeros, 'k:')
+ax.set_ylabel('AE (nT)')
+ax.set_xlim(data["times"][0],data["times"][-1])
+
+ax = fig.add_subplot(515)
+ax.plot(data["times"], data["cpcp"])
+#ax.plot(times, zeros, 'k:')
+ax.set_ylabel('CPCP (kV)')
+ax.set_xlim(data["times"][0],data["times"][-1])
+
+
+plotfile = 'electrodynamics.png'
+fig.savefig(plotfile)
+plt.close()
