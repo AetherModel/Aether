@@ -47,6 +47,7 @@ def get_args(argv):
     winds = 0
     diff = 0
     IsGitm = 1
+    HasHeaders = 0
     movie = 0
     rate = 30
 
@@ -145,12 +146,17 @@ def get_args(argv):
                 m = re.match(r'(.*)bin',arg)
                 if m:
                     IsGitm = 1
+                    # check for a header file:
+                    checkFile = glob(m.group(1)+"header")
+                    if (len(checkFile[0]) > 1):
+                        HasHeader = 1
                 else:
                     IsGitm = 0
 
                     
     args = {'filelist':filelist,
             'IsGitm':IsGitm,
+            'HasHeader':HasHeader,
             'var':var,
             'cut':cut,
             'diff':diff,
@@ -176,11 +182,16 @@ def get_args(argv):
 args = get_args(sys.argv)
 
 IsGitm = args['IsGitm']
+HasHeader = args['HasHeader']
 
-if (IsGitm):
+if ((IsGitm) and (not HasHeader)):
     header = read_gitm_header(args["filelist"])
 else:
-    header = read_aether_header(args["filelist"])
+    if (HasHeader):
+        header = read_aether_ascii_header(args["filelist"])
+        IsGitm = 0
+    else:
+        header = read_aether_header(args["filelist"])
 
 if (args["var"] >= header["nVars"]):
     print('You asked for a variable that doesnt exist!!!')
@@ -211,7 +222,6 @@ if (args["help"]):
 
     exit()
 
-        
 filelist = args["filelist"]
 nFiles = len(filelist)
 
@@ -243,9 +253,8 @@ AllData2D = []
 AllAlts = []
 AllTimes = []
 
-j = 0
 iCut = -1
-for file in filelist:
+for j, file in enumerate(filelist):
 
     if (IsGitm):
         data = read_gitm_one_file(file, vars)
@@ -255,8 +264,12 @@ for file in filelist:
             VarList = []
             for v in vars:
                 VarList.append(header["vars"][v])
-        data = read_aether_one_file(file, VarList)
-        iVar_ = 3
+        if (HasHeader):
+            data = read_aether_one_binary_file(header, j, vars)
+            iVar_ = args["var"]
+        else:
+            data = read_aether_one_file(file, VarList)
+            iVar_ = 3
     if (j == 0):
         [nLons, nLats, nAlts] = data[0].shape
         Alts = data[2][0][0]/1000.0;
@@ -337,7 +350,6 @@ for file in filelist:
             if (cut == 'lon'):
                 AllWindsX.append(data[iUx_][iLon,:,:])
                 AllWindsY.append(data[iUy_][iLon,:,:])
-    j=j+1
     
 
 AllData2D = np.array(AllData2D)
