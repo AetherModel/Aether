@@ -5,41 +5,42 @@
 
 #include "../include/aether.h"
 #include <vector>
-using namespace std;
-//using namespace netCDF;
-//using namespace netCDF::exceptions;
 
-// g++ electrodynamics.cpp -o -std=c++11
+// Initialize Electrodynamics
 
-//Initialize Electrodynamics
-
-Electrodynamics::Electrodynamics(Inputs input, Report &report){
-    read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report); 
+Electrodynamics::Electrodynamics(Inputs input, Report &report) {
+  read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report); 
 }
 
-fcube Electrodynamics::get_potential(fcube magLat, fcube magLocalTime, Report &report){
-    fcube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
-    pot.zeros();
-    int time_pos = static_cast<int>(time_index);
-    fmat e_potentials = input_electrodynamics[0].potential[time_pos];
-    for (int i = 0; i < magLat.n_slices; ++i){
-        set_grid(magLat.slice(i), magLocalTime.slice(i), report);
-        pot.slice(i) = get_values(e_potentials, magLat.n_rows, magLat.n_cols);
-    }
-    return pot;
+fcube Electrodynamics::get_potential(fcube magLat,
+				     fcube magLocalTime,
+				     Report &report) {
+  fcube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
+  pot.zeros();
+  int time_pos = static_cast<int>(time_index);
+  fmat e_potentials = input_electrodynamics[0].potential[time_pos];
+  for (int i = 0; i < magLat.n_slices; ++i){
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+    pot.slice(i) = get_values(e_potentials, magLat.n_rows, magLat.n_cols);
+  }
+  return pot;
 }
 
-fmat Electrodynamics::get_eflux(fcube magLat, fcube magLocalTime, Report &report){
-    int i = magLat.n_slices-1;//figure out
-    set_grid(magLat.slice(i), magLocalTime.slice(i), report);
-    int time_pos = static_cast<int>(time_index);
-    fmat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
-    return get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
+fmat Electrodynamics::get_eflux(fcube magLat,
+				fcube magLocalTime,
+				Report &report) {
+  int i = magLat.n_slices-1;
+  set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+  int time_pos = static_cast<int>(time_index);
+  fmat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
+  return get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
 }
 
-fmat Electrodynamics::get_avee(fcube magLat, fcube magLocalTime, Report &report){
-    int i = magLat.n_slices-1;//figure out
-    set_grid(magLat.slice(i), magLocalTime.slice(i), report);
+fmat Electrodynamics::get_avee(fcube magLat,
+			       fcube magLocalTime,
+			       Report &report) {
+    int i = magLat.n_slices-1;
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
     int time_pos = static_cast<int>(time_index);
     fmat e_avee = input_electrodynamics[0].average_energy[time_pos];
     return get_values(e_avee, magLat.n_rows, magLat.n_cols);
@@ -71,13 +72,22 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols){
             else {
                 r_start = v_pos;
             }
-            float first_row_slope = matToInterpolateOn(r_start, c_start + 1) - matToInterpolateOn(r_start, c_start);
-            float second_row_slope = matToInterpolateOn(r_start + 1, c_start + 1) - matToInterpolateOn(r_start + 1, c_start);
-            float first_row_val = matToInterpolateOn(r_start, c_start) + first_row_slope * (h_pos - c_start);
-            float second_row_val = matToInterpolateOn(r_start + 1, c_start) + second_row_slope * (h_pos - c_start);
+            float first_row_slope =
+	      matToInterpolateOn(r_start, c_start + 1) - 
+	      matToInterpolateOn(r_start, c_start);
+            float second_row_slope =
+	      matToInterpolateOn(r_start + 1, c_start + 1) -
+	      matToInterpolateOn(r_start + 1, c_start);
+            float first_row_val =
+	      matToInterpolateOn(r_start, c_start) +
+	      first_row_slope * (h_pos - c_start);
+            float second_row_val =
+	      matToInterpolateOn(r_start + 1, c_start) +
+	      second_row_slope * (h_pos - c_start);
             //time to vertically linear interpolate these two values
             float vertical_slope = second_row_val - first_row_val;
-            float final_value = first_row_val + vertical_slope * (v_pos - r_start); 
+            float final_value =
+	      first_row_val + vertical_slope * (v_pos - r_start); 
             slice(r, c) = final_value;
         }
     }
@@ -86,7 +96,9 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols){
 
 //average energy and eflux energy as well call to get_values
 
-std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report){
+std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat,
+								   fcube magLocalTime,
+								   Report &report){
     fcube pot;
     fmat eflux;
     fmat avee;
@@ -94,8 +106,7 @@ std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat,
         pot = get_potential(magLat, magLocalTime, report);
         eflux = get_eflux(magLat, magLocalTime, report);
         avee = get_avee(magLat, magLocalTime, report);
-    }
-    else{
+    } else {
         pot.set_size(magLat.n_rows, magLat.n_cols, magLat.n_slices);
         pot.zeros();
         eflux.set_size(magLat.n_rows, magLat.n_cols);
@@ -173,15 +184,16 @@ void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report){
     static int iFunction = -1;
     //report.enter(function, iFunction);
 
-    lats_needed = lats;
+    lats_needed = abs(lats);
     mlts_needed = mlts;
 
     //uses first input_electrodynamics struct
     fvec lat_search = input_electrodynamics[0].mlats;
     fvec mlt_search = input_electrodynamics[0].mlts;
 
-    input_electrodynamics[0].lats_indices = get_interpolation_indices(lats, lat_search);
-    input_electrodynamics[0].mlts_indices = get_interpolation_indices(mlts, mlt_search);
+    input_electrodynamics[0].lats_indices = get_interpolation_indices(lats_needed, lat_search);
+    input_electrodynamics[0].mlts_indices = get_interpolation_indices(mlts_needed, mlt_search);
+
     // If we have read in a file, we need to create interpolation indices here:
 
     // This is a bit more complicated, since we need to loop through
