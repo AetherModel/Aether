@@ -73,9 +73,14 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
 
-  potential.set_size(nLons, nLats, nAlts);
-  potential.zeros();
+  potential_scgc.set_size(nLons, nLats, nAlts);
+  potential_scgc.zeros();
 
+  eflux.set_size(nLons, nLats);
+  eflux.zeros();
+  avee.set_size(nLons, nLats);
+  avee.zeros();
+  
   // This gets a bunch of the species-dependent characteristics:
   int iErr = read_planet_file(input, report);
   if (iErr > 0) std::cout << "Error in reading planet file!" << '\n';
