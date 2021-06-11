@@ -67,9 +67,10 @@ class Ions {
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;
 
-  fcube potential;
-  std::vector<fcube> efield;
-  std::vector<fcube> exb;
+  // Electrodynamics:
+  fcube potential_scgc;
+  std::vector<fcube> efield_vcgc;
+  std::vector<fcube> exb_vcgc;
   fmat eflux;
   fmat avee;
 
