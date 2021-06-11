@@ -730,14 +730,15 @@ for i in np.arange(0,nTimes):
     ocflb = make_ocflb(mlts, byNow, bzs[i], DoAddVarOCFLB, phase, substorm[i], move)
     pot2d = make_potential(mlts, lats, byNow, bz[i], aeCurrent, ocflb, substorm[i], move)
     eflux2d, avee2d = make_electron_aurora(mlts, lats, aeCurrent, ocflb, substorm[i], move)
-    if (ions):
-        ionEflux2d, ionAvee2d = make_ion_aurora(mlts, lats, aeCurrent, ocflb, dst)
-
     power = eflux2d/1000.0 * area # In Watts
     hp = np.sum(power)/1.0e9 # In GW
 
-    ionpower = ionEflux2d/1000.0 * area
-    ionHp = np.sum(ionPower)/1.0e9 # in GW
+    if (ions):
+        ionEflux2d, ionAvee2d = make_ion_aurora(mlts, lats, aeCurrent, ocflb, dst)
+        ionpower = ionEflux2d/1000.0 * area
+        ionHp = np.sum(ionPower)/1.0e9 # in GW
+    else:
+        ionHp = hp * 0.0
 
     # print(ut, int(by[i]), int(bz[i]), int(ae[i]), int(hp))
         
