@@ -65,6 +65,7 @@ int main() {
   bool times_are_aligned = electrodynamics.check_times(time.get_current(), time.get_end());
   if (!times_are_aligned){
     iErr = 1;
+    std::cout << "Times don't align with electrodynamics file!  Please check this!\n";
     return iErr;
   }
   
