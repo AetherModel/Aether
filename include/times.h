@@ -28,6 +28,8 @@ public:
   int check_time_gate(float dt_check);
 
   void calc_dt();
+
+  std::vector<int> get_iCurrent();
   
 private:
   
