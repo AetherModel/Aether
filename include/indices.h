@@ -54,6 +54,9 @@ class Indices {
 		 std::vector<float> values,
 		 float missing);
 
+  void perturb_f107();
+  void dump_one(int ind);
+
  private:
 
   struct index_time_pair {

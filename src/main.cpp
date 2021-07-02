@@ -92,6 +92,11 @@ int main() {
 
     // Do some coupling here. But we have no coupling to do. Sad.
   }
+
+  //testing perturb
+  indices.perturb_f107();
+  indices.dump_one(0);
+
   report.exit(function);
   report.times();
   return iErr;

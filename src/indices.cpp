@@ -293,3 +293,86 @@ int Indices::get_swt_index_id() { return iSWT_; }
 int Indices::get_ae_index_id() { return iAE_; }
 int Indices::get_au_index_id() { return iAU_; }
 int Indices::get_al_index_id() { return iAL_; }
+
+
+
+
+// --------------------------------------------------------------------
+// This function will perturb the inputed data array an amount determined
+// by the input or by a random amount, if amount is zero then it will be random 
+// if mult_add is true it will multiply by a percentage, else it will add 
+// if all is true it will use same value for all elements, else it will 
+// do different normally distributed random values for each element.
+// if amt_mean is true then amt is the given offset/* amount, else it is the mean
+// to use in the stdev randomization. 
+// --------------------------------------------------------------------
+void perturb(std::vector<float> &indexarray, double amount, double stdev,
+       bool mult_add, bool all, bool amt_mean) {
+  if (!amt_mean) {    // do random
+    std::default_random_engine generator;
+    // normal_distribution<double> distribution(mean,stdev);
+    std::normal_distribution<double> distribution(amount, stdev);
+    // srand(time(NULL));
+    int first_digit = distribution(generator);
+    if (mult_add) {    // multiply by 
+        if (all) {
+         double val = distribution(generator);
+        for (int i = 0; i < indexarray.size(); ++i) {
+            indexarray[i] = indexarray[i] * (1+ val);
+        }
+        } else {
+            for (int i = 0; i < indexarray.size(); ++i) {
+            indexarray[i] = indexarray[i] * (1 + distribution(generator));
+        }
+        }
+
+    }
+    if (!mult_add) {    // add 
+        if (all) {
+            double val = distribution(generator);
+        for (int i = 0; i < indexarray.size(); ++i) {
+            indexarray[i] = indexarray[i] + val;
+        }
+        } else {
+            for (int i = 0; i < indexarray.size(); ++i) {
+            indexarray[i] = indexarray[i] + distribution(generator);
+        }
+        }
+    }
+  } else {
+     // add a constant offset
+    if(mult_add){
+            for (int i = 0; i < indexarray.size(); ++i) {
+              indexarray[i] = indexarray[i] * amount;
+            }
+  }
+    if (!mult_add) {
+            for (int i = 0; i < indexarray.size(); ++i) {
+            indexarray[i] = indexarray[i] + amount;
+            }
+  }
+} }
+
+
+void Indices::perturb_f107(){
+  
+  perturb(all_indices_arrays[0].values, 3, 1,true,true,true); 
+  
+} // allows person to input stdev, type of change, ect to perturb data set, or do in set_* method
+
+
+void Indices::dump_one(int ind){
+  std::ofstream dumpfile;
+  dumpfile.open("indices.txt");
+  dumpfile << "#INDEX" << std::endl;
+  // print time/value pairs
+ 
+    dumpfile << all_indices_arrays[ind].name << std::endl;
+    if (all_indices_arrays[ind].nValues > 0){
+    for (int indicsize = 0; indicsize < all_indices_arrays.size(); ++indicsize) {
+      dumpfile << all_indices_arrays[ind].times[indicsize] << " " << all_indices_arrays[ind].values[indicsize] << std::endl;
+    }
+    } else { dumpfile << "empty"<< std::endl;}
+  
+  dumpfile.close();
+} // go through all of the indices and see which have more than zero values. Then add those. 
