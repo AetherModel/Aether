@@ -5,8 +5,6 @@
 
 #include "../include/aether.h"
 
-#include <algorithm>
-
 using namespace netCDF;
 using namespace netCDF::exceptions;
 
@@ -131,9 +129,7 @@ int output(Neutrals neutrals,
 
       timeVar.putAtt(UNITS, "seconds");
       lonVar.putAtt(UNITS, "radians");
-      //lonVar.putAtt(UNITS, "degrees");
       latVar.putAtt(UNITS, "radians");
-      //latVar.putAtt(UNITS, "degrees");
       altVar.putAtt(UNITS, "meters");
 
       timeVar.putAtt(DESC, "Time in s from XXX");
@@ -154,7 +150,6 @@ int output(Neutrals neutrals,
 
       time_array[0] = time.get_current();
       timeVar.putVar(time_array);
-
 
       // Output longitude, latitude, altitude 3D arrays:
 
@@ -179,11 +174,7 @@ int output(Neutrals neutrals,
           denVar.push_back(ncdf_file.addVar("Neutral_Density_" + neutrals.species[iSpecies].cName,
                                             ncFloat, dimVector));
           denVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
-          denVar[iSpecies].putAtt(DESC, "Specie density of " + neutrals.species[iSpecies].cName + " in " + neutrals.density_unit);
-
-          // Work in Progress: calculating min and max values for MIN_VAL and MAX_VAL
-          //int min = std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end());
-          //denVar[iSpecies].putAtt(MIN_VAL, std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end()));
+          denVar[iSpecies].putAtt(DESC, "Density of " + neutrals.species[iSpecies].cName + " in " + neutrals.density_unit);
 
           output_variable_3d(startp, countp,
                              neutrals.species[iSpecies].density_scgc,
@@ -222,7 +213,7 @@ int output(Neutrals neutrals,
           ionVar.push_back(ncdf_file.addVar("Ion_Density_" + ions.species[iSpecies].cName,
                                             ncFloat, dimVector));
           ionVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
-          ionVar[iSpecies].putAtt(DESC, "Specie density of " + ions.species[iSpecies].cName + " in " + neutrals.density_unit);
+          ionVar[iSpecies].putAtt(DESC, "Density of " + ions.species[iSpecies].cName + " in " + neutrals.density_unit);
           output_variable_3d(startp, countp,
                              ions.species[iSpecies].density_scgc,
                              ionVar[iSpecies]);
@@ -230,7 +221,7 @@ int output(Neutrals neutrals,
 
         ionVar.push_back(ncdf_file.addVar("Electron_Density_e-", ncFloat, dimVector));
         ionVar[nIons].putAtt(UNITS, neutrals.density_unit);
-        ionVar[nIons].putAtt(DESC, "Specie density of e- in " + neutrals.density_unit);
+        ionVar[nIons].putAtt(DESC, "Density of e- in " + neutrals.density_unit);
         output_variable_3d(startp, countp, ions.density_scgc, ionVar[nIons]);
       }
 
