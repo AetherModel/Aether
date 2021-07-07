@@ -181,6 +181,7 @@ int output(Neutrals neutrals,
           denVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
           denVar[iSpecies].putAtt(DESC, "Specie density of " + neutrals.species[iSpecies].cName + " in " + neutrals.density_unit);
 
+          // Work in Progress: calculating min and max values for MIN_VAL and MAX_VAL
           //int min = std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end());
           //denVar[iSpecies].putAtt(MIN_VAL, std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end()));
 
