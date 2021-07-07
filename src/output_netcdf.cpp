@@ -5,6 +5,8 @@
 
 #include "../include/aether.h"
 
+#include <algorithm>
+
 using namespace netCDF;
 using namespace netCDF::exceptions;
 
@@ -87,6 +89,9 @@ int output(Neutrals neutrals,
       std::string file_name;
       std::string file_ext = ".nc";
       std::string UNITS = "units";
+      std::string DESC = "description";
+      std::string MIN_VAL = "minimum value";
+      std::string MAX_VAL = "maximum value";
       std::string file_pre;
 
       std::string type_output = args.get_type_output(iOutput);
@@ -103,9 +108,9 @@ int output(Neutrals neutrals,
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
-      NcDim lonDim = ncdf_file.addDim("Longitude", nLons);
-      NcDim latDim = ncdf_file.addDim("Latitude", nLats);
-      NcDim altDim = ncdf_file.addDim("Altitude", nAlts);
+      NcDim lonDim = ncdf_file.addDim("longitude", nLons);
+      NcDim latDim = ncdf_file.addDim("latitude", nLats);
+      NcDim altDim = ncdf_file.addDim("altitude", nAlts);
 
       NcDim timeDim = ncdf_file.addDim("Time", 1);
 
@@ -120,14 +125,21 @@ int output(Neutrals neutrals,
       dimVector.push_back(altDim);
 
       NcVar timeVar = ncdf_file.addVar("Time", ncDouble, timeDim);
-      NcVar lonVar = ncdf_file.addVar("Longitude", ncFloat, dimVector);
-      NcVar latVar = ncdf_file.addVar("Latitude", ncFloat, dimVector);
+      NcVar lonVar = ncdf_file.addVar("Geographic_Longitude", ncFloat, dimVector);
+      NcVar latVar = ncdf_file.addVar("Geographic_Latitude", ncFloat, dimVector);
       NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, dimVector);
 
       timeVar.putAtt(UNITS, "seconds");
       lonVar.putAtt(UNITS, "radians");
+      //lonVar.putAtt(UNITS, "degrees");
       latVar.putAtt(UNITS, "radians");
+      //latVar.putAtt(UNITS, "degrees");
       altVar.putAtt(UNITS, "meters");
+
+      timeVar.putAtt(DESC, "Time in s from XXX");
+      lonVar.putAtt(DESC, "Geographic longitude in radians");
+      latVar.putAtt(DESC, "Geographic latitude in radians");
+      altVar.putAtt(DESC, "Altitude in m");
 
       std::vector<size_t> startp, countp;
       startp.push_back(0);
@@ -143,11 +155,13 @@ int output(Neutrals neutrals,
       time_array[0] = time.get_current();
       timeVar.putVar(time_array);
 
+
       // Output longitude, latitude, altitude 3D arrays:
 
       output_variable_3d(startp, countp, grid.geoLon_scgc, lonVar);
       output_variable_3d(startp, countp, grid.geoLat_scgc, latVar);
       output_variable_3d(startp, countp, grid.geoAlt_scgc, altVar);
+
 
       // ----------------------------------------------
       // Neutral Densities and Temperature
@@ -162,24 +176,31 @@ int output(Neutrals neutrals,
           if (report.test_verbose(3))
             std::cout << "Outputting Var : "
                       << neutrals.species[iSpecies].cName << "\n";
-          denVar.push_back(ncdf_file.addVar(neutrals.species[iSpecies].cName,
+          denVar.push_back(ncdf_file.addVar("Neutral_Density_" + neutrals.species[iSpecies].cName,
                                             ncFloat, dimVector));
           denVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
+          denVar[iSpecies].putAtt(DESC, "Specie density of " + neutrals.species[iSpecies].cName + " in " + neutrals.density_unit);
+
+          //int min = std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end());
+          //denVar[iSpecies].putAtt(MIN_VAL, std::min_element(neutrals.species[iSpecies].density_scgc.begin(), neutrals.species[iSpecies].density_scgc.end()));
+
           output_variable_3d(startp, countp,
                              neutrals.species[iSpecies].density_scgc,
                              denVar[iSpecies]);
         }
 
         // Output bulk temperature:
-        NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name,
+        NcVar tempVar = ncdf_file.addVar("Neutral_" + neutrals.temperature_name,
                                          ncFloat, dimVector);
         tempVar.putAtt(UNITS, neutrals.temperature_unit);
+        tempVar.putAtt(DESC, "Neutral temperature in K");
         output_variable_3d(startp, countp, neutrals.temperature_scgc, tempVar);
 
         // Output SZA
-        NcVar szaVar = ncdf_file.addVar("Solar Zenith Angle",
+        NcVar szaVar = ncdf_file.addVar("Solar_Zenith_Angle",
           ncFloat, dimVector);
         szaVar.putAtt(UNITS, "degrees");
+        szaVar.putAtt(DESC, "Solar zenith angle in degrees");
         output_variable_3d(startp, countp, grid.sza_scgc * cRtoD, szaVar);
 
       }
@@ -197,16 +218,18 @@ int output(Neutrals neutrals,
           if (report.test_verbose(3))
             std::cout << "Outputting Var : "
                       << ions.species[iSpecies].cName << "\n";
-          ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName,
+          ionVar.push_back(ncdf_file.addVar("Ion_Density_" + ions.species[iSpecies].cName,
                                             ncFloat, dimVector));
           ionVar[iSpecies].putAtt(UNITS, neutrals.density_unit);
+          ionVar[iSpecies].putAtt(DESC, "Specie density of " + ions.species[iSpecies].cName + " in " + neutrals.density_unit);
           output_variable_3d(startp, countp,
                              ions.species[iSpecies].density_scgc,
                              ionVar[iSpecies]);
         }
 
-        ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
+        ionVar.push_back(ncdf_file.addVar("Electron_Density_e-", ncFloat, dimVector));
         ionVar[nIons].putAtt(UNITS, neutrals.density_unit);
+        ionVar[nIons].putAtt(DESC, "Specie density of e- in " + neutrals.density_unit);
         output_variable_3d(startp, countp, ions.density_scgc, ionVar[nIons]);
       }
 
@@ -215,17 +238,17 @@ int output(Neutrals neutrals,
       // ----------------------------------------------
 
       if (type_output == "bfield") {
-        NcVar mLatVar = ncdf_file.addVar("Magnetic Latitude",
+        NcVar mLatVar = ncdf_file.addVar("Magnetic_Latitude",
                                          ncFloat, dimVector);
         mLatVar.putAtt(UNITS, "radians");
         output_variable_3d(startp, countp, grid.magLat_scgc, mLatVar);
 
-        NcVar mLonVar = ncdf_file.addVar("Magnetic Longitude",
+        NcVar mLonVar = ncdf_file.addVar("Magnetic_Longitude",
                                          ncFloat, dimVector);
         mLonVar.putAtt(UNITS, "radians");
         output_variable_3d(startp, countp, grid.magLat_scgc, mLonVar);
 
-        NcVar mLTVar = ncdf_file.addVar("Magnetic Local Time",
+        NcVar mLTVar = ncdf_file.addVar("Magnetic_Local_Time",
                                          ncFloat, dimVector);
         mLTVar.putAtt(UNITS, "hours");
         output_variable_3d(startp, countp, grid.magLocalTime_scgc, mLTVar);
