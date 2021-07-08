@@ -16,7 +16,7 @@ clean:
 
 rundir:
 	mkdir -p ${RUNDIR}/UA
-	cd ${RUNDIR} ; mkdir UA/output ; ln -s UA/outputs . ; cd -
+	cd ${RUNDIR} ; mkdir UA/output ; ln -s UA/output . ; cd -
 	cd ${RUNDIR}/UA ; mkdir restartOut ; cd -
 	cd ${RUNDIR}/UA ; ln -s restartOut restartIn ; cd -
 	mkdir -p ${RUNDIR}/UA/inputs ; cp inputs/* ${RUNDIR}/UA/inputs

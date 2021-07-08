@@ -29,7 +29,8 @@ OBJECTS = \
 	file_input.o\
 	fill_grid.o\
 	init_geo_grid.o\
-	output.o\
+	output_binary.o\
+	output_netcdf.o\
 	read_f107_file.o\
 	read_input_file.o\
 	read_omni_file.o\
