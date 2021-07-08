@@ -8,6 +8,9 @@ default : Aether
 Aether:
 	cd src; make Aether
 
+test_mgrid:
+	cd src; make test_mgrid
+
 clean:
 	cd src; make clean
 

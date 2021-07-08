@@ -19,7 +19,7 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   // This is just an example:
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  Inputs::grid_input_struct grid_input = input.get_geo_grid_inputs();
 
   int64_t iLon, iLat, iAlt;
 

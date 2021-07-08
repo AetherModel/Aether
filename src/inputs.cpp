@@ -25,6 +25,8 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Grid Defaults:
+
+  //for geo grid
   geo_grid_input.alt_file = "";
   geo_grid_input.IsUniformAlt = 1;
   geo_grid_input.alt_min = 100.0 * 1000.0;
@@ -49,6 +51,31 @@ Inputs::Inputs(Times &time, Report &report) {
     geo_grid_input.lat_min = -cPI/2;
     geo_grid_input.lat_max = cPI/2;
   }
+  //for mag grid
+  mag_grid_input.alt_file = "";
+  mag_grid_input.IsUniformAlt = 1;
+  mag_grid_input.alt_min = 100.0 * 1000.0;
+  mag_grid_input.dalt = 5.0 * 1000.0;
+
+  nLonsMag = 12;
+  nLatsMag = 20;
+  nAltsMag = 40;
+
+  if (nLonsMag == 1) {
+    mag_grid_input.lon_min = 0.0;
+    mag_grid_input.lon_max = 0.0;
+  } else {
+    mag_grid_input.lon_min = 0.0;
+    mag_grid_input.lon_max = 2.0*cPI;
+  }
+
+  if (nLatsMag == 1) {
+    mag_grid_input.lat_min = 0.0;
+    mag_grid_input.lat_max = 0.0;
+  } else {
+    mag_grid_input.lat_min = -cPI/2;
+    mag_grid_input.lat_max = cPI/2;
+  }
 
   euv_heating_eff_neutrals = 0.40;
   euv_heating_eff_electrons = 0.05;
@@ -65,11 +92,19 @@ Inputs::Inputs(Times &time, Report &report) {
 }
 
 // -----------------------------------------------------------------------
-// Return characteristics of the grid that are entered by the user
+// Return characteristics of the geo grid that are entered by the user
 // -----------------------------------------------------------------------
 
-Inputs::grid_input_struct Inputs::get_grid_inputs() {
+Inputs::grid_input_struct Inputs::get_geo_grid_inputs() {
   return geo_grid_input;
+}
+
+// -----------------------------------------------------------------------
+// Return characteristics of the mag grid that are entered by the user
+// -----------------------------------------------------------------------
+
+Inputs::grid_input_struct Inputs::get_mag_grid_inputs() {
+  return mag_grid_input;
 }
 
 // -----------------------------------------------------------------------
@@ -121,7 +156,7 @@ float Inputs::get_n_outputs() {
 }
 
 // -----------------------------------------------------------------------
-// Return number of longitudes, latitudes, and altitudes in grid
+// Return number of longitudes, latitudes, and altitudes in geo grid
 // -----------------------------------------------------------------------
 
 int Inputs::get_nLonsGeo() {
@@ -134,6 +169,22 @@ int Inputs::get_nLatsGeo() {
 
 int Inputs::get_nAltsGeo() {
   return nAltsGeo;
+}
+
+// -----------------------------------------------------------------------
+// Return number of longitudes, latitudes, and altitudes in mag grid
+// -----------------------------------------------------------------------
+
+int Inputs::get_nLonsMag() {
+  return nLonsMag;
+}
+
+int Inputs::get_nLatsMag() {
+  return nLatsMag;
+}
+
+int Inputs::get_nAltsMag() {
+  return nAltsMag;
 }
 
 // -----------------------------------------------------------------------

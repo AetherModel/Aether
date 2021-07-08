@@ -89,6 +89,7 @@ public:
   void init_geo_grid(Planets planet, Inputs input, Report &report);
   void fill_grid_bfield(Planets planet, Inputs input, Report &report);
 
+  void init_mag_grid(Planets planet, Inputs input, Report &report);
  private:
 
   int IsGeoGrid;

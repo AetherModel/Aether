@@ -3,7 +3,13 @@
 
 #include "../include/aether.h"
 
+
 #include <fstream>
+
+//.. using namespace netCDF;
+// using namespace netCDF::exceptions;
+// using namespace netCDF::NcType;
+
 
 //----------------------------------------------------------------------
 // Output a given variable to the binary file. 

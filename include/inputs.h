@@ -47,11 +47,16 @@ public:
     float lon_max;
   };
 
-  grid_input_struct get_grid_inputs();
+  grid_input_struct get_geo_grid_inputs();
+  grid_input_struct get_mag_grid_inputs();
 
   int get_nLonsGeo();
   int get_nLatsGeo();
   int get_nAltsGeo();
+
+  int get_nLonsMag();
+  int get_nLatsMag();
+  int get_nAltsMag();
 
   int iVerbose;
   int iTimingDepth;
@@ -75,6 +80,8 @@ private:
 
   grid_input_struct geo_grid_input;
 
+  grid_input_struct mag_grid_input;
+
   float euv_heating_eff_neutrals;
   float euv_heating_eff_electrons;
 
@@ -86,6 +93,10 @@ private:
   int nLonsGeo;
   int nLatsGeo;
   int nAltsGeo;
+
+  int nLonsMag;
+  int nLatsMag;
+  int nAltsMag;
 };
 
 #endif  // INCLUDE_INPUTS_H_

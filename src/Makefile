@@ -1,7 +1,7 @@
 # (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 # Full license can be found in License.md
 
-include Makefile.OSX
+include Makefile.OS
 
 .SUFFICES:
 .SUFFICES: .cpp .o
@@ -50,7 +50,7 @@ TEST = \
 	test.o
 
 .cpp.o: ${HEADERS}
-	${COMPILE.CPP} ${FLAGS} $<
+	${COMPILE.CPP} ${FLAGS} -l${NETCDF} -l${ARMADILLO} $<
 
 MY_LIB = libAether.a
 
@@ -59,11 +59,21 @@ LIB: ${CLASSES} ${OBJECTS}
 
 
 Aether: ${MAIN} LIB
-	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
+	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF} -l${ARMADILLO}
 
 test: ${TEST} LIB
-	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
+	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF} -l${ARMADILLO}
 
 clean:
 	rm -f *~ core *.o *.exe *.a *.so *.d
+
+
+
+TESTMGRID = \
+	test_mgrid.o
+
+test_mgrid: ${TESTMGRID} LIB
+	${LINK.CPP} -o test_mgrid.exe ${TESTMGRID} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF} -l${ARMADILLO}
+
+
 
