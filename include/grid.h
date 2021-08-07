@@ -88,9 +88,9 @@ public:
   void fill_grid_radius(Planets planet, Report &report);
   void init_geo_grid(Planets planet, Inputs input, Report &report);
   void fill_grid_bfield(Planets planet, Inputs input, Report &report);
-
   void init_mag_grid(Planets planet, Inputs input, Report &report);
- private:
+
+private:
 
   int IsGeoGrid;
 
@@ -100,6 +100,12 @@ public:
 
   int nGCs; // number of ghostcells
 
+
+  // Routines for converting between spherical geo to spherical tilted and
+  // back
+  //void sph_geo_to_sph_tilted(Planets planet, float theta_geo, float phi_geo, Report &report)
+  void lshell_to_qn_qs(Planets planet, float Lshell, float AltMin, float qN, float qS,Report &report); 
+  void convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzGeo[3]);
 };
 
 #endif  // INCLUDE_GRID_H_
