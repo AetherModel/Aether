@@ -38,6 +38,10 @@ void vector_diff(float vect_in_1[3],
                  float vect_in_2[3],
                  float vect_out[3]);
 
+void vector_add(float vect_in_1[3],
+                 float vect_in_2[3],
+                 float vect_out[3]);
+
 
 #endif  // INCLUDE_TRANSFORM_H_
 
