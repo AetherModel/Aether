@@ -207,3 +207,13 @@ void vector_diff(float vect_in_1[3],
                  float vect_out[3]) {
   for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }
+
+// -----------------------------------------------------------------------
+// Simple 3-element vector addition
+// -----------------------------------------------------------------------
+
+void vector_add(float vect_in_1[3],
+                 float vect_in_2[3],
+                 float vect_out[3]) {
+  for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] + vect_in_2[i];
+}
