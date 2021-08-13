@@ -62,11 +62,11 @@ public:
 
 private:
 
-  std::string euv_file = "UA/inputs/euv.csv";
-  std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
+  std::string euv_file = "inputs/UA/euv.csv";
+  std::string chemistry_file = "inputs/UA/chemistry_earth.csv";
   std::string input_file = "aether.in";
   std::string euv_model = "euvac";
-  std::string planetary_file = "UA/inputs/orbits.csv";
+  std::string planetary_file = "inputs/UA/orbits.csv";
   std::vector<std::string> omniweb_files;
   std::string planet = "earth";
   std::string f107_file = "";
