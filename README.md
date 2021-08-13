@@ -20,31 +20,55 @@ can be accessed by the Makefile.
 These are unix commands, assuming that you have access to a unix/linux
 terminal. This has been tested on a MacBook Pro.
 
-1. git clone https://github.com/AetherModel/Aether
+```bash
+git clone https://github.com/AetherModel/Aether
+```
 
-2. cd Aether
+```bash
+cd Aether
+```
 
-3. git checkout develop
+```bash
+git checkout develop
+```
 
-4. Copy example Makefile.OSX/ubuntu and modify src/Makefile.OS to
-adjust compiler options and to point to the correct netcdf library and
-armadillo include file locations.  We will fix this so that there is a
-configuration script at some point.
+Make sure you have [CMake](https://cmake.org/) installed. If you don't:
 
-5. make 
+For MacOS [homebrew](https://formulae.brew.sh/formula/cmake):
+```bash
+brew install cmake
+```
 
-6. make rundir
+For Ubuntu/Debian Linux:
+```bash
+sudo apt install cmake
+```
 
-7. cd run
+Create a build/run directory for the Aether executable:
+```bash
+mkdir build
+cd build
+cmake ..
+make -j
+```
 
-8. ./aether.exe (should run 1 hour of simulation with no issues).
+You should have a file called `aether` by now. To run an example you must set
+up your directory like this:
 
-9. Make some plots:
+```bash
+cp -r ../inputs .
+cp inputs/aether.in .
+./aether
+```
 
+Make some plots:
+
+```bash
 ../python/plot_model_results.py -var=24 3DALL_20110320_010000.nc -alt=110
 
 ../python/plot_model_results.py -var=14 3DALL_20110320_010000.nc -alt=300
+```
 
-10. compare png files to ../inputs/*.png to see if they are similar.
+Compare png files to ../inputs/*.png to see if they are similar.
 
 
