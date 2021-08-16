@@ -30,7 +30,6 @@ target_include_directories(aether PUBLIC ${PROJECT_SOURCE_DIR}/include)
 include_directories(${SHARE_INCLUDE})
 
 # Find dependencies
-
 find_package(Armadillo REQUIRED)
 target_include_directories(aether PUBLIC ${ARMADILLO_INCLUDE_DIRS})
 find_package(BLAS)
