@@ -4,7 +4,6 @@ project(Aether LANGUAGES CXX
                VERSION   2021.0)
 
 # Directory variables
-
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
