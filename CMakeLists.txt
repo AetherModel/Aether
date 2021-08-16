@@ -17,7 +17,7 @@ else()
 endif()
 add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
 
-# compiler and cmake options
+# Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
 set(SHARE_INCLUDE ${PROJECT_SOURCE_DIR}/share/include)
 set(CMAKE_CXX_STANDARD 11)
