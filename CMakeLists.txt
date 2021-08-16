@@ -9,7 +9,6 @@ set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 
 # Executable decision
-
 if(USE_NETCDF)
   set(SRC_FILES ${OUT_DIR}/output_netcdf.cpp ${SRC_FILES})
 else()
