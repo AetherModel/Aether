@@ -41,7 +41,7 @@ if(BLAS_FOUND AND LAPACK_FOUND)
   target_link_libraries(aether PUBLIC ${BLAS_LIBRARIES})
   target_link_libraries(aether PUBLIC ${LAPACK_LIBRARIES})
 elseif(ARMADILLO_FOUND)
-  # Warning here
+  message(WARNING "BLAS and LAPACK not found. Matrix operation will be slower.")
   target_link_libraries(aether PUBLIC ${ARMADILLO_LIBRARIES})
 endif()
 
