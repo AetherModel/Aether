@@ -62,7 +62,7 @@ earth
 5.0
 
 #f107file
-inputs/UA/f107.txt
+UA/inputs/f107.txt
 
 #bfield
 dipole
@@ -72,7 +72,7 @@ states, 900.0
 bfield, 0.0
 
 #chemistry
-inputs/UA/chemistry_earth.csv
+UA/inputs/chemistry_earth.csv
 
 omniweb
 omni_20110622.txt

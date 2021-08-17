@@ -156,7 +156,7 @@ int Inputs::read(Times &time, Report &report) {
         if (report.test_verbose(3))
           std::cout << "Setting planet to : " << planet << "\n";
         if (planet_species_file.length() <= 1)
-          planet_species_file = "inputs/UA/"+planet+".in";
+          planet_species_file = "UA/inputs/"+planet+".in";
       }
 
       // ---------------------------

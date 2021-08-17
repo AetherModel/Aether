@@ -6,7 +6,7 @@
 
  "Endtime": [2011, 6, 21, 12, 10, 0],
 
- "F107File": "inputs/UA.f107.txt",
+ "F107File": "UA/inputs.f107.txt",
 
  "BField": "dipole",
 
