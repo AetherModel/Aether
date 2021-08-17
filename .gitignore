@@ -7,8 +7,10 @@
 *~
 *#
 
-# Run directories
-run/
+# Run and build directories
+run/**/*.*
+run/**/aether*
+build/
 
 # Python extras
 __pycache__
