@@ -44,7 +44,7 @@ For Ubuntu/Debian Linux:
 sudo apt install cmake
 ```
 
-Create a build/run directory for the Aether executable:
+To compile Aether:
 ```bash
 mkdir build
 cd build
@@ -56,9 +56,8 @@ You should have a file called `aether` by now. To run an example you must set
 up your directory like this:
 
 ```bash
-cp -r ../inputs .
-cp inputs/aether.in .
-./aether
+cmake -DMAKE_RUNDIR=Y ..
+cd ../run
 ```
 
 Make some plots:
