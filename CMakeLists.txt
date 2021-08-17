@@ -7,6 +7,7 @@ project(Aether LANGUAGES CXX
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
+set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
 # Executable decision
 if(USE_NETCDF)
@@ -58,3 +59,12 @@ if(USE_NETCDF)
   target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
 endif()
 
+if(MAKE_RUNDIR)
+  file(COPY ${PROJECT_SOURCE_DIR}/inputs/
+       DESTINATION ${RUN_DIR}/
+       PATTERN "*")
+  file(COPY ${PROJECT_SOURCE_DIR}/inputs/UA/
+       DESTINATION ${RUN_DIR}/UA/inputs)
+     file(COPY ${CMAKE_BINARY_DIR}/aether
+          DESTINATION ${RUN_DIR})
+endif()
