@@ -1,13 +1,14 @@
 # (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 # Full license can be found in License.md
 
-include Makefile.OS
+include Makefile.OSX
 
 .SUFFICES:
 .SUFFICES: .cpp .o
 
 CLASSES = \
 	chemistry.o\
+	electrodynamics.o\
 	euv.o\
 	grid.o\
 	indices.o\
@@ -20,23 +21,33 @@ CLASSES = \
 OBJECTS = \
 	add_sources.o\
 	advance.o\
+	aurora.o\
 	bfield.o\
 	calc_chemistry.o\
 	calc_chemical_sources.o\
 	calc_euv.o\
+	calc_grid_derived.o\
+	calc_ion_drift.o\
+	calc_ion_temperature.o\
 	calc_neutral_derived.o\
+	collisions.o\
 	dipole.o\
 	file_input.o\
 	fill_grid.o\
 	init_geo_grid.o\
 	output.o\
+	read_collision_file.o\
 	read_f107_file.o\
 	read_input_file.o\
+	read_netcdf_electrodynamics.o\
 	read_omni_file.o\
 	report.o\
 	solver_chemistry.o\
 	solver_conduction.o\
+	solver_gradients.o\
+	solver_interpolation.o\
 	time_conversion.o\
+	tools.o\
 	transform.o
 
 MAIN = \
@@ -52,6 +63,7 @@ MY_LIB = libAether.a
 
 LIB: ${CLASSES} ${OBJECTS}
 	${AR} ${MY_LIB} ${CLASSES} ${OBJECTS}
+
 
 Aether: ${MAIN} LIB
 	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
