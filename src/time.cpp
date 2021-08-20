@@ -54,10 +54,17 @@ void Times::set_times(std::vector<int> itime) {
 
 int Times::check_time_gate(float dt_check) {
   int DoThing = 0;
-  if (current == start) DoThing = 1;
-  if (current == restart) DoThing = 1;
+
+  if (current == start)
+    DoThing = 1;
+
+  if (current == restart)
+    DoThing = 1;
+
   if ( floor((simulation - dt) / dt_check) <
-       floor(simulation / dt_check)) DoThing = 1;
+       floor(simulation / dt_check))
+    DoThing = 1;
+
   return DoThing;
 }
 
@@ -152,6 +159,7 @@ void Times::increment_time() {
   simulation += dt;
 
   // Increment iStep (iteration number):
+
   iStep++;
 
   // Increment current time:
@@ -186,23 +194,23 @@ void Times::increment_time() {
 
   // Calculate UT (in hours):
   ut = static_cast<float>(iCurrent[3])    // hours
-    + static_cast<float>(iCurrent[4])/60.0    // minutes
-    + (static_cast<float>(iCurrent[5])
-       + static_cast<float>(iCurrent[6])/1000)/3600.0;
+       + static_cast<float>(iCurrent[4]) / 60.0  // minutes
+       + (static_cast<float>(iCurrent[5])
+          + static_cast<float>(iCurrent[6]) / 1000) / 3600.0;
 
   // Calculate orbital parameters based on E Standish,
   // Solar System Dynamics, JPL,.
   // No constant orbital speed assumption
 
   float day_number = 367.0 * static_cast<float>(iCurrent[0])
-    - 7.0*(static_cast<float>(iCurrent[0])
-           + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
-    + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
-    + static_cast<float>(iCurrent[2])
-    - 730531.5
-    + ut / 24.0;
+                     - 7.0 * (static_cast<float>(iCurrent[0])
+                              + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
+                     + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
+                     + static_cast<float>(iCurrent[2])
+                     - 730531.5
+                     + ut / 24.0;
 
-  orbittime = day_number/36525.0;
+  orbittime = day_number / 36525.0;
 
   return;
 }
@@ -223,32 +231,32 @@ void Times::display() {
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;
   float ratio_of_time = elapsed_simulation_time / total_simulation_time;
-  float total_walltime = walltime/(ratio_of_time+1e-6);
+  float total_walltime = walltime / (ratio_of_time + 1e-6);
   int remaining_walltime = total_walltime - walltime;
 
   if (walltime > 120) {
     if (walltime > 7200) {
-      walltime = static_cast<int>(walltime/3600.0);
+      walltime = static_cast<int>(walltime / 3600.0);
       units = "h";
     } else {
-      walltime = static_cast<int>(walltime/60.0);
+      walltime = static_cast<int>(walltime / 60.0);
       units = "m";
     }
   }
 
   if (remaining_walltime > 120) {
     if (remaining_walltime > 7200) {
-      remaining_walltime = remaining_walltime/3600.0;
+      remaining_walltime = remaining_walltime / 3600.0;
       remaining_units = "h";
     } else {
-      remaining_walltime = remaining_walltime/60.0;
+      remaining_walltime = remaining_walltime / 60.0;
       remaining_units = "m";
     }
   }
 
   std::cout << "Wall Time : " << walltime << units;
   std::cout << " (left : "
-      << remaining_walltime << remaining_units << ")";
+            << remaining_walltime << remaining_units << ")";
   std::cout << "; Current Time : ";
   display_itime(iCurrent);
 }
@@ -262,7 +270,9 @@ void Times::display() {
 void Times::increment_intermediate(double dt) {
 
   intermediate = current + dt;
-  if (intermediate > end) intermediate = end;
+
+  if (intermediate > end)
+    intermediate = end;
 
   return;
 
