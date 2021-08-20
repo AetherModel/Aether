@@ -1,30 +1,11 @@
-#ifndef INCLUDE_AETHER_H_
-#define INCLUDE_AETHER_H_
-
-/*! \mainpage Aether: Thermosphere-Ionosphere model
- *
- * \section intro_sec Introduction
- *
- * Aether is a Thermosphere and Ionosphere model where the two regions are
- * coupled through different grids.
- *
- * \section install_sec Installation
- *
- * Run make.
- *
- */
-
-/*! \file aether.h
-    \brief Main include file that includes other parts.
-    
-    Top level include file.
-*/
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
+#ifndef INCLUDE_AETHER_H_
+#define INCLUDE_AETHER_H_
+
 // The armadillo library is to allow the use of 3d cubes and other
 // array types, with array math built in. This eliminates loops!
-
 #include <armadillo>
 using namespace arma;
 
@@ -45,13 +26,20 @@ using namespace arma;
 
 #include "bfield.h"
 
+#include "electrodynamics.h"
+
+#include "aurora.h"
 #include "euv.h"
 #include "calc_euv.h"
 #include "chemistry.h"
+#include "read_collision_file.h"
 #include "output.h"
 #include "advance.h"
 
 #include "solvers.h"
+#include "tools.h"
 #include "transform.h"
+
+#include "calc_grid_derived.h"
 
 #endif  // INCLUDE_AETHER_H_
