@@ -31,7 +31,8 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
-    if (report.test_verbose(8)) display_reaction(reactions[iReaction]);
+    if (report.test_verbose(8))
+      display_reaction(reactions[iReaction]);
 
     // Zero calculate reaction rate:
 
@@ -42,9 +43,11 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     //    reaction rate * loss den 1 * loss den 2 (* loss den 3 if needed)
 
     change3d.fill(rate);
+
     for (iLoss = 0; iLoss < reactions[iReaction].nLosses; iLoss++) {
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
+
       if (IsNeutral)
         change3d = change3d % neutrals.species[id_].density_scgc;
       else
@@ -55,6 +58,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     for (iLoss = 0; iLoss < reactions[iReaction].nLosses; iLoss++) {
       IsNeutral = reactions[iReaction].losses_IsNeutral[iLoss];
       id_ = reactions[iReaction].losses_ids[iLoss];
+
       if (IsNeutral)
         neutrals.species[id_].losses_scgc =
           neutrals.species[id_].losses_scgc + change3d;
@@ -63,10 +67,11 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
           ions.species[id_].losses_scgc + change3d;
     }
 
-    // Third add change to the difference constituents:    
+    // Third add change to the difference constituents:
     for (iSource = 0; iSource < reactions[iReaction].nSources; iSource++) {
       IsNeutral = reactions[iReaction].sources_IsNeutral[iSource];
       id_ = reactions[iReaction].sources_ids[iSource];
+
       if (IsNeutral)
         neutrals.species[id_].sources_scgc =
           neutrals.species[id_].sources_scgc + change3d;
@@ -75,5 +80,6 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
           ions.species[id_].sources_scgc + change3d;
     }  // for iSource
   }  // for iReaction
+
   report.exit(function);
 }
