@@ -17,6 +17,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
+            Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
             Report &report) {
@@ -27,7 +28,8 @@ int advance(Planets &planet,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (time.check_time_gate(input.get_dt_report())) time.display();
+  if (time.check_time_gate(input.get_dt_report()))
+    time.display();
 
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
@@ -44,11 +46,25 @@ int advance(Planets &planet,
                   input,
                   report);
 
+  electrodynamics.set_time(time.get_current(), report);
+  gGrid.calc_sza(planet, time, report);
+  gGrid.calc_gse(planet, time, report);
+  gGrid.calc_mlt(report);
+  auto electrodynamics_values =
+    electrodynamics.get_electrodynamics(gGrid.magLat_scgc,
+                                        gGrid.magLocalTime_scgc,
+                                        report);
+  ions.potential_scgc = std::get<0>(electrodynamics_values);
+  ions.eflux = std::get<1>(electrodynamics_values);
+  ions.avee = std::get<2>(electrodynamics_values);
+  ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
+
+  calc_aurora(gGrid, neutrals, ions, input, report);
+
   neutrals.calc_conduction(gGrid, time, report);
-
-  neutrals.add_sources(time, report);
-
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
+  neutrals.add_sources(time, report);
+  ions.calc_ion_temperature(neutrals, gGrid, report);
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
