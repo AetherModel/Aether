@@ -48,11 +48,11 @@ bfield_info_type get_dipole(float lon,
   float magnetic_pole_tilt = planet.get_dipole_tilt();
   transform_rot_y(pos_rot_z, -magnetic_pole_tilt, pos_rot_zy);
 
-  float xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[1]*pos_rot_zy[1]);
+  float xypp2  = (pos_rot_zy[0] * pos_rot_zy[0] + pos_rot_zy[1] * pos_rot_zy[1]);
 
-  float xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
-                   pos_rot_zy[1]*pos_rot_zy[1] +
-                   pos_rot_zy[2]*pos_rot_zy[2]);
+  float xyzpp2  = (pos_rot_zy[0] * pos_rot_zy[0] +
+                   pos_rot_zy[1] * pos_rot_zy[1] +
+                   pos_rot_zy[2] * pos_rot_zy[2]);
 
   float xypp = sqrt(xypp2);
   float xyzpp = sqrt(xyzpp2);
@@ -67,14 +67,18 @@ bfield_info_type get_dipole(float lon,
   // planet agnostic), we use the classic definition of L-Shell, which
   // is with respect to the planetary radius.
 
-  float cos_lat = xypp/xyzpp;
+  float cos_lat = xypp / xyzpp;
   float lShell = 1.0 / normal_r / (cos_lat * cos_lat);
 
   float mlat = acos(1.0 / sqrt(lShell));
-  if (pos_rot_zy[2] < 0.0) mlat = -mlat;
+
+  if (pos_rot_zy[2] < 0.0)
+    mlat = -mlat;
 
   float mlon = acos(pos_rot_zy[0] / xypp);
-  if (pos_rot_zy[1] < 0.0) mlon = -mlon;
+
+  if (pos_rot_zy[1] < 0.0)
+    mlon = -mlon;
 
   float dipole_strength = planet.get_dipole_strength();
 
@@ -82,7 +86,7 @@ bfield_info_type get_dipole(float lon,
   b[0] = dipole_strength * r3 * 3 * pos_rot_zy[0] * pos_rot_zy[2] / xyzpp2;
   b[1] = dipole_strength * r3 * 3 * pos_rot_zy[2] * pos_rot_zy[1] / xyzpp2;
   b[2] = dipole_strength * r3 / xyzpp2 *
-    (2 * pos_rot_zy[2]*pos_rot_zy[2] - xypp2);
+         (2 * pos_rot_zy[2] * pos_rot_zy[2] - xypp2);
 
   float b_rot_y[3];
   float b_rot_yz[3];
