@@ -27,7 +27,6 @@ class Neutrals {
 
     std::vector<float> diff0;
     std::vector<float> diff_exp;
-    std::vector<float> neutral_ion;
 
     float thermal_cond;
     float thermal_exp;
@@ -37,8 +36,13 @@ class Neutrals {
     std::vector<int> iEuvIonSpecies_;
     std::vector<int> iEuvIonId_;
 
+    int nAuroraIonSpecies;
+    std::vector<int> iAuroraIonSpecies_;
+    float Aurora_Coef;
+
     // Some derived quantities:
     fcube chapman_scgc;
+    fcube rho_alt_int_scgc;
     fcube scale_height_scgc;
 
     // Sources and Losses:
@@ -52,9 +56,13 @@ class Neutrals {
     float lower_bc_density;
   };
 
+
   // bulk quantities (states):
 
+  
+
   fcube density_scgc;
+  std::vector<fcube> velocity_vcgc;
   fcube temperature_scgc;
 
   fcube rho_scgc;
@@ -68,7 +76,7 @@ class Neutrals {
   fcube kappa_scgc;
 
   std::vector<species_chars> species;
-
+  
   float max_chapman = 1.0e26;
 
   // Source terms:
@@ -107,6 +115,7 @@ class Neutrals {
   void calc_conduction(Grid grid, Times time, Report &report);
   void add_sources(Times time, Report &report);
   void set_bcs(Report &report);
+  int get_species_id(std::string name, Report &report);
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
