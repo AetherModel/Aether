@@ -8,9 +8,11 @@
 *#
 
 # Run and build directories
-run/**/*.*
-run/**/aether*
+run/
 build/
+
+# Doxygen generated files
+doc/generated
 
 # Python extras
 __pycache__
