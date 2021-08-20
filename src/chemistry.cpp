@@ -44,7 +44,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
   int iErr = 0;
   reaction_type reaction;
 
-  report.print(1, "Reading Chemistry File : "+args.get_chemistry_file());
+  report.print(1, "Reading Chemistry File : " + args.get_chemistry_file());
 
   infile_ptr.open(args.get_chemistry_file());
 
@@ -59,9 +59,10 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
       int nLines = csv.size();
 
-      if (nLines <= 2) {
+      if (nLines <= 2)
         iErr = 1;
-      } else {
+
+      else {
 
         nReactions = 0;
 
@@ -71,11 +72,14 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           // skip anything where the length of the string in column 2
           // is == 0:
           if (csv[iLine][1].length() > 0) {
-            report.print(2, "interpreting chemistry line : "+csv[iLine][0]);
+            report.print(3, "interpreting chemistry line : " + csv[iLine][0]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
+
             if (reaction.nLosses > 0 && reaction.nSources > 0) {
-              if (report.test_verbose(2)) display_reaction(reaction);
+              if (report.test_verbose(3))
+                display_reaction(reaction);
+
               reactions.push_back(reaction);
               nReactions++;
             }
@@ -84,6 +88,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
       }
     }
   }
+
   report.exit(function);
   return iErr;
 }
@@ -108,8 +113,10 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
   // Losses (left side) first:
   reaction.nLosses = 0;
+
   for (i = 0; i < 3; i++) {
     find_species_id(line[i], neutrals, ions, id_, IsNeutral, report);
+
     if (id_ >= 0) {
       reaction.losses_names.push_back(line[i]);
       reaction.losses_ids.push_back(id_);
@@ -120,8 +127,10 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
   // Sources (right side) second:
   reaction.nSources = 0;
+
   for (i = 4; i < 7; i++) {
     find_species_id(line[i], neutrals, ions, id_, IsNeutral, report);
+
     if (id_ >= 0) {
       reaction.sources_names.push_back(line[i]);
       reaction.sources_ids.push_back(id_);
@@ -159,29 +168,15 @@ void Chemistry::find_species_id(std::string name,
   report.enter(function, iFunction);
 
   int iSpecies;
-
-  id_ = -1;
   IsNeutral = -1;
-  if (name.length() > 0) {
 
-    // Check Neutrals:
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      if (name == neutrals.species[iSpecies].cName) {
-        id_ = iSpecies;
-        IsNeutral = 1;
-        break;
-      }
+  id_ = neutrals.get_species_id(name, report);
 
-    if (id_ == -1) {
-      // Check Ions:
-      for (iSpecies = 0; iSpecies <= nIons; iSpecies++)
-        if (name == ions.species[iSpecies].cName) {
-          id_ = iSpecies;
-          IsNeutral = 0;
-          break;
-        }
-    }
-  }
+  if (id_ > -1)
+    IsNeutral = 1;
+
+  else
+    id_ = ions.get_species_id(name, report);
 
   report.exit(function);
   return;
@@ -200,18 +195,24 @@ void Chemistry::display_reaction(Chemistry::reaction_type reaction) {
 
   for (i = 0; i < reaction.nLosses; i++)
     std::cout << reaction.losses_names[i] << " + ";
+
   std::cout << " -> ";
+
   for (i = 0; i < reaction.nSources; i++)
     std::cout << reaction.sources_names[i] << " + ";
+
   std::cout << " ( RR : " << reaction.rate << ")\n";
 
   for (i = 0; i < reaction.nLosses; i++)
     std::cout << reaction.losses_ids[i]
               << "(" << reaction.losses_IsNeutral[i] << ")" << " + ";
+
   std::cout << " -> ";
+
   for (i = 0; i < reaction.nSources; i++)
     std::cout << reaction.sources_ids[i]
               << "(" << reaction.sources_IsNeutral[i]
               << ")" << " + ";
+
   std::cout << " ( RR : " << reaction.rate << ")\n";
 }
