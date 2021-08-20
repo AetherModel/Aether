@@ -52,12 +52,25 @@ cmake ..
 make -j
 ```
 
-You should have a file called `aether` by now. To run an example you must set
-up your directory like this:
+To compile Aether with NetCDF:
+```bash
+mkdir build
+cd build
+cmake -DUSE_NETCDF=Y ..
+make -j
+```
+
+Once you have compiled you can install Aether with an example run directory
+structure like this:
 
 ```bash
-cmake -DMAKE_RUNDIR=Y ..
+make install
 cd ../run
+```
+
+If you want a different run directory you could run `cmake` like this:
+```bash
+cmake -DRUN_DIR=/my/run/dir ..
 ```
 
 Make some plots:
