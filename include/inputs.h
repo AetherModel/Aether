@@ -1,11 +1,6 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-/*! \file inputs.h
-    \brief Input handling.
-    
-
-*/
 #ifndef INCLUDE_INPUTS_H_
 #define INCLUDE_INPUTS_H_
 
@@ -27,7 +22,7 @@ public:
   float get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
-  std::string get_output_directory();
+  std::string get_aurora_file();
   std::string get_chemistry_file();
   std::vector<std::string> get_omniweb_files();
   int get_number_of_omniweb_files();
@@ -35,7 +30,9 @@ public:
   std::string get_planet();
   std::string get_planetary_file();
   std::string get_planet_species_file();
+  std::string get_collision_file();
   std::string get_bfield_type();
+  std::string get_electrodynamics_file();
 
   // ------------------------------
   // Grid inputs:
@@ -63,7 +60,10 @@ public:
 private:
 
   std::string euv_file = "UA/inputs/euv.csv";
+  std::string aurora_file = "UA/inputs/aurora_earth.csv";
   std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
+  std::string collision_file =
+    "UA/inputs/ion_neutral_collision_frequencies.csv";
   std::string input_file = "aether.in";
   std::string euv_model = "euvac";
   std::string planetary_file = "UA/inputs/orbits.csv";
@@ -71,6 +71,7 @@ private:
   std::string planet = "earth";
   std::string f107_file = "";
   std::string planet_species_file = "";
+  std::string electrodynamics_file = "";
 
   std::string bfield = "none";
 
@@ -81,10 +82,6 @@ private:
 
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
-  std::string output_directory = "UA/output";
-  std::string restart_out_directory = "UA/restartOut";
-  std::string restart_in_directory = "UA/restartIn";
-
   float dt_euv;
   float dt_report;
 

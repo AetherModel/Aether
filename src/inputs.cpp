@@ -10,7 +10,7 @@
 
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
-// The setting of initial values should probably be moved. 
+// The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
 Inputs::Inputs(Times &time, Report &report) {
@@ -39,15 +39,15 @@ Inputs::Inputs(Times &time, Report &report) {
     geo_grid_input.lon_max = 0.0;
   } else {
     geo_grid_input.lon_min = 0.0;
-    geo_grid_input.lon_max = 2.0*cPI;
+    geo_grid_input.lon_max = 2.0 * cPI;
   }
 
   if (nLatsGeo == 1) {
     geo_grid_input.lat_min = 0.0;
     geo_grid_input.lat_max = 0.0;
   } else {
-    geo_grid_input.lat_min = -cPI/2;
-    geo_grid_input.lat_max = cPI/2;
+    geo_grid_input.lat_min = -cPI / 2;
+    geo_grid_input.lat_max = cPI / 2;
   }
 
   euv_heating_eff_neutrals = 0.40;
@@ -61,7 +61,9 @@ Inputs::Inputs(Times &time, Report &report) {
   // ------------------------------------------------
   // Now read the input file:
   int iErr = read(time, report);
-  if (iErr > 0) std::cout << "Error in reading input file!\n";
+
+  if (iErr > 0)
+    std::cout << "Error in reading input file!\n";
 }
 
 // -----------------------------------------------------------------------
@@ -143,7 +145,10 @@ int Inputs::get_nAltsGeo() {
 float Inputs::get_dt_output(int iOutput) {
   float value = 0.0;
   int iSize = dt_output.size();
-  if (iOutput < iSize) value = dt_output[iOutput];
+
+  if (iOutput < iSize)
+    value = dt_output[iOutput];
+
   return value;
 }
 
@@ -154,7 +159,10 @@ float Inputs::get_dt_output(int iOutput) {
 std::string Inputs::get_type_output(int iOutput) {
   std::string value = "";
   int iSize = dt_output.size();
-  if (iOutput < iSize) value = type_output[iOutput];
+
+  if (iOutput < iSize)
+    value = type_output[iOutput];
+
   return value;
 }
 
@@ -167,11 +175,27 @@ std::string Inputs::get_euv_file() {
 }
 
 // -----------------------------------------------------------------------
+// Return aurora file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_aurora_file() {
+  return aurora_file;
+}
+
+// -----------------------------------------------------------------------
 // Return Chemistry file name
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_chemistry_file() {
   return chemistry_file;
+}
+
+// -----------------------------------------------------------------------
+// Return Collision file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_collision_file() {
+  return collision_file;
 }
 
 // -----------------------------------------------------------------------
@@ -223,11 +247,6 @@ std::string Inputs::get_planet_species_file() {
   return planet_species_file;
 }
 
-// -----------------------------------------------------------------------
-// Return directory to write output files to.
-// -----------------------------------------------------------------------
-
-std::string Inputs::get_output_directory() {
-  return output_directory;
+std::string Inputs::get_electrodynamics_file() {
+  return electrodynamics_file;
 }
-
