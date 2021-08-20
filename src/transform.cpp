@@ -11,12 +11,11 @@
 // -----------------------------------------------------------------------
 
 void copy_vector_to_array(std::vector<float> vector_in,
-        int64_t nElements,
-        float *array_out) {
+                          int64_t nElements,
+                          float *array_out) {
 
-  for (int64_t i = 0; i < nElements; i++) {
+  for (int64_t i = 0; i < nElements; i++)
     array_out[i] = vector_in[i];
-  }
 }
 
 // -----------------------------------------------------------------------
@@ -34,7 +33,7 @@ void copy_cube_to_array(fcube cube_in,
   for (iX = 0; iX < nX; iX++) {
     for (iY = 0; iY < nY; iY++) {
       for (iZ = 0; iZ < nZ; iZ++) {
-        index = iX*nY*nZ + iY*nZ + iZ;
+        index = iX * nY * nZ + iY * nZ + iZ;
         array_out[index] = cube_in(iX, iY, iZ);
       }
     }
@@ -85,8 +84,8 @@ std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
   float ca = cos(angle);
   float sa = sin(angle);
 
-  XYZ_out.push_back( X * ca + Y *sa);
-  XYZ_out.push_back(-X * sa + Y *ca);
+  XYZ_out.push_back( X * ca + Y * sa);
+  XYZ_out.push_back(-X * sa + Y * ca);
   XYZ_out.push_back(Z);
 
   return XYZ_out;
@@ -107,9 +106,9 @@ std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle) {
   float ca = cos(angle);
   float sa = sin(angle);
 
-  XYZ_out.push_back(X * ca - Z *sa);
+  XYZ_out.push_back(X * ca - Z * sa);
   XYZ_out.push_back(Y);
-  XYZ_out.push_back(X * sa + Z *ca);
+  XYZ_out.push_back(X * sa + Z * ca);
 
   return XYZ_out;
 }
@@ -130,8 +129,8 @@ std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
   float sa = sin(angle);
 
   XYZ_out.push_back(X);
-  XYZ_out.push_back( Y * ca + Z *sa);
-  XYZ_out.push_back(-Y * sa + Z *ca);
+  XYZ_out.push_back( Y * ca + Z * sa);
+  XYZ_out.push_back(-Y * sa + Z * ca);
 
   return XYZ_out;
 }
@@ -168,7 +167,8 @@ void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]) {
 
 void transform_float_vector_to_array(std::vector<float> input,
                                      float output[3]) {
-  for (int i = 0; i < 3; i++) output[i] = input[i];
+  for (int i = 0; i < 3; i++)
+    output[i] = input[i];
 }
 
 // -----------------------------------------------------------------------
@@ -180,13 +180,13 @@ void transform_vector_xyz_to_env(float xyz_in[3],
                                  float lat,
                                  float env_out[3]) {
 
-  env_out[2] =   xyz_in[0] * cos(lat)*cos(lon) +
-    xyz_in[1] * cos(lat)*sin(lon) + xyz_in[2]*sin(lat);
-  env_out[1] = -(xyz_in[0] * sin(lat)*cos(lon) +
-                 xyz_in[1] * sin(lat)*sin(lon) -
-                 xyz_in[2]*cos(lat));
+  env_out[2] =   xyz_in[0] * cos(lat) * cos(lon) +
+                 xyz_in[1] * cos(lat) * sin(lon) + xyz_in[2] * sin(lat);
+  env_out[1] = -(xyz_in[0] * sin(lat) * cos(lon) +
+                 xyz_in[1] * sin(lat) * sin(lon) -
+                 xyz_in[2] * cos(lat));
   env_out[0] = - xyz_in[0] * sin(lon) +
-    xyz_in[1] * cos(lon);
+               xyz_in[1] * cos(lon);
 }
 
 // -----------------------------------------------------------------------
@@ -205,5 +205,6 @@ void transform_vector_xyz_to_env(float xyz_in[3],
 void vector_diff(float vect_in_1[3],
                  float vect_in_2[3],
                  float vect_out[3]) {
-  for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
+  for (int i = 0; i < 3; i++)
+    vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }
