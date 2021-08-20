@@ -47,4 +47,12 @@ configuration script at some point.
 
 10. compare png files to ../inputs/*.png to see if they are similar.
 
+## Code Manual:
 
+To create the code documentation manual, download Doxygen for your operating
+system and run:
+
+```bash
+cd doc
+doxygen Doxyfile
+```

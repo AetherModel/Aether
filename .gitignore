@@ -7,6 +7,9 @@
 *~
 *#
 
+# Doxygen generated files
+doc/generated
+
 # Run directories
 run/
 
