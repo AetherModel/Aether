@@ -13,6 +13,7 @@ class Grid {
 public:
 
   int get_IsGeoGrid();
+  bool get_HasBField();
   void set_IsGeoGrid(int value);
 
   int64_t get_nPointsInGrid();
@@ -75,9 +76,18 @@ public:
 
   fcube dalt_center_scgc;
   fcube dalt_lower_scgc;
+  fcube dalt_ratio_scgc;
+  fcube dalt_ratio_sq_scgc;
 
+  fcube dlon_center_scgc;
+  fcube dlon_center_dist_scgc;
+
+  fcube dlat_center_scgc;
+  fcube dlat_center_dist_scgc;
+  
   std::vector<fcube> bfield_vcgc;
   fcube bfield_mag_scgc;
+  std::vector<fcube> bfield_unit_vcgc;
 
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
@@ -92,6 +102,7 @@ public:
  private:
 
   int IsGeoGrid;
+  bool HasBField;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
