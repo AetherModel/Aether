@@ -21,13 +21,11 @@ fcube solver_chemistry(fcube density,
 		       fcube loss,
 		       float dt);
 
-/// Use the previous value:
+/// Set flag values that indicate whether the previous, next, closest,
+/// or an interpolated value should be used.
 const int iPrevious_ = 1;
-/// Use the next value:
 const int iNext_ = 2;
-// Use the closest value:
 const int iClosest_ = 3; 
-/// Interpolate:
 const int iInterp_ = 4;
 
 double interpolate_1d_get_index_doubles(double intime,
