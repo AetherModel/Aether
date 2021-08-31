@@ -78,6 +78,7 @@ fvec calculate_fang(float eflux,  // in ergs/cm2/s
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  // Define function variables
   float de = 0.035;  // keV move to before any loops (beginning of function)
   float char_e = avee / 2;  // keV
   long double Q0 = eflux * 6.242e11;   // eV/cm2/s
