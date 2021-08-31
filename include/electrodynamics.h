@@ -344,7 +344,7 @@ class Electrodynamics {
     
     /// Vector of 2d electron average energy (in keV):
     std::vector<fmat> average_energy;
-    /// average energy at current time:
+    /// Average energy at current time:
     fmat average_energy_current;
     
     /// Vector of 2d ion energy flux (in ergs/cm2/s):
