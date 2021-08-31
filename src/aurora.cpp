@@ -193,7 +193,7 @@ void calc_aurora(Grid grid,
   std::vector<float> Ci;
 
   if (IsFirstTime) {
-    // read aurora csv
+    // Initialize the aurora using the auroral csv file
     read_aurora(neutrals, ions, args, report);
 
     float lnE;
