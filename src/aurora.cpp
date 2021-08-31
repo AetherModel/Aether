@@ -31,7 +31,7 @@ void read_aurora(Neutrals &neutrals,
     int nLines = csv.size();
 
     for (int iLine = 0; iLine < nLines; iLine++) {
-      //set aurora ion and neutral index and coef
+      //Set the auroral ion and neutral indices and coefficients
       int iNeutral_ = neutrals.get_species_id(csv[iLine][0], report);
       int iIon_ = ions.get_species_id(csv[iLine][1], report);
       neutrals.species[iNeutral_].iAuroraIonSpecies_.push_back(iIon_);
