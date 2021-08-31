@@ -325,7 +325,7 @@ class Electrodynamics {
     int nLats;
     int nMlts;
 
-    /// vectors of magnetic latitudes and magnetic local times:
+    /// Vectors of magnetic latitudes and magnetic local times:
     fvec mlats;
     fvec mlts;
 
