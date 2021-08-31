@@ -6,10 +6,10 @@
 # braces on the same lines as conditions etc (attached):
 --style=google
 
-# indents are 2 spaces:
+# Indents are 2 spaces:
 -s2
 
-# comments should be indented:
+# Comments should be indented:
 --indent-col1-comments
 
 # Set the  maximum of # spaces to indent a continuation line:
