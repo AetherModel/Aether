@@ -334,7 +334,8 @@ class Electrodynamics {
 
     /// Vector of 2d electric potentials (in Volts):
     std::vector<fmat> potential;
-    /// potential at current time:
+
+    /// Potential at current time:
     fmat potential_current;
     
     /// Vector of 2d electron energy flux (in ergs/cm2/s):
