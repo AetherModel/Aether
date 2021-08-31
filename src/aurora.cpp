@@ -73,7 +73,7 @@ fvec calculate_fang(float eflux,  // in ergs/cm2/s
                     fvec H,
                     Report &report) {
 
-  // report
+  // Set up function reporting
   std::string function = "calc_fang";
   static int iFunction = -1;
   report.enter(function, iFunction);
