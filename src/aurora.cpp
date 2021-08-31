@@ -157,7 +157,7 @@ void calc_aurora(Grid grid,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  // some variables
+  // Set the grid, location, and species variables
   int64_t iSpecies;
   int64_t iAlt, iLon, iLat;
   int64_t nLons = grid.get_nLons();
