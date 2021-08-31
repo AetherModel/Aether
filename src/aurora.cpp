@@ -13,8 +13,8 @@
 
 // -----------------------------------------------------------------------------
 // Read in aurora information
-//  - need both neutrals and ions, so we can't do this while reading in
-//    planet file.
+//  - because we need both neutrals and ions, we can't do this while reading
+//    in the planet file.
 // -----------------------------------------------------------------------------
 
 void read_aurora(Neutrals &neutrals,
