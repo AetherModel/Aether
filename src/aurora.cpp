@@ -316,7 +316,7 @@ void calc_aurora(Grid grid,
           }
         }
 
-        // for each species of neutrals that gets aurora,
+        // Cycle through each species of neutrals that gets aurora,
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
           if (neutrals.species[iSpecies].nAuroraIonSpecies != 0) {
