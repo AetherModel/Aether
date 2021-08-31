@@ -67,7 +67,7 @@ fvec calculate_maxwellian(float eflux,  // in ergs/cm2/s
 fvec calculate_fang(float eflux,  // in ergs/cm2/s
                     float avee,   // in keV
                     float Ebin,   // eV
-                    fvec rhoH,
+                    fvec rhoH,    // kg/m2
                     std::vector<float> Ci,
                     float dE,     // eV
                     fvec H,
