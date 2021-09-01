@@ -64,47 +64,6 @@ fvec calculate_maxwellian(float eflux,  // in ergs/cm2/s
 // -----------------------------------------------------------------------------
 // Function to Calculate ionization rate for 1 Ebin for 1 alt profile
 // -----------------------------------------------------------------------------
-fvec calculate_fang(float eflux,  // in ergs/cm2/s
-                    float avee,   // in keV
-                    float Ebin,   // eV
-                    fvec rhoH,    // kg/m2
-                    std::vector<float> Ci,
-                    float dE,     // eV
-                    fvec H,
-                    Report &report) {
-
-  // Set up function reporting
-  std::string function = "calc_fang";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  // Define function variables
-  float de = 0.035;  // keV move to before any loops (beginning of function)
-  float char_e = avee / 2;  // keV
-  long double Q0 = eflux * 6.242e11;   // eV/cm2/s
-  float E0 = char_e * 1000;  // eV
-
-  long double a = Q0 / 2 / (E0 * E0 * E0);  // cm2/s/eV2
-  long double flux_max = a * Ebin * exp(-Ebin / E0);  //  /cm2/s/eV
-  long double QE = flux_max * Ebin * dE; //  eV/cm2/s
-
-  long double E_keV = Ebin / 1000.0;   // Convert to keV
-  long double Q_keV = QE / 1000.0;   // Convert to keV
-
-  fvec yE = (2.0 / E_keV) * pow( (rhoH / (6e-6)), 0.7);
-  fvec fyE =
-    (Ci[0] * pow(yE, Ci[1])) % exp((-Ci[2] * pow(yE, Ci[3]))) +
-    (Ci[4] * pow(yE, Ci[5])) % exp((-Ci[6] * pow(yE, Ci[7])));
-  fvec fac = Q_keV / de / H;
-  fvec qtot = fyE % fac;
-
-  report.exit(function);
-  return qtot;
-}
-
-// -----------------------------------------------------------------------------
-// Function to Calculate ionization rate for 1 Ebin for 1 alt profile
-// -----------------------------------------------------------------------------
 
 fvec calculate_fang_v2(float energy_bin,
                        float diff_energy_flux,
@@ -113,7 +72,7 @@ fvec calculate_fang_v2(float energy_bin,
                        fvec scale_height,
                        Report &report) {
 
-  // report
+  // Set up function reporting
   std::string function = "calc_fang";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -132,14 +91,18 @@ fvec calculate_fang_v2(float energy_bin,
   // This *100 below should be a /10, but we don't understand why it isn't:
   dvec rhoHnorm = conv_to<dvec>::from(rhoH * 100.0 / 6e-6);
   dvec yE = (2.0 / E_mono) * pow( rhoHnorm, 0.7);
+
   // Eqn. 4 of Fang et al [2010]:
   dvec fyE =
     (Ci[0] * pow(yE, Ci[1])) % exp((-Ci[2] * pow(yE, Ci[3]))) +
     (Ci[4] * pow(yE, Ci[5])) % exp((-Ci[6] * pow(yE, Ci[7])));
+
   // Eqn. 3 of Fang et al [2010] (parenthesis):
   dvec fac = Q_mono / de / H;
-  // Eqn. 3 of Fang et al [2010] (solve for Qtot(z)):
+
+  // Eqn. 3 of Fang et al [2010] (solve for Qtot(z), ionization rate):
   fvec q_tot = conv_to<fvec>::from(fyE % fac);
+  
   report.exit(function);
   return q_tot;
 }
@@ -168,16 +131,16 @@ void calc_aurora(Grid grid,
   // 170 rho_alt_int_scgc species[iSpecies].rho_alt_int_scgc =
   // integral3d * species[iSpecies].mass;
 
-  // SET UP PIJ VALUES
-  static mat Pij = { {1.25, 1.45903, -2.42e-1, 5.95e-2},
-    {2.24, -4.23e-7, 1.36e-2, 2.53e-3},
-    {1.42, 1.45e-1, 1.70e-2, 6.40e-4},
-    {0.248775, -1.51e-1, 6.31e-9, 1.24e-3},
-    {-0.465119, -1.05e-1, -8.96e-2, 1.22e-2},
-    {3.86e-1, 1.75e-3, -7.43e-4, 4.61e-4},
-    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
-    {9.49e-1, 1.97e-1, -2.51e-1, -2.07e-3}
-  };
+  // SET UP PIJ VALUES - these are directly from Fang et al. [2010]:
+  static mat Pij = {
+		    {1.25, 1.45903, -2.42e-1, 5.95e-2},
+		    {2.24, -4.23e-7, 1.36e-2, 2.53e-3},
+		    {1.42, 1.45e-1, 1.70e-2, 6.40e-4},
+		    {0.248775, -1.51e-1, 6.31e-9, 1.24e-3},
+		    {-0.465119, -1.05e-1, -8.96e-2, 1.22e-2},
+		    {3.86e-1, 1.75e-3, -7.43e-4, 4.61e-4},
+		    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
+		    {9.49e-1, 1.97e-1, -2.51e-1, -2.07e-3} };
 
   static std::vector<std::vector<float>> CiArray;
   static bool IsFirstTime = 1;
@@ -209,7 +172,8 @@ void calc_aurora(Grid grid,
 
       lnE = log(auroral_energies(iBin) / 1000.0); // eV -> keV
 
-      // loop through Pij values to get vector of Ci values
+      // loop through Pij values to get vector of Ci values.  This is
+      // directly from Fang et al., [2010]:
       for (int i = 0; i < 8; i++) {
         float tot = 0;
 
@@ -260,9 +224,7 @@ void calc_aurora(Grid grid,
       if (eflux > 0.01) {
 
         // Step 1: Calculate the height-integrated mass density:
-
         rhoH1d.zeros();
-
         for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
@@ -280,7 +242,6 @@ void calc_aurora(Grid grid,
 
 
         // Step 4: Calculate ionization rates from Fang (all energy bins):
-
         H = scale_height.tube(iLon, iLat);
         fvec temp;
 
@@ -301,7 +262,7 @@ void calc_aurora(Grid grid,
         // without it.
         ionization1d = ionization1d * pcm3topm3 / 1.0e4;  // /cm3 -> /m3
 
-        // Step 3: Distribute ionization among neutrals:
+        // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the
         // ionization, so we compute a weighted average given the
         // weights (coef or Aurora_Coef) and the neutral density
