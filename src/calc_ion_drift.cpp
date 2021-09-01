@@ -37,7 +37,7 @@ void Ions::calc_exb_drift(Grid grid, Report &report) {
 }
 
 // --------------------------------------------------------------------------
-//
+// Calculate the ion + electron pressure for the specified ion species
 // --------------------------------------------------------------------------
 
 std::vector<fcube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
