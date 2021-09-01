@@ -302,9 +302,11 @@ class Electrodynamics {
   /// set to an auroral model to use.  Need to add model types.
   std::string auroral_model_to_use;
   
-  /// interpolation indices, for each one, the integer portion is
-  /// the index, while the decimal part is the percentage of the way
-  /// between the index and index + 1
+  /// Set the interpolation indices as a float. For each interpolation index,
+  /// the integer portion is the current index, and the decimal part is the 
+  /// percentage of the distance between the current index and the next
+  /// index.  For example, a distance midway between index 45 and 46 
+  /// would give an interpolation index of 45.5.
   /// for time, we are assuming that all grids have the same times or that
   /// there are no overlaps in time, I think.
   float time_index;
