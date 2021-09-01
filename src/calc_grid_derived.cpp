@@ -3,15 +3,15 @@
 
 #include "../include/aether.h"
 
-// Want to be able to call the calculations with fvecs and vectors,
-// but only want to do calculation in one function:
-
-fvec calc_bin_edges(fvec centers) {
-  std::vector<float> centers_vec = make_vector_from_fvec(centers);
-  std::vector<float> edges_vec = calc_bin_edges(centers_vec);
-  fvec edges = make_fvec_from_vector(edges_vec);
-  return edges;
-}
+// -----------------------------------------------------------------------------
+// Calculate the edges of the cells. The cell edges are not in the
+// exact centers between the cell centers.  We assume that (1) the
+// edge to the left is equally distant from the center as the edge to
+// the right, and that (2) the cell edge between the 0th and 1st cells
+// is half way between them. We build up from there.  For a uniform
+// grid, they edges should be half way between.  For a non-uniform
+// grid, this should work.
+// -----------------------------------------------------------------------------
 
 std::vector<float> calc_bin_edges(std::vector<float> centers) {
 
@@ -40,12 +40,25 @@ std::vector<float> calc_bin_edges(std::vector<float> centers) {
   return edges;
 }
 
-fvec calc_bin_widths(fvec centers) {
+// -----------------------------------------------------------------------------
+// Want to be able to call the calculations with fvecs and vectors,
+// but only want to do calculation in one function:
+// -----------------------------------------------------------------------------
+
+fvec calc_bin_edges(fvec centers) {
   std::vector<float> centers_vec = make_vector_from_fvec(centers);
-  std::vector<float> widths_vec = calc_bin_widths(centers_vec);
-  fvec widths = make_fvec_from_vector(widths_vec);
-  return widths;
+  std::vector<float> edges_vec = calc_bin_edges(centers_vec);
+  fvec edges = make_fvec_from_vector(edges_vec);
+  return edges;
 }
+
+// -----------------------------------------------------------------------------
+// Calculate the bin widths. This is done by calculating the cell edges
+// and then calculating the distance between the edges.  For a uniform
+// grid, this should be the same as the distance between cell centers, but
+// for a non-uniform grid, this will NOT be the same as:
+// (Center(i+1) - Center(i-1))/2.
+// -----------------------------------------------------------------------------
 
 std::vector<float> calc_bin_widths(std::vector<float> centers) {
 
@@ -60,3 +73,16 @@ std::vector<float> calc_bin_widths(std::vector<float> centers) {
 
   return widths;
 }
+
+// -----------------------------------------------------------------------------
+// Want to be able to call the calculations with fvecs and vectors,
+// but only want to do calculation in one function:
+// -----------------------------------------------------------------------------
+
+fvec calc_bin_widths(fvec centers) {
+  std::vector<float> centers_vec = make_vector_from_fvec(centers);
+  std::vector<float> widths_vec = calc_bin_widths(centers_vec);
+  fvec widths = make_fvec_from_vector(widths_vec);
+  return widths;
+}
+
