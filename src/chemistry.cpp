@@ -109,7 +109,8 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction_type reaction;
 
   int i;
-  int id_, IsNeutral;
+  int id_;
+  bool IsNeutral;
 
   // Losses (left side) first:
   reaction.nLosses = 0;
@@ -142,11 +143,14 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   // Reaction Rate:
   reaction.rate = stof(line[7]);
 
+  // for base, this is 8, for richards, this is 10:
+  int iBranch_ = 8;
+  
   // Branching Ratio:
-  reaction.branching_ratio = stof(line[8]);
+  reaction.branching_ratio = stof(line[iBranch_]);
 
   // energy released as exo-thermic reaction:
-  reaction.energy = stof(line[9]);
+  reaction.energy = stof(line[iBranch_+1]);
 
   report.exit(function);
   return reaction;
@@ -160,7 +164,7 @@ void Chemistry::find_species_id(std::string name,
                                 Neutrals neutrals,
                                 Ions ions,
                                 int &id_,
-                                int &IsNeutral,
+                                bool &IsNeutral,
                                 Report &report) {
 
   std::string function = "Chemistry::find_species_id";
@@ -168,12 +172,12 @@ void Chemistry::find_species_id(std::string name,
   report.enter(function, iFunction);
 
   int iSpecies;
-  IsNeutral = -1;
+  IsNeutral = false;
 
   id_ = neutrals.get_species_id(name, report);
 
   if (id_ > -1)
-    IsNeutral = 1;
+    IsNeutral = true;
 
   else
     id_ = ions.get_species_id(name, report);

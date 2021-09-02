@@ -22,7 +22,8 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
   int64_t iReaction, iLoss, iSource;
   float rate;
-  int IsNeutral, id_;
+  bool IsNeutral;
+  int id_;
 
   // This is make change the same size as the grid:
   fcube change3d = neutrals.temperature_scgc;
@@ -31,7 +32,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
-    if (report.test_verbose(8))
+    if (report.test_verbose(3))
       display_reaction(reactions[iReaction]);
 
     // Zero calculate reaction rate:
