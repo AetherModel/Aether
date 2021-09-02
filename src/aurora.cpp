@@ -50,14 +50,14 @@ void read_aurora(Neutrals &neutrals,
 
 fvec calculate_maxwellian(float eflux,  // in ergs/cm2/s
                           float avee,   // in keV
-                          fvec energies) {  // in eV
+                          fvec energies) {  // in keV
 
   // Change all units to be in eV and cm2:
-  float E0 = avee / 2 * 1000.0; // characteristic energy in eV
-  float Q0 = eflux * 6.242e11;  // eV/cm2/s (ergs -> eV)
-  float a = Q0 / 2 / (E0 * E0 * E0);  // cm2/s/eV2
+  float E0 = avee / 2; // characteristic energy in keV
+  float Q0 = eflux * 6.242e11 / 1000.0;  //  keV/cm2/s
+  float a = Q0 / 2 / (E0 * E0 * E0);  // cm2/s/keV2
 
-  fvec diff_num_flux = a * energies % exp(-energies / E0);  //eV/cm2/s
+  fvec diff_num_flux = a * energies % exp(-energies / E0);  //  keV/cm2/s
   return  diff_num_flux;
 }
 
@@ -78,18 +78,17 @@ fvec calculate_fang_v2(float energy_bin,
   report.enter(function, iFunction);
 
   // rhoH is in kg/m2, but need it in g/cm2 (/10)
-  // scale_height is in m, but need it in cm
-  // energy_bin is in eV but need it in keV
-  // diff_energy_flux is in eV/cm2/s but need it in keV/cm2/s
+  // scale_height needs to be in cm
+  // energy_bin needs to be in keV
+  // diff_energy_flux needs to be in keV/cm2/s
 
   float de = 0.035;  // keV
-  float E_mono = energy_bin / 1000.0;   // Convert to keV
-  float Q_mono = diff_energy_flux / 1000.0;   // Convert to keV
-  dvec H = conv_to<dvec>::from(scale_height) * 100.0; // Convert to cm
+  float E_mono = energy_bin;
+  float Q_mono = diff_energy_flux;
+  dvec H = conv_to<dvec>::from(scale_height); 
 
   // Eqn. 1 of Fang et al [2010]:
-  // This *100 below should be a /10, but we don't understand why it isn't:
-  dvec rhoHnorm = conv_to<dvec>::from(rhoH * 100.0 / 6e-6);
+  dvec rhoHnorm = conv_to<dvec>::from(rhoH / 10.0 / 6e-6);
   dvec yE = (2.0 / E_mono) * pow( rhoHnorm, 0.7);
 
   // Eqn. 4 of Fang et al [2010]:
@@ -98,7 +97,7 @@ fvec calculate_fang_v2(float energy_bin,
     (Ci[4] * pow(yE, Ci[5])) % exp((-Ci[6] * pow(yE, Ci[7])));
 
   // Eqn. 3 of Fang et al [2010] (parenthesis):
-  dvec fac = Q_mono / de / H;
+  dvec fac = Q_mono / (de * H);
 
   // Eqn. 3 of Fang et al [2010] (solve for Qtot(z), ionization rate):
   fvec q_tot = conv_to<fvec>::from(fyE % fac);
@@ -140,7 +139,7 @@ void calc_aurora(Grid grid,
 		    {-0.465119, -1.05e-1, -8.96e-2, 1.22e-2},
 		    {3.86e-1, 1.75e-3, -7.43e-4, 4.61e-4},
 		    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
-		    {9.49e-1, 1.97e-1, -2.51e-1, -2.07e-3} };
+		    {9.49e-1, 1.97e-1, -2.51e-3, -2.07e-3} };
 
   static std::vector<std::vector<float>> CiArray;
   static bool IsFirstTime = 1;
@@ -163,23 +162,22 @@ void calc_aurora(Grid grid,
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
       float energy = exp(Emin + iBin * (Emax - Emin) / (nBins - 1));
-      auroral_energies(iBin) = energy;
+      // convert from eV -> keV
+      auroral_energies(iBin) = energy/1000.0;
     }
 
     auroral_energy_widths = calc_bin_widths(auroral_energies);
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
 
-      lnE = log(auroral_energies(iBin) / 1000.0); // eV -> keV
+      lnE = log(auroral_energies(iBin));
 
       // loop through Pij values to get vector of Ci values.  This is
       // directly from Fang et al., [2010]:
       for (int i = 0; i < 8; i++) {
         float tot = 0;
-
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
-
         Ci.push_back(exp(tot));
       }
 
@@ -221,7 +219,7 @@ void calc_aurora(Grid grid,
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
       avee = ions.avee(iLon, iLat);  // in keV
 
-      if (eflux > 0.01) {
+      if (eflux > 0.1) {
 
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
@@ -231,7 +229,7 @@ void calc_aurora(Grid grid,
           rhoH1d = rhoH1d + rho_tube;
         }
 
-        // Step 2: Calculate the distribution function:
+	// Step 2: Calculate the distribution function:
         diff_num_flux = calculate_maxwellian(eflux,
                                              avee,
                                              auroral_energies);
@@ -240,9 +238,9 @@ void calc_aurora(Grid grid,
         diff_energy_flux =
           diff_num_flux % auroral_energies % auroral_energy_widths;
 
-
         // Step 4: Calculate ionization rates from Fang (all energy bins):
-        H = scale_height.tube(iLon, iLat);
+	// in cm (from meters)
+        H = scale_height.tube(iLon, iLat) * 100.0;
         fvec temp;
 
         ionization1d.zeros();
@@ -258,11 +256,10 @@ void calc_aurora(Grid grid,
           ionization1d = ionization1d + temp;
         }
 
-        // This /1e4 shouldn't be there, but I don't know why it doesn't work
-        // without it.
-        ionization1d = ionization1d * pcm3topm3 / 1.0e4;  // /cm3 -> /m3
+	// /cm3 -> /m3
+        ionization1d = ionization1d * pcm3topm3;
 
-        // Step 5: Distribute ionization among neutrals:
+	// Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the
         // ionization, so we compute a weighted average given the
         // weights (coef or Aurora_Coef) and the neutral density
@@ -280,7 +277,7 @@ void calc_aurora(Grid grid,
         // Cycle through each species of neutrals that gets aurora,
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
-          if (neutrals.species[iSpecies].nAuroraIonSpecies != 0) {
+          if (neutrals.species[iSpecies].nAuroraIonSpecies > 0) {
 
             // Parse the ionization into the species-specific parts:
             neutral_density_tube =
@@ -308,7 +305,7 @@ void calc_aurora(Grid grid,
             }  // nAuroraIonSpecies
           }  // if nAuroraIonSpecies > 0
         }  // nSpecies
-      }  // eflux > 0.01
+      }  // eflux > 0.1
     }  // nLats
   }  // nLons
 
