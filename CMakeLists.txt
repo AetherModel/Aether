@@ -59,12 +59,7 @@ if(USE_NETCDF)
   target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
 endif()
 
-if(MAKE_RUNDIR)
-  file(COPY ${PROJECT_SOURCE_DIR}/inputs/
-       DESTINATION ${RUN_DIR}/
-       PATTERN "*")
-  file(COPY ${PROJECT_SOURCE_DIR}/inputs/UA/
-       DESTINATION ${RUN_DIR}/UA/inputs)
-     file(COPY ${CMAKE_BINARY_DIR}/aether
-          DESTINATION ${RUN_DIR})
-endif()
+# Set up links for executable
+
+file(CREATE_LINK ${CMAKE_BINARY_DIR}/aether
+                 ${PROJECT_SOURCE_DIR}/share/run/aether SYMBOLIC)
