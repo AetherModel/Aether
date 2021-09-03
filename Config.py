@@ -25,6 +25,11 @@ def parse_args(oss):
                         choices = oss, \
                         default='none')
 
+    parser.add_argument('-rundir', \
+                        help='Make a run directory', \
+                        nargs = '?', \
+                        const='run')
+
     args = parser.parse_args()
     
     return args
@@ -57,18 +62,59 @@ args = parse_args(oss)
 print(args.netcdf)
 print(args.os)
 print(args.verbose)
+print(args.rundir)
 
-output_dir = "src"
-output_target = "output.cpp"
-if (args.netcdf):
-    output_source = "output_netcdf.cpp"
-else:
-    output_source = "output_binary.cpp"
+if (args.rundir):
+    dir = args.rundir
+    isDir = os.path.isdir(dir)
+    if (isDir):
+        print("Directory " + dir + " exists!")
+        print("Please do something about this!")
+        exit()
+    else:
+        # Let's make the run directory and put files in the right place!
 
-command = "cd " + output_dir + " ; /bin/rm -f " + output_target + " ; cd -"
-execute_command(command, args.verbose)
+        aetherExe = os.getcwd() + "/build/aether"
 
-command = "cd " + output_dir + \
-    " ; ln -s " + output_source + " " + output_target + " ; cd -"
-execute_command(command, args.verbose)
+        print(aetherExe)
+        
+        command = "mkdir "+dir
+        execute_command(command, args.verbose)
+
+        command = "mkdir " + dir + "/UA"
+        execute_command(command, args.verbose)
+
+        command = "mkdir " + dir + "/UA/inputs"
+        execute_command(command, args.verbose)
+
+        command = "mkdir " + dir + "/UA/output"
+        execute_command(command, args.verbose)
+
+        command = "mkdir " + dir + "/UA/restartOut"
+        execute_command(command, args.verbose)
+
+        command = "cd " + dir + "/UA; ln -s restartOut restartIn ; cd -"
+        execute_command(command, args.verbose)
+
+        command = "cp inputs/aether.in " + dir
+        execute_command(command, args.verbose)
+
+        command = "cp inputs/UA/*.csv " + dir + "/UA/inputs"
+        execute_command(command, args.verbose)
+
+        command = "cp inputs/UA/*.txt " + dir + "/UA/inputs"
+        execute_command(command, args.verbose)
+
+        command = "cp inputs/*.csv " + dir + "/UA/inputs"
+        execute_command(command, args.verbose)
+
+        command = "cp inputs/*.txt " + dir + "/UA/inputs"
+        execute_command(command, args.verbose)
+
+        command = "cd " + dir + "/UA; ln -s restartOut restartIn ; cd -"
+        execute_command(command, args.verbose)
+
+#command = "cd " + output_dir + " ; /bin/rm -f " + output_target + " ; cd -"
+#execute_command(command, args.verbose)
+
 
