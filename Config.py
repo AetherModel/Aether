@@ -45,18 +45,14 @@ def execute_command(command, verbose):
 # Main Code
 # ----------------------------------------------------------------------
 
-makefiles = glob('src/Makefile.*')
+makefiles = glob('src/Makefile.NetCDF.*')
 oss = []
 for file in makefiles:
-    oper = file[13:]
+    oper = file[20:]
     if (oper != 'OS'):
         oss.append(oper)
 
 args = parse_args(oss)
-
-print(args.netcdf)
-print(args.os)
-print(args.verbose)
 
 output_dir = "src"
 output_target = "output.cpp"
@@ -64,6 +60,23 @@ if (args.netcdf):
     output_source = "output_netcdf.cpp"
 else:
     output_source = "output_binary.cpp"
+
+command = "cd " + output_dir + " ; /bin/rm -f " + output_target + " ; cd -"
+execute_command(command, args.verbose)
+
+command = "cd " + output_dir + \
+    " ; ln -s " + output_source + " " + output_target + " ; cd -"
+execute_command(command, args.verbose)
+
+# ------------------------------------------------
+# Makefile
+# ------------------------------------------------
+
+output_target = "Makefile.NetCDF"
+if (args.netcdf):
+    output_source = "Makefile.NetCDF." + args.os
+else:
+    output_source = "Makefile.NoNetCDF"
 
 command = "cd " + output_dir + " ; /bin/rm -f " + output_target + " ; cd -"
 execute_command(command, args.verbose)
