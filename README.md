@@ -53,24 +53,17 @@ Once you have compiled you can install Aether with an example run directory
 structure like this:
 
 ```bash
-make install
-cd ../run
+cd ..
+cp -R share/run ./run.test
+cd run.test
+./aether
 ```
 
-If you want a different run directory you could run `cmake` like this:
-```bash
-cmake -DRUN_DIR=/my/run/dir ..
-```
+Output files are in UA/output.
 
-Make some plots:
+We are working on aetherpy to make plots.
 
-```bash
-../python/plot_model_results.py -var=24 3DALL_20110320_010000.nc -alt=110
-
-../python/plot_model_results.py -var=14 3DALL_20110320_010000.nc -alt=300
-```
-
-Compare png files to ../inputs/*.png to see if they are similar.
+Compare png files to tests/outputs_pngs/*.png to see if they are similar.
 
 ## Code Manual:
 
