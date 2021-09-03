@@ -4,17 +4,6 @@ This is the home of the Aether model of the thermosphere and ionosphere
 The Aether model has been developed using gnu c++ (version 9.3.0). If
 you are using this, hopefully it will just work out of the box.
 
-## Dependencies:
-
-1. Aether uses the netcdf library (netcdf-cxx4). We will eventually
-make a configuration file that will check to see if you have this
-installed, but right now it is hardcoded to be in
-/opt/local/lib. Sorry. Also, the python code provided for
-visualization uses the netcdf library (netCDF4).
-
-2. The armadillo include files need to be placed somewhere that
-can be accessed by the Makefile.
-
 ## Quick Start:
 
 These are unix commands, assuming that you have access to a unix/linux
@@ -52,12 +41,25 @@ cmake ..
 make -j
 ```
 
-You should have a file called `aether` by now. To run an example you must set
-up your directory like this:
+To compile Aether with NetCDF:
+```bash
+mkdir build
+cd build
+cmake -DUSE_NETCDF=Y ..
+make -j
+```
+
+Once you have compiled you can install Aether with an example run directory
+structure like this:
 
 ```bash
-cmake -DMAKE_RUNDIR=Y ..
+make install
 cd ../run
+```
+
+If you want a different run directory you could run `cmake` like this:
+```bash
+cmake -DRUN_DIR=/my/run/dir ..
 ```
 
 Make some plots:
@@ -70,4 +72,12 @@ Make some plots:
 
 Compare png files to ../inputs/*.png to see if they are similar.
 
+## Code Manual:
 
+To create the code documentation manual, download Doxygen for your operating
+system and run:
+
+```bash
+cd doc
+doxygen Doxyfile
+```

@@ -60,6 +60,6 @@ if(USE_NETCDF)
 endif()
 
 # Set up links for executable
-
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/aether
                  ${PROJECT_SOURCE_DIR}/share/run/aether SYMBOLIC)
+
