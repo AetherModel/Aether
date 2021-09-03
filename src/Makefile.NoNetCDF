@@ -1,0 +1,15 @@
+# (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+# Full license can be found in License.md
+
+COMPILE.CPP = g++
+LINK.CPP = g++
+AR = ar -rs
+
+NETCDF_INCLUDE_DIR = 
+LIB_DIR = /opt/local/lib
+NETCDF = netcdf_c++4
+
+FLAGS = -O3 -ffast-math -c -I/opt/local/include
+
+# Can use this version for no optimization and no fast math:
+# FLAGS = -c -I${INCLUDE_DIR} -I../include
