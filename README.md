@@ -6,14 +6,12 @@ you are using this, hopefully it will just work out of the box.
 
 ## Dependencies:
 
-1. Aether uses the netcdf library (netcdf-cxx4). We will eventually
-make a configuration file that will check to see if you have this
-installed, but right now it is hardcoded to be in
-/opt/local/lib. Sorry. Also, the python code provided for
-visualization uses the netcdf library (netCDF4).
+1. Aether uses the netcdf library (netcdf-cxx4), but we wrote a
+binary output file also, so we can choose which one we want.
 
-2. The armadillo include files need to be placed somewhere that
-can be accessed by the Makefile.
+2. The armadillo include files need to be placed somewhere that can be
+accessed by the Makefile.  These are included in the Aether/include
+directory now.
 
 ## Quick Start:
 
@@ -26,10 +24,11 @@ terminal. This has been tested on a MacBook Pro.
 
 3. git checkout develop
 
-4. Copy example Makefile.OSX/ubuntu and modify src/Makefile.OS to
-adjust compiler options and to point to the correct netcdf library and
-armadillo include file locations.  We will fix this so that there is a
-configuration script at some point.
+4. Run the ./Config.py script.  Things that work:
+./Config.py -os=OSX
+./Config.py -os=OSX -netcdf
+./Config.py -os=ubuntu
+./Config.py -os=ubuntu -netcdf
 
 5. make 
 
