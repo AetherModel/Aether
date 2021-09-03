@@ -1,7 +1,18 @@
 # (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
 # Full license can be found in License.md
 
-include Makefile.OS
+COMPILE.CPP = g++
+LINK.CPP = g++
+AR = ar -rs
+
+include Makefile.NetCDF
+
+LIB_DIR = 
+
+FLAGS = -O3 -ffast-math -c -I../include --std=c++11 ${NETCDF_INCLUDE_DIR}
+
+# Can use this version for no optimization and no fast math:
+# FLAGS = -c -I${INCLUDE_DIR} -I../include
 
 .SUFFICES:
 .SUFFICES: .cpp .o
@@ -54,10 +65,10 @@ LIB: ${CLASSES} ${OBJECTS}
 	${AR} ${MY_LIB} ${CLASSES} ${OBJECTS}
 
 Aether: ${MAIN} LIB
-	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
+	${LINK.CPP} -o aether.exe ${MAIN} ${MY_LIB} ${LIB_DIR} ${NETCDF_LIB_DIR} ${NETCDF_LIB}
 
 test: ${TEST} LIB
-	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} -L../lib -L${LIB_DIR} -l${NETCDF}
+	${LINK.CPP} -o test.exe ${TEST} ${MY_LIB} ${LIB_DIR} ${NETCDF_LIB_DIR} ${NETCDF_LIB}
 
 clean:
 	rm -f *~ core *.o *.exe *.a *.so *.d
