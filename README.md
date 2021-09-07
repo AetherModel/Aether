@@ -9,42 +9,66 @@ you are using this, hopefully it will just work out of the box.
 1. Aether uses the netcdf library (netcdf-cxx4), but we wrote a
 binary output file also, so we can choose which one we want.
 
-2. The armadillo include files need to be placed somewhere that can be
-accessed by the Makefile.  These are included in the Aether/include
-directory now.
-
 ## Quick Start:
 
 These are unix commands, assuming that you have access to a unix/linux
 terminal. This has been tested on a MacBook Pro.
 
-1. git clone https://github.com/AetherModel/Aether
+```bash
+git clone https://github.com/AetherModel/Aether
+```
 
-2. cd Aether
+```bash
+cd Aether
+```
 
-3. git checkout develop
+```bash
+git checkout develop
+```
 
-4. Run the ./Config.py script.  Things that work:
-./Config.py -os=OSX
-./Config.py -os=OSX -netcdf
-./Config.py -os=ubuntu
-./Config.py -os=ubuntu -netcdf
+Make sure you have [CMake](https://cmake.org/) installed. If you don't:
 
-5. make 
+For MacOS [homebrew](https://formulae.brew.sh/formula/cmake):
+```bash
+brew install cmake
+```
 
-6. make rundir
+For Ubuntu/Debian Linux:
+```bash
+sudo apt install cmake
+```
 
-7. cd run
+To compile Aether:
+```bash
+mkdir build
+cd build
+cmake ..
+make -j
+```
 
-8. ./aether.exe (should run 1 hour of simulation with no issues).
+To compile Aether with NetCDF:
+```bash
+mkdir build
+cd build
+cmake -DUSE_NETCDF=Y ..
+make -j
+```
 
-9. Make some plots:
+Once you have compiled you can install Aether with an example run directory
+structure like this:
 
-../python/plot_model_results.py -var=24 3DALL_20110320_010000.nc -alt=110
+```bash
+cd ..
+cp -R share/run ./run.test
+cd run.test
+./aether
+```
 
-../python/plot_model_results.py -var=14 3DALL_20110320_010000.nc -alt=300
+Output files are in UA/output.
 
-10. compare png files to ../inputs/*.png to see if they are similar.
+We are working on aetherpy to make plots.
+
+Compare png files to tests/outputs_pngs/*.png to see if they are similar.
 
 ## Code Manual:
 
