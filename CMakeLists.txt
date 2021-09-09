@@ -25,6 +25,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_FIND_ROOT_PATH ${SHARE_INCLUDE}
                          ${CMAKE_FIND_ROOT_PATH}
                          )
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
+                      ${PROJECT_SOURCE_DIR}/share
+                      )
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/share
                       ${CMAKE_MODULE_PATH})
 target_include_directories(aether PUBLIC ${PROJECT_SOURCE_DIR}/include)
