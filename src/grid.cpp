@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // --------------------------------------------------------------------------
 // Initialize Grid class
@@ -45,7 +45,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   sza_scgc.set_size(nX, nY, nZ);
   cos_sza_scgc.set_size(nX, nY, nZ);
 
-  fcube tmp(nX, nY, nZ);
+  arma_cube tmp(nX, nY, nZ);
   tmp.zeros();
   bfield_vcgc.push_back(tmp);  // x-component
   bfield_vcgc.push_back(tmp);  // y-component
@@ -62,7 +62,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_north_ll.zeros();
   mag_pole_south_ll.zeros();
 
-  fcube tmp_col(1, 1, nZ);
+  arma_cube tmp_col(1, 1, nZ);
   mag_pole_north_gse.push_back(tmp_col);
   mag_pole_north_gse.push_back(tmp_col);
   mag_pole_north_gse.push_back(tmp_col);

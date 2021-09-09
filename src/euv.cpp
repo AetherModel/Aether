@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize EUV
@@ -16,7 +16,7 @@
 Euv::Euv(Inputs args, Report report) {
 
   int iErr;
-  float ave;
+  precision_t ave;
 
   iErr = 0;
 
@@ -57,7 +57,7 @@ int Euv::read_file(Inputs args, Report report) {
 
   waveinfotype tmp;
   std::string line, col;
-  float mulfac;
+  precision_t mulfac;
   std::ifstream infile_ptr;
   int iErr = 0;
 
@@ -234,8 +234,8 @@ int Euv::scale_from_1au(Planets planet,
                         Times time,
       Report report) {
   int iErr = 0;
-  float d = planet.get_star_to_planet_dist(time);
-  float scale = 1.0 / (d*d);
+  precision_t d = planet.get_star_to_planet_dist(time);
+  precision_t scale = 1.0 / (d*d);
   if (report.test_verbose(7))
     std::cout << "Scale from 1 AU : " << scale << "\n";
   for (int iWave = 0; iWave < nWavelengths; iWave++)
@@ -252,16 +252,16 @@ int Euv::euvac(Times time,
                Report &report) {
 
   int iErr = 0;
-  float slope;
+  precision_t slope;
 
   std::string function = "Euv::euvac";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  float f107 = indices.get_f107(time.get_current());
-  float f107a = indices.get_f107a(time.get_current());
+  precision_t f107 = indices.get_f107(time.get_current());
+  precision_t f107a = indices.get_f107a(time.get_current());
 
-  float mean_f107 = (f107 + f107a)/2.0;
+  precision_t mean_f107 = (f107 + f107a)/2.0;
 
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
     slope = 1.0 + euvac_afac[iWave] * (mean_f107 - 80.0);

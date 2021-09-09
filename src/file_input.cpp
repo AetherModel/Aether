@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "aether.h"
+
 // -------------------------------------------------------------------
 // Read a line of the file, set to lower case, remove spaces until
 // the end of the line or 2+ spaces are reached.
@@ -141,10 +143,10 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
 // Read a string, clean it up, and convert it to an float
 // -------------------------------------------------------------------
 
-float read_float(std::ifstream &file_ptr, std::string hash) {
+precision_t read_float(std::ifstream &file_ptr, std::string hash) {
 
   std::string line = "";
-  float output = -1;
+  precision_t output = -1;
 
   if (!file_ptr.is_open()) {
     std::cout << "File is not open (read_float)!\n";

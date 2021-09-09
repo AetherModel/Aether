@@ -5,26 +5,26 @@
 #define INCLUDE_BFIELD_H_
 
 struct bfield_info_type {
-  float b[3];
-  float lon;
-  float lat;
+  precision_t b[3];
+  precision_t lon;
+  precision_t lat;
 };
 
-fvec get_magnetic_pole(int IsNorth,
+arma_vec get_magnetic_pole(int IsNorth,
 		       Planets planet,
 		       Inputs input,
 		       Report &report);
 
-bfield_info_type get_bfield(float lon,
-                            float lat,
-                            float alt,
+bfield_info_type get_bfield(precision_t lon,
+                            precision_t lat,
+                            precision_t alt,
                             Planets planet,
                             Inputs input,
                             Report &report);
 
-bfield_info_type get_dipole(float lon,
-                            float lat,
-                            float alt,
+bfield_info_type get_dipole(precision_t lon,
+                            precision_t lat,
+                            precision_t alt,
                             Planets planet,
                             Inputs input,
                             Report &report);

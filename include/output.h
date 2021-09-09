@@ -4,7 +4,7 @@
 #ifndef INCLUDE_OUTPUT_H_
 #define INCLUDE_OUTPUT_H_
 
-#include "../include/aether.h"
+#include "aether.h"
 
 int output(Neutrals neutrals,
            Ions ions,

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <vector>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------
 // copy from c++ vector to c-native array
@@ -23,7 +23,7 @@ void copy_vector_to_array(std::vector<float> vector_in,
 // copy from armidillo cube to 3d c-native array
 // -----------------------------------------------------------------------
 
-void copy_cube_to_array(fcube cube_in,
+void copy_cube_to_array(arma_cube cube_in,
                         float *array_out) {
 
   int64_t nX = cube_in.n_rows;
@@ -49,8 +49,8 @@ void copy_cube_to_array(fcube cube_in,
 // Use armidillo cubes
 // -----------------------------------------------------------------------
 
-std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr) {
-  std::vector<fcube> xyz;
+std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr) {
+  std::vector<arma_cube> xyz;
   xyz.push_back(llr[2] % cos(llr[1]) % cos(llr[0]));
   xyz.push_back(llr[2] % cos(llr[1]) % sin(llr[0]));
   xyz.push_back(llr[2] % sin(llr[1]));
@@ -61,7 +61,7 @@ std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr) {
 // Transform Longitude, Latitude, Radius to X, Y, Z
 // -----------------------------------------------------------------------
 
-void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]) {
+void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3]) {
   // llr_in[0] = longitude (in radians)
   // llr_in[1] = latitude (in radians)
   // llr_in[2] = radius
@@ -75,15 +75,15 @@ void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
+std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
 
-  fcube X = XYZ_in[0];
-  fcube Y = XYZ_in[1];
-  fcube Z = XYZ_in[2];
-  std::vector<fcube> XYZ_out;
+  arma_cube X = XYZ_in[0];
+  arma_cube Y = XYZ_in[1];
+  arma_cube Z = XYZ_in[2];
+  std::vector<arma_cube> XYZ_out;
 
-  float ca = cos(angle);
-  float sa = sin(angle);
+  precision_t ca = cos(angle);
+  precision_t sa = sin(angle);
 
   XYZ_out.push_back( X * ca + Y *sa);
   XYZ_out.push_back(-X * sa + Y *ca);
@@ -97,15 +97,15 @@ std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle) {
+std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
 
-  fcube X = XYZ_in[0];
-  fcube Y = XYZ_in[1];
-  fcube Z = XYZ_in[2];
-  std::vector<fcube> XYZ_out;
+  arma_cube X = XYZ_in[0];
+  arma_cube Y = XYZ_in[1];
+  arma_cube Z = XYZ_in[2];
+  std::vector<arma_cube> XYZ_out;
 
-  float ca = cos(angle);
-  float sa = sin(angle);
+  precision_t ca = cos(angle);
+  precision_t sa = sin(angle);
 
   XYZ_out.push_back(X * ca - Z *sa);
   XYZ_out.push_back(Y);
@@ -119,15 +119,15 @@ std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
+std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
 
-  fcube X = XYZ_in[0];
-  fcube Y = XYZ_in[1];
-  fcube Z = XYZ_in[2];
-  std::vector<fcube> XYZ_out;
+  arma_cube X = XYZ_in[0];
+  arma_cube Y = XYZ_in[1];
+  arma_cube Z = XYZ_in[2];
+  std::vector<arma_cube> XYZ_out;
 
-  float ca = cos(angle);
-  float sa = sin(angle);
+  precision_t ca = cos(angle);
+  precision_t sa = sin(angle);
 
   XYZ_out.push_back(X);
   XYZ_out.push_back( Y * ca + Z *sa);
@@ -141,9 +141,9 @@ std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]) {
-  float ca = cos(angle_in);
-  float sa = sin(angle_in);
+void transform_rot_z(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]) {
+  precision_t ca = cos(angle_in);
+  precision_t sa = sin(angle_in);
   xyz_out[0] =  xyz_in[0] * ca + xyz_in[1] * sa;
   xyz_out[1] = -xyz_in[0] * sa + xyz_in[1] * ca;
   xyz_out[2] =  xyz_in[2];
@@ -154,9 +154,9 @@ void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]) {
-  float ca = cos(angle_in);
-  float sa = sin(angle_in);
+void transform_rot_y(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]) {
+  precision_t ca = cos(angle_in);
+  precision_t sa = sin(angle_in);
   xyz_out[0] = xyz_in[0] * ca - xyz_in[2] * sa;
   xyz_out[1] = xyz_in[1];
   xyz_out[2] = xyz_in[0] * sa + xyz_in[2] * ca;
@@ -167,7 +167,7 @@ void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]) {
 // -----------------------------------------------------------------------
 
 void transform_float_vector_to_array(std::vector<float> input,
-                                     float output[3]) {
+                                     precision_t output[3]) {
   for (int i = 0; i < 3; i++) output[i] = input[i];
 }
 
@@ -175,10 +175,10 @@ void transform_float_vector_to_array(std::vector<float> input,
 // Rotate a vector from XYZ to East, North, Vertical
 // -----------------------------------------------------------------------
 
-void transform_vector_xyz_to_env(float xyz_in[3],
-                                 float lon,
-                                 float lat,
-                                 float env_out[3]) {
+void transform_vector_xyz_to_env(precision_t xyz_in[3],
+                                 precision_t lon,
+                                 precision_t lat,
+                                 precision_t env_out[3]) {
 
   env_out[2] =   xyz_in[0] * cos(lat)*cos(lon) +
     xyz_in[1] * cos(lat)*sin(lon) + xyz_in[2]*sin(lat);
@@ -202,8 +202,8 @@ void transform_vector_xyz_to_env(float xyz_in[3],
 // Simple 3-element vector difference
 // -----------------------------------------------------------------------
 
-void vector_diff(float vect_in_1[3],
-                 float vect_in_2[3],
-                 float vect_out[3]) {
+void vector_diff(precision_t vect_in_1[3],
+                 precision_t vect_in_2[3],
+                 precision_t vect_out[3]) {
   for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }

@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Initialize chemistry class

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
@@ -92,7 +92,7 @@ std::string Inputs::get_euv_model() {
 // Return the heating efficiency of the neutrals for EUV
 // -----------------------------------------------------------------------
 
-float Inputs::get_euv_heating_eff_neutrals() {
+precision_t Inputs::get_euv_heating_eff_neutrals() {
   return euv_heating_eff_neutrals;
 }
 
@@ -100,7 +100,7 @@ float Inputs::get_euv_heating_eff_neutrals() {
 // Return how often to calculate EUV energy deposition
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_euv() {
+precision_t Inputs::get_dt_euv() {
   return dt_euv;
 }
 
@@ -108,7 +108,7 @@ float Inputs::get_dt_euv() {
 // Return how often to report progress of simulation
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_report() {
+precision_t Inputs::get_dt_report() {
   return dt_report;
 }
 
@@ -116,7 +116,7 @@ float Inputs::get_dt_report() {
 // Return number of output types
 // -----------------------------------------------------------------------
 
-float Inputs::get_n_outputs() {
+precision_t Inputs::get_n_outputs() {
   return dt_output.size();
 }
 
@@ -140,8 +140,8 @@ int Inputs::get_nAltsGeo() {
 // Return how often to output a given output type
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_output(int iOutput) {
-  float value = 0.0;
+precision_t Inputs::get_dt_output(int iOutput) {
+  precision_t value = 0.0;
   int iSize = dt_output.size();
   if (iOutput < iSize) value = dt_output[iOutput];
   return value;

@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "aether.h"
+
 class Report {
 
 public:
@@ -31,7 +33,7 @@ private:
   struct item_struct {
     std::string entry;
     int nTimes;
-    float timing_total;
+    precision_t timing_total;
     unsigned long long timing_start;
     int iLevel;
     int iStringPosBefore;
