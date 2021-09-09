@@ -16,6 +16,9 @@ else()
   set(SRC_FILES ${OUT_DIR}/output_binary.cpp ${SRC_FILES})
 endif()
 add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
+if(USE_DOUBLE_PRECISION)
+  add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
+endif()
 
 # Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
