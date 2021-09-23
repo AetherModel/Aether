@@ -44,6 +44,23 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
+     \brief update the potential and aurora
+
+     \param planet need info about SZA and stuff to get MLTs
+     \param gGrid need grid
+     \param time need current time
+     \param ions Going to set the potential and aurora
+
+     \param report Need to pass Report class, so reporting can occur  
+   **/
+  
+  int update(Planets planet,
+	     Grid gGrid,
+	     Times time,
+	     Ions &ions,
+	     Report &report);
+
+  /**************************************************************
      \brief used in main.cpp to ensure electrodynamics times and
       aether input times match up. Returns false if times are
       misaligned, true if they are aligned
@@ -269,6 +286,9 @@ class Electrodynamics {
 
   /// The input file to read that contains the grid of electrodynamics:
   std::string input_file;
+
+  ///
+  bool HaveElectrodynamics;
 
   /// Variables needed by user - all set by set_ functions:
 
