@@ -1,16 +1,20 @@
-
-#include <iostream>
-#include <string>
-#include <netcdf>
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
 #include "../include/aether.h"
-#include <vector>
 
-// Initialize Electrodynamics
+// -----------------------------------------------------------------------------
+// Initialize the electrodynamics by reading the electrodynamics
+// netCDF file.
+// -----------------------------------------------------------------------------
 
 Electrodynamics::Electrodynamics(Inputs input, Report &report) {
   read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
 }
+
+// -----------------------------------------------------------------------------
+// Gets potential with generic interpolation scheme
+// -----------------------------------------------------------------------------
 
 fcube Electrodynamics::get_potential(fcube magLat,
                                      fcube magLocalTime,
@@ -28,6 +32,10 @@ fcube Electrodynamics::get_potential(fcube magLat,
   return pot;
 }
 
+// -----------------------------------------------------------------------------
+// Gets energy flux with generic interpolation scheme
+// -----------------------------------------------------------------------------
+
 fmat Electrodynamics::get_eflux(fcube magLat,
                                 fcube magLocalTime,
                                 Report &report) {
@@ -38,6 +46,10 @@ fmat Electrodynamics::get_eflux(fcube magLat,
   return get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
 }
 
+// -----------------------------------------------------------------------------
+// Gets average energy with generic interpolation scheme
+// -----------------------------------------------------------------------------
+
 fmat Electrodynamics::get_avee(fcube magLat,
                                fcube magLocalTime,
                                Report &report) {
@@ -47,6 +59,10 @@ fmat Electrodynamics::get_avee(fcube magLat,
   fmat e_avee = input_electrodynamics[0].average_energy[time_pos];
   return get_values(e_avee, magLat.n_rows, magLat.n_cols);
 }
+
+// -----------------------------------------------------------------------------
+// Generic function to conduct 2d linear interpolation
+// -----------------------------------------------------------------------------
 
 fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols) {
   fmat slice(rows, cols);
@@ -95,6 +111,10 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols) {
   return slice;
 }
 
+// -----------------------------------------------------------------------------
+// Get potential, electron energy flux, and electron average energy patterns
+// -----------------------------------------------------------------------------
+
 //average energy and eflux energy as well call to get_values
 
 std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat,
@@ -120,12 +140,21 @@ std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat,
   return std::make_tuple(pot, eflux, avee);
 }
 
+// -----------------------------------------------------------------------------
+// Check if the requested time is within bounds of the electrodynamics times.
+// -----------------------------------------------------------------------------
+
 bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
   std::vector<double> e_times = input_electrodynamics[0].times;
   int iLow = 0;
   int iHigh = e_times.size() - 1;
   return !(inputStartTime > e_times[iHigh] || inputEndTime < e_times[iLow]);
 }
+
+// -----------------------------------------------------------------------------
+// Set the user-defined time for the electrodynamics, and find the
+// interpolation indices for use when the user requests parameters.
+// -----------------------------------------------------------------------------
 
 void Electrodynamics::set_time(double time, Report &report) {
   std::string function = "Electrodynamics::set_time";
@@ -190,10 +219,15 @@ void Electrodynamics::set_time(double time, Report &report) {
   //report.exit(function);
 }
 
+// -----------------------------------------------------------------------------
+// Take the user defined lats/mlts and set the interpolation indices
+// so the code can easy get the requested electrodynamics parameters later
+// -----------------------------------------------------------------------------
+
 void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report) {
   std::string function = "Electrodynamics::set_grid";
   static int iFunction = -1;
-  //report.enter(function, iFunction);
+  report.enter(function, iFunction);
 
   lats_needed = abs(lats);
   mlts_needed = mlts;
@@ -214,8 +248,13 @@ void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report) {
   // the index, store, and move to next point; then repeat with mlts.
 
 
-  //report.exit(function);
+  report.exit(function);
 }
+
+// -----------------------------------------------------------------------------
+// Use binomial search to find location in vector and then get linear
+// interpolation coefficients
+// -----------------------------------------------------------------------------
 
 fmat Electrodynamics::get_interpolation_indices(fmat vals, fvec search) {
   fmat res(vals.n_rows, vals.n_cols, fill::zeros);
@@ -226,7 +265,6 @@ fmat Electrodynamics::get_interpolation_indices(fmat vals, fvec search) {
       float in = vals(i, j);
       int64_t iLow, iMid, iHigh, N;
       double interpolation_index, x, dx;
-
 
       // Check to see if the time is below the bottom time in the vector:
       iLow = 0;
@@ -277,6 +315,9 @@ fmat Electrodynamics::get_interpolation_indices(fmat vals, fvec search) {
   return res;
 }
 
+// -----------------------------------------------------------------------------
+// Functions to set indices for models that need them
+// -----------------------------------------------------------------------------
 
 void Electrodynamics::set_imf_bx(float value) {
   imf_bx_needed = value;
@@ -317,5 +358,3 @@ void Electrodynamics::set_ae(float value) {
 void Electrodynamics::set_kp(float value) {
   kp_needed = value;
 }
-
-
