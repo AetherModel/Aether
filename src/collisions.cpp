@@ -14,7 +14,7 @@ void Ions::calc_ion_neutral_coll_freq(Neutrals neutrals, Report &report) {
   std::string function = "Ions::calc_ion_neutral_coll_freq";
   static int iFunction = -1;
   report.enter(function, iFunction);
-  fcube t, one_minus_log;
+  arma_cube t, one_minus_log;
 
   for (int iIon = 0; iIon < nIons; iIon++) {
     if (species[iIon].nu_ion_neutral_coef.size() > 0) {
