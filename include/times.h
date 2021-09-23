@@ -187,7 +187,6 @@ private:
   precision_t ut;
   
   /// in weird JPL units
-  float orbittime;
   precision_t orbittime;
 
   /// current time as different integer units:
