@@ -1,9 +1,23 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
-#include <iostream>
-#include <string>
-#include <stdlib.h>
 #include "../include/aether.h"
-#include <vector>
+
+// -----------------------------------------------------------------------------
+// The first few functions are general readers for one "record" of data in
+// a binary file.
+// (These files are a bit weird, because of history.  They are binary files
+//  that used to be produced in fortran, so they have a record-length at
+//  the beginning and end of a record. So, the general format is:
+//  record-length data data data record-length
+//  record-length data data data record-length
+//  record-length data data data record-length
+//  The specific format on what the data is can be found in the python code.)
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Reads in a 2d matrix of floats from a binary file.
+// -----------------------------------------------------------------------------
 
 fmat read_in_fmat_array(FILE *infile, int nRows, int nCols) {
 
@@ -26,6 +40,10 @@ fmat read_in_fmat_array(FILE *infile, int nRows, int nCols) {
   return values;
 }
 
+// -----------------------------------------------------------------------------
+// Reads in a 1d vector of floats from a binary file.
+// -----------------------------------------------------------------------------
+
 std::vector<float> read_in_float_array(FILE *infile, int nPoints) {
 
   std::vector<float> values;
@@ -42,6 +60,10 @@ std::vector<float> read_in_float_array(FILE *infile, int nPoints) {
 
   return values;
 }
+
+// -----------------------------------------------------------------------------
+// Read in a 1d vector of integers from a binary file.
+// -----------------------------------------------------------------------------
 
 std::vector<int> read_in_int_array(FILE *infile, int nPoints) {
 
@@ -60,6 +82,10 @@ std::vector<int> read_in_int_array(FILE *infile, int nPoints) {
 
   return values;
 }
+
+// -----------------------------------------------------------------------------
+// Read in a string from a binary file
+// -----------------------------------------------------------------------------
 
 std::string read_in_string(FILE *infile) {
 
@@ -80,7 +106,12 @@ std::string read_in_string(FILE *infile) {
 }
 
 
-//done with binary currently, not netcdf
+// -----------------------------------------------------------------------------
+// Read in an amie-type of electrodynamics file. There is code in the
+// aetherpy distribution that will produce these types of files, with
+// a write function.
+// -----------------------------------------------------------------------------
+
 void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
                                                        Report &report) {
   if (filename == "")
