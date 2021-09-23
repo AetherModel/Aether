@@ -59,6 +59,6 @@ int pair_omniweb_index(std::string, Indices index);
   \brief This code returns the missing value for a given OMNIWeb variable
   \param variable_name the name of the variable to get the OMNIWeb missing value
 **/
-float get_omniweb_missing_value(std::string);
+precision_t get_omniweb_missing_value(std::string);
 
 #endif  // INCLUDE_READ_INDICES_H_
