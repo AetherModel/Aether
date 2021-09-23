@@ -5,7 +5,8 @@
 #include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
-//
+// Calculates the ion-neutral collision frequencies given parameters
+// read in from the CSV file.
 // -----------------------------------------------------------------------------
 
 void Ions::calc_ion_neutral_coll_freq(Neutrals neutrals, Report &report) {
