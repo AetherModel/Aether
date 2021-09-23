@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // ----------------------------------------------------------------------
 // Initialize the geographic grid.  At the moment, this is a simple
@@ -26,32 +26,30 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   // Longitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
-  fvec lon1d(nLons);
-  float dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons - 2 * nGCs);
+  arma_vec lon1d(nLons);
+  precision_t dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
+  for (iLon=0; iLon < nLons; iLon++)
+    lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
 
-  for (iLon = 0; iLon < nLons; iLon++)
-    lon1d(iLon) = grid_input.lon_min + (iLon - nGCs + 0.5) * dlon;
-
-  for (iLat = 0; iLat < nLats; iLat++) {
-    for (iAlt = 0; iAlt < nAlts; iAlt++)
-      geoLon_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
+  for (iLat=0; iLat < nLats; iLat++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++)
+      geoLon_scgc.subcube(0, iLat, iAlt, nLons-1, iLat, iAlt) = lon1d;
   }
 
   // Latitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
-  fvec lat1d(nLats);
-  float dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats - 2 * nGCs);
+  arma_vec lat1d(nLats);
+  precision_t dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats-2*nGCs);
+  for (iLat=0; iLat < nLats; iLat++)
+    lat1d(iLat) = grid_input.lat_min + (iLat-nGCs+0.5) * dlat;
 
-  for (iLat = 0; iLat < nLats; iLat++)
-    lat1d(iLat) = grid_input.lat_min + (iLat - nGCs + 0.5) * dlat;
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iAlt = 0; iAlt < nAlts; iAlt++)
-      geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
+  for (iLon=0; iLon < nLons; iLon++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++)
+      geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats-1, iAlt) = lat1d;
   }
 
-  fvec alt1d(nAlts);
+  arma_vec alt1d(nAlts);
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)

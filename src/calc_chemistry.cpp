@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // calculates the chemical reactions in the model by taking into account
@@ -22,7 +22,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  float dt = time.get_dt();
+  precision_t dt = time.get_dt();
 
   // ------------------------------------
   // Calculate electron densities

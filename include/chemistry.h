@@ -7,12 +7,6 @@
 #include <vector>
 #include <string>
 
-#include "../include/earth.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/inputs.h"
-#include "../include/report.h"
-
 class Chemistry {
 
  public:
@@ -32,9 +26,9 @@ class Chemistry {
     int nSources;
     int nLosses;
 
-    float energy;
-    float rate;
-    float branching_ratio;
+    precision_t energy;
+    precision_t rate;
+    precision_t branching_ratio;
   };
 
   std::vector<reaction_type> reactions;
@@ -59,14 +53,14 @@ class Chemistry {
 
   struct sources_and_losses_type {
 
-    float neutral_sources[nSpecies];
-    float neutral_losses[nSpecies];
-    float ion_sources[nIons];
-    float ion_losses[nIons];
+    precision_t neutral_sources[nSpecies];
+    precision_t neutral_losses[nSpecies];
+    precision_t ion_sources[nIons];
+    precision_t ion_losses[nIons];
 
-    float heat_neutrals;
-    float heat_ions;
-    float heat_electrons;
+    precision_t heat_neutrals;
+    precision_t heat_ions;
+    precision_t heat_electrons;
   };
 
   sources_and_losses_type sources_and_losses;

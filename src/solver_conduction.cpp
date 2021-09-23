@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------
 // This code solves the conduction equation in 1D.
@@ -15,30 +15,30 @@
 //    (i) and the cell center of the cell BELOW the current one (i-1).
 // -----------------------------------------------------------------------
 
-fvec solver_conduction(fvec value,
-                       fvec lambda,
-                       fvec front,
-                       float dt,
-                       fvec dx) {
+arma_vec solver_conduction(arma_vec value,
+                       arma_vec lambda,
+                       arma_vec front,
+                       precision_t dt,
+                       arma_vec dx) {
 
   int64_t nPts = value.n_elem;
 
-  fvec di = lambda;
-  fvec m = dt / front;
+  arma_vec di = lambda;
+  arma_vec m = dt / front;
 
   // These are to allow for a stretched grid:
   // du is cell spacing in upper direction (so, lower, shifted by one):
-  fvec du(nPts);
-  du(span(0, nPts - 2)) = dx(span(1, nPts - 1));
-  du(nPts - 1) = du(nPts - 2);
+  arma_vec du(nPts);
+  du(span(0, nPts-2)) = dx(span(1, nPts-1));
+  du(nPts-1) = du(nPts-2);
   // dl is lower cell spacing:
-  fvec dl = dx;
-  fvec r = du / dl;
-  fvec du12 = du % du % (1 + r) % (1 + r);
-  fvec du22 = 0.5 * (dl % du + du % du);
-  fvec lou = di / du22;
+  arma_vec dl = dx;
+  arma_vec r = du/dl;
+  arma_vec du12 = du % du % (1 + r) % (1 + r);
+  arma_vec du22 = 0.5 * (dl % du + du % du);
+  arma_vec lou = di/du22;
 
-  fvec conduction(nPts);
+  arma_vec conduction(nPts);
   conduction.zeros();
 
   int64_t i;
@@ -46,10 +46,10 @@ fvec solver_conduction(fvec value,
   for (i = 2; i < nPts - 2; i++)
     dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r[i]);
 
-  fvec a = di / du22 % r - dl / du12 % r % r;
-  fvec c = di / du22 + dl / du12;
-  fvec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r);
-  fvec d = -1.0 * value / m;
+  arma_vec a = di / du22 % r - dl / du12 % r % r;
+  arma_vec c = di / du22 + dl / du12;
+  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r);
+  arma_vec d = -1.0 * value / m;
 
   // Lower BCs (fixed value):
   a(1) = 0.0;
@@ -66,9 +66,9 @@ fvec solver_conduction(fvec value,
   c(i) = 0.0;
   d(i) = -1.0 * value(i);
 
-  fvec cp(nPts, fill::zeros);
-  fvec dp(nPts, fill::zeros);
-  fvec result(nPts, fill::zeros);
+  arma_vec cp(nPts, fill::zeros);
+  arma_vec dp(nPts, fill::zeros);
+  arma_vec result(nPts, fill::zeros);
 
   cp(1) = c(1) / b(1);
 

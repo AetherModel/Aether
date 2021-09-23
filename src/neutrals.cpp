@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 //  Create a single species by filling the species structure
@@ -218,7 +218,7 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   int iErr = 0;
   int64_t iLon, iLat, iAlt, iA;
-  float alt, r;
+  precision_t alt, r;
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -233,10 +233,10 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
 
   // Let's assume that the altitudes are not dependent on lat/lon:
 
-  fvec alt1d(nAlts);
-  fvec temp1d(nAlts);
+  arma_vec alt1d(nAlts);
+  arma_vec temp1d(nAlts);
 
-  fmat H2d(nLons, nLats);
+  arma_mat H2d(nLons, nLats);
 
   alt1d = grid.geoAlt_scgc.tube(0, 0);
 

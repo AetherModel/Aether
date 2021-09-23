@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------
 // Read input file!

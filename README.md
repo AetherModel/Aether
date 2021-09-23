@@ -6,45 +6,84 @@ you are using this, hopefully it will just work out of the box.
 
 ## Dependencies:
 
-1. Aether uses the netcdf library (netcdf-cxx4). We will eventually
-make a configuration file that will check to see if you have this
-installed, but right now it is hardcoded to be in
-/opt/local/lib. Sorry. Also, the python code provided for
-visualization uses the netcdf library (netCDF4).
-
-2. The armadillo include files need to be placed somewhere that
-can be accessed by the Makefile.
+1. Aether uses the netcdf library (netcdf-cxx4), but we wrote a
+binary output file also, so we can choose which one we want.
 
 ## Quick Start:
 
 These are unix commands, assuming that you have access to a unix/linux
 terminal. This has been tested on a MacBook Pro.
 
-1. git clone https://github.com/AetherModel/Aether
+```bash
+git clone https://github.com/AetherModel/Aether
+```
 
-2. cd Aether
+```bash
+cd Aether
+```
 
-3. git checkout develop
+```bash
+git checkout develop
+```
 
-4. Copy example Makefile.OSX/ubuntu and modify src/Makefile.OS to
-adjust compiler options and to point to the correct netcdf library and
-armadillo include file locations.  We will fix this so that there is a
-configuration script at some point.
+Make sure you have [CMake](https://cmake.org/) installed. If you don't:
 
-5. make 
+For MacOS [homebrew](https://formulae.brew.sh/formula/cmake):
+```bash
+brew install cmake
+```
 
-6. make rundir
+For Ubuntu/Debian Linux:
+```bash
+sudo apt install cmake
+```
 
-7. cd run
+To compile Aether:
+```bash
+mkdir build
+cd build
+cmake ..
+make -j
+```
 
-8. ./aether.exe (should run 1 hour of simulation with no issues).
+To compile Aether with NetCDF:
+```bash
+mkdir build
+cd build
+cmake -DUSE_NETCDF=Y ..
+make -j
+```
 
-9. Make some plots:
+To compile Aether with double precision:
+```bash
+mkdir build
+cd build
+cmake -DUSE_DOUBLE_PRECISION=Y ..
+make -j
+```
 
-../python/plot_model_results.py -var=24 3DALL_20110320_010000.nc -alt=110
+Once you have compiled you can install Aether with an example run directory
+structure like this:
 
-../python/plot_model_results.py -var=14 3DALL_20110320_010000.nc -alt=300
+```bash
+cd ..
+cp -R share/run ./run.test
+cd run.test
+./aether
+```
 
-10. compare png files to ../inputs/*.png to see if they are similar.
+Output files are in UA/output.
 
+We are working on aetherpy to make plots.
 
+Compare png files to tests/outputs_pngs/*.png to see if they are similar.
+
+## Code Manual:
+
+To create the code documentation manual, download Doxygen for your operating
+system and run:
+
+```bash
+cd doc
+doxygen Doxyfile
+```

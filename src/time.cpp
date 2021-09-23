@@ -7,7 +7,7 @@
 #include <iostream>
 #include <time.h>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Instantiate the time variables
@@ -52,7 +52,7 @@ void Times::set_times(std::vector<int> itime) {
 // current time is the start time.
 // -----------------------------------------------------------------------------
 
-int Times::check_time_gate(float dt_check) {
+int Times::check_time_gate(precision_t dt_check) {
   int DidPassGate = 0;
 
   if (current == start)
@@ -113,7 +113,7 @@ double Times::get_intermediate() {
 // Get the current dt
 // -----------------------------------------------------------------------------
 
-float Times::get_dt() {
+precision_t Times::get_dt() {
   return dt;
 }
 
@@ -121,7 +121,7 @@ float Times::get_dt() {
 // Get the orbit time, needed to update planetary characteristics
 // -----------------------------------------------------------------------------
 
-float Times::get_orbittime() {
+precision_t Times::get_orbittime() {
   return orbittime;
 }
 
@@ -202,7 +202,7 @@ void Times::increment_time() {
   // Solar System Dynamics, JPL,.
   // No constant orbital speed assumption
 
-  float day_number = 367.0 * static_cast<float>(iCurrent[0])
+  precision_t day_number = 367.0 * static_cast<float>(iCurrent[0])
                      - 7.0 * (static_cast<float>(iCurrent[0])
                               + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
                      + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
@@ -230,8 +230,8 @@ void Times::display() {
 
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;
-  float ratio_of_time = elapsed_simulation_time / total_simulation_time;
-  float total_walltime = walltime / (ratio_of_time + 1e-6);
+  precision_t ratio_of_time = elapsed_simulation_time / total_simulation_time;
+  precision_t total_walltime = walltime / (ratio_of_time + 1e-6);
   int remaining_walltime = total_walltime - walltime;
 
   if (walltime > 120) {

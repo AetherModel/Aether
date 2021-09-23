@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // loops through all of the chemical reactions doing 3 things:
@@ -21,12 +21,12 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   report.enter(function, iFunction);
 
   int64_t iReaction, iLoss, iSource;
-  float rate;
+  precision_t rate;
   bool IsNeutral;
   int id_;
 
   // This is make change the same size as the grid:
-  fcube change3d = neutrals.temperature_scgc;
+  arma_cube change3d = neutrals.temperature_scgc;
   // Then zero is out:
   change3d.zeros();
 

@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // display time as a 7-element array

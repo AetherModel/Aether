@@ -14,12 +14,12 @@ public:
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
   int get_verbose();
-  float get_dt_euv();
-  float get_dt_report();
-  float get_n_outputs();
-  float get_dt_output(int iOutput);
+  precision_t get_dt_euv();
+  precision_t get_dt_report();
+  precision_t get_n_outputs();
+  precision_t get_dt_output(int iOutput);
   std::string get_type_output(int iOutput);
-  float get_euv_heating_eff_neutrals();
+  precision_t get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
   std::string get_aurora_file();
@@ -40,12 +40,12 @@ public:
   struct grid_input_struct {
     std::string alt_file;
     int IsUniformAlt;
-    float alt_min;
-    float dalt;
-    float lat_min;
-    float lat_max;
-    float lon_min;
-    float lon_max;
+    precision_t alt_min;
+    precision_t dalt;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t lon_min;
+    precision_t lon_max;
   };
 
   grid_input_struct get_grid_inputs();
@@ -77,13 +77,17 @@ private:
 
   grid_input_struct geo_grid_input;
 
-  float euv_heating_eff_neutrals;
-  float euv_heating_eff_electrons;
+  precision_t euv_heating_eff_neutrals;
+  precision_t euv_heating_eff_electrons;
 
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
-  float dt_euv;
-  float dt_report;
+  std::string output_directory = "UA/output";
+  std::string restart_out_directory = "UA/restartOut";
+  std::string restart_in_directory = "UA/restartIn";
+
+  precision_t dt_euv;
+  precision_t dt_report;
 
   int nLonsGeo;
   int nLatsGeo;

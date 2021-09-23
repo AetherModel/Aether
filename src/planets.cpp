@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Constructor (initiaze the class):
@@ -26,7 +26,7 @@ Planets::Planets(Inputs args, Report report) {
 // Get the offset between the longitude and local time
 // -----------------------------------------------------------------------------
 
-float Planets::get_longitude_offset(Times time) {
+precision_t Planets::get_longitude_offset(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -39,7 +39,7 @@ float Planets::get_longitude_offset(Times time) {
 // Get the sin of the planet's declination angle
 // -----------------------------------------------------------------------------
 
-float Planets::get_sin_dec(Times time) {
+precision_t Planets::get_sin_dec(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -52,7 +52,7 @@ float Planets::get_sin_dec(Times time) {
 // Get the cos of the planet's declination angle
 // -----------------------------------------------------------------------------
 
-float Planets::get_cos_dec(Times time) {
+precision_t Planets::get_cos_dec(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -65,7 +65,7 @@ float Planets::get_cos_dec(Times time) {
 // Get the radius of the planet as a function of latitude (meters)
 // -----------------------------------------------------------------------------
 
-float Planets::get_radius(float latitude) {
+precision_t Planets::get_radius(precision_t latitude) {
   // Should modify this to allow an oblate spheriod, but not now.
   return planet.radius;
 }
@@ -74,7 +74,7 @@ float Planets::get_radius(float latitude) {
 // Get the rotation of the dipole (in radians, rotation in longitude)
 // -----------------------------------------------------------------------------
 
-float Planets::get_dipole_rotation() {
+precision_t Planets::get_dipole_rotation() {
   return planet.dipole_rotation;
 }
 
@@ -83,7 +83,7 @@ float Planets::get_dipole_rotation() {
 // planet (radians)
 // -----------------------------------------------------------------------------
 
-float Planets::get_dipole_tilt() {
+precision_t Planets::get_dipole_tilt() {
   return planet.dipole_tilt;
 }
 
@@ -91,7 +91,7 @@ float Planets::get_dipole_tilt() {
 // Get the strength of the dipole
 // -----------------------------------------------------------------------------
 
-float Planets::get_dipole_strength() {
+precision_t Planets::get_dipole_strength() {
   return planet.dipole_strength;
 }
 
@@ -107,7 +107,7 @@ std::vector<float> Planets::get_dipole_center() {
 // Get the mu of the planet (mass * gravitational constant)
 // -----------------------------------------------------------------------------
 
-float Planets::get_mu() {
+precision_t Planets::get_mu() {
   return planet.mu;
 }
 
@@ -115,7 +115,7 @@ float Planets::get_mu() {
 // Get the distance from the star to the planet (meters)
 // -----------------------------------------------------------------------------
 
-float Planets::get_star_to_planet_dist(Times time) {
+precision_t Planets::get_star_to_planet_dist(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -128,7 +128,7 @@ float Planets::get_star_to_planet_dist(Times time) {
 // Get planetary orbit angle (radians)
 // -----------------------------------------------------------------------------
 
-float Planets::get_orbit_angle(Times time) {
+precision_t Planets::get_orbit_angle(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -141,7 +141,7 @@ float Planets::get_orbit_angle(Times time) {
 // Get planetary declination (radians)
 // -----------------------------------------------------------------------------
 
-float Planets::get_declination(Times time) {
+precision_t Planets::get_declination(Times time) {
   int iErr = update(time);
 
   if (iErr > 0)
@@ -164,37 +164,36 @@ int Planets::update(Times time) {
 
     planet.update_time = time.get_current();
 
-    float sma = planet.semimajoraxis +
-                planet.rates_semimajoraxis * time.get_orbittime();
-    float ecc = planet.eccentricity +
-                planet.rates_eccentricity * time.get_orbittime();
-    float inc = planet.inclination +
-                planet.rates_inclination * time.get_orbittime();
-    float meanlon = planet.meanlongitude +
-                    planet.rates_meanlongitude * time.get_orbittime();
-    float node_long = planet.nodelongitude +
-                      planet.rates_nodelongitude * time.get_orbittime();
-    float perilon = planet.perihelionlongitude +
-                    planet.rates_perihelionlongitude * time.get_orbittime();
+    precision_t sma = planet.semimajoraxis +
+      planet.rates_semimajoraxis * time.get_orbittime();
+    precision_t ecc = planet.eccentricity +
+      planet.rates_eccentricity * time.get_orbittime();
+    precision_t inc = planet.inclination +
+      planet.rates_inclination * time.get_orbittime();
+    precision_t meanlon = planet.meanlongitude +
+      planet.rates_meanlongitude * time.get_orbittime();
+    precision_t node_long = planet.nodelongitude +
+      planet.rates_nodelongitude * time.get_orbittime();
+    precision_t perilon = planet.perihelionlongitude +
+      planet.rates_perihelionlongitude * time.get_orbittime();
 
     // Compute argument of perihelion and mean anomaly
-    float arg_peri = perilon - node_long;
+    precision_t arg_peri = perilon - node_long;
 
     // computation of M for Jupiter and out is supposed to be modified
     // by additional terms for the time interval 3000BC -
     // 30000AD... This probably doesn't matter.
-    float meananomaly = fmod(meanlon - perilon + 360.0, 360.0);
-
+    precision_t meananomaly = fmod(meanlon - perilon + 360.0, 360.0);
     if (meananomaly > 180.)
       meananomaly = meananomaly - 360.0;
 
     // Need to solve Kepler's equation by iterating
-    float d_ecc_anomaly = 10000.0;
-    float tol = 1.0e-6;
-    float ecc_deg = ecc * cRtoD;
-    float ecc_anomaly = meananomaly + ecc_deg * sin(meananomaly * cDtoR);
+    precision_t d_ecc_anomaly = 10000.0;
+    precision_t tol = 1.0e-6;
+    precision_t ecc_deg = ecc * cRtoD;
+    precision_t ecc_anomaly = meananomaly+ecc_deg*sin(meananomaly * cDtoR);
     int i = 0;
-    float dm = 0.0;
+    precision_t dm = 0.0;
 
     while (abs(d_ecc_anomaly) > tol && i < 100) {
       dm = meananomaly - (ecc_anomaly - ecc_deg * sin(ecc_anomaly * cDtoR));
@@ -204,17 +203,17 @@ int Planets::update(Times time) {
     }
 
     // Get heliocentric coordinates, TrueAnomaly and sunplanetdistance
-    float x_heliocentric = sma * (cos(ecc_anomaly * cDtoR) - ecc);
-    float y_heliocentric = sma * sqrt(1 - ecc * ecc) * sin(ecc_anomaly * cDtoR);
+    precision_t x_heliocentric = sma*(cos(ecc_anomaly * cDtoR) - ecc);
+    precision_t y_heliocentric = sma*sqrt(1-ecc*ecc)*sin(ecc_anomaly * cDtoR);
 
-    float true_anomaly = atan2(y_heliocentric, x_heliocentric) * cRtoD;
+    precision_t true_anomaly = atan2(y_heliocentric, x_heliocentric) * cRtoD;
 
     planet.star_planet_distance = sqrt(x_heliocentric * x_heliocentric +
                                        y_heliocentric * y_heliocentric);
 
     // convert to J2000 coordinates with x-axis aligned with vernal equinox so
     // we can get solar longitude in the coorect system.  We don't need z.
-    float x_ecl =
+    precision_t x_ecl =
       x_heliocentric *
       (cos(arg_peri * cDtoR) * cos(node_long * cDtoR) -
        sin(arg_peri * cDtoR) * sin(node_long * cDtoR) * cos(inc * cDtoR)) +
@@ -222,7 +221,7 @@ int Planets::update(Times time) {
       (-sin(arg_peri * cDtoR) * cos(node_long * cDtoR) -
        cos(arg_peri * cDtoR) * sin(node_long * cDtoR) * cos(inc * cDtoR));
 
-    float y_ecl =
+    precision_t y_ecl =
       x_heliocentric *
       (cos(arg_peri * cDtoR) * sin(node_long * cDtoR) +
        sin(arg_peri * cDtoR) * cos(node_long * cDtoR) * cos(inc * cDtoR)) +
@@ -322,8 +321,9 @@ int Planets::set_planet(Inputs args, Report report) {
       planet.length_of_day = planets[i].length_of_day;
       planet.longitude_jb2000 = planets[i].longitude_jb2000;
 
-      float rotrate = cTWOPI /
-                      planet.length_of_day * (1.0 + 1.0 / (loy * cStoD));
+      precision_t rotrate = cTWOPI /
+	planet.length_of_day * (1.0 + 1.0 / (loy * cStoD));
+
       planet.omega = rotrate;  // frequency (rad/s)
       planet.rotation_period = cTWOPI / rotrate; // (seconds)
 

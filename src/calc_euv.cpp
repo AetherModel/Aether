@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Runs through the steps of calculating the EUV energy deposition:
@@ -72,9 +72,9 @@ void calc_ionization_heating(Euv euv,
 
   int64_t nAlts = neutrals.heating_euv_scgc.n_slices;
 
-  fmat tau2d = neutrals.heating_euv_scgc.slice(0);
-  fmat intensity2d = neutrals.heating_euv_scgc.slice(0);
-  fmat ionization2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat tau2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat intensity2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat ionization2d = neutrals.heating_euv_scgc.slice(0);
 
   for (iAlt = 2; iAlt < nAlts - 2; iAlt++) {
     for (iWave = 0; iWave < euv.nWavelengths; iWave++) {

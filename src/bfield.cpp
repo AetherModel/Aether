@@ -1,16 +1,16 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // This is the head bfield function that determines which bfield
 // to get, then gets it.
 // -----------------------------------------------------------------------------
 
-bfield_info_type get_bfield(float lon,
-                            float lat,
-                            float alt,
+bfield_info_type get_bfield(precision_t lon,
+                            precision_t lat,
+                            precision_t alt,
                             Planets planet,
                             Inputs input,
                             Report &report) {
@@ -55,12 +55,12 @@ bfield_info_type get_bfield(float lon,
 // Return values in radians!
 // -----------------------------------------------------------------------------
 
-fvec get_magnetic_pole(int IsNorth,
+arma_vec get_magnetic_pole(int IsNorth,
                        Planets planet,
                        Inputs input,
                        Report &report) {
 
-  fvec lonlat(2, fill::zeros);
+  arma_vec lonlat(2, fill::zeros);
 
   if (input.get_bfield_type() == "none") {
     // No magnetic field, so set location to the geo pole:
@@ -77,8 +77,8 @@ fvec get_magnetic_pole(int IsNorth,
     // pole location should be altitude dependent.  For many planets,
     // this is a very small error, but should be fixed at some point.
 
-    float magnetic_pole_rotation = planet.get_dipole_rotation();
-    float magnetic_pole_tilt = planet.get_dipole_tilt();
+    precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
+    precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
 
     if (IsNorth) {
       lonlat(0) = magnetic_pole_rotation;

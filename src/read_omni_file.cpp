@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Read OMNIWeb File.  This doesn't match anything, just reads the file
@@ -68,12 +68,12 @@ index_file_output_struct read_omni_file(std::string omni_file,
       // functions that return the missing values for the variables
       // and the index id (within the Indices class).
       std::vector<float> values_dummy;
-      float single_value;
+      precision_t single_value;
 
       for (int iVar = 0; iVar < file_contents.nVars; iVar++) {
         std::string var = file_contents.var_names[iVar];
         int index_id = pair_omniweb_index(var, indices);
-        float missing_value = get_omniweb_missing_value(var);
+        precision_t missing_value = get_omniweb_missing_value(var);
         file_contents.index_id.push_back(index_id);
         file_contents.missing_values.push_back(missing_value);
         file_contents.values.push_back(values_dummy);
@@ -211,9 +211,9 @@ int pair_omniweb_index(std::string var_name, Indices indices) {
 // variable.  A pain.  So, get the missing values from this list.
 // ----------------------------------------------------------------------
 
-float get_omniweb_missing_value(std::string var_name) {
+precision_t get_omniweb_missing_value(std::string var_name) {
 
-  float missing = -1.0e32;
+  precision_t missing = -1.0e32;
   std::size_t test;
 
   test = var_name.find("BX");
