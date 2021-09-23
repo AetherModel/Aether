@@ -71,7 +71,14 @@ double interpolate_1d_get_index_doubles(double intime,
 }
 
 // ----------------------------------------------------------------------
-//
+// These functions are overloaded, in that they are called the same
+// thing but take different inputs - mostly a mixture of float/double
+// arrays, vectors, and armadillo types.
+// ----------------------------------------------------------------------
+
+// ----------------------------------------------------------------------
+// Conducts interpolation using one of 4 methods
+// (vector is double, index is double)
 // ----------------------------------------------------------------------
 
 double interpolate_1d_w_index(std::vector<double> values,
@@ -105,7 +112,8 @@ double interpolate_1d_w_index(std::vector<double> values,
 }
 
 // ----------------------------------------------------------------------
-//
+// Conducts interpolation using one of 4 methods
+// (vector is float, index is double)
 // ----------------------------------------------------------------------
 
 double interpolate_1d_w_index(std::vector<float> values,
@@ -139,7 +147,8 @@ double interpolate_1d_w_index(std::vector<float> values,
 }
 
 // ----------------------------------------------------------------------
-//
+// Conducts interpolation using one of 4 methods
+// (vector is float, index is float)
 // ----------------------------------------------------------------------
 
 double interpolate_1d_w_index(std::vector<float> values,
@@ -173,7 +182,8 @@ double interpolate_1d_w_index(std::vector<float> values,
 }
 
 // ----------------------------------------------------------------------
-//
+// Conducts interpolation using one of 4 methods
+// (vector is fvec, index is double)
 // ----------------------------------------------------------------------
 
 double interpolate_1d_w_index(fvec values,
