@@ -16,7 +16,7 @@ void Ions::calc_efield(Grid grid, Report &report) {
     efield_vcgc[iComp] = -efield_vcgc[iComp];
 
   // Remove component along b-field (should be zero, anyways!)
-  fcube edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
+  arma_cube edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     efield_vcgc[iComp] =
@@ -28,7 +28,7 @@ void Ions::calc_efield(Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid, Report &report) {
-  fcube bmag2 =
+  arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
 
@@ -40,11 +40,11 @@ void Ions::calc_exb_drift(Grid grid, Report &report) {
 // Calculate the ion + electron pressure for the specified ion species
 // --------------------------------------------------------------------------
 
-std::vector<fcube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
+std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
     Grid grid,
     Report &report) {
-  std::vector<fcube> pressure_gradient_vcgc;
-  fcube total_pressure_scgc;
+  std::vector<arma_cube> pressure_gradient_vcgc;
+  arma_cube total_pressure_scgc;
 
   // Total Pressure =
   //     Ion Pressure + Electron Pressure =
@@ -68,7 +68,7 @@ std::vector<fcube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
 
 void Ions::calc_ion_drift(Neutrals neutrals,
                           Grid grid,
-                          float dt,
+                          precision_t dt,
                           Report &report) {
 
   std::string function = "Ions::calc_ion_drift";
@@ -86,17 +86,17 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   report.print(5, "going into calc_exb_drift");
   calc_exb_drift(grid, report);
 
-  std::vector<fcube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<fcube> wind_forcing = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<fcube> total_forcing = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> wind_forcing = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> total_forcing = make_cube_vector(nX, nY, nZ, 3);
 
   report.print(5, "going into collision frequencies");
   calc_ion_neutral_coll_freq(neutrals, report);
 
   int64_t iIon, iNeutral;
 
-  std::vector<fcube> grad_Pi_plus_Pe;
-  fcube rho, rho_nuin, nuin_sum, Nie, sum_rho;
+  std::vector<arma_cube> grad_Pi_plus_Pe;
+  arma_cube rho, rho_nuin, nuin_sum, Nie, sum_rho;
 
   nuin_sum.set_size(nX, nY, nZ);
   nuin_sum.zeros();
@@ -156,13 +156,13 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           + Nie % efield_vcgc[iComp];
       }
 
-      std::vector<fcube> a_par = make_cube_vector(nX, nY, nZ, 3);
-      std::vector<fcube> a_perp = make_cube_vector(nX, nY, nZ, 3);
-      std::vector<fcube> a_x_b;
+      std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
+      std::vector<arma_cube> a_perp = make_cube_vector(nX, nY, nZ, 3);
+      std::vector<arma_cube> a_x_b;
 
       if (grid.get_HasBField()) {
         // With a Planetary Magnetic field
-        fcube a_dot_b = dot_product(total_forcing, grid.bfield_unit_vcgc);
+        arma_cube a_dot_b = dot_product(total_forcing, grid.bfield_unit_vcgc);
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = a_dot_b % grid.bfield_unit_vcgc[iComp];

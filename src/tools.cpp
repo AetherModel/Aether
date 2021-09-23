@@ -4,13 +4,13 @@
 #include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
-// Translate an fvec into a vector
+// Translate an arma_vec into a vector
 // -----------------------------------------------------------------------------
 
-std::vector<float> make_vector_from_fvec(fvec in_fvec) {
+std::vector<precision_t> make_vector_from_fvec(arma_vec in_fvec) {
 
   int64_t nPts = in_fvec.n_elem;
-  std::vector<float> out_vector(nPts);
+  std::vector<precision_t> out_vector(nPts);
 
   for (int64_t iPt = 0; iPt < nPts; iPt++)
     out_vector[iPt] = in_fvec(iPt);
@@ -22,10 +22,10 @@ std::vector<float> make_vector_from_fvec(fvec in_fvec) {
 // Translate a vector into an fvec
 // -----------------------------------------------------------------------------
 
-fvec make_fvec_from_vector(std::vector<float> in_vector) {
+arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector) {
 
   int64_t nPts = in_vector.size();
-  fvec out_fvec(nPts);
+  arma_vec out_fvec(nPts);
 
   for (int64_t iPt = 0; iPt < nPts; iPt++)
     out_fvec(iPt) = in_vector[iPt];
@@ -34,15 +34,15 @@ fvec make_fvec_from_vector(std::vector<float> in_vector) {
 }
 
 // -----------------------------------------------------------------------------
-// Make a vector of fcubes
+// Make a vector of arma_cubes
 // -----------------------------------------------------------------------------
 
-std::vector<fcube> make_cube_vector(int64_t nLons,
+std::vector<arma_cube> make_cube_vector(int64_t nLons,
                                     int64_t nLats,
                                     int64_t nAlts,
                                     int64_t nComps) {
-  std::vector<fcube> vec;
-  fcube one_component(nLons, nLats, nAlts);
+  std::vector<arma_cube> vec;
+  arma_cube one_component(nLons, nLats, nAlts);
   one_component.zeros();
 
   for (int64_t iComp = 0; iComp < nComps; iComp++)
@@ -53,13 +53,13 @@ std::vector<fcube> make_cube_vector(int64_t nLons,
 
 // -----------------------------------------------------------------------------
 // Dot product
-// This assumes a 3-component vector of fcubes:
+// This assumes a 3-component vector of arma_cubes:
 // -----------------------------------------------------------------------------
 
-fcube dot_product(std::vector<fcube> vec1,
-                  std::vector<fcube> vec2) {
+arma_cube dot_product(std::vector<arma_cube> vec1,
+                  std::vector<arma_cube> vec2) {
   // create the dot product:
-  fcube dot = vec1[0];
+  arma_cube dot = vec1[0];
   dot.zeros();
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
@@ -70,12 +70,12 @@ fcube dot_product(std::vector<fcube> vec1,
 
 // -----------------------------------------------------------------------------
 // Cross product
-// This assumes a 3-component vector of fcubes:
+// This assumes a 3-component vector of arma_cubes:
 // -----------------------------------------------------------------------------
 
-std::vector<fcube> cross_product(std::vector<fcube> vec1,
-                                 std::vector<fcube> vec2) {
-  std::vector<fcube> cross;
+std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
+                                 std::vector<arma_cube> vec2) {
+  std::vector<arma_cube> cross;
   // East:
   cross.push_back(vec1[1] % vec2[2] - vec1[2] % vec2[1]);
   // North:

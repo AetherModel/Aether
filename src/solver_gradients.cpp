@@ -7,9 +7,9 @@
 // Calculate the gradient in the longitudinal direction
 // --------------------------------------------------------------------------
 
-std::vector<fcube> calc_gradient_vector(fcube value_scgc, Grid grid) {
+std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
-  std::vector<fcube> gradient_vcgc;
+  std::vector<arma_cube> gradient_vcgc;
 
   gradient_vcgc.push_back(calc_gradient_lon(value_scgc, grid));
   gradient_vcgc.push_back(calc_gradient_lat(value_scgc, grid));
@@ -21,14 +21,14 @@ std::vector<fcube> calc_gradient_vector(fcube value_scgc, Grid grid) {
 // Calculate the gradient in the longitudinal direction
 // --------------------------------------------------------------------------
 
-fcube calc_gradient_lon(fcube value, Grid grid) {
+arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
   int64_t iLon;
 
-  fcube gradient(nLons, nLats, nAlts);
+  arma_cube gradient(nLons, nLats, nAlts);
   gradient.zeros();
 
   // Interior:
@@ -56,14 +56,14 @@ fcube calc_gradient_lon(fcube value, Grid grid) {
 // Calculate the gradient in the latitudinal direction
 // --------------------------------------------------------------------------
 
-fcube calc_gradient_lat(fcube value, Grid grid) {
+arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
   int64_t iLat;
 
-  fcube gradient(nLons, nLats, nAlts);
+  arma_cube gradient(nLons, nLats, nAlts);
   gradient.zeros();
 
   // Interior:
@@ -91,17 +91,17 @@ fcube calc_gradient_lat(fcube value, Grid grid) {
 // Calculate the gradient in the altitudinal direction
 // --------------------------------------------------------------------------
 
-fcube calc_gradient_alt(fcube value, Grid grid) {
+arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
   int64_t iAlt;
 
-  fcube gradient(nLons, nLats, nAlts);
+  arma_cube gradient(nLons, nLats, nAlts);
   gradient.zeros();
 
-  fcube one_minus_r2 = 1.0 - grid.dalt_ratio_sq_scgc;
+  arma_cube one_minus_r2 = 1.0 - grid.dalt_ratio_sq_scgc;
 
   // Central part
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++)

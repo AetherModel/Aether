@@ -4,18 +4,18 @@
 #ifndef INCLUDE_TOOLS_H_
 #define INCLUDE_TOOLS_H_
 
-std::vector<fcube> make_cube_vector(int64_t nLons,
+std::vector<arma_cube> make_cube_vector(int64_t nLons,
 				    int64_t nLats,
 				    int64_t nAlts,
 				    int64_t nComps);
 
-fcube dot_product(std::vector<fcube> vec1,
-		  std::vector<fcube> vec2);
+arma_cube dot_product(std::vector<arma_cube> vec1,
+		      std::vector<arma_cube> vec2);
 
-std::vector<fcube> cross_product(std::vector<fcube> vec1,
-				 std::vector<fcube> vec2);
+std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
+				     std::vector<arma_cube> vec2);
 
-std::vector<float> make_vector_from_fvec(fvec in_fvec);
-fvec make_fvec_from_vector(std::vector<float> in_vector);
+std::vector<precision_t> make_vector_from_fvec(arma_vec in_fvec);
+arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector);
 
 #endif  // INCLUDE_TOOLS_H_

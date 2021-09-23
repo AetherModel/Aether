@@ -48,16 +48,16 @@ void read_aurora(Neutrals &neutrals,
 // Calculate the Maxellian distribution (eqn 6 in Fang et al. [2010])
 // -----------------------------------------------------------------------------
 
-fvec calculate_maxwellian(float eflux,  // in ergs/cm2/s
-                          float avee,   // in keV
-                          fvec energies) {  // in keV
+arma_vec calculate_maxwellian(precision_t eflux,  // in ergs/cm2/s
+                          precision_t avee,   // in keV
+                          arma_vec energies) {  // in keV
 
   // Change all units to be in eV and cm2:
-  float E0 = avee / 2; // characteristic energy in keV
-  float Q0 = eflux * 6.242e11 / 1000.0;  //  keV/cm2/s
-  float a = Q0 / 2 / (E0 * E0 * E0);  // cm2/s/keV2
+  precision_t E0 = avee / 2; // characteristic energy in keV
+  precision_t Q0 = eflux * 6.242e11 / 1000.0;  //  keV/cm2/s
+  precision_t a = Q0 / 2 / (E0 * E0 * E0);  // cm2/s/keV2
 
-  fvec diff_num_flux = a * energies % exp(-energies / E0);  //  keV/cm2/s
+  arma_vec diff_num_flux = a * energies % exp(-energies / E0);  //  keV/cm2/s
   return  diff_num_flux;
 }
 
@@ -65,11 +65,11 @@ fvec calculate_maxwellian(float eflux,  // in ergs/cm2/s
 // Function to Calculate ionization rate for 1 Ebin for 1 alt profile
 // -----------------------------------------------------------------------------
 
-fvec calculate_fang_v2(float energy_bin,
-                       float diff_energy_flux,
-                       fvec rhoH,
-                       std::vector<float> Ci,
-                       fvec scale_height,
+arma_vec calculate_fang_v2(precision_t energy_bin,
+                       precision_t diff_energy_flux,
+                       arma_vec rhoH,
+                       std::vector<precision_t> Ci,
+                       arma_vec scale_height,
                        Report &report) {
 
   // Set up function reporting
@@ -82,9 +82,9 @@ fvec calculate_fang_v2(float energy_bin,
   // energy_bin needs to be in keV
   // diff_energy_flux needs to be in keV/cm2/s
 
-  float de = 0.035;  // keV
-  float E_mono = energy_bin;
-  float Q_mono = diff_energy_flux;
+  precision_t de = 0.035;  // keV
+  precision_t E_mono = energy_bin;
+  precision_t Q_mono = diff_energy_flux;
   dvec H = conv_to<dvec>::from(scale_height); 
 
   // Eqn. 1 of Fang et al [2010]:
@@ -100,7 +100,7 @@ fvec calculate_fang_v2(float energy_bin,
   dvec fac = Q_mono / (de * H);
 
   // Eqn. 3 of Fang et al [2010] (solve for Qtot(z), ionization rate):
-  fvec q_tot = conv_to<fvec>::from(fyE % fac);
+  arma_vec q_tot = conv_to<arma_vec>::from(fyE % fac);
   
   report.exit(function);
   return q_tot;
@@ -141,27 +141,27 @@ void calc_aurora(Grid grid,
 		    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
 		    {9.49e-1, 1.97e-1, -2.51e-3, -2.07e-3} };
 
-  static std::vector<std::vector<float>> CiArray;
+  static std::vector<std::vector<precision_t>> CiArray;
   static bool IsFirstTime = 1;
 
   // ENERGY BINS AND DE (E in eV)
-  static float min = 100;
-  static float max = 1000000;
-  static float Emin = log(min);
-  static float Emax = log(max);
+  static precision_t min = 100;
+  static precision_t max = 1000000;
+  static precision_t Emin = log(min);
+  static precision_t Emax = log(max);
   static int nBins = 101;
-  static fvec auroral_energies(nBins);
-  static fvec auroral_energy_widths(nBins);
-  std::vector<float> Ci;
+  static arma_vec auroral_energies(nBins);
+  static arma_vec auroral_energy_widths(nBins);
+  std::vector<precision_t> Ci;
 
   if (IsFirstTime) {
     // Initialize the aurora using the auroral csv file
     read_aurora(neutrals, ions, args, report);
 
-    float lnE;
+    precision_t lnE;
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
-      float energy = exp(Emin + iBin * (Emax - Emin) / (nBins - 1));
+      precision_t energy = exp(Emin + iBin * (Emax - Emin) / (nBins - 1));
       // convert from eV -> keV
       auroral_energies(iBin) = energy/1000.0;
     }
@@ -175,7 +175,7 @@ void calc_aurora(Grid grid,
       // loop through Pij values to get vector of Ci values.  This is
       // directly from Fang et al., [2010]:
       for (int i = 0; i < 8; i++) {
-        float tot = 0;
+        precision_t tot = 0;
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
         Ci.push_back(exp(tot));
@@ -187,16 +187,16 @@ void calc_aurora(Grid grid,
     IsFirstTime = 0;
   }
 
-  fvec rhoH1d;
-  fcube scale_height;
-  fvec ionization1d;
-  fvec H;
-  fvec yE;
-  fvec rho_tube;
-  fvec weighted_sum;
-  float coef;
-  fvec neutral_density_tube;
-  fvec ionization_tube, ionization_species;
+  arma_vec rhoH1d;
+  arma_cube scale_height;
+  arma_vec ionization1d;
+  arma_vec H;
+  arma_vec yE;
+  arma_vec rho_tube;
+  arma_vec weighted_sum;
+  precision_t coef;
+  arma_vec neutral_density_tube;
+  arma_vec ionization_tube, ionization_species;
 
   int iIon_;
 
@@ -207,10 +207,10 @@ void calc_aurora(Grid grid,
   scale_height = cKB * neutrals.temperature_scgc /
                  (neutrals.mean_major_mass_scgc % abs(grid.gravity_scgc));
 
-  float eflux;
-  float avee;
-  fvec diff_num_flux;
-  fvec diff_energy_flux;
+  precision_t eflux;
+  precision_t avee;
+  arma_vec diff_num_flux;
+  arma_vec diff_energy_flux;
 
   // loop through each altitude and calculate ionization
   for (iLon = 0; iLon < nLons ; iLon++) {
@@ -241,7 +241,7 @@ void calc_aurora(Grid grid,
         // Step 4: Calculate ionization rates from Fang (all energy bins):
 	// in cm (from meters)
         H = scale_height.tube(iLon, iLat) * 100.0;
-        fvec temp;
+        arma_vec temp;
 
         ionization1d.zeros();
 

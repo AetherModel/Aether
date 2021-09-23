@@ -13,10 +13,10 @@
 // grid, this should work.
 // -----------------------------------------------------------------------------
 
-std::vector<float> calc_bin_edges(std::vector<float> centers) {
+std::vector<precision_t> calc_bin_edges(std::vector<precision_t> centers) {
 
-  std::vector<float> edges;
-  float dc;
+  std::vector<precision_t> edges;
+  precision_t dc;
   int64_t nPts = centers.size();
 
   if (nPts < 2) {
@@ -45,10 +45,10 @@ std::vector<float> calc_bin_edges(std::vector<float> centers) {
 // but only want to do calculation in one function:
 // -----------------------------------------------------------------------------
 
-fvec calc_bin_edges(fvec centers) {
-  std::vector<float> centers_vec = make_vector_from_fvec(centers);
-  std::vector<float> edges_vec = calc_bin_edges(centers_vec);
-  fvec edges = make_fvec_from_vector(edges_vec);
+arma_vec calc_bin_edges(arma_vec centers) {
+  std::vector<precision_t> centers_vec = make_vector_from_fvec(centers);
+  std::vector<precision_t> edges_vec = calc_bin_edges(centers_vec);
+  arma_vec edges = make_fvec_from_vector(edges_vec);
   return edges;
 }
 
@@ -60,10 +60,10 @@ fvec calc_bin_edges(fvec centers) {
 // (Center(i+1) - Center(i-1))/2.
 // -----------------------------------------------------------------------------
 
-std::vector<float> calc_bin_widths(std::vector<float> centers) {
+std::vector<precision_t> calc_bin_widths(std::vector<precision_t> centers) {
 
-  std::vector<float> edges = calc_bin_edges(centers);
-  std::vector<float> widths;
+  std::vector<precision_t> edges = calc_bin_edges(centers);
+  std::vector<precision_t> widths;
 
   int64_t nPts = edges.size();
 
@@ -79,10 +79,10 @@ std::vector<float> calc_bin_widths(std::vector<float> centers) {
 // but only want to do calculation in one function:
 // -----------------------------------------------------------------------------
 
-fvec calc_bin_widths(fvec centers) {
-  std::vector<float> centers_vec = make_vector_from_fvec(centers);
-  std::vector<float> widths_vec = calc_bin_widths(centers_vec);
-  fvec widths = make_fvec_from_vector(widths_vec);
+arma_vec calc_bin_widths(arma_vec centers) {
+  std::vector<precision_t> centers_vec = make_vector_from_fvec(centers);
+  std::vector<precision_t> widths_vec = calc_bin_widths(centers_vec);
+  arma_vec widths = make_fvec_from_vector(widths_vec);
   return widths;
 }
 
