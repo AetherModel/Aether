@@ -9,16 +9,16 @@
 #include <armadillo>
 using namespace arma;
 
-fvec solver_conduction(fvec value,
-		       fvec lambda,
-		       fvec front,
-		       float dt,
-		       fvec dx);
+arma_vec solver_conduction(arma_vec value,
+		       arma_vec lambda,
+		       arma_vec front,
+		       precision_t dt,
+		       arma_vec dx);
 
 
-fcube solver_chemistry(fcube density,
-		       fcube source,
-		       fcube loss,
-		       float dt);
+arma_cube solver_chemistry(arma_cube density,
+		       arma_cube source,
+		       arma_cube loss,
+		       precision_t dt);
 
 #endif  // INCLUDE_SOLVERS_H_

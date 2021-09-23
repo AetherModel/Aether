@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
 // Read the F107 file produced by NOAA NDGC

@@ -26,7 +26,27 @@
 // array types, with array math built in. This eliminates loops!
 
 #include <armadillo>
-using namespace arma;
+
+// Types
+// Precision compile-time aliasing
+#ifdef AETHER_USE_PRECISION_DOUBLE
+/// Precision type chosen to be `double` through `AETHER_USE_PRECISION_DOUBLE`
+using precision_t = double;
+#else
+/// Precision type compile-time default to float.
+using precision_t = float;
+#endif
+
+
+/// Armadillo type vector (single column) with compile-time precision.
+using arma_vec = arma::Col<precision_t>;
+/// Armadillo type matrix (two dimension) with compile-time precision.
+using arma_mat = arma::Mat<precision_t>;
+/// Armadillo type cube (three dimension) with compile-time precision.
+using arma_cube = arma::Cube<precision_t>;
+
+// Aether includes
+#include "earth.h"
 
 // Contains all information about time in the code and wall time:
 #include "times.h"

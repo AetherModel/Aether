@@ -78,13 +78,13 @@ class Indices {
    \brief get the daily f107 value at the given time
    \param time time in seconds
    **/
-  float get_f107(double time);
+  precision_t get_f107(double time);
 
   /**************************************************************
    \brief get the 81-day average f107 at the given time
    \param time time in seconds
    **/
-  float get_f107a(double time);
+  precision_t get_f107a(double time);
 
   /**************************************************************
    \brief a series of functions that return the internal index number
@@ -130,7 +130,7 @@ class Indices {
   void set_index(int index_id,
 		 std::vector<double> time,
 		 std::vector<float> values,
-		 float missing);
+		 precision_t missing);
 
 // -----------------------------------------------------------------------
 // Private functions and variables
@@ -179,7 +179,7 @@ private:
    \param time the time in seconds that the index is requested at
    \param the index to return (i.e., one of the constants defined above)
    **/
-  float get_index(double time, int index);
+  precision_t get_index(double time, int index);
 };
 
 

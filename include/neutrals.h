@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "aether.h"
-
 class Neutrals {
 
  public:
@@ -38,16 +36,17 @@ class Neutrals {
     std::string cName;
 
     /// Mass of the species (kg)
-    float mass;
+    precision_t mass;
 
     /// Vibrations of species (for calculation specific heat)
-    float vibe;
+    precision_t vibe;
 
     /// Advect this species? (1 = yes, 0 = no)
     int DoAdvect;
 
     /// Number density of species (/m3)
     fcube density_scgc;
+    arma_cube density_scgc;
 
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
@@ -57,8 +56,8 @@ class Neutrals {
     std::vector<float> neutral_ion;
 
     /// Thermal conduction coefficients:
-    float thermal_cond;
-    float thermal_exp;
+    precision_t thermal_cond;
+    precision_t thermal_exp;
 
     /// Which row in the EUV CSV file is for absorption:
     int iEuvAbsId_;
@@ -73,70 +72,70 @@ class Neutrals {
     // Some derived quantities:
 
     /// Chapman Integrals for the species for EUV calculation (/m2)
-    fcube chapman_scgc;
+    arma_cube chapman_scgc;
 
     /// Scale height for the species (m)
-    fcube scale_height_scgc;
+    arma_cube scale_height_scgc;
 
     // --------------------------------------------------
     // Sources and Losses:
 
     /// How much of this species is lost to ionization (/m3/s)
-    fcube ionization_scgc;
+    arma_cube ionization_scgc;
 
     /// Chemistry source rate (/m3/s)
-    fcube sources_scgc;
+    arma_cube sources_scgc;
     
     /// Chemistry loss rate (/m3/s)
-    fcube losses_scgc;
+    arma_cube losses_scgc;
 
     /// If we want a fixed lower BC:
-    float lower_bc_density;
+    precision_t lower_bc_density;
   };
 
   /// bulk number density (/m3)
-  fcube density_scgc;
+  arma_cube density_scgc;
 
   /// bunk temperature (K)
-  fcube temperature_scgc;
+  arma_cube temperature_scgc;
 
   /// bulk mass density (kg/m3)
-  fcube rho_scgc;
+  arma_cube rho_scgc;
 
   /// mean major mass (kg)
-  fcube mean_major_mass_scgc;
+  arma_cube mean_major_mass_scgc;
 
   /// mean pressure (Pa)
-  fcube pressure_scgc;
+  arma_cube pressure_scgc;
 
   /// speed of sound (m/s)
-  fcube sound_scgc;
+  arma_cube sound_scgc;
 
   /// Specific heat (constant volume):
-  fcube Cv_scgc;
+  arma_cube Cv_scgc;
 
   /// Bulk Gamma:
-  fcube gamma_scgc;
+  arma_cube gamma_scgc;
 
   /// Bulk thermal heat conduction:
-  fcube kappa_scgc;
+  arma_cube kappa_scgc;
 
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
 
   /// Maximum Chapman integral (will give nearly infinite tau in EUV)
-  float max_chapman = 1.0e26;
+  precision_t max_chapman = 1.0e26;
 
   // Source terms:
 
   /// Bulk neutral thermal conduction temperature change rate (K/s)
-  fcube conduction_scgc;
+  arma_cube conduction_scgc;
 
   /// Bulk neutral EUV heating temperatuare change (K/s)
-  fcube heating_euv_scgc;
+  arma_cube heating_euv_scgc;
 
   /// Nuetral gas direct absorption heating efficiency (~5%)
-  float heating_efficiency;
+  precision_t heating_efficiency;
 
   /// Initial temperature profile, read in through the planet.in file:
   float *initial_temperatures, *initial_altitudes;

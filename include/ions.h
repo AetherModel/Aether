@@ -7,16 +7,6 @@
 #include <string>
 #include <vector>
 
-// The armadillo library is to allow the use of 3d cubes and other
-// array types, with array math built in. This eliminates loops!
-#include <armadillo>
-
-#include "inputs.h"
-#include "report.h"
-#include "grid.h"
-
-using namespace arma;
-
 class Ions {
 
  public:
@@ -26,32 +16,32 @@ class Ions {
 
   struct species_chars {
     std::string cName;
-    float mass;
+    precision_t mass;
     int charge;
 
     int DoAdvect;
 
     // Sources and Losses:
 
-    fcube density_scgc;
-    fcube par_velocity_vcgc;
-    fcube perp_velocity_vcgc;
+    arma_cube density_scgc;
+    arma_cube par_velocity_vcgc;
+    arma_cube perp_velocity_vcgc;
 
-    fcube temperature_scgc;
+    arma_cube temperature_scgc;
 
     // Sources and Losses:
 
-    fcube ionization_scgc;
+    arma_cube ionization_scgc;
 
-    fcube sources_scgc;
-    fcube losses_scgc;
+    arma_cube sources_scgc;
+    arma_cube losses_scgc;
   };
 
   // bulk quantities (states):
-  fcube density_scgc;
+  arma_cube density_scgc;
 
-  fcube ion_temperature_scgc;
-  fcube electron_temperature_scgc;
+  arma_cube ion_temperature_scgc;
+  arma_cube electron_temperature_scgc;
 
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;

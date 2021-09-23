@@ -104,7 +104,7 @@ public:
 
      dt is the delta-time between iterations in Aether.
    **/
-  float get_dt();
+  precision_t get_dt();
 
   /**************************************************************
      \brief Returns current time in specific unit for planetary calc
@@ -112,7 +112,7 @@ public:
      Return the current time as an orbit time, to allow for calculation
    of a bunch of planetary characteristics. It's a JPL thing.
    **/
-  float get_orbittime();
+  precision_t get_orbittime();
 
   /**************************************************************
      \brief Returns current time in Julian Days
@@ -131,7 +131,7 @@ public:
    \param dt_check Repetative delta-time to do a task
 
    **/
-  int check_time_gate(float dt_check);
+  int check_time_gate(precision_t dt_check);
 
   /**************************************************************
      \brief Calculates the delta time in the code.
@@ -175,7 +175,7 @@ private:
   int64_t iStep;
 
   /// delta-time between current time-steps
-  float dt;
+  precision_t dt;
 
   // -------------------------------------------------------------
   // Derived variables from the current time:
@@ -184,10 +184,11 @@ private:
   std::vector<int> iCurrent;
 
   /// Universal time in hours
-  float ut;
+  precision_t ut;
   
   /// in weird JPL units
   float orbittime;
+  precision_t orbittime;
 
   /// current time as different integer units:
   int year;
@@ -223,7 +224,7 @@ private:
   time_t sys_time_current;
 
   /// This is the difference, or the current walltime in seconds
-  float walltime;
+  precision_t walltime;
 };
 
 #endif  // INCLUDE_TIMES_H_

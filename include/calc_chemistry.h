@@ -31,19 +31,19 @@ class Chemistry {
     std::vector<int> losses_ids;
     std::vector<int> losses_IsNeutrals;
 
-    float rate;
+    precision_t rate;
   };
 
   std::vector<reaction_type> reactions;
 
   struct sources_and_losses_type {
-    float neutral_sources[nSpecies];
-    float neutral_losses[nSpecies];
-    float ion_sources[nIons];
-    float ion_losses[nIons];
-    float heat_neutrals;
-    float heat_ions;
-    float heat_electrons;
+    precision_t neutral_sources[nSpecies];
+    precision_t neutral_losses[nSpecies];
+    precision_t ion_sources[nIons];
+    precision_t ion_losses[nIons];
+    precision_t heat_neutrals;
+    precision_t heat_ions;
+    precision_t heat_electrons;
   };
 
 #endif  // INCLUDE_CALC_CHEMISTRY_H_

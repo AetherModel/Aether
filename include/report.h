@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include "aether.h"
+
 class Report {
 
 // -----------------------------------------------------------------------
@@ -129,7 +131,7 @@ private:
     /// number of times this entry is called
     int nTimes;
     /// The total accumulated wall time time that this entry takes to run
-    float timing_total;
+    precision_t timing_total;
     /// This is the start-gate for the timer
     unsigned long long timing_start;
     /// This is the level of the function that is then compared to verbose

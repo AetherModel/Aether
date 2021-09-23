@@ -88,7 +88,7 @@ int read_int(std::ifstream &file_ptr, std::string hash);
  \param file_ptr file pointer to the open file
  \param hash string to print out if there is an error
  **/
-float read_float(std::ifstream &file_ptr, std::string hash);
+precision_t read_float(std::ifstream &file_ptr, std::string hash);
 
 /**************************************************************
  \brief take a string with comma-separated-values and parse into vector
