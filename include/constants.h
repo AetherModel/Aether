@@ -13,11 +13,6 @@
 #include <vector>
 
 // -------------------------------------------------------------------------
-// Header file to define a bunch of constants
-// -------------------------------------------------------------------------
-
-
-// -------------------------------------------------------------------------
 // Physical Constants
 //   - Naming standards:
 //     - Names start with a "c" to indicate they are constants
