@@ -63,8 +63,8 @@ class Ions {
   arma_cube potential_scgc;
   std::vector<arma_cube> efield_vcgc;
   std::vector<arma_cube> exb_vcgc;
-  fmat eflux;
-  fmat avee;
+  arma_mat eflux;
+  arma_mat avee;
 
   // ------------------------------
   // Functions:

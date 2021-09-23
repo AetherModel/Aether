@@ -45,7 +45,6 @@ class Neutrals {
     int DoAdvect;
 
     /// Number density of species (/m3)
-    fcube density_scgc;
     arma_cube density_scgc;
 
     /// Diffusion through other neutral species:
@@ -74,9 +73,7 @@ class Neutrals {
 
     // --------------------------------------------------
     // Some derived quantities:
-    fcube chapman_scgc;
-    fcube rho_alt_int_scgc;
-    fcube scale_height_scgc;
+    arma_cube rho_alt_int_scgc;
 
     /// Chapman Integrals for the species for EUV calculation (/m2)
     arma_cube chapman_scgc;
