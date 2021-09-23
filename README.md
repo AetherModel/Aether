@@ -54,6 +54,14 @@ cmake -DUSE_NETCDF=Y ..
 make -j
 ```
 
+To compile Aether with double precision:
+```bash
+mkdir build
+cd build
+cmake -DUSE_DOUBLE_PRECISION=Y ..
+make -j
+```
+
 Once you have compiled you can install Aether with an example run directory
 structure like this:
 

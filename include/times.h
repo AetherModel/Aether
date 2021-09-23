@@ -21,11 +21,11 @@ public:
   double get_end();
   std::string get_YMD_HMS();
   double get_intermediate();
-  float get_dt();
-  float get_orbittime();
+  precision_t get_dt();
+  precision_t get_orbittime();
   double get_julian_day();
 
-  int check_time_gate(float dt_check);
+  int check_time_gate(precision_t dt_check);
 
   void calc_dt();
 
@@ -41,12 +41,12 @@ private:
   double simulation;
   int64_t iStep;
 
-  float dt;
+  precision_t dt;
 
   // Derived variables from the current time:
   std::vector<int> iCurrent;
-  float ut;
-  float orbittime;
+  precision_t ut;
+  precision_t orbittime;
   int year;
   int month;
   int day;
@@ -63,7 +63,7 @@ private:
   // Keeping track of walltime for the run:
   time_t sys_time_start;
   time_t sys_time_current;
-  float walltime;
+  precision_t walltime;
 };
 
 #endif  // INCLUDE_TIMES_H_

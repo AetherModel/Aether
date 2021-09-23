@@ -1,7 +1,7 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include "../include/aether.h"
+#include "aether.h"
 
 #include <fstream>
 
@@ -11,7 +11,7 @@
 
 
 void output_variable_3d(std::ofstream &binary,
-                        fcube value) {
+                        arma_cube value) {
 
   // Get the size of the cube:
   

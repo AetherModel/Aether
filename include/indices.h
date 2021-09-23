@@ -28,8 +28,8 @@ class Indices {
 
   Indices(Inputs args);
 
-  float get_f107(double time);
-  float get_f107a(double time);
+  precision_t get_f107(double time);
+  precision_t get_f107a(double time);
 
   int get_f107_index_id();
   int get_f107a_index_id();
@@ -52,7 +52,7 @@ class Indices {
   void set_index(int index_id,
 		 std::vector<double> time,
 		 std::vector<float> values,
-		 float missing);
+		 precision_t missing);
 
  private:
 
@@ -80,7 +80,7 @@ class Indices {
   const int iAU_ = 12;
   int nIndices = 13;
   
-  float get_index(double time, int index);
+  precision_t get_index(double time, int index);
 };
 
 

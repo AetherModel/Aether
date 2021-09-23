@@ -26,41 +26,41 @@
 // -------------------------------------------------------------------------
 
 // avogadros_number (per mole)
-const float cNA = 6.02214086e23;
+const precision_t cNA = 6.02214086e23;
 
 // boltzmanns_constant (m2 kg /s2 /K)
-const float cKB = 1.38064852e-23;
+const precision_t cKB = 1.38064852e-23;
 
 // Universal Gas Constant (J/K/mol)
-const float cR = cNA * cKB;
+const precision_t cR = cNA * cKB;
 
 // Mass of a proton (kg)
-const float cMP = 1.6726219e-27;
+const precision_t cMP = 1.6726219e-27;
 
 // Atomic Mass Unit (kk)
-const float cAMU = cMP;
+const precision_t cAMU = cMP;
 
 // Mass of an electron (kg)
-const float cME = 9.1094e-31;
+const precision_t cME = 9.1094e-31;
 
 // Plancks Constant (Js)
-const float cH = 6.6261e-34;
+const precision_t cH = 6.6261e-34;
 
 // Elemental Charge (C (J/eV))
-const float cE = 1.6022e-19;
+const precision_t cE = 1.6022e-19;
 
 // Speed of Light (m/s)
-const float cC = 2.9979e8;
+const precision_t cC = 2.9979e8;
 
 // -------------------------------------------------------------------------
 // Stellar constants:
 // -------------------------------------------------------------------------
 
 // gravitational_constant (m3/kg/s2)
-const float cG = 6.67408e-11;
+const precision_t cG = 6.67408e-11;
 
 // This is for our sun (solar mass in kg):
-const float cMSOL = 1.989e30;
+const precision_t cMSOL = 1.989e30;
 
 // -------------------------------------------------------------------------
 // Some constants for time
@@ -75,8 +75,8 @@ const double cJULIAN2000 = 2451545.0;
 // Some Constants for Angles
 // -------------------------------------------------------------------------
 
-const float cPI = 3.141592653589793;
-const float cTWOPI = 2*cPI;
+const precision_t cPI = 3.141592653589793;
+const precision_t cTWOPI = 2*cPI;
 
 // -------------------------------------------------------------------------
 // Conversion Constants:
@@ -86,8 +86,8 @@ const float cTWOPI = 2*cPI;
 //   - Names are all UPPER CASE otherwise
 // -------------------------------------------------------------------------
 
-const float cDtoR = cPI/180.0;
-const float cRtoD = 180.0/cPI;
+const precision_t cDtoR = cPI/180.0;
+const precision_t cRtoD = 180.0/cPI;
 
 // -------------------------------------------------------------------------
 // converting time between seconds and other units of time:
@@ -118,17 +118,17 @@ const double cStoMS = 1000.0;
 // -------------------------------------------------------------------------
 
 // kilometer <-> meter:
-const float cKMtoM = 1000.0;
-const float cMtoKM = 1.0 / cKMtoM;
+const precision_t cKMtoM = 1000.0;
+const precision_t cMtoKM = 1.0 / cKMtoM;
 
 // Angstrom <-> Meter
-const float cAtoM = 1.0e-10;
+const precision_t cAtoM = 1.0e-10;
 
 // AU <-> Meter
-const float cAUtoM = 1.495978707e11;
+const precision_t cAUtoM = 1.495978707e11;
 
-const float pcm3topm3 = 1e6;  // /cm3 to /m3
-const float pcm2topm2 = 1e4;  // /cm2 to /m2
-const float pcmtopm = 100.0;  // /cm to /m
+const precision_t pcm3topm3 = 1e6;  // /cm3 to /m3
+const precision_t pcm2topm2 = 1e4;  // /cm2 to /m2
+const precision_t pcmtopm = 100.0;  // /cm to /m
 
 #endif  // INCLUDE_CONSTANTS_H_

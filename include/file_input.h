@@ -17,7 +17,7 @@ std::string strip_string_end(std::string instring);
 std::string strip_spaces(std::string instring);
 std::string read_string(std::ifstream &file_ptr, std::string hash);
 int read_int(std::ifstream &file_ptr, std::string hash);
-float read_float(std::ifstream &file_ptr, std::string hash);
+precision_t read_float(std::ifstream &file_ptr, std::string hash);
 std::vector<std::string> parse_csv_row_into_vector(std::string line);
 
 #endif  // INCLUDE_FILE_INPUT_H_

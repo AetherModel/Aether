@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // ----------------------------------------------------------------------
 // Initialize the Indices class
@@ -161,11 +161,11 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
 // get functions for getting an index at a specific time
 // ----------------------------------------------------------------------
 
-float Indices:: get_f107(double time) {
+precision_t Indices:: get_f107(double time) {
   return get_index(time, iF107_);
 }
 
-float Indices:: get_f107a(double time) {
+precision_t Indices:: get_f107a(double time) {
   return get_index(time, iF107A_);
 }
 
@@ -173,7 +173,7 @@ float Indices:: get_f107a(double time) {
 // This is the general function for getting an index
 // ----------------------------------------------------------------------
 
-float Indices::get_index(double time, int index) {
+precision_t Indices::get_index(double time, int index) {
 
   int64_t iLow, iMid, iHigh;
 
@@ -201,9 +201,9 @@ float Indices::get_index(double time, int index) {
 
   double dt = (all_indices_arrays[index].times[iMid+1] -
          all_indices_arrays[index].times[iMid]);
-  float x = (time - all_indices_arrays[index].times[iMid]) / dt;
+  precision_t x = (time - all_indices_arrays[index].times[iMid]) / dt;
 
-  float value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
+  precision_t value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
     x * all_indices_arrays[index].values[iMid+1];
 
   return value;
@@ -217,7 +217,7 @@ float Indices::get_index(double time, int index) {
 void Indices::set_index(int index,
 			std::vector<double> timearray,
 			std::vector<float> indexarray,
-			float missing) {
+			precision_t missing) {
 
   if (timearray.size() != indexarray.size()) {
     std::cout << "In set_index. Size of time and index arrays don't match!\n";

@@ -3,7 +3,7 @@
 
 #include <netcdf>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;
@@ -16,7 +16,7 @@ using namespace netCDF::exceptions;
 
 void output_variable_3d(std::vector<size_t> count_start,
                         std::vector<size_t> count_end,
-                        fcube value,
+                        arma_cube value,
                         NcVar variable) {
 
   // Get the size of the cube:

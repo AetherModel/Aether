@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "aether.h"
-
 class Neutrals {
 
  public:
@@ -18,19 +16,19 @@ class Neutrals {
   
   struct species_chars {
     std::string cName;
-    float mass;
-    float vibe;
+    precision_t mass;
+    precision_t vibe;
 
     int DoAdvect;
 
-    fcube density_scgc;
+    arma_cube density_scgc;
 
     std::vector<float> diff0;
     std::vector<float> diff_exp;
     std::vector<float> neutral_ion;
 
-    float thermal_cond;
-    float thermal_exp;
+    precision_t thermal_cond;
+    precision_t thermal_exp;
 
     int iEuvAbsId_;
     int nEuvIonSpecies;
@@ -38,45 +36,45 @@ class Neutrals {
     std::vector<int> iEuvIonId_;
 
     // Some derived quantities:
-    fcube chapman_scgc;
-    fcube scale_height_scgc;
+    arma_cube chapman_scgc;
+    arma_cube scale_height_scgc;
 
     // Sources and Losses:
 
-    fcube ionization_scgc;
+    arma_cube ionization_scgc;
 
-    fcube sources_scgc;
-    fcube losses_scgc;
+    arma_cube sources_scgc;
+    arma_cube losses_scgc;
 
     // If we want a fixed lower BC:
-    float lower_bc_density;
+    precision_t lower_bc_density;
   };
 
   // bulk quantities (states):
 
-  fcube density_scgc;
-  fcube temperature_scgc;
+  arma_cube density_scgc;
+  arma_cube temperature_scgc;
 
-  fcube rho_scgc;
-  fcube mean_major_mass_scgc;
-  fcube pressure_scgc;
-  fcube sound_scgc;
+  arma_cube rho_scgc;
+  arma_cube mean_major_mass_scgc;
+  arma_cube pressure_scgc;
+  arma_cube sound_scgc;
 
   // For heating/cooling:
-  fcube Cv_scgc;
-  fcube gamma_scgc;
-  fcube kappa_scgc;
+  arma_cube Cv_scgc;
+  arma_cube gamma_scgc;
+  arma_cube kappa_scgc;
 
   std::vector<species_chars> species;
 
-  float max_chapman = 1.0e26;
+  precision_t max_chapman = 1.0e26;
 
   // Source terms:
 
-  fcube conduction_scgc;
-  fcube heating_euv_scgc;
+  arma_cube conduction_scgc;
+  arma_cube heating_euv_scgc;
 
-  float heating_efficiency;
+  precision_t heating_efficiency;
 
   // This is an initial temperature profile, read in through the
   // planet.in file:

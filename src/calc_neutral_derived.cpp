@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/aether.h"
+#include "aether.h"
 
 // ----------------------------------------------------------------------
 //  Calculate a bunch of derived products:
@@ -113,7 +113,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   double y, dy;
 
-  float grad_xp, grad_in, Xg, in, int_g, int_p;
+  precision_t grad_xp, grad_in, Xg, in, int_g, int_p;
   int64_t iiAlt;
 
   std::string function = "Neutrals::calc_chapman";
@@ -127,21 +127,21 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   // New way of doing it with 3D arrays:
 
-  fcube integral3d(nLons, nLats, nAlts);
-  fcube log_int3d(nLons, nLats, nAlts);
-  fcube xp3d(nLons, nLats, nAlts);
-  fcube y3d(nLons, nLats, nAlts);
-  fcube erfcy3d(nLons, nLats, nAlts);
+  arma_cube integral3d(nLons, nLats, nAlts);
+  arma_cube log_int3d(nLons, nLats, nAlts);
+  arma_cube xp3d(nLons, nLats, nAlts);
+  arma_cube y3d(nLons, nLats, nAlts);
+  arma_cube erfcy3d(nLons, nLats, nAlts);
 
-  fvec integral1d(nAlts);
-  fvec log_int1d(nAlts);
-  fvec xp1d(nAlts);
-  fvec y1d(nAlts);
-  fvec erfcy1d(nAlts);
-  fvec dAlt1d(nAlts);
-  fvec sza1d(nAlts);
-  fvec radius1d(nAlts);
-  fvec H1d(nAlts);
+  arma_vec integral1d(nAlts);
+  arma_vec log_int1d(nAlts);
+  arma_vec xp1d(nAlts);
+  arma_vec y1d(nAlts);
+  arma_vec erfcy1d(nAlts);
+  arma_vec dAlt1d(nAlts);
+  arma_vec sza1d(nAlts);
+  arma_vec radius1d(nAlts);
+  arma_vec H1d(nAlts);
 
   for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
 
@@ -251,7 +251,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
 void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
-  float dt;
+  precision_t dt;
 
   int64_t iLon, iLat;
 
@@ -263,20 +263,20 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
 
-  fcube rhocvr23d(nLons, nLats, nAlts);
-  fcube lambda3d(nLons, nLats, nAlts);
-  fcube prandtl3d(nLons, nLats, nAlts);
+  arma_cube rhocvr23d(nLons, nLats, nAlts);
+  arma_cube lambda3d(nLons, nLats, nAlts);
+  arma_cube prandtl3d(nLons, nLats, nAlts);
 
   rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
   // Need to make this eddy * rho * cv:
   prandtl3d.zeros();
   lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
-  fvec temp1d(nAlts);
-  fvec lambda1d(nAlts);
-  fvec rhocvr21d(nAlts);
-  fvec dalt1d(nAlts);
-  fvec conduction1d(nAlts);
+  arma_vec temp1d(nAlts);
+  arma_vec lambda1d(nAlts);
+  arma_vec rhocvr21d(nAlts);
+  arma_vec dalt1d(nAlts);
+  arma_vec conduction1d(nAlts);
 
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iLat = 0; iLat < nLats; iLat++) {
