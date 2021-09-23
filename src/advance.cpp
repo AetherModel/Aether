@@ -46,17 +46,12 @@ int advance(Planets &planet,
                   input,
                   report);
 
-  electrodynamics.set_time(time.get_current(), report);
-  gGrid.calc_sza(planet, time, report);
-  gGrid.calc_gse(planet, time, report);
-  gGrid.calc_mlt(report);
-  auto electrodynamics_values =
-    electrodynamics.get_electrodynamics(gGrid.magLat_scgc,
-                                        gGrid.magLocalTime_scgc,
-                                        report);
-  ions.potential_scgc = std::get<0>(electrodynamics_values);
-  ions.eflux = std::get<1>(electrodynamics_values);
-  ions.avee = std::get<2>(electrodynamics_values);
+  iErr = electrodynamics.update(planet,
+				gGrid,
+				time,
+				ions,
+				report);
+  
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
 
   calc_aurora(gGrid, neutrals, ions, input, report);
