@@ -16,13 +16,13 @@ Electrodynamics::Electrodynamics(Inputs input, Report &report) {
 // Gets potential with generic interpolation scheme
 // -----------------------------------------------------------------------------
 
-fcube Electrodynamics::get_potential(fcube magLat,
-                                     fcube magLocalTime,
+arma_cube Electrodynamics::get_potential(arma_cube magLat,
+                                     arma_cube magLocalTime,
                                      Report &report) {
-  fcube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
+  arma_cube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
   pot.zeros();
   int time_pos = static_cast<int>(time_index);
-  fmat e_potentials = input_electrodynamics[0].potential[time_pos];
+  arma_mat e_potentials = input_electrodynamics[0].potential[time_pos];
 
   for (int i = 0; i < magLat.n_slices; ++i) {
     set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
@@ -36,13 +36,13 @@ fcube Electrodynamics::get_potential(fcube magLat,
 // Gets energy flux with generic interpolation scheme
 // -----------------------------------------------------------------------------
 
-fmat Electrodynamics::get_eflux(fcube magLat,
-                                fcube magLocalTime,
+arma_mat Electrodynamics::get_eflux(arma_cube magLat,
+                                arma_cube magLocalTime,
                                 Report &report) {
   int i = magLat.n_slices - 1;
   set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
   int time_pos = static_cast<int>(time_index);
-  fmat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
+  arma_mat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
   return get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
 }
 
@@ -50,13 +50,13 @@ fmat Electrodynamics::get_eflux(fcube magLat,
 // Gets average energy with generic interpolation scheme
 // -----------------------------------------------------------------------------
 
-fmat Electrodynamics::get_avee(fcube magLat,
-                               fcube magLocalTime,
+arma_mat Electrodynamics::get_avee(arma_cube magLat,
+                               arma_cube magLocalTime,
                                Report &report) {
   int i = magLat.n_slices - 1;
   set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
   int time_pos = static_cast<int>(time_index);
-  fmat e_avee = input_electrodynamics[0].average_energy[time_pos];
+  arma_mat e_avee = input_electrodynamics[0].average_energy[time_pos];
   return get_values(e_avee, magLat.n_rows, magLat.n_cols);
 }
 
@@ -64,14 +64,14 @@ fmat Electrodynamics::get_avee(fcube magLat,
 // Generic function to conduct 2d linear interpolation
 // -----------------------------------------------------------------------------
 
-fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols) {
-  fmat slice(rows, cols);
+arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn, int rows, int cols) {
+  arma_mat slice(rows, cols);
   slice.zeros();
 
   for (int r = 0; r < rows; ++r) {
     for (int c = 0; c < cols; ++c) {
-      float h_pos = input_electrodynamics[0].mlts_indices(r, c);
-      float v_pos = input_electrodynamics[0].lats_indices(r, c);
+      precision_t h_pos = input_electrodynamics[0].mlts_indices(r, c);
+      precision_t v_pos = input_electrodynamics[0].lats_indices(r, c);
       int r_start, c_start;
 
       if (h_pos < 0)
@@ -88,21 +88,21 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols) {
       else
         r_start = v_pos;
 
-      float first_row_slope =
+      precision_t first_row_slope =
         matToInterpolateOn(r_start, c_start + 1) -
         matToInterpolateOn(r_start, c_start);
-      float second_row_slope =
+      precision_t second_row_slope =
         matToInterpolateOn(r_start + 1, c_start + 1) -
         matToInterpolateOn(r_start + 1, c_start);
-      float first_row_val =
+      precision_t first_row_val =
         matToInterpolateOn(r_start, c_start) +
         first_row_slope * (h_pos - c_start);
-      float second_row_val =
+      precision_t second_row_val =
         matToInterpolateOn(r_start + 1, c_start) +
         second_row_slope * (h_pos - c_start);
       //time to vertically linear interpolate these two values
-      float vertical_slope = second_row_val - first_row_val;
-      float final_value =
+      precision_t vertical_slope = second_row_val - first_row_val;
+      precision_t final_value =
         first_row_val + vertical_slope * (v_pos - r_start);
       slice(r, c) = final_value;
     }
@@ -117,12 +117,12 @@ fmat Electrodynamics::get_values(fmat matToInterpolateOn, int rows, int cols) {
 
 //average energy and eflux energy as well call to get_values
 
-std::tuple<fcube, fmat, fmat> Electrodynamics::get_electrodynamics(fcube magLat,
-    fcube magLocalTime,
+std::tuple<arma_cube, arma_mat, arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
+    arma_cube magLocalTime,
     Report &report) {
-  fcube pot;
-  fmat eflux;
-  fmat avee;
+  arma_cube pot;
+  arma_mat eflux;
+  arma_mat avee;
 
   if (!input_electrodynamics.empty()) {
     pot = get_potential(magLat, magLocalTime, report);
@@ -224,7 +224,7 @@ void Electrodynamics::set_time(double time, Report &report) {
 // so the code can easy get the requested electrodynamics parameters later
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report) {
+void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts, Report &report) {
   std::string function = "Electrodynamics::set_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -233,8 +233,8 @@ void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report) {
   mlts_needed = mlts;
 
   //uses first input_electrodynamics struct
-  fvec lat_search = input_electrodynamics[0].mlats;
-  fvec mlt_search = input_electrodynamics[0].mlts;
+  arma_vec lat_search = input_electrodynamics[0].mlats;
+  arma_vec mlt_search = input_electrodynamics[0].mlts;
 
   input_electrodynamics[0].lats_indices = get_interpolation_indices(lats_needed,
                                           lat_search);
@@ -256,13 +256,14 @@ void Electrodynamics::set_grid(fmat lats, fmat mlts, Report &report) {
 // interpolation coefficients
 // -----------------------------------------------------------------------------
 
-fmat Electrodynamics::get_interpolation_indices(fmat vals, fvec search) {
-  fmat res(vals.n_rows, vals.n_cols, fill::zeros);
+arma_mat Electrodynamics::get_interpolation_indices(arma_mat vals,
+						    arma_vec search) {
+  arma_mat res(vals.n_rows, vals.n_cols, fill::zeros);
 
   for (int i = 0; i < vals.n_rows; ++i) {
     for (int j = 0; j < vals.n_cols; ++j) {
 
-      float in = vals(i, j);
+      precision_t in = vals(i, j);
       int64_t iLow, iMid, iHigh, N;
       double interpolation_index, x, dx;
 
@@ -319,42 +320,42 @@ fmat Electrodynamics::get_interpolation_indices(fmat vals, fvec search) {
 // Functions to set indices for models that need them
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::set_imf_bx(float value) {
+void Electrodynamics::set_imf_bx(precision_t value) {
   imf_bx_needed = value;
 }
 
-void Electrodynamics::set_imf_by(float value) {
+void Electrodynamics::set_imf_by(precision_t value) {
   imf_by_needed = value;
 }
 
-void Electrodynamics::set_imf_bz(float value) {
+void Electrodynamics::set_imf_bz(precision_t value) {
   imf_bz_needed = value;
 }
 
-void Electrodynamics::set_sw_v(float value) {
+void Electrodynamics::set_sw_v(precision_t value) {
   sw_v_needed = value;
 }
 
-void Electrodynamics::set_sw_n(float value) {
+void Electrodynamics::set_sw_n(precision_t value) {
   sw_n_needed = value;
 }
 
-void Electrodynamics::set_hp(float value) {
+void Electrodynamics::set_hp(precision_t value) {
   hp_needed = value;
 }
 
-void Electrodynamics::set_au(float value) {
+void Electrodynamics::set_au(precision_t value) {
   au_needed = value;
 }
 
-void Electrodynamics::set_al(float value) {
+void Electrodynamics::set_al(precision_t value) {
   al_needed = value;
 }
 
-void Electrodynamics::set_ae(float value) {
+void Electrodynamics::set_ae(precision_t value) {
   ae_needed = value;
 }
 
-void Electrodynamics::set_kp(float value) {
+void Electrodynamics::set_kp(precision_t value) {
   kp_needed = value;
 }
