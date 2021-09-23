@@ -9,8 +9,43 @@
 // -----------------------------------------------------------------------------
 
 Electrodynamics::Electrodynamics(Inputs input, Report &report) {
+
+  HaveElectrodynamics = false;
   read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
 }
+
+// -----------------------------------------------------------------------------
+// Update Electrodynamics
+// -----------------------------------------------------------------------------
+
+int Electrodynamics::update(Planets planet,
+			    Grid gGrid,
+			    Times time,
+			    Ions &ions,
+			    Report &report) {
+
+  if (HaveElectrodynamics) {
+    set_time(time.get_current(), report);
+    gGrid.calc_sza(planet, time, report);
+    gGrid.calc_gse(planet, time, report);
+    gGrid.calc_mlt(report);
+    auto electrodynamics_values =
+      get_electrodynamics(gGrid.magLat_scgc,
+			  gGrid.magLocalTime_scgc,
+			  report);
+    ions.potential_scgc = std::get<0>(electrodynamics_values);
+    ions.eflux = std::get<1>(electrodynamics_values);
+    ions.avee = std::get<2>(electrodynamics_values);
+  } else {
+    ions.potential_scgc.zeros();
+    ions.eflux.zeros();
+    ions.avee.zeros();
+  }
+
+  return 0;
+
+}
+
 
 // -----------------------------------------------------------------------------
 // Gets potential with generic interpolation scheme
@@ -21,12 +56,15 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
                                      Report &report) {
   arma_cube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
   pot.zeros();
-  int time_pos = static_cast<int>(time_index);
-  arma_mat e_potentials = input_electrodynamics[0].potential[time_pos];
 
-  for (int i = 0; i < magLat.n_slices; ++i) {
-    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
-    pot.slice(i) = get_values(e_potentials, magLat.n_rows, magLat.n_cols);
+  if (HaveElectrodynamics) {
+    int time_pos = static_cast<int>(time_index);
+    arma_mat e_potentials = input_electrodynamics[0].potential[time_pos];
+
+    for (int i = 0; i < magLat.n_slices; ++i) {
+      set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+      pot.slice(i) = get_values(e_potentials, magLat.n_rows, magLat.n_cols);
+    }
   }
 
   return pot;
@@ -37,13 +75,19 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_eflux(arma_cube magLat,
-                                arma_cube magLocalTime,
-                                Report &report) {
-  int i = magLat.n_slices - 1;
-  set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
-  int time_pos = static_cast<int>(time_index);
-  arma_mat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
-  return get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
+				    arma_cube magLocalTime,
+				    Report &report) {
+
+  arma_mat eflux(magLat.n_rows, magLat.n_cols);
+  eflux.zeros();
+  if (HaveElectrodynamics) {
+    int i = magLat.n_slices - 1;
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+    int time_pos = static_cast<int>(time_index);
+    arma_mat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
+    eflux = get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
+  }
+  return eflux;
 }
 
 // -----------------------------------------------------------------------------
@@ -53,18 +97,24 @@ arma_mat Electrodynamics::get_eflux(arma_cube magLat,
 arma_mat Electrodynamics::get_avee(arma_cube magLat,
                                arma_cube magLocalTime,
                                Report &report) {
-  int i = magLat.n_slices - 1;
-  set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
-  int time_pos = static_cast<int>(time_index);
-  arma_mat e_avee = input_electrodynamics[0].average_energy[time_pos];
-  return get_values(e_avee, magLat.n_rows, magLat.n_cols);
+  arma_mat avee(magLat.n_rows, magLat.n_cols);
+  avee.zeros();
+  if (HaveElectrodynamics) {
+    int i = magLat.n_slices - 1;
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+    int time_pos = static_cast<int>(time_index);
+    arma_mat e_avee = input_electrodynamics[0].average_energy[time_pos];
+    avee = get_values(e_avee, magLat.n_rows, magLat.n_cols);
+  }
+  return avee;
 }
 
 // -----------------------------------------------------------------------------
 // Generic function to conduct 2d linear interpolation
 // -----------------------------------------------------------------------------
 
-arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn, int rows, int cols) {
+arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
+				     int rows, int cols) {
   arma_mat slice(rows, cols);
   slice.zeros();
 
@@ -117,9 +167,11 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn, int rows, int 
 
 //average energy and eflux energy as well call to get_values
 
-std::tuple<arma_cube, arma_mat, arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
-    arma_cube magLocalTime,
-    Report &report) {
+std::tuple<arma_cube,
+	   arma_mat,
+	   arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
+							  arma_cube magLocalTime,
+							  Report &report) {
   arma_cube pot;
   arma_mat eflux;
   arma_mat avee;
@@ -145,10 +197,14 @@ std::tuple<arma_cube, arma_mat, arma_mat> Electrodynamics::get_electrodynamics(a
 // -----------------------------------------------------------------------------
 
 bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
-  std::vector<double> e_times = input_electrodynamics[0].times;
-  int iLow = 0;
-  int iHigh = e_times.size() - 1;
-  return !(inputStartTime > e_times[iHigh] || inputEndTime < e_times[iLow]);
+  
+  if (HaveElectrodynamics) {
+    std::vector<double> e_times = input_electrodynamics[0].times;
+    int iLow = 0;
+    int iHigh = e_times.size() - 1;
+    return !(inputStartTime > e_times[iHigh] || inputEndTime < e_times[iLow]);
+  } else 
+    return true;
 }
 
 // -----------------------------------------------------------------------------
