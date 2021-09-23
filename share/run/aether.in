@@ -27,7 +27,7 @@ separated values or a row of values (e.g., times can be year, month,
 day, etc, or year\n month\n day\n etc...)
 
 #debug
-1    iVerbose
+0    iVerbose
 
 #planet
 earth
@@ -74,5 +74,8 @@ bfield, 0.0
 #chemistry
 UA/inputs/chemistry_earth.csv
 
-omniweb
-omni_20110622.txt
+#omniweb
+UA/inputs/omni_20110319.txt
+
+#electrodynamics
+UA/inputs/b20110320n_omni.bin
