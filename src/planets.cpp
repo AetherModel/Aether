@@ -320,10 +320,8 @@ int Planets::set_planet(Inputs args, Report report) {
       planet.length_of_year = loy;
       planet.length_of_day = planets[i].length_of_day;
       planet.longitude_jb2000 = planets[i].longitude_jb2000;
-
       precision_t rotrate = cTWOPI /
 	planet.length_of_day * (1.0 + 1.0 / (loy * cStoD));
-
       planet.omega = rotrate;  // frequency (rad/s)
       planet.rotation_period = cTWOPI / rotrate; // (seconds)
 
