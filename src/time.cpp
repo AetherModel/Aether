@@ -53,19 +53,19 @@ void Times::set_times(std::vector<int> itime) {
 // -----------------------------------------------------------------------------
 
 int Times::check_time_gate(float dt_check) {
-  int DoThing = 0;
+  int DidPassGate = 0;
 
   if (current == start)
-    DoThing = 1;
+    DidPassGate = 1;
 
   if (current == restart)
-    DoThing = 1;
+    DidPassGate = 1;
 
   if ( floor((simulation - dt) / dt_check) <
        floor(simulation / dt_check))
-    DoThing = 1;
+    DidPassGate = 1;
 
-  return DoThing;
+  return DidPassGate;
 }
 
 // -----------------------------------------------------------------------------
