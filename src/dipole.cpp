@@ -60,12 +60,15 @@ bfield_info_type get_dipole(float lon,
   float normal_r = (radius / xyzpp);
   float r3 = normal_r * normal_r * normal_r;
 
-  // In GITM, L-Shell is defined with respect to the bottom of the
-  // ionosphere.  This is so there can be a 0 deg magnetic latitude,
-  // which can't really exist if L-shell is defined with respec to the
-  // surface. But, to simplify things to begin with (and make it
-  // planet agnostic), we use the classic definition of L-Shell, which
-  // is with respect to the planetary radius.
+  // L-Shell is the equatorial distance to the magnetic field-line
+  // normalized to some specific distance, typically the planet
+  // radius.  In older models, this distance has been the planet
+  // radius + distance to the bottom of the model.  This is so there
+  // can be a 0 deg magnetic latitude, which can't really exist if
+  // L-shell is defined with respect to the surface. But, to simplify
+  // things to begin with (and make it planet agnostic), we use the
+  // classic definition of L-Shell, which is with respect to the
+  // planetary radius.
 
   float cos_lat = xypp / xyzpp;
   float lShell = 1.0 / normal_r / (cos_lat * cos_lat);
