@@ -9,7 +9,9 @@
 #include <cassert>
 using namespace std;
 
-//g++ electrodynamics_unit_tests.cpp -o e_test.exe -std=c++11
+// To run these unit tests perform:
+// g++ electrodynamics_unit_tests.cpp -o e_test.exe -std=c++11
+
 
 
 fmat get_interpolation_indices(fmat vals, fvec search) {
