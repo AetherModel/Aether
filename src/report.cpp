@@ -89,6 +89,10 @@ void Report::exit(std::string input) {
     std::cout << "Report::exit Error!!! Could not find valid entry!\n";
     std::cout << "current_entry : " << current_entry << "\n";
   } else {
+
+    if (DoReportOnExit)
+      print(iLevel, "Exiting function : " + current_entry);
+
     // Get current system time:
     unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>
                              (std::chrono::system_clock::now().time_since_epoch()).count();

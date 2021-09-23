@@ -159,6 +159,9 @@ private:
 
   /// The current depth level of the function calls
   int iLevel;
+
+  /// Report when leaving a function
+  bool DoReportOnExit = false;
 };
 
 #endif  // INCLUDE_REPORT_H_
