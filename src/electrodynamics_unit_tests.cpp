@@ -1,3 +1,5 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
 
 #include <iostream>
 #include <string>
@@ -9,10 +11,13 @@
 #include <cassert>
 using namespace std;
 
+// -----------------------------------------------------------------------------
 // To run these unit tests perform:
 // g++ electrodynamics_unit_tests.cpp -o e_test.exe -std=c++11
-
-
+//
+//
+//  Binomial search to find interpolation indices.
+// -----------------------------------------------------------------------------
 
 fmat get_interpolation_indices(fmat vals, fvec search) {
   fmat res(vals.n_rows, vals.n_cols, fill::zeros);
@@ -74,6 +79,10 @@ fmat get_interpolation_indices(fmat vals, fvec search) {
   return res;
 }
 
+// -----------------------------------------------------------------------------
+// Test 2d interpolation
+// -----------------------------------------------------------------------------
+
 float two_d_interpolate(fmat vals, float row, float col) {
   fmat e_potentials = vals;
   float h_pos = col;
@@ -132,7 +141,10 @@ bool test_interpolation_indices_1() {
   return true;
 }
 
-//empty
+// -----------------------------------------------------------------------------
+// Test for interpolation indices
+// -----------------------------------------------------------------------------
+
 bool test_interpolation_indices_2() {
   fmat vals = {};
   fvec search = {1, 2, 3, 4, 5};
@@ -151,7 +163,10 @@ bool test_interpolation_indices_2() {
   return true;
 }
 
-//decimal indices
+// -----------------------------------------------------------------------------
+// Test for interpolation indices
+// -----------------------------------------------------------------------------
+
 bool test_interpolation_indices_3() {
   fmat vals = {{1.5, 3}, {4, 5}, {7, 9}};
   fvec search = {1, 3, 4, 8};
@@ -170,7 +185,10 @@ bool test_interpolation_indices_3() {
   return true;
 }
 
-//decimal indices
+// -----------------------------------------------------------------------------
+// Test for interpolation indices
+// -----------------------------------------------------------------------------
+
 bool test_interpolation_indices_4() {
   fmat vals = {{0, 3}, {4, 5}};
   fvec search = {2, 4, 8};
@@ -189,8 +207,9 @@ bool test_interpolation_indices_4() {
   return true;
 }
 
-//----------------------------------------------------------------------------
-// Testing different function below
+//------------------------------------------------------------------------------
+// Testing a bunch of different functions below
+// -----------------------------------------------------------------------------
 
 bool test_two_d_interpolate_1() {
   fmat vals = { {0, 1, 2},
