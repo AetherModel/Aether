@@ -29,16 +29,19 @@ index_file_output_struct read_f107_file(std::string f107_file,
 
   myFile.open(f107_file);
 
-  if (!myFile.is_open()) {
+  if (!myFile.is_open())
     std::cout << "Could not open input file: " << f107_file << "!!!\n";
-  } else {
+
+  else {
 
     int IsFound = 0;
     int IsAdjusted = 0;  // At some point need to take adjusted into account.
     std::string line;
 
     while (getline(myFile, line)) {
-      if (line == "#Element: adjusted") IsAdjusted = 1;
+      if (line == "#Element: adjusted")
+        IsAdjusted = 1;
+
       if (line == "#yyyy-MM-dd HH:mm value qualifier description") {
         IsFound = 1;
         break;
@@ -89,6 +92,7 @@ index_file_output_struct read_f107_file(std::string f107_file,
         values.push_back(stof(tmp));
         f107_contents.nTimes++;
       }  // while
+
       // Push the vector into a vector of vectors:
       f107_contents.values.push_back(values);
 

@@ -68,8 +68,15 @@ class Neutrals {
     /// Which ion species results from the ionization?
     std::vector<int> iEuvIonSpecies_;
 
+    int nAuroraIonSpecies;
+    std::vector<int> iAuroraIonSpecies_;
+    float Aurora_Coef;
+
     // --------------------------------------------------
     // Some derived quantities:
+    fcube chapman_scgc;
+    fcube rho_alt_int_scgc;
+    fcube scale_height_scgc;
 
     /// Chapman Integrals for the species for EUV calculation (/m2)
     arma_cube chapman_scgc;
@@ -93,8 +100,13 @@ class Neutrals {
     precision_t lower_bc_density;
   };
 
+  // bulk quantities (states):
+
   /// bulk number density (/m3)
   arma_cube density_scgc;
+
+  /// bulk velocity (m/s)
+  std::vector<arma_cube> velocity_vcgc;
 
   /// bunk temperature (K)
   arma_cube temperature_scgc;
@@ -122,7 +134,7 @@ class Neutrals {
 
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
-
+  
   /// Maximum Chapman integral (will give nearly infinite tau in EUV)
   precision_t max_chapman = 1.0e26;
 
@@ -241,6 +253,7 @@ class Neutrals {
      \param report allow reporting to occur
    **/
   void set_bcs(Report &report);
+  int get_species_id(std::string name, Report &report);
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

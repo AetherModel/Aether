@@ -35,6 +35,7 @@ int Inputs::read(Times &time, Report &report) {
       // ---------------------------
 
       hash = find_next_hash(infile_ptr);
+
       if (report.test_verbose(3))
         std::cout << "hash : -->" << hash << "<--\n";
 
@@ -55,10 +56,12 @@ int Inputs::read(Times &time, Report &report) {
 
       if (hash == "#starttime") {
         std::vector<int> istart = read_itime(infile_ptr, hash);
-        if (istart[0] > 0) time.set_times(istart);
-        if (report.test_verbose(3)) {
+
+        if (istart[0] > 0)
+          time.set_times(istart);
+
+        if (report.test_verbose(3))
           display_itime(istart);
-        }
       }
 
       // ---------------------------
@@ -67,7 +70,10 @@ int Inputs::read(Times &time, Report &report) {
 
       if (hash == "#endtime") {
         std::vector<int> iend = read_itime(infile_ptr, hash);
-        if (iend[0] > 0) time.set_end_time(iend);
+
+        if (iend[0] > 0)
+          time.set_end_time(iend);
+
         if (report.test_verbose(3)) {
           std::cout << "Endtime : ";
           display_itime(iend);
@@ -82,6 +88,7 @@ int Inputs::read(Times &time, Report &report) {
         nLonsGeo = read_int(infile_ptr, hash);
         nLatsGeo = read_int(infile_ptr, hash);
         nAltsGeo = read_int(infile_ptr, hash);
+
         if (report.test_verbose(3)) {
           std::cout << "nLonsGeo : " << nLonsGeo << "\n";
           std::cout << "nLatsGeo : " << nLatsGeo << "\n";
@@ -101,6 +108,7 @@ int Inputs::read(Times &time, Report &report) {
         geo_grid_input.alt_min = read_float(infile_ptr, hash) * 1000.0;
         geo_grid_input.dalt = read_float(infile_ptr, hash) * 1000.0;
         geo_grid_input.IsUniformAlt = 1;
+
         if (report.test_verbose(3)) {
           std::cout << "lon min/max : "
                     << geo_grid_input.lon_min
@@ -118,34 +126,51 @@ int Inputs::read(Times &time, Report &report) {
       // #f107file
       // ---------------------------
 
-      if (hash == "#f107file") {
+      if (hash == "#f107file")
         f107_file = read_string(infile_ptr, hash);
-      }
+
+      // ---------------------------
+      // #aurorafile
+      // ---------------------------
+
+      if (hash == "#aurorafile")
+        aurora_file = read_string(infile_ptr, hash);
 
       // ---------------------------
       // #bfield
       // ---------------------------
 
-      if (hash == "#bfield") {
+      if (hash == "#bfield")
         bfield = read_string(infile_ptr, hash);
-      }
 
       // ---------------------------
       // #chemistry
       // ---------------------------
 
-      if (hash == "#chemistry") {
+      if (hash == "#chemistry")
         chemistry_file = read_string(infile_ptr, hash);
-      }
+
+      // ---------------------------
+      // #collisions
+      // ---------------------------
+
+      if (hash == "#collisions")
+        collision_file = read_string(infile_ptr, hash);
 
       // ---------------------------
       // #omniweb
       // This can actually be called multiple times:
       // ---------------------------
 
-      if (hash == "#omniweb") {
+      if (hash == "#omniweb")
         omniweb_files.push_back(read_string(infile_ptr, hash));
-      }
+
+      // ---------------------------
+      // #electrodynamics
+      // ---------------------------
+
+      if (hash == "#electrodynamics")
+        electrodynamics_file = read_string(infile_ptr, hash);
 
       // ---------------------------
       // #planet
@@ -153,10 +178,12 @@ int Inputs::read(Times &time, Report &report) {
 
       if (hash == "#planet") {
         planet = read_string(infile_ptr, hash);
+
         if (report.test_verbose(3))
           std::cout << "Setting planet to : " << planet << "\n";
+
         if (planet_species_file.length() <= 1)
-          planet_species_file = "UA/inputs/"+planet+".in";
+          planet_species_file = "UA/inputs/" + planet + ".in";
       }
 
       // ---------------------------
@@ -168,23 +195,28 @@ int Inputs::read(Times &time, Report &report) {
         // comma separated values, with type, then dt:
         int nOutputs = csv.size();
         int iOutput;
+
         if (nOutputs > 1) {
           type_output[0] = csv[0][0];
           dt_output[0] = stof(csv[0][1]);
+
           for (iOutput = 1; iOutput < nOutputs; iOutput++) {
             type_output.push_back(csv[iOutput][0]);
             dt_output.push_back(stof(csv[iOutput][1]));
           }
+
           // Allow users to enter 0 for dt, so they only get the
           // output at the beginning of the run:
           for (iOutput = 0; iOutput < nOutputs; iOutput++)
-            if (dt_output[iOutput] <= 0.0) dt_output[iOutput] = 1.0e32;
-        } else {
+            if (dt_output[iOutput] <= 0.0)
+              dt_output[iOutput] = 1.0e32;
+        } else
           std::cout << "Something wrong with #output. Need to report...\n";
-        }
       }
     }
+
     infile_ptr.close();
   }
+
   return iErr;
 }

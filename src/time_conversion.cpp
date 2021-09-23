@@ -12,7 +12,10 @@
 
 void display_itime(std::vector<int> itime) {
   int iSize = itime.size();
-  for (int i = 0; i < iSize; i++) std::cout << itime[i] << " ";
+
+  for (int i = 0; i < iSize; i++)
+    std::cout << itime[i] << " ";
+
   std::cout << "\n";
 }
 
@@ -22,10 +25,14 @@ void display_itime(std::vector<int> itime) {
 
 int day_of_year(int year, int month, int day) {
   int doy = 0;
+
   for (int i = 1; i < month; i++) {
-    doy += cDAYS[i-1];
-    if (year % 4 == 0 && i == 2) doy++;
+    doy += cDAYS[i - 1];
+
+    if (year % 4 == 0 && i == 2)
+      doy++;
   }
+
   doy += day;
   return doy;
 }
@@ -38,15 +45,15 @@ int day_of_year(int year, int month, int day) {
 double time_int_to_real(std::vector<int> itime) {
 
   int nYears = itime[0] - cREFYEAR;
-  int nLeaps = nYears/4;
-  int nDays = day_of_year(itime[0], itime[1], itime[2])-1;
+  int nLeaps = nYears / 4;
+  int nDays = day_of_year(itime[0], itime[1], itime[2]) - 1;
 
   double timereal =
     static_cast<double>(itime[6]) * cMStoS +
     static_cast<double>(itime[5]) +
     static_cast<double>(itime[4]) * cMtoS +
     static_cast<double>(itime[3]) * cHtoS +
-    static_cast<double>(nDays+nLeaps) * cDtoS +
+    static_cast<double>(nDays + nLeaps) * cDtoS +
     static_cast<double>(nYears) * cYtoS;
 
   return timereal;
@@ -61,20 +68,21 @@ std::vector<int> time_real_to_int(double timereal) {
   std::vector<int> itime(7);
 
   int nYears = static_cast<int> (timereal * cStoY);
-  int nLeaps = nYears/4;
+  int nLeaps = nYears / 4;
   int nDays = static_cast<int> ((timereal -
                                  (static_cast<double>(nYears) * cYtoS)) *
-				cStoD);
+                                cStoD);
 
   // This can happen in some circumstances, like the first few days of the year:
   if (nDays < nLeaps) {
     nYears = (timereal - (static_cast<double>(nLeaps) * cDtoS)) * cStoY;
-    nLeaps = nYears/4;
+    nLeaps = nYears / 4;
     nDays = (timereal - (static_cast<double>(nYears) * cYtoS)) * cStoD;
+
     // This should be very rare:
     if (nDays < nLeaps) {
       nYears = (timereal - (static_cast<double>(nLeaps) * cDtoS)) * cStoY;
-      nLeaps = nYears/4;
+      nLeaps = nYears / 4;
       nDays = (timereal - (static_cast<double>(nYears) * cYtoS)) * cStoD;
     }
   }
@@ -84,8 +92,8 @@ std::vector<int> time_real_to_int(double timereal) {
 
   // Calculate how much time is left, after subtracting off years and days:
   double timeleft = timereal
-    - static_cast<double>(nYears) * cYtoS
-    - static_cast<double>(nDays + nLeaps) * cDtoS;
+                    - static_cast<double>(nYears) * cYtoS
+                    - static_cast<double>(nDays + nLeaps) * cDtoS;
 
   // Calculate hours and subtract them:
   int nHours = timeleft * cStoH;
@@ -106,14 +114,19 @@ std::vector<int> time_real_to_int(double timereal) {
   // sort of a hack so we can keep cDAYS as a constant.
   int nMonths = 1;
   int iLeap = 0;
-  if (itime[0] % 4 == 0) iLeap=1;
+
+  if (itime[0] % 4 == 0)
+    iLeap = 1;
+
   std::vector<int> add_on_days {0, iLeap, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  while (nDays > (cDAYS[nMonths-1] + add_on_days[nMonths-1])) {
-    nDays = nDays - (cDAYS[nMonths-1] + add_on_days[nMonths-1]);
+
+  while (nDays > (cDAYS[nMonths - 1] + add_on_days[nMonths - 1])) {
+    nDays = nDays - (cDAYS[nMonths - 1] + add_on_days[nMonths - 1]);
     nMonths++;
   }
+
   itime[1] = nMonths;
-  itime[2] = nDays+1;
+  itime[2] = nDays + 1;
   itime[3] = nHours;
   itime[4] = nMinutes;
   itime[5] = nSeconds;
@@ -153,12 +166,12 @@ int test_time_routines() {
 
   display_itime(itime);
   std::cout << " --> " << timeout << " compares to : " << timecheck << "\n";
-  if (abs(timecheck-timeout) > 1.0) {
+
+  if (abs(timecheck - timeout) > 1.0) {
     iErr = 1;
     std::cout << "Fails!!!\n";
-  } else {
+  } else
     std::cout << "Passes!!!\n";
-  }
 
   itime = time_real_to_int(timecheck);
   display_itime(itime);

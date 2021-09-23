@@ -4,12 +4,6 @@
 #ifndef INCLUDE_CONSTANTS_H_
 #define INCLUDE_CONSTANTS_H_
 
-/*! \file constants.h
-    \brief Physical consants.
-    
-    Contains constants used around the code.
-*/
-
 #include <vector>
 
 // -------------------------------------------------------------------------
@@ -125,5 +119,11 @@ const precision_t cAUtoM = 1.495978707e11;
 const precision_t pcm3topm3 = 1e6;  // /cm3 to /m3
 const precision_t pcm2topm2 = 1e4;  // /cm2 to /m2
 const precision_t pcmtopm = 100.0;  // /cm to /m
+
+// -------------------------------------------------------------------------
+// B-Field
+// -------------------------------------------------------------------------
+
+const float cNTtoT = 1e-9;  // nT to T
 
 #endif  // INCLUDE_CONSTANTS_H_

@@ -13,6 +13,7 @@ class Grid {
 public:
 
   int get_IsGeoGrid();
+  bool get_HasBField();
   void set_IsGeoGrid(int value);
 
   int64_t get_nPointsInGrid();
@@ -75,9 +76,18 @@ public:
 
   arma_cube dalt_center_scgc;
   arma_cube dalt_lower_scgc;
+  arma_cube dalt_ratio_scgc;
+  arma_cube dalt_ratio_sq_scgc;
 
+  arma_cube dlon_center_scgc;
+  arma_cube dlon_center_dist_scgc;
+
+  arma_cube dlat_center_scgc;
+  arma_cube dlat_center_dist_scgc;
+  
   std::vector<arma_cube> bfield_vcgc;
   arma_cube bfield_mag_scgc;
+  std::vector<arma_cube> bfield_unit_vcgc;
 
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
@@ -92,6 +102,7 @@ public:
  private:
 
   int IsGeoGrid;
+  bool HasBField;
 
   int64_t nX, nLons;
   int64_t nY, nLats;

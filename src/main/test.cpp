@@ -18,7 +18,9 @@ int main() {
   // ------------------------------------------------------------
 
   iErr = test_time_routines();
-  if (iErr == 0) std::cout << "Passed test_time_routines!\n";
+
+  if (iErr == 0)
+    std::cout << "Passed test_time_routines!\n";
   else
     std::cout << "Failed test_time_routines!\n";
 

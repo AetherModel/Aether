@@ -15,13 +15,7 @@
  *   of the states in the system.
  **************************************************************/
 
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/neutrals.h"
-#include "../include/euv.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/ions.h"
+#include "../include/aether.h"
 
 int advance(Planets &planet,
             Grid &gGrid,
@@ -30,6 +24,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
+            Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &args,
             Report &report);

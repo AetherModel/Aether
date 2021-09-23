@@ -48,11 +48,12 @@ bfield_info_type get_dipole(precision_t lon,
   precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
   transform_rot_y(pos_rot_z, -magnetic_pole_tilt, pos_rot_zy);
 
-  precision_t xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] + pos_rot_zy[1]*pos_rot_zy[1]);
+  precision_t xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
+			pos_rot_zy[1]*pos_rot_zy[1]);
 
   precision_t xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
-                   pos_rot_zy[1]*pos_rot_zy[1] +
-                   pos_rot_zy[2]*pos_rot_zy[2]);
+			 pos_rot_zy[1]*pos_rot_zy[1] +
+			 pos_rot_zy[2]*pos_rot_zy[2]);
 
   precision_t xypp = sqrt(xypp2);
   precision_t xyzpp = sqrt(xyzpp2);
@@ -60,21 +61,28 @@ bfield_info_type get_dipole(precision_t lon,
   precision_t normal_r = (radius / xyzpp);
   precision_t r3 = normal_r * normal_r * normal_r;
 
-  // In GITM, L-Shell is defined with respect to the bottom of the
-  // ionosphere.  This is so there can be a 0 deg magnetic latitude,
-  // which can't really exist if L-shell is defined with respec to the
-  // surface. But, to simplify things to begin with (and make it
-  // planet agnostic), we use the classic definition of L-Shell, which
-  // is with respect to the planetary radius.
+  // L-Shell is the equatorial distance to the magnetic field-line
+  // normalized to some specific distance, typically the planet
+  // radius.  In older models, this distance has been the planet
+  // radius + distance to the bottom of the model.  This is so there
+  // can be a 0 deg magnetic latitude, which can't really exist if
+  // L-shell is defined with respect to the surface. But, to simplify
+  // things to begin with (and make it planet agnostic), we use the
+  // classic definition of L-Shell, which is with respect to the
+  // planetary radius.
 
-  precision_t cos_lat = xypp/xyzpp;
+  precision_t cos_lat = xypp / xyzpp;
   precision_t lShell = 1.0 / normal_r / (cos_lat * cos_lat);
 
   precision_t mlat = acos(1.0 / sqrt(lShell));
-  if (pos_rot_zy[2] < 0.0) mlat = -mlat;
+
+  if (pos_rot_zy[2] < 0.0)
+    mlat = -mlat;
 
   precision_t mlon = acos(pos_rot_zy[0] / xypp);
-  if (pos_rot_zy[1] < 0.0) mlon = -mlon;
+
+  if (pos_rot_zy[1] < 0.0)
+    mlon = -mlon;
 
   precision_t dipole_strength = planet.get_dipole_strength();
 
@@ -82,7 +90,7 @@ bfield_info_type get_dipole(precision_t lon,
   b[0] = dipole_strength * r3 * 3 * pos_rot_zy[0] * pos_rot_zy[2] / xyzpp2;
   b[1] = dipole_strength * r3 * 3 * pos_rot_zy[2] * pos_rot_zy[1] / xyzpp2;
   b[2] = dipole_strength * r3 / xyzpp2 *
-    (2 * pos_rot_zy[2]*pos_rot_zy[2] - xypp2);
+         (2 * pos_rot_zy[2] * pos_rot_zy[2] - xypp2);
 
   precision_t b_rot_y[3];
   precision_t b_rot_yz[3];

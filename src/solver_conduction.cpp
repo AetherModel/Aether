@@ -43,8 +43,8 @@ arma_vec solver_conduction(arma_vec value,
 
   int64_t i;
 
-  for (i = 2; i < nPts-2; i++)
-    dl(i) = di(i+1) - di(i-1) * r(i) * r(i) - di(i) * (1.0-r(i)*r[i]);
+  for (i = 2; i < nPts - 2; i++)
+    dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r[i]);
 
   arma_vec a = di / du22 % r - dl / du12 % r % r;
   arma_vec c = di / du22 + dl / du12;
@@ -55,38 +55,41 @@ arma_vec solver_conduction(arma_vec value,
   a(1) = 0.0;
   b(1) = -1.0;
   c(1) = 0.0;
-  d(1) = -1.0*value(1);
+  d(1) = -1.0 * value(1);
 
   // Upper BCs:
   // This assumes a constant-gradient BC (need to change for ion and ele temps.
 
-  i = nPts-2;
-  a(i) = 1.0*(r(i) * (1.0 + r(i)) * di(i) * m(i) / du22(i));
-  b(i) = -1.0*(1.0 + r(i) * (1 + r(i)) * di(i) *m(i) / du22(i));
+  i = nPts - 2;
+  a(i) = 1.0 * (r(i) * (1.0 + r(i)) * di(i) * m(i) / du22(i));
+  b(i) = -1.0 * (1.0 + r(i) * (1 + r(i)) * di(i) * m(i) / du22(i));
   c(i) = 0.0;
-  d(i) = -1.0*value(i);
+  d(i) = -1.0 * value(i);
 
   arma_vec cp(nPts, fill::zeros);
   arma_vec dp(nPts, fill::zeros);
   arma_vec result(nPts, fill::zeros);
 
-  cp(1) = c(1)/b(1);
-  for (i = 2; i <= nPts-2; i++)
-    cp(i) = c(i)/(b(i)-cp(i-1)*a(i));
+  cp(1) = c(1) / b(1);
 
-  dp(1) = d(1)/b(1);
-  for (i = 2; i <= nPts-2; i++)
-    dp(i) = (d(i)-dp(i-1)*a(i))/(b(i)-cp(i-1)*a(i));
+  for (i = 2; i <= nPts - 2; i++)
+    cp(i) = c(i) / (b(i) - cp(i - 1) * a(i));
 
-  result(nPts-2) = dp(nPts-2);
-  for (i = nPts-3; i > 0; i--)
-    result(i) = dp(i) - cp(i)*result(i+1);
+  dp(1) = d(1) / b(1);
+
+  for (i = 2; i <= nPts - 2; i++)
+    dp(i) = (d(i) - dp(i - 1) * a(i)) / (b(i) - cp(i - 1) * a(i));
+
+  result(nPts - 2) = dp(nPts - 2);
+
+  for (i = nPts - 3; i > 0; i--)
+    result(i) = dp(i) - cp(i) * result(i + 1);
 
   conduction = result - value;
   conduction(0) = 0.0;
   conduction(1) = 0.0;
-  conduction(nPts-2) = 0.0;
-  conduction(nPts-1) = 0.0;
+  conduction(nPts - 2) = 0.0;
+  conduction(nPts - 1) = 0.0;
 
   return conduction;
 }

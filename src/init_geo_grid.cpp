@@ -32,9 +32,8 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
     lon1d(iLon) = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
 
   for (iLat=0; iLat < nLats; iLat++) {
-    for (iAlt=0; iAlt < nAlts; iAlt++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++)
       geoLon_scgc.subcube(0, iLat, iAlt, nLons-1, iLat, iAlt) = lon1d;
-    }
   }
 
   // Latitudes:
@@ -46,9 +45,8 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
     lat1d(iLat) = grid_input.lat_min + (iLat-nGCs+0.5) * dlat;
 
   for (iLon=0; iLon < nLons; iLon++) {
-    for (iAlt=0; iAlt < nAlts; iAlt++) {
+    for (iAlt=0; iAlt < nAlts; iAlt++)
       geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats-1, iAlt) = lat1d;
-    }
   }
 
   arma_vec alt1d(nAlts);
@@ -57,12 +55,12 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       alt1d(iAlt) =
         grid_input.alt_min +
-        (iAlt-nGeoGhosts) * grid_input.dalt;
+        (iAlt - nGeoGhosts) * grid_input.dalt;
   }
+
   for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
+    for (iLat = 0; iLat < nLats; iLat++)
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
-    }
   }
 
   IsGeoGrid = 1;

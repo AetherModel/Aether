@@ -18,10 +18,10 @@ class Chemistry {
     std::vector<std::string> losses_names;
 
     std::vector<int> sources_ids;
-    std::vector<int> sources_IsNeutral;
+    std::vector<bool> sources_IsNeutral;
 
     std::vector<int> losses_ids;
-    std::vector<int> losses_IsNeutral;
+    std::vector<bool> losses_IsNeutral;
 
     int nSources;
     int nLosses;
@@ -79,7 +79,7 @@ class Chemistry {
                        Neutrals neutrals,
                        Ions ions,
                        int &id_,
-                       int &IsNeutral,
+                       bool &IsNeutral,
                        Report &report);
 
   void display_reaction(reaction_type reaction);
