@@ -13,6 +13,8 @@ public:
 
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
+  json read_json(std::string json_file);
+  int read_inputs_json(Times &time, Report &report);
   int get_verbose();
   precision_t get_dt_euv();
   precision_t get_dt_report();
@@ -39,7 +41,7 @@ public:
 
   struct grid_input_struct {
     std::string alt_file;
-    int IsUniformAlt;
+    bool IsUniformAlt;
     precision_t alt_min;
     precision_t dalt;
     precision_t lat_min;
@@ -57,8 +59,15 @@ public:
   int iVerbose;
   int iTimingDepth;
 
+  std::string get_settings_str(std::string key1);
+  std::string get_settings_str(std::string key1, std::string key2);
+  std::vector<int> get_settings_timearr(std::string key1);
+  std::vector<int> get_settings_intarr(std::string key1);
+  
 private:
 
+  json settings;
+  
   std::string euv_file = "UA/inputs/euv.csv";
   std::string aurora_file = "UA/inputs/aurora_earth.csv";
   std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
