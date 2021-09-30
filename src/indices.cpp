@@ -211,12 +211,12 @@ precision_t Indices::get_index(double time, int index) {
 
   // At this point, time should be between iMid and iMid+1:
 
-  double dt = (all_indices_arrays[index].times[iMid+1] -
-         all_indices_arrays[index].times[iMid]);
+  double dt = (all_indices_arrays[index].times[iMid + 1] -
+               all_indices_arrays[index].times[iMid]);
   precision_t x = (time - all_indices_arrays[index].times[iMid]) / dt;
 
   precision_t value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
-    x * all_indices_arrays[index].values[iMid+1];
+                      x * all_indices_arrays[index].values[iMid + 1];
 
   return value;
 }
@@ -227,9 +227,9 @@ precision_t Indices::get_index(double time, int index) {
 // ----------------------------------------------------------------------
 
 void Indices::set_index(int index,
-			std::vector<double> timearray,
-			std::vector<float> indexarray,
-			precision_t missing) {
+                        std::vector<double> timearray,
+                        std::vector<float> indexarray,
+                        precision_t missing) {
 
   if (timearray.size() != indexarray.size()) {
     std::cout << "In set_index. Size of time and index arrays don't match!\n";

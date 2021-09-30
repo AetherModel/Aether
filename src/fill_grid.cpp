@@ -213,6 +213,7 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
   // Just in case we have a latitude-dependent planetary radius
   arma_vec radius0_1d(nLats);
+
   for (iLat = 0; iLat < nLats; iLat++)
     radius0_1d(iLat) = planet.get_radius(geoLat_scgc(0, iLat, 0));
 

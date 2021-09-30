@@ -74,7 +74,8 @@ void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3]) {
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
+std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in,
+                                          precision_t angle) {
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -96,7 +97,8 @@ std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in, precisi
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
+std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in,
+                                          precision_t angle) {
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -118,7 +120,8 @@ std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in, precisi
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precision_t angle) {
+std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in,
+                                          precision_t angle) {
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -140,7 +143,8 @@ std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precisi
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-void transform_rot_z(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]) {
+void transform_rot_z(precision_t xyz_in[3], precision_t angle_in,
+                     precision_t xyz_out[3]) {
   precision_t ca = cos(angle_in);
   precision_t sa = sin(angle_in);
   xyz_out[0] =  xyz_in[0] * ca + xyz_in[1] * sa;
@@ -153,7 +157,8 @@ void transform_rot_z(precision_t xyz_in[3], precision_t angle_in, precision_t xy
 //  - Angle needs to be in radians!!!
 // -----------------------------------------------------------------------
 
-void transform_rot_y(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]) {
+void transform_rot_y(precision_t xyz_in[3], precision_t angle_in,
+                     precision_t xyz_out[3]) {
   precision_t ca = cos(angle_in);
   precision_t sa = sin(angle_in);
   xyz_out[0] = xyz_in[0] * ca - xyz_in[2] * sa;

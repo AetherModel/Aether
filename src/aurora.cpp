@@ -49,8 +49,8 @@ void read_aurora(Neutrals &neutrals,
 // -----------------------------------------------------------------------------
 
 arma_vec calculate_maxwellian(precision_t eflux,  // in ergs/cm2/s
-                          precision_t avee,   // in keV
-                          arma_vec energies) {  // in keV
+                              precision_t avee,   // in keV
+                              arma_vec energies) {  // in keV
 
   // Change all units to be in eV and cm2:
   precision_t E0 = avee / 2; // characteristic energy in keV
@@ -66,11 +66,11 @@ arma_vec calculate_maxwellian(precision_t eflux,  // in ergs/cm2/s
 // -----------------------------------------------------------------------------
 
 arma_vec calculate_fang_v2(precision_t energy_bin,
-                       precision_t diff_energy_flux,
-                       arma_vec rhoH,
-                       std::vector<precision_t> Ci,
-                       arma_vec scale_height,
-                       Report &report) {
+                           precision_t diff_energy_flux,
+                           arma_vec rhoH,
+                           std::vector<precision_t> Ci,
+                           arma_vec scale_height,
+                           Report &report) {
 
   // Set up function reporting
   std::string function = "calc_fang";
@@ -85,7 +85,7 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
   precision_t de = 0.035;  // keV
   precision_t E_mono = energy_bin;
   precision_t Q_mono = diff_energy_flux;
-  dvec H = conv_to<dvec>::from(scale_height); 
+  dvec H = conv_to<dvec>::from(scale_height);
 
   // Eqn. 1 of Fang et al [2010]:
   dvec rhoHnorm = conv_to<dvec>::from(rhoH / 10.0 / 6e-6);
@@ -101,7 +101,7 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
 
   // Eqn. 3 of Fang et al [2010] (solve for Qtot(z), ionization rate):
   arma_vec q_tot = conv_to<arma_vec>::from(fyE % fac);
-  
+
   report.exit(function);
   return q_tot;
 }
@@ -132,14 +132,15 @@ void calc_aurora(Grid grid,
 
   // SET UP PIJ VALUES - these are directly from Fang et al. [2010]:
   static mat Pij = {
-		    {1.25, 1.45903, -2.42e-1, 5.95e-2},
-		    {2.24, -4.23e-7, 1.36e-2, 2.53e-3},
-		    {1.42, 1.45e-1, 1.70e-2, 6.40e-4},
-		    {0.248775, -1.51e-1, 6.31e-9, 1.24e-3},
-		    {-0.465119, -1.05e-1, -8.96e-2, 1.22e-2},
-		    {3.86e-1, 1.75e-3, -7.43e-4, 4.61e-4},
-		    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
-		    {9.49e-1, 1.97e-1, -2.51e-3, -2.07e-3} };
+    {1.25, 1.45903, -2.42e-1, 5.95e-2},
+    {2.24, -4.23e-7, 1.36e-2, 2.53e-3},
+    {1.42, 1.45e-1, 1.70e-2, 6.40e-4},
+    {0.248775, -1.51e-1, 6.31e-9, 1.24e-3},
+    {-0.465119, -1.05e-1, -8.96e-2, 1.22e-2},
+    {3.86e-1, 1.75e-3, -7.43e-4, 4.61e-4},
+    {-6.45e-1, 8.50e-4, -4.29e-2, -2.99e-3},
+    {9.49e-1, 1.97e-1, -2.51e-3, -2.07e-3}
+  };
 
   static std::vector<std::vector<precision_t>> CiArray;
   static bool IsFirstTime = 1;
@@ -163,7 +164,7 @@ void calc_aurora(Grid grid,
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
       precision_t energy = exp(Emin + iBin * (Emax - Emin) / (nBins - 1));
       // convert from eV -> keV
-      auroral_energies(iBin) = energy/1000.0;
+      auroral_energies(iBin) = energy / 1000.0;
     }
 
     auroral_energy_widths = calc_bin_widths(auroral_energies);
@@ -176,8 +177,10 @@ void calc_aurora(Grid grid,
       // directly from Fang et al., [2010]:
       for (int i = 0; i < 8; i++) {
         precision_t tot = 0;
+
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
+
         Ci.push_back(exp(tot));
       }
 
@@ -223,13 +226,14 @@ void calc_aurora(Grid grid,
 
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
+
         for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
           rhoH1d = rhoH1d + rho_tube;
         }
 
-	// Step 2: Calculate the distribution function:
+        // Step 2: Calculate the distribution function:
         diff_num_flux = calculate_maxwellian(eflux,
                                              avee,
                                              auroral_energies);
@@ -239,7 +243,7 @@ void calc_aurora(Grid grid,
           diff_num_flux % auroral_energies % auroral_energy_widths;
 
         // Step 4: Calculate ionization rates from Fang (all energy bins):
-	// in cm (from meters)
+        // in cm (from meters)
         H = scale_height.tube(iLon, iLat) * 100.0;
         arma_vec temp;
 
@@ -256,10 +260,10 @@ void calc_aurora(Grid grid,
           ionization1d = ionization1d + temp;
         }
 
-	// /cm3 -> /m3
+        // /cm3 -> /m3
         ionization1d = ionization1d * pcm3topm3;
 
-	// Step 5: Distribute ionization among neutrals:
+        // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the
         // ionization, so we compute a weighted average given the
         // weights (coef or Aurora_Coef) and the neutral density

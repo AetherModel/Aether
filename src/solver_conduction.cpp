@@ -16,10 +16,10 @@
 // -----------------------------------------------------------------------
 
 arma_vec solver_conduction(arma_vec value,
-                       arma_vec lambda,
-                       arma_vec front,
-                       precision_t dt,
-                       arma_vec dx) {
+                           arma_vec lambda,
+                           arma_vec front,
+                           precision_t dt,
+                           arma_vec dx) {
 
   int64_t nPts = value.n_elem;
 
@@ -29,14 +29,14 @@ arma_vec solver_conduction(arma_vec value,
   // These are to allow for a stretched grid:
   // du is cell spacing in upper direction (so, lower, shifted by one):
   arma_vec du(nPts);
-  du(span(0, nPts-2)) = dx(span(1, nPts-1));
-  du(nPts-1) = du(nPts-2);
+  du(span(0, nPts - 2)) = dx(span(1, nPts - 1));
+  du(nPts - 1) = du(nPts - 2);
   // dl is lower cell spacing:
   arma_vec dl = dx;
-  arma_vec r = du/dl;
+  arma_vec r = du / dl;
   arma_vec du12 = du % du % (1 + r) % (1 + r);
   arma_vec du22 = 0.5 * (dl % du + du % du);
-  arma_vec lou = di/du22;
+  arma_vec lou = di / du22;
 
   arma_vec conduction(nPts);
   conduction.zeros();

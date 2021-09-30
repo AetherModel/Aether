@@ -124,7 +124,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
     report.exit(function);
     return;
   }
-  
+
   int reclen;
   int nLats, nMlts, nTimes, nVars;
   std::vector<double> real_times;
@@ -219,7 +219,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
   fclose(infile);
 
   HaveElectrodynamics = true;
-  
+
   input_electrodynamics_struct obj = input_electrodynamics_struct();
   obj.nLats = nLats;
   obj.nMlts = nMlts;
