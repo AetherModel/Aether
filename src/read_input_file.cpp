@@ -4,27 +4,6 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
-// Read json file
-// -----------------------------------------------------------------------
-
-json Inputs::read_json(std::string json_file) {
-
-  int iErr = 0;
-
-  json json_inputs;
-  std::ifstream infile_ptr;
-  infile_ptr.open(json_file);
-
-  if (!infile_ptr.is_open())
-    std::cout << "Could not open input file: " << json_file << "!!!\n";
-
-  else
-    infile_ptr >> json_inputs;
-
-  return json_inputs;
-}
-
-// -----------------------------------------------------------------------
 // Read input file - json format!
 // -----------------------------------------------------------------------
 
