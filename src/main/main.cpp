@@ -36,7 +36,8 @@ int main() {
   // Initialize Geographic grid:
   Grid gGrid(input.get_nLonsGeo(),
              input.get_nLatsGeo(),
-             input.get_nAltsGeo(), nGeoGhosts);
+             input.get_nAltsGeo(),
+	     nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
@@ -71,6 +72,13 @@ int main() {
     return iErr;
   }
 
+  if (input.get_do_restart()) {
+    report.print(1, "Restarting! Reading time file!");
+    bool DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
+    if (!DidWork)
+      std::cout << "Reading Restart for time Failed!!!\n";
+  }
+  
   // This is for the initial output.  If it is not a restart, this will go:
   if (time.check_time_gate(input.get_dt_output(0)))
     iErr = output(neutrals, ions, gGrid, time, planet, input, report);
