@@ -13,7 +13,6 @@ public:
 
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
-  json read_json(std::string json_file);
   int read_inputs_json(Times &time, Report &report);
   int get_verbose();
   precision_t get_dt_euv();
@@ -35,7 +34,11 @@ public:
   std::string get_collision_file();
   std::string get_bfield_type();
   std::string get_electrodynamics_file();
-
+  bool get_do_restart();
+  std::string get_restartout_dir();
+  std::string get_restartin_dir();
+  precision_t get_dt_write_restarts();
+  
   // ------------------------------
   // Grid inputs:
 
@@ -95,6 +98,8 @@ private:
   std::string restart_out_directory = "UA/restartOut";
   std::string restart_in_directory = "UA/restartIn";
 
+  bool DoRestart;
+  
   precision_t dt_euv;
   precision_t dt_report;
 
