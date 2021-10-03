@@ -219,72 +219,80 @@ int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
   int iErr = 0;
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
-
+  
   report.print(3, "Creating Neutrals initial_condition");
 
-  // ---------------------------------------------------------------------
-  // This section assumes we want a hydrostatic solution given the
-  // temperature profile in the planet.in file.
-  // ---------------------------------------------------------------------
+  if (input.get_do_restart()) {
+    report.print(1, "Restarting! Reading neutral files!");
+    bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
+    if (!DidWork)
+      std::cout << "Reading Restart for Neutrals Failed!!!\n";
+  } else {
+    
+    // ---------------------------------------------------------------------
+    // This section assumes we want a hydrostatic solution given the
+    // temperature profile in the planet.in file.
+    // ---------------------------------------------------------------------
 
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
+    int64_t nLons = grid.get_nLons();
+    int64_t nLats = grid.get_nLats();
+    int64_t nAlts = grid.get_nAlts();
 
-  // Let's assume that the altitudes are not dependent on lat/lon:
+    // Let's assume that the altitudes are not dependent on lat/lon:
 
-  arma_vec alt1d(nAlts);
-  arma_vec temp1d(nAlts);
+    arma_vec alt1d(nAlts);
+    arma_vec temp1d(nAlts);
 
-  arma_mat H2d(nLons, nLats);
+    arma_mat H2d(nLons, nLats);
 
-  alt1d = grid.geoAlt_scgc.tube(0, 0);
+    alt1d = grid.geoAlt_scgc.tube(0, 0);
 
-  if (nInitial_temps > 0) {
-    for (iAlt = 0; iAlt < nAlts; iAlt++) {
-      alt = alt1d(iAlt);
+    if (nInitial_temps > 0) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
+	alt = alt1d(iAlt);
 
-      // Find temperatures:
-      if (alt <= initial_altitudes[0])
-        temp1d[iAlt] = initial_temperatures[0];
+	// Find temperatures:
+	if (alt <= initial_altitudes[0])
+	  temp1d[iAlt] = initial_temperatures[0];
 
-      else {
-        if (alt >= initial_altitudes[nInitial_temps - 1])
-          temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
+	else {
+	  if (alt >= initial_altitudes[nInitial_temps - 1])
+	    temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
 
-        else {
-          // Linear interpolation!
-          iA = 0;
+	  else {
+	    // Linear interpolation!
+	    iA = 0;
 
-          while (alt > initial_altitudes[iA])
-            iA++;
+	    while (alt > initial_altitudes[iA])
+	      iA++;
 
-          iA--;
-          // alt will be between iA and iA+1:
-          r = (alt - initial_altitudes[iA]) /
+	    iA--;
+	    // alt will be between iA and iA+1:
+	    r = (alt - initial_altitudes[iA]) /
               (initial_altitudes[iA + 1] - initial_altitudes[iA]);
-          temp1d[iAlt] =
-            (1.0 - r) * initial_temperatures[iA] +
-            (r) * initial_temperatures[iA + 1];
-        }
+	    temp1d[iAlt] =
+	      (1.0 - r) * initial_temperatures[iA] +
+	      (r) * initial_temperatures[iA + 1];
+	  }
+	}
       }
+    } else
+      temp1d = 200.0;
+
+    // spread the 1D temperature across the globe:
+    for (iLon = 0; iLon < nLons; iLon++) {
+      for (iLat = 0; iLat < nLats; iLat++)
+	temperature_scgc.tube(iLon, iLat) = temp1d;
     }
-  } else
-    temp1d = 200.0;
 
-  // spread the 1D temperature across the globe:
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++)
-      temperature_scgc.tube(iLon, iLat) = temp1d;
+    // Set the lower boundary condition:
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      species[iSpecies].density_scgc.slice(0).
+	fill(species[iSpecies].lower_bc_density);
+    }
+
+    fill_with_hydrostatic(grid, report);
   }
-
-  // Set the lower boundary condition:
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    species[iSpecies].density_scgc.slice(0).
-    fill(species[iSpecies].lower_bc_density);
-  }
-
-  fill_with_hydrostatic(grid, report);
 
   return iErr;
 }
@@ -362,5 +370,56 @@ int Neutrals::get_species_id(std::string name, Report &report) {
 
   report.exit(function);
   return id_;
+}
+
+//----------------------------------------------------------------------
+// Read/Write restart files for the neutrals
+//----------------------------------------------------------------------
+
+bool Neutrals::restart_file(std::string dir, bool DoRead) {
+  std::string filename;
+  bool DidWork = true;
+  json description;
+  
+  // Output Densities
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    filename = dir + "/neu_s"+tostr(iSpecies,2)+"_n.bin";
+    if (DidWork)
+      if (DoRead)
+	DidWork = species[iSpecies].density_scgc.load(filename);
+      else {
+	DidWork = species[iSpecies].density_scgc.save(filename);
+	description["density"][species[iSpecies].cName] = filename;
+      }
+  }
+
+  // Output Temperature
+  filename = dir + "/neu_t.bin";
+  if (DidWork)
+    if (DoRead)
+      DidWork = temperature_scgc.load(filename);
+    else {
+      DidWork = temperature_scgc.save(filename);
+      description["temperature"]["bulk"] = filename;
+    }
+
+  // Output Velocity
+  for (int iComp = 0; iComp < 3; iComp++) {
+    filename = dir + "/neu_v"+tostr(iComp,1)+".bin";
+    if (DidWork)
+      if (DoRead)
+	DidWork = velocity_vcgc[iComp].load(filename);
+      else {
+	DidWork = velocity_vcgc[iComp].save(filename);
+	description["vel_comp"+tostr(iComp,1)]["bulk"] = filename;
+      }
+  }
+
+  if (!DoRead && DidWork) {
+    filename = dir + "/neutrals.json";
+    DidWork = write_json(filename, description);
+  }
+  
+  return DidWork;
 }
 
