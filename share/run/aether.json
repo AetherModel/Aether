@@ -5,7 +5,10 @@
 	"iVerbose" : 0,
 	"dt" : 10.0},
 
-    "Mysetting" : "blerg",
+    "Mysetting" : {
+	"setting1" : "this_is_an_example",
+	"setting2" : 42,
+	"setting3" : true},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin"
