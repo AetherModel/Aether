@@ -4,7 +4,7 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
-// Read json file
+// Read the json input file
 // -----------------------------------------------------------------------
 
 json Inputs::read_json(std::string json_file) {
@@ -25,7 +25,7 @@ json Inputs::read_json(std::string json_file) {
 }
 
 // -----------------------------------------------------------------------
-// Read input file - json format!
+// Read input file - json format
 // -----------------------------------------------------------------------
 
 int Inputs::read_inputs_json(Times &time, Report &report) {
