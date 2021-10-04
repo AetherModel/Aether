@@ -94,10 +94,11 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading ion files!");
     bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
+
     if (!DidWork)
       std::cout << "Reading Restart for Ions Failed!!!\n";
   }
-  
+
   // This gets a bunch of the species-dependent characteristics:
   int iErr = read_planet_file(input, report);
 
@@ -239,49 +240,58 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
   for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
 
     // Output Densities
-    filename = dir + "/ion_s"+tostr(iSpecies,2)+"_n.bin";
+    filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_n.bin";
+
     if (DidWork)
       if (DoRead)
-	DidWork = species[iSpecies].density_scgc.load(filename);
+        DidWork = species[iSpecies].density_scgc.load(filename);
       else {
-	DidWork = species[iSpecies].density_scgc.save(filename);	
-	description["density"][species[iSpecies].cName] = filename;
+        DidWork = species[iSpecies].density_scgc.save(filename);
+        description["density"][species[iSpecies].cName] = filename;
       }
 
     // Output Temperature for each species
-    filename = dir + "/ion_s"+tostr(iSpecies,2)+"_t.bin";
+    filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_t.bin";
+
     if (DidWork)
       if (DoRead)
-	DidWork = species[iSpecies].temperature_scgc.load(filename);
+        DidWork = species[iSpecies].temperature_scgc.load(filename);
       else {
-	DidWork = species[iSpecies].temperature_scgc.save(filename);
-	description["temperature"][species[iSpecies].cName] = filename;
+        DidWork = species[iSpecies].temperature_scgc.save(filename);
+        description["temperature"][species[iSpecies].cName] = filename;
       }
+
     // Output Velocity (Parallel and Perp) for each species
     for (int iComp = 0; iComp < 3; iComp++) {
-      filename = dir + "/ion_s"+tostr(iSpecies,2)+"_vpa"+tostr(iComp,1)+".bin";
+      filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_vpa" + tostr(iComp,
+                 1) + ".bin";
+
       if (DidWork)
-	if (DoRead)
-	  DidWork = species[iSpecies].par_velocity_vcgc[iComp].load(filename);
-	else {
-	  DidWork = species[iSpecies].par_velocity_vcgc[iComp].save(filename);
-	  description["vel_par_comp"+tostr(iComp,1)][species[iSpecies].cName] =
-	    filename;
-	}
-      filename = dir + "/ion_s"+tostr(iSpecies,2)+"_vpe"+tostr(iComp,1)+".bin";
+        if (DoRead)
+          DidWork = species[iSpecies].par_velocity_vcgc[iComp].load(filename);
+        else {
+          DidWork = species[iSpecies].par_velocity_vcgc[iComp].save(filename);
+          description["vel_par_comp" + tostr(iComp, 1)][species[iSpecies].cName] =
+            filename;
+        }
+
+      filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_vpe" + tostr(iComp,
+                 1) + ".bin";
+
       if (DidWork)
-	if (DoRead)
-	  DidWork = species[iSpecies].perp_velocity_vcgc[iComp].load(filename);
-	else {
-	  DidWork = species[iSpecies].perp_velocity_vcgc[iComp].save(filename);
-	  description["vel_perp_comp"+tostr(iComp,1)][species[iSpecies].cName] =
-	    filename;
-	}
+        if (DoRead)
+          DidWork = species[iSpecies].perp_velocity_vcgc[iComp].load(filename);
+        else {
+          DidWork = species[iSpecies].perp_velocity_vcgc[iComp].save(filename);
+          description["vel_perp_comp" + tostr(iComp, 1)][species[iSpecies].cName] =
+            filename;
+        }
     }
   }
 
   // Output bulk Temperature
   filename = dir + "/ion_t.bin";
+
   if (DidWork)
     if (DoRead)
       DidWork = ion_temperature_scgc.load(filename);
@@ -292,6 +302,7 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
   // Output electron Temperature
   filename = dir + "/ele_t.bin";
+
   if (DidWork)
     if (DoRead)
       DidWork = electron_temperature_scgc.load(filename);
@@ -299,12 +310,12 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
       DidWork = electron_temperature_scgc.save(filename);
       description["temperature"]["electron"] = filename;
     }
-  
+
   if (!DoRead && DidWork) {
     filename = dir + "/ions.json";
     DidWork = write_json(filename, description);
   }
-  
+
   return DidWork;
 }
 

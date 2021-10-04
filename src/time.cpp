@@ -54,10 +54,11 @@ bool Times::restart_file(std::string dir, bool DoRead) {
     display_itime(iCurrent);
   } else {
     restart_time_json = { {"currenttime", current},
-			  {"istep", iStep} };
+      {"istep", iStep}
+    };
     DidWork = write_json(filename, restart_time_json);
   }
-  
+
   return DidWork;
 }
 

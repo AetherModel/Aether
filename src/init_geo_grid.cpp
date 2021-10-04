@@ -67,7 +67,7 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
   }
 
-  report.exit(function);  
+  report.exit(function);
 }
 
 
@@ -83,8 +83,9 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   static int iFunction = -1;
   report.enter(function, iFunction);
   bool DidWork = true;
-  
+
   IsGeoGrid = 1;
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
@@ -96,10 +97,10 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   if (report.test_verbose(3)) {
     std::cout << "init_geo_grid testing\n";
     std::cout << "   DidWork (reading/writing restart files): "
-	      << DidWork << "\n";
+              << DidWork << "\n";
     report_grid_boundaries();
   }
-  
+
   // Calculate the radius, etc:
   fill_grid_radius(planet, report);
 
