@@ -112,6 +112,17 @@ int main() {
                      input,
                      report);
 
+    // Should write out some restart files every time we are done with
+    // intermediate times.  Just so when we restart, we know that we can
+    // couple first thing and everything should be good. (Not sure if
+    // restart should be before or after the coupling, but since we are
+    // not coupling, it doesn't matter.  Once we do coupling to something,
+    // need to figure it out.
+    report.print(3, "Writing restart files");
+    neutrals.restart_file(input.get_restartout_dir(), DoWrite);
+    ions.restart_file(input.get_restartout_dir(), DoWrite);
+    time.restart_file(input.get_restartout_dir(), DoWrite);
+    
     // Do some coupling here. But we have no coupling to do. Sad.
   }
 
