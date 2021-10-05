@@ -26,6 +26,11 @@ using arma_mat = arma::Mat<precision_t>;
 /// Armadillo type cube (three dimension) with compile-time precision.
 using arma_cube = arma::Cube<precision_t>;
 
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
+
 // Aether includes
 #include "earth.h"
 

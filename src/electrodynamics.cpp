@@ -19,10 +19,10 @@ Electrodynamics::Electrodynamics(Inputs input, Report &report) {
 // -----------------------------------------------------------------------------
 
 int Electrodynamics::update(Planets planet,
-			    Grid gGrid,
-			    Times time,
-			    Ions &ions,
-			    Report &report) {
+                            Grid gGrid,
+                            Times time,
+                            Ions &ions,
+                            Report &report) {
 
   if (HaveElectrodynamics) {
     set_time(time.get_current(), report);
@@ -31,8 +31,8 @@ int Electrodynamics::update(Planets planet,
     gGrid.calc_mlt(report);
     auto electrodynamics_values =
       get_electrodynamics(gGrid.magLat_scgc,
-			  gGrid.magLocalTime_scgc,
-			  report);
+                          gGrid.magLocalTime_scgc,
+                          report);
     ions.potential_scgc = std::get<0>(electrodynamics_values);
     ions.eflux = std::get<1>(electrodynamics_values);
     ions.avee = std::get<2>(electrodynamics_values);
@@ -52,8 +52,8 @@ int Electrodynamics::update(Planets planet,
 // -----------------------------------------------------------------------------
 
 arma_cube Electrodynamics::get_potential(arma_cube magLat,
-                                     arma_cube magLocalTime,
-                                     Report &report) {
+                                         arma_cube magLocalTime,
+                                         Report &report) {
   arma_cube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
   pot.zeros();
 
@@ -75,11 +75,12 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_eflux(arma_cube magLat,
-				    arma_cube magLocalTime,
-				    Report &report) {
+                                    arma_cube magLocalTime,
+                                    Report &report) {
 
   arma_mat eflux(magLat.n_rows, magLat.n_cols);
   eflux.zeros();
+
   if (HaveElectrodynamics) {
     int i = magLat.n_slices - 1;
     set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
@@ -87,6 +88,7 @@ arma_mat Electrodynamics::get_eflux(arma_cube magLat,
     arma_mat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
     eflux = get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
   }
+
   return eflux;
 }
 
@@ -95,10 +97,11 @@ arma_mat Electrodynamics::get_eflux(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_avee(arma_cube magLat,
-                               arma_cube magLocalTime,
-                               Report &report) {
+                                   arma_cube magLocalTime,
+                                   Report &report) {
   arma_mat avee(magLat.n_rows, magLat.n_cols);
   avee.zeros();
+
   if (HaveElectrodynamics) {
     int i = magLat.n_slices - 1;
     set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
@@ -106,6 +109,7 @@ arma_mat Electrodynamics::get_avee(arma_cube magLat,
     arma_mat e_avee = input_electrodynamics[0].average_energy[time_pos];
     avee = get_values(e_avee, magLat.n_rows, magLat.n_cols);
   }
+
   return avee;
 }
 
@@ -114,7 +118,7 @@ arma_mat Electrodynamics::get_avee(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
-				     int rows, int cols) {
+                                     int rows, int cols) {
   arma_mat slice(rows, cols);
   slice.zeros();
 
@@ -168,10 +172,10 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
 //average energy and eflux energy as well call to get_values
 
 std::tuple<arma_cube,
-	   arma_mat,
-	   arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
-							  arma_cube magLocalTime,
-							  Report &report) {
+    arma_mat,
+    arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
+                                                   arma_cube magLocalTime,
+Report &report) {
   arma_cube pot;
   arma_mat eflux;
   arma_mat avee;
@@ -197,13 +201,13 @@ std::tuple<arma_cube,
 // -----------------------------------------------------------------------------
 
 bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
-  
+
   if (HaveElectrodynamics) {
     std::vector<double> e_times = input_electrodynamics[0].times;
     int iLow = 0;
     int iHigh = e_times.size() - 1;
     return !(inputStartTime > e_times[iHigh] || inputEndTime < e_times[iLow]);
-  } else 
+  } else
     return true;
 }
 
@@ -313,7 +317,7 @@ void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts, Report &report) {
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_interpolation_indices(arma_mat vals,
-						    arma_vec search) {
+                                                    arma_vec search) {
   arma_mat res(vals.n_rows, vals.n_cols, fill::zeros);
 
   for (int i = 0; i < vals.n_rows; ++i) {

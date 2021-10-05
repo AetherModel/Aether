@@ -48,12 +48,12 @@ bfield_info_type get_dipole(precision_t lon,
   precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
   transform_rot_y(pos_rot_z, -magnetic_pole_tilt, pos_rot_zy);
 
-  precision_t xypp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
-			pos_rot_zy[1]*pos_rot_zy[1]);
+  precision_t xypp2  = (pos_rot_zy[0] * pos_rot_zy[0] +
+                        pos_rot_zy[1] * pos_rot_zy[1]);
 
-  precision_t xyzpp2  = (pos_rot_zy[0]*pos_rot_zy[0] +
-			 pos_rot_zy[1]*pos_rot_zy[1] +
-			 pos_rot_zy[2]*pos_rot_zy[2]);
+  precision_t xyzpp2  = (pos_rot_zy[0] * pos_rot_zy[0] +
+                         pos_rot_zy[1] * pos_rot_zy[1] +
+                         pos_rot_zy[2] * pos_rot_zy[2]);
 
   precision_t xypp = sqrt(xypp2);
   precision_t xyzpp = sqrt(xyzpp2);

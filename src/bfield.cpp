@@ -56,9 +56,9 @@ bfield_info_type get_bfield(precision_t lon,
 // -----------------------------------------------------------------------------
 
 arma_vec get_magnetic_pole(int IsNorth,
-                       Planets planet,
-                       Inputs input,
-                       Report &report) {
+                           Planets planet,
+                           Inputs input,
+                           Report &report) {
 
   arma_vec lonlat(2, fill::zeros);
 

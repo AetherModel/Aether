@@ -72,6 +72,17 @@ cd run.test
 ./aether
 ```
 
+There are essentially two input files that specify the settings in the code.  When you are in a run directory, they are:
+
+1. UA/inputs/defaults.json.  These set the default inputs for the run
+and should not be modified at all.  You can look at these and copy the
+settings that you want to change to this file:
+
+2. aether.json.  This file can and should be modified to direct the
+code to run the way that you would like.  You can copy settings from
+the default.json file and then modify them here. This will be covered
+in the reference manual, once we have written one.
+
 Output files are in UA/output.
 
 We are working on aetherpy to make plots.

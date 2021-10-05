@@ -165,17 +165,17 @@ int Planets::update(Times time) {
     planet.update_time = time.get_current();
 
     precision_t sma = planet.semimajoraxis +
-      planet.rates_semimajoraxis * time.get_orbittime();
+                      planet.rates_semimajoraxis * time.get_orbittime();
     precision_t ecc = planet.eccentricity +
-      planet.rates_eccentricity * time.get_orbittime();
+                      planet.rates_eccentricity * time.get_orbittime();
     precision_t inc = planet.inclination +
-      planet.rates_inclination * time.get_orbittime();
+                      planet.rates_inclination * time.get_orbittime();
     precision_t meanlon = planet.meanlongitude +
-      planet.rates_meanlongitude * time.get_orbittime();
+                          planet.rates_meanlongitude * time.get_orbittime();
     precision_t node_long = planet.nodelongitude +
-      planet.rates_nodelongitude * time.get_orbittime();
+                            planet.rates_nodelongitude * time.get_orbittime();
     precision_t perilon = planet.perihelionlongitude +
-      planet.rates_perihelionlongitude * time.get_orbittime();
+                          planet.rates_perihelionlongitude * time.get_orbittime();
 
     // Compute argument of perihelion and mean anomaly
     precision_t arg_peri = perilon - node_long;
@@ -184,6 +184,7 @@ int Planets::update(Times time) {
     // by additional terms for the time interval 3000BC -
     // 30000AD... This probably doesn't matter.
     precision_t meananomaly = fmod(meanlon - perilon + 360.0, 360.0);
+
     if (meananomaly > 180.)
       meananomaly = meananomaly - 360.0;
 
@@ -191,7 +192,7 @@ int Planets::update(Times time) {
     precision_t d_ecc_anomaly = 10000.0;
     precision_t tol = 1.0e-6;
     precision_t ecc_deg = ecc * cRtoD;
-    precision_t ecc_anomaly = meananomaly+ecc_deg*sin(meananomaly * cDtoR);
+    precision_t ecc_anomaly = meananomaly + ecc_deg * sin(meananomaly * cDtoR);
     int i = 0;
     precision_t dm = 0.0;
 
@@ -203,8 +204,9 @@ int Planets::update(Times time) {
     }
 
     // Get heliocentric coordinates, TrueAnomaly and sunplanetdistance
-    precision_t x_heliocentric = sma*(cos(ecc_anomaly * cDtoR) - ecc);
-    precision_t y_heliocentric = sma*sqrt(1-ecc*ecc)*sin(ecc_anomaly * cDtoR);
+    precision_t x_heliocentric = sma * (cos(ecc_anomaly * cDtoR) - ecc);
+    precision_t y_heliocentric = sma * sqrt(1 - ecc * ecc) * sin(
+                                   ecc_anomaly * cDtoR);
 
     precision_t true_anomaly = atan2(y_heliocentric, x_heliocentric) * cRtoD;
 
@@ -321,7 +323,7 @@ int Planets::set_planet(Inputs args, Report report) {
       planet.length_of_day = planets[i].length_of_day;
       planet.longitude_jb2000 = planets[i].longitude_jb2000;
       precision_t rotrate = cTWOPI /
-	planet.length_of_day * (1.0 + 1.0 / (loy * cStoD));
+                            planet.length_of_day * (1.0 + 1.0 / (loy * cStoD));
       planet.omega = rotrate;  // frequency (rad/s)
       planet.rotation_period = cTWOPI / rotrate; // (seconds)
 

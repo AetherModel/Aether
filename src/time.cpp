@@ -203,12 +203,12 @@ void Times::increment_time() {
   // No constant orbital speed assumption
 
   precision_t day_number = 367.0 * static_cast<float>(iCurrent[0])
-                     - 7.0 * (static_cast<float>(iCurrent[0])
-                              + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
-                     + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
-                     + static_cast<float>(iCurrent[2])
-                     - 730531.5
-                     + ut / 24.0;
+                           - 7.0 * (static_cast<float>(iCurrent[0])
+                                    + (static_cast<float>(iCurrent[1]) + 9.0) / 12.0) / 4.0
+                           + 275.0 * static_cast<float>(iCurrent[1]) / 9.0
+                           + static_cast<float>(iCurrent[2])
+                           - 730531.5
+                           + ut / 24.0;
 
   orbittime = day_number / 36525.0;
 

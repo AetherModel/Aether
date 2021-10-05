@@ -38,9 +38,9 @@ arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector) {
 // -----------------------------------------------------------------------------
 
 std::vector<arma_cube> make_cube_vector(int64_t nLons,
-                                    int64_t nLats,
-                                    int64_t nAlts,
-                                    int64_t nComps) {
+                                        int64_t nLats,
+                                        int64_t nAlts,
+                                        int64_t nComps) {
   std::vector<arma_cube> vec;
   arma_cube one_component(nLons, nLats, nAlts);
   one_component.zeros();
@@ -57,7 +57,7 @@ std::vector<arma_cube> make_cube_vector(int64_t nLons,
 // -----------------------------------------------------------------------------
 
 arma_cube dot_product(std::vector<arma_cube> vec1,
-                  std::vector<arma_cube> vec2) {
+                      std::vector<arma_cube> vec2) {
   // create the dot product:
   arma_cube dot = vec1[0];
   dot.zeros();
@@ -74,7 +74,7 @@ arma_cube dot_product(std::vector<arma_cube> vec1,
 // -----------------------------------------------------------------------------
 
 std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
-                                 std::vector<arma_cube> vec2) {
+                                     std::vector<arma_cube> vec2) {
   std::vector<arma_cube> cross;
   // East:
   cross.push_back(vec1[1] % vec2[2] - vec1[2] % vec2[1]);

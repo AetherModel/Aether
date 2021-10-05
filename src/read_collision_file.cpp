@@ -99,8 +99,9 @@ void check_collision_frequncies(Ions ions,
 
     for (int iIon = 0; iIon < nIons; iIon++) {
       std::cout << "====> Looking at Ion : "
-		<< ions.species[iIon].cName
-		<< " " << iIon << " of " << nIons << "\n";
+                << ions.species[iIon].cName
+                << " " << iIon << " of " << nIons << "\n";
+
       if (ions.species[iIon].nu_ion_neutral_coef.size() > 0) {
         for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
           std::cout << ions.species[iIon].cName << " -> ";
@@ -143,6 +144,7 @@ void check_collision_frequncies(Ions ions,
                   << " has no collision frequencies! \n";
       }
     }
+
     std::cout << "Done with check_collision_frequncies\n";
   }
 

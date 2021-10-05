@@ -5,7 +5,7 @@
 
 // --------------------------------------------------------------------------
 // Hack to just set the ion temperature to the neutral temperature
-// Issue #23 - Calculate Ion Temperature 
+// Issue #23 - Calculate Ion Temperature
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {

@@ -47,11 +47,11 @@ int advance(Planets &planet,
                   report);
 
   iErr = electrodynamics.update(planet,
-				gGrid,
-				time,
-				ions,
-				report);
-  
+                                gGrid,
+                                time,
+                                ions,
+                                report);
+
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
 
   calc_aurora(gGrid, neutrals, ions, input, report);
