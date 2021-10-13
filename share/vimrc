@@ -1,0 +1,2 @@
+set makeprg=mkdir\ build;\ cd\ build;\ cmake\ ..\ &&\ make\ -j
+set path+=src/**,include/**,share/include/**
