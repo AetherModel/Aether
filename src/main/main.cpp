@@ -36,7 +36,8 @@ int main() {
   // Initialize Geographic grid:
   Grid gGrid(input.get_nLonsGeo(),
              input.get_nLatsGeo(),
-             input.get_nAltsGeo(), nGeoGhosts);
+             input.get_nAltsGeo(),
+	     nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
 
@@ -71,6 +72,13 @@ int main() {
     return iErr;
   }
 
+  if (input.get_do_restart()) {
+    report.print(1, "Restarting! Reading time file!");
+    bool DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
+    if (!DidWork)
+      std::cout << "Reading Restart for time Failed!!!\n";
+  }
+  
   // This is for the initial output.  If it is not a restart, this will go:
   if (time.check_time_gate(input.get_dt_output(0)))
     iErr = output(neutrals, ions, gGrid, time, planet, input, report);
@@ -104,6 +112,17 @@ int main() {
                      input,
                      report);
 
+    // Should write out some restart files every time we are done with
+    // intermediate times.  Just so when we restart, we know that we can
+    // couple first thing and everything should be good. (Not sure if
+    // restart should be before or after the coupling, but since we are
+    // not coupling, it doesn't matter.  Once we do coupling to something,
+    // need to figure it out.
+    report.print(3, "Writing restart files");
+    neutrals.restart_file(input.get_restartout_dir(), DoWrite);
+    ions.restart_file(input.get_restartout_dir(), DoWrite);
+    time.restart_file(input.get_restartout_dir(), DoWrite);
+    
     // Do some coupling here. But we have no coupling to do. Sad.
   }
 

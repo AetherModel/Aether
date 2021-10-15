@@ -4,7 +4,7 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
-// Read the json input file
+// Read a generic json input file
 // -----------------------------------------------------------------------
 
 json Inputs::read_json(std::string json_file) {

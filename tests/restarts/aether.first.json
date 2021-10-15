@@ -1,0 +1,23 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 60.0},
+
+    "Mysetting" : {
+	"setting1" : "this_is_an_example",
+	"setting2" : 42,
+	"setting3" : true},
+
+    "StartTime" : [2011, 3, 20, 0, 0, 0],
+    "EndTime" : [2011, 3, 20, 0, 45, 0],
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+    
+    "Restart" : {
+	"do" : false,
+	"dt" : 900.0}
+
+}

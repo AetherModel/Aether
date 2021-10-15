@@ -31,6 +31,38 @@ Times::Times() {
 }
 
 // -----------------------------------------------------------------------------
+// This is for restarting the code. Either write or read the time.
+// -----------------------------------------------------------------------------
+
+bool Times::restart_file(std::string dir, bool DoRead) {
+
+  std::string filename;
+  bool DidWork = true;
+  filename = dir + "/time.json";
+
+  json restart_time_json;
+
+  if (DoRead) {
+    restart_time_json = read_json(filename);
+    current = restart_time_json["currenttime"];
+    restart = current;
+    iStep = restart_time_json["istep"];
+    iStep--;
+    dt = 0;
+    increment_time();
+    std::cout << "Restarted time, Current time : ";
+    display_itime(iCurrent);
+  } else {
+    restart_time_json = { {"currenttime", current},
+      {"istep", iStep}
+    };
+    DidWork = write_json(filename, restart_time_json);
+  }
+
+  return DidWork;
+}
+
+// -----------------------------------------------------------------------------
 // This is to initialize the time variables with real times
 // -----------------------------------------------------------------------------
 
@@ -56,9 +88,6 @@ int Times::check_time_gate(precision_t dt_check) {
   int DidPassGate = 0;
 
   if (current == start)
-    DidPassGate = 1;
-
-  if (current == restart)
     DidPassGate = 1;
 
   if ( floor((simulation - dt) / dt_check) <
@@ -155,15 +184,14 @@ void Times::set_end_time(std::vector<int> itime) {
 
 void Times::increment_time() {
 
-  // Increment simulation time:
-  simulation += dt;
-
   // Increment iStep (iteration number):
-
   iStep++;
 
   // Increment current time:
   current += dt;
+
+  // set the simulation time:
+  simulation = current - start;
 
   // Convert current time to array:
   iCurrent = time_real_to_int(current);

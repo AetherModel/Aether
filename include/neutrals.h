@@ -250,7 +250,21 @@ class Neutrals {
      \param report allow reporting to occur
    **/
   void set_bcs(Report &report);
+
+  /**********************************************************************
+     \brief Get the species ID number (int) given the species name (string)
+     \param name string holding the species name (e.g., "O+")
+     \param report allow reporting to occur
+   **/
   int get_species_id(std::string name, Report &report);
+
+  /**********************************************************************
+     \brief Read / Write restart files for the neutral variables
+     \param dir directory to write restart files
+     \param DoRead read the restart files if true, write if false
+   **/
+  bool restart_file(std::string dir, bool DoRead);  
+
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

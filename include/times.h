@@ -147,6 +147,13 @@ public:
    **/
   std::vector<int> get_iCurrent();
   
+  /**********************************************************************
+     \brief Read / Write restart files for time
+     \param dir directory to write restart files
+     \param DoRead read the restart files if true, write if false
+   **/
+  bool restart_file(std::string dir, bool DoRead);  
+
 private:
   
   // -------------------------------------------------------------
