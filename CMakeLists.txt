@@ -6,6 +6,7 @@ project(Aether LANGUAGES CXX
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
+set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
@@ -19,6 +20,9 @@ add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
 if(USE_DOUBLE_PRECISION)
   add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
 endif()
+
+# Tests executable
+add_executable(tests ${TESTS_DIR}/electrodynamics_unit_tests.cpp)
 
 # Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
