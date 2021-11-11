@@ -15,7 +15,7 @@ arma_mat map_cube2sphere(const arma_mat& cube);
 /** Helper function the transforms cartesian coordinates to cube sphere grid
  * vertices in cartesian coordinates.
  */
-arma_vec c2s(const arma_vec& x, const arma_vec& y, const arma_vec& z);
+arma_vec cube2sphere(const arma_vec& x, const arma_vec& y, const arma_vec& z);
 
 /** Helper function the transforms cartesian coordinates to cube sphere grid
  * vertices in cartesian coordinates.
