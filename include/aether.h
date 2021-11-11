@@ -86,6 +86,8 @@ using json = nlohmann::json;
 #include "euv.h"
 
 // not done
+#include "cubesphere.h"
+// not done
 #include "calc_euv.h"
 // not done
 #include "chemistry.h"
