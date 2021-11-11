@@ -6,14 +6,14 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
-// Initialize the geographic grid.  At the moment, this is a simple
-// Lon/Lat/Alt grid.  The grid structure is general enough that each
-// of the lon, lat, and alt can be a function of the other variables.
+// Create a geographic grid
+//    - if restarting, read in the grid
+//    - if not restarting, initialize the grid
 // ----------------------------------------------------------------------
 
-void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
+void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 
-  std::string function = "Grid::init_geo_grid";
+  std::string function = "Grid::create_simple_lat_lon_alt_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -67,12 +67,44 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
   }
 
+  report.exit(function);
+}
+
+
+// ----------------------------------------------------------------------
+// Initialize the geographic grid.  At the moment, this is a simple
+// Lon/Lat/Alt grid.  The grid structure is general enough that each
+// of the lon, lat, and alt can be a function of the other variables.
+// ----------------------------------------------------------------------
+
+void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
+
+  std::string function = "Grid::init_geo_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+  bool DidWork = true;
+
   IsGeoGrid = 1;
 
-  // Calculate the radius, etc:
+  if (input.get_do_restart()) {
+    report.print(1, "Restarting! Reading grid files!");
+    DidWork = read_restart(input.get_restartin_dir());
+  } else {
+    create_simple_lat_lon_alt_grid(input, report);
+    DidWork = write_restart(input.get_restartout_dir());
+  }
 
+  if (report.test_verbose(3)) {
+    std::cout << "init_geo_grid testing\n";
+    std::cout << "   DidWork (reading/writing restart files): "
+              << DidWork << "\n";
+    report_grid_boundaries();
+  }
+
+  // Calculate the radius, etc:
   fill_grid_radius(planet, report);
 
+  // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet, input, report);
 
   report.exit(function);

@@ -24,6 +24,10 @@ int Electrodynamics::update(Planets planet,
                             Ions &ions,
                             Report &report) {
 
+  std::string function = "Electrodynamics::update";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
   if (HaveElectrodynamics) {
     set_time(time.get_current(), report);
     gGrid.calc_sza(planet, time, report);
@@ -42,8 +46,8 @@ int Electrodynamics::update(Planets planet,
     ions.avee.zeros();
   }
 
+  report.exit(function);
   return 0;
-
 }
 
 

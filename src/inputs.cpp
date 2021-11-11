@@ -147,6 +147,38 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to restart or not
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_restart() {
+  return settings["Restart"]["do"];
+}
+
+// -----------------------------------------------------------------------
+// Return restart OUT directory
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_restartout_dir() {
+  return settings["Restart"]["OutDir"];
+}
+
+// -----------------------------------------------------------------------
+// Return restart OUT directory
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_restartin_dir() {
+  return settings["Restart"]["InDir"];
+}
+
+// -----------------------------------------------------------------------
+// dt for writing restart files
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_dt_write_restarts() {
+  return settings["Restart"]["dt"];
+}
+
+// -----------------------------------------------------------------------
 // Return magnetic field type (dipole and none defined now.)
 // -----------------------------------------------------------------------
 

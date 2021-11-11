@@ -4,6 +4,57 @@
 #include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
+// Convert an integer to a zero-padded string
+// -----------------------------------------------------------------------------
+
+std::string tostr(int64_t num_to_convert, int64_t zero_padding_len) {
+  std::ostringstream ss;
+  ss << std::setw( zero_padding_len ) << std::setfill( '0' ) << num_to_convert;
+  return ss.str();
+}
+
+// -----------------------------------------------------------------------
+// Read json file
+// -----------------------------------------------------------------------
+
+json read_json(std::string json_file) {
+
+  int iErr = 0;
+
+  json json_input;
+  std::ifstream infile_ptr;
+  infile_ptr.open(json_file);
+
+  if (!infile_ptr.is_open())
+    std::cout << "Could not open input file: " << json_file << "!!!\n";
+
+  else
+    infile_ptr >> json_input;
+
+  return json_input;
+}
+
+// -----------------------------------------------------------------------
+// Write json file
+// -----------------------------------------------------------------------
+
+bool write_json(std::string json_file, json json_output) {
+
+  bool DidWork = true;
+
+  std::ofstream outfile_ptr;
+  outfile_ptr.open(json_file);
+
+  if (!outfile_ptr.is_open()) {
+    std::cout << "Could not open output json file: " << json_file << "!!!\n";
+    DidWork = false;
+  } else
+    outfile_ptr << std::setw(2) << json_output << "\n";
+
+  return DidWork;
+}
+
+// -----------------------------------------------------------------------------
 // Translate an arma_vec into a vector
 // -----------------------------------------------------------------------------
 

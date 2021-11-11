@@ -18,4 +18,9 @@ std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
 std::vector<precision_t> make_vector_from_fvec(arma_vec in_fvec);
 arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector);
 
+std::string tostr(int64_t num_to_convert, int64_t zero_padding_len);
+
+json read_json(std::string json_file);
+bool write_json(std::string json_file, json json_output);
+
 #endif  // INCLUDE_TOOLS_H_

@@ -85,5 +85,8 @@ class Ions {
 							     Grid grid,
 							     Report &report);
   void calc_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
+
+  bool restart_file(std::string dir, bool DoRead);
+
 };
 #endif  // INCLUDE_IONS_H_

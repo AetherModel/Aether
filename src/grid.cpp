@@ -81,6 +81,76 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 }
 
 // --------------------------------------------------------------------------
+// write restart out files for the grid
+// --------------------------------------------------------------------------
+
+bool Grid::write_restart(std::string dir) {
+  std::string filename;
+  bool DidWork = true;
+  filename = dir + "/geolons.bin";
+
+  if (DidWork)
+    DidWork = geoLon_scgc.save(filename);
+
+  filename = dir + "/geolats.bin";
+
+  if (DidWork)
+    DidWork = geoLat_scgc.save(filename);
+
+  filename = dir + "/geoalts.bin";
+
+  if (DidWork)
+    DidWork = geoAlt_scgc.save(filename);
+
+  return DidWork;
+}
+
+// --------------------------------------------------------------------------
+// read restart out files for the grid
+// - Returns true if everything worked ok
+// --------------------------------------------------------------------------
+
+bool Grid::read_restart(std::string dir) {
+  std::string filename;
+  bool DidWork = true;
+  filename = dir + "/geolons.bin";
+
+  if (DidWork)
+    DidWork = geoLon_scgc.load(filename);
+
+  filename = dir + "/geolats.bin";
+
+  if (DidWork)
+    DidWork = geoLat_scgc.load(filename);
+
+  filename = dir + "/geoalts.bin";
+
+  if (DidWork)
+    DidWork = geoAlt_scgc.load(filename);
+
+  return DidWork;
+}
+
+// --------------------------------------------------------------------------
+// Report Grid boundaries:
+// --------------------------------------------------------------------------
+
+void Grid::report_grid_boundaries() {
+  std::cout << "---------------------------------------------------\n";
+  std::cout << "Grid Boundaries (min / max):\n";
+  std::cout << "Lon : "
+            << geoLon_scgc.min() << " / "
+            << geoLon_scgc.max() << "\n";
+  std::cout << "Lat : "
+            << geoLat_scgc.min() << " / "
+            << geoLat_scgc.max() << "\n";
+  std::cout << "Alt : "
+            << geoAlt_scgc.min() << " / "
+            << geoAlt_scgc.max() << "\n";
+  std::cout << "---------------------------------------------------\n";
+}
+
+// --------------------------------------------------------------------------
 // Get whether the grid is a geographic grid (or magnetic - return 0)
 // --------------------------------------------------------------------------
 

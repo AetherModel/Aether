@@ -13,6 +13,15 @@ Make new branches for features `git checkout -b my_feature` and commit often
 and push a little less often. Try to merge back to main branch as soon as
 you have something that works.
 
+#### Using AStyle
+
+We have started using astyle to format the code.  Please see
+http://astyle.sourceforge.net/. There is a style file in the root directory
+of Aether, called .astylerc.  To run this, do:
+
+AStyle --project=.astylerc src/*.cpp
+
+
 #### Linting
 
 For *C++* code make sure to use a static code checker like

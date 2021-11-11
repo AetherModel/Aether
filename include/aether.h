@@ -30,6 +30,11 @@ using arma_cube = arma::Cube<precision_t>;
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+// This is for manipulating IO
+#include <iomanip>
+
+// This is for manipulating strings
+#include <sstream>
 
 // Aether includes
 #include "earth.h"
