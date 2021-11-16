@@ -59,7 +59,7 @@ Inputs::Inputs(Times &time, Report &report) {
 
   nLonsMag = 12;
   nLatsMag = 20;
-  nAltsMag = 40;
+  nAltsMag = 101;
 
   if (nLonsMag == 1) {
     mag_grid_input.lon_min = 0.0;
@@ -69,12 +69,14 @@ Inputs::Inputs(Times &time, Report &report) {
     mag_grid_input.lon_max = 2.0*cPI;
   }
 
+  //note that for the mag grid this is invariant lat
+  //this is used to define an Lshell grid
   if (nLatsMag == 1) {
     mag_grid_input.lat_min = 0.0;
     mag_grid_input.lat_max = 0.0;
   } else {
-    mag_grid_input.lat_min = -cPI/2;
-    mag_grid_input.lat_max = cPI/2;
+    mag_grid_input.lat_min = 10.0*cPI/180.0;
+    mag_grid_input.lat_max = 70.0*cPI/180.0;
   }
 
   euv_heating_eff_neutrals = 0.40;

@@ -35,9 +35,9 @@ public:
   
   // These define the magnetic grid:
   // Armidillo Cube Versions:
-  fcube magLon_scgc, magX_scgc;
-  fcube magLat_scgc, magY_scgc;
-  fcube magAlt_scgc, magZ_scgc;
+  fcube magLon_scgc, magX_scgc, magPhi_scgc;
+  fcube magLat_scgc, magY_scgc, magP_scgc;
+  fcube magAlt_scgc, magZ_scgc, magQ_scgc;
   fcube magLocalTime_scgc;
 
   // These are the locations of the magnetic poles:
@@ -104,8 +104,11 @@ private:
   // Routines for converting between spherical geo to spherical tilted and
   // back
   //void sph_geo_to_sph_tilted(Planets planet, float theta_geo, float phi_geo, Report &report)
-  void lshell_to_qn_qs(Planets planet, float Lshell, float AltMin, float qN, float qS,Report &report); 
+  std::pair<float,float> lshell_to_qn_qs(Planets planet, float Lshell, float Lon, float AltMin, Report &report);
+  void fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lshell,float Lon,  double *q, Report &report); 
   void convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzGeo[3]);
+  std::pair<float,float> p_q_to_r_theta(float p, float q);
+  
 };
 
 #endif  // INCLUDE_GRID_H_

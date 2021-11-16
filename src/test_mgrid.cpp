@@ -43,7 +43,10 @@ int main() {
   gGrid.fill_grid(planet, report);
 
   // Initialize Magnetic grid:
-  Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
+  cout << "input.get_nAltsMag() " <<input.get_nAltsMag()<<endl;
+  Grid mGrid(input.get_nLonsMag(),
+       input.get_nLatsMag(),
+       input.get_nAltsMag(),nMagGhosts);
   mGrid.init_mag_grid(planet, input, report);
 
   report.exit(function);

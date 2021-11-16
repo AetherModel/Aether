@@ -29,6 +29,10 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   magLat_scgc.set_size(nX, nY, nZ);
   magAlt_scgc.set_size(nX, nY, nZ);
 
+  magPhi_scgc.set_size(nX, nY, nZ);
+  magP_scgc.set_size(nX, nY, nZ);
+  magQ_scgc.set_size(nX, nY, nZ);
+  
   magX_scgc.set_size(nX, nY, nZ);
   magY_scgc.set_size(nX, nY, nZ);
   magZ_scgc.set_size(nX, nY, nZ);
