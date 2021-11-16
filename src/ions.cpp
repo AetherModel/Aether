@@ -60,6 +60,10 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
     species.push_back(tmp);
   }
 
+  velocity_name.push_back("Ion Zonal Drift");
+  velocity_name.push_back("Ion Meridional Drift");
+  velocity_name.push_back("Ion Vertical Drift");
+
   // Create one extra species for electrons
   tmp = create_species(grid);
   species.push_back(tmp);
@@ -233,8 +237,47 @@ int Ions::get_species_id(std::string name, Report &report) {
 //----------------------------------------------------------------------
 
 bool Ions::restart_file(std::string dir, bool DoRead) {
+
   std::string filename;
   bool DidWork = true;
+
+  OutputContainer RestartContainer;
+  RestartContainer.set_netcdf();
+  RestartContainer.set_directory(dir);
+  RestartContainer.set_version(0.1);
+  //RestartContainers.set_time(time.get_current());
+  RestartContainer.set_time(0.0);
+  RestartContainer.set_filename("ions");
+  
+  for (int iSpecies = 0; iSpecies < nIons; iSpecies++) { 
+    std::string cName = species[iSpecies].cName;
+    RestartContainer.store_variable(cName,
+				    density_unit,
+				    species[iSpecies].density_scgc);
+    cName = " ("+cName+")";
+    RestartContainer.store_variable(temperature_name + cName,
+				    temperature_unit,
+				    species[iSpecies].temperature_scgc);
+    for (int iDir = 0; iDir < 3; iDir++) 
+      RestartContainer.store_variable(par_velocity_name[iDir] + cName,
+				      velocity_unit,
+				      species[iSpecies].
+				      par_velocity_vcgc[iDir]);
+    for (int iDir = 0; iDir < 3; iDir++) 
+      RestartContainer.store_variable(perp_velocity_name[iDir] + cName,
+				      velocity_unit,
+				      species[iSpecies].
+				      perp_velocity_vcgc[iDir]);
+  }
+  RestartContainer.store_variable(temperature_name + " (bulk ion)",
+				  temperature_unit,
+				  ion_temperature_scgc);
+  RestartContainer.store_variable(temperature_name + " (electron)",
+				  temperature_unit,
+				  electron_temperature_scgc);
+  RestartContainer.write();
+  RestartContainer.clear_variables();
+
   json description;
 
   for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
@@ -263,16 +306,17 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
     // Output Velocity (Parallel and Perp) for each species
     for (int iComp = 0; iComp < 3; iComp++) {
-      filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_vpa" + tostr(iComp,
-                 1) + ".bin";
+      filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_vpa" +
+	tostr(iComp, 1) + ".bin";
 
       if (DidWork)
         if (DoRead)
           DidWork = species[iSpecies].par_velocity_vcgc[iComp].load(filename);
         else {
           DidWork = species[iSpecies].par_velocity_vcgc[iComp].save(filename);
-          description["vel_par_comp" + tostr(iComp, 1)][species[iSpecies].cName] =
-            filename;
+          description
+	    ["vel_par_comp" + tostr(iComp, 1)]
+	    [species[iSpecies].cName] = filename;
         }
 
       filename = dir + "/ion_s" + tostr(iSpecies, 2) + "_vpe" + tostr(iComp,
@@ -283,8 +327,9 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
           DidWork = species[iSpecies].perp_velocity_vcgc[iComp].load(filename);
         else {
           DidWork = species[iSpecies].perp_velocity_vcgc[iComp].save(filename);
-          description["vel_perp_comp" + tostr(iComp, 1)][species[iSpecies].cName] =
-            filename;
+          description
+	    ["vel_perp_comp" + tostr(iComp, 1)]
+	    [species[iSpecies].cName] = filename;
         }
     }
   }

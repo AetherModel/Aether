@@ -68,6 +68,10 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
     species.push_back(tmp);
   }
 
+  velocity_name.push_back("Zonal Wind");
+  velocity_name.push_back("Meridional Wind");
+  velocity_name.push_back("Vertical Wind");
+  
   // State variables:
 
   density_scgc.set_size(nLons, nLats, nAlts);
@@ -378,8 +382,32 @@ int Neutrals::get_species_id(std::string name, Report &report) {
 //----------------------------------------------------------------------
 
 bool Neutrals::restart_file(std::string dir, bool DoRead) {
+
   std::string filename;
   bool DidWork = true;
+
+  OutputContainer RestartContainer;
+  RestartContainer.set_netcdf();
+  RestartContainer.set_directory(dir);
+  RestartContainer.set_version(0.1);
+  //RestartContainers.set_time(time.get_current());
+  RestartContainer.set_time(0.0);
+  RestartContainer.set_filename("neutrals");
+  
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) 
+    RestartContainer.store_variable(species[iSpecies].cName,
+				    density_unit,
+				    species[iSpecies].density_scgc);
+  RestartContainer.store_variable(temperature_name,
+				  temperature_unit,
+				  temperature_scgc);
+  for (int iDir = 0; iDir < 3; iDir++) 
+    RestartContainer.store_variable(velocity_name[iDir],
+				    velocity_unit,
+				    velocity_vcgc[iDir]);
+  RestartContainer.write();
+  RestartContainer.clear_variables();
+
   json description;
 
   // Output Densities
