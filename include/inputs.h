@@ -14,6 +14,7 @@ public:
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
   int read_inputs_json(Times &time, Report &report);
+  json read_json(std::string json_file);
   int get_verbose();
   precision_t get_dt_euv();
   precision_t get_dt_report();
