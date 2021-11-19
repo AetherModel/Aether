@@ -401,47 +401,33 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
       RestartContainer.set_time(0.0);
     }
 
-    iVar = 0;
-
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       cName = species[iSpecies].cName;
-
-      if (DoRead) {
-        iVar = RestartContainer.find_variable(cName);
+      if (DoRead)
         species[iSpecies].density_scgc =
-          RestartContainer.get_element_value(iVar);
-        iVar++;
-      } else {
+          RestartContainer.get_element_value(cName);
+      else
         RestartContainer.store_variable(cName,
                                         density_unit,
                                         species[iSpecies].density_scgc);
-      }
     }
 
     cName = temperature_name;
-
-    if (DoRead) {
-      iVar = RestartContainer.find_variable(cName);
-      temperature_scgc = RestartContainer.get_element_value(iVar);
-      iVar++;
-    } else {
+    if (DoRead)
+      temperature_scgc = RestartContainer.get_element_value(cName);
+    else
       RestartContainer.store_variable(cName,
                                       temperature_unit,
                                       temperature_scgc);
-    }
 
     for (int iDir = 0; iDir < 3; iDir++) {
       cName = velocity_name[iDir];
-
-      if (DoRead) {
-        iVar = RestartContainer.find_variable(cName);
-        velocity_vcgc[iDir] = RestartContainer.get_element_value(iVar);
-        iVar++;
-      } else {
+      if (DoRead)
+        velocity_vcgc[iDir] = RestartContainer.get_element_value(cName);
+      else
         RestartContainer.store_variable(cName,
                                         velocity_unit,
                                         velocity_vcgc[iDir]);
-      }
     }
 
     if (!DoRead) {

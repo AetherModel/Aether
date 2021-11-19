@@ -128,12 +128,9 @@ bool Grid::read_restart(std::string dir) {
     RestartContainer.set_filename("grid");
     RestartContainer.read_container_netcdf();
 
-    iVar = RestartContainer.find_variable(longitude_name);
-    geoLon_scgc = RestartContainer.get_element_value(iVar);
-    iVar = RestartContainer.find_variable(latitude_name);
-    geoLat_scgc = RestartContainer.get_element_value(iVar);
-    iVar = RestartContainer.find_variable(altitude_name);
-    geoAlt_scgc = RestartContainer.get_element_value(iVar);
+    geoLon_scgc = RestartContainer.get_element_value(longitude_name);
+    geoLat_scgc = RestartContainer.get_element_value(latitude_name);
+    geoAlt_scgc = RestartContainer.get_element_value(altitude_name);
   } catch (...) {
     std::cout << "Error reading grid restart file!\n";
     DidWork = false;

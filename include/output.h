@@ -88,6 +88,12 @@ class OutputContainer {
   arma_cube get_element_value(int64_t iElement);
 
   /**********************************************************************
+     \brief Get an arma_cube from the Container
+     \param var_to_get variable name to return the arma_cube
+   **/
+  arma_cube get_element_value(std::string var_to_get);
+
+  /**********************************************************************
      \brief Get the variable name from the Container
      \param iElement return the iElement name
    **/
@@ -99,10 +105,10 @@ class OutputContainer {
   int64_t get_nElements();
 
   /**********************************************************************
-     \brief Get element number for specified variable name
+     \brief Get element number for specified name
      \param var_to_find variable to find in the list
    **/
-  int64_t find_variable(std::string var_to_find);
+  int64_t find_element(std::string var_to_find);
 
   /**********************************************************************
      \brief set the time for the output
