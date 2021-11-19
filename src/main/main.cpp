@@ -119,11 +119,16 @@ int main() {
     // restart should be before or after the coupling, but since we are
     // not coupling, it doesn't matter.  Once we do coupling to something,
     // need to figure it out.
-    report.print(3, "Writing restart files");
-    neutrals.restart_file(input.get_restartout_dir(), DoWrite);
-    ions.restart_file(input.get_restartout_dir(), DoWrite);
-    time.restart_file(input.get_restartout_dir(), DoWrite);
-    
+    //
+    // The odd thing here is that in advance, we most likely JUST
+    // wrote out restart files, so we only need to do this if we
+    // didn't just do it.  So, check the negative here:
+    if (!time.check_time_gate(input.get_dt_write_restarts())) {
+      report.print(3, "Writing restart files");
+      neutrals.restart_file(input.get_restartout_dir(), DoWrite);
+      ions.restart_file(input.get_restartout_dir(), DoWrite);
+      time.restart_file(input.get_restartout_dir(), DoWrite);
+    }
     // Do some coupling here. But we have no coupling to do. Sad.
   }
 
