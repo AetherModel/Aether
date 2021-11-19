@@ -86,6 +86,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
 bool Grid::write_restart(std::string dir) {
   bool DidWork = true;
+
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_netcdf();
@@ -95,17 +96,18 @@ bool Grid::write_restart(std::string dir) {
     RestartContainer.set_time(0.0);
     RestartContainer.set_filename("grid");
     RestartContainer.store_variable(longitude_name,
-				    longitude_unit,
-				    geoLon_scgc);
+                                    longitude_unit,
+                                    geoLon_scgc);
     RestartContainer.store_variable(latitude_name, latitude_unit, geoLat_scgc);
     RestartContainer.store_variable(altitude_name, altitude_unit, geoAlt_scgc);
     RestartContainer.write();
     RestartContainer.clear_variables();
-  } catch(...) {
+  } catch (...) {
     std::cout << "Error writing grid restart file!\n";
     DidWork = false;
   }
-    return DidWork;
+
+  return DidWork;
 }
 
 // --------------------------------------------------------------------------
@@ -117,6 +119,7 @@ bool Grid::read_restart(std::string dir) {
 
   bool DidWork = true;
   int64_t iVar;
+
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_netcdf();
@@ -124,17 +127,18 @@ bool Grid::read_restart(std::string dir) {
     RestartContainer.set_version(0.1);
     RestartContainer.set_filename("grid");
     RestartContainer.read_container_netcdf();
-  
+
     iVar = RestartContainer.find_variable(longitude_name);
     geoLon_scgc = RestartContainer.get_element_value(iVar);
     iVar = RestartContainer.find_variable(latitude_name);
     geoLat_scgc = RestartContainer.get_element_value(iVar);
     iVar = RestartContainer.find_variable(altitude_name);
     geoAlt_scgc = RestartContainer.get_element_value(iVar);
-  } catch(...) {
+  } catch (...) {
     std::cout << "Error reading grid restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 

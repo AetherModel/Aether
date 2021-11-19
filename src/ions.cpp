@@ -264,92 +264,105 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
     }
 
     std::string cName;
-    for (int iSpecies = 0; iSpecies < nIons; iSpecies++) { 
+
+    for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
       // ----------------------------
       // Density and Temperature (per ion)
       // ----------------------------
       cName = species[iSpecies].cName;
+
       if (DoRead) {
-	iVar = RestartContainer.find_variable(cName);
-	species[iSpecies].density_scgc =
-	  RestartContainer.get_element_value(iVar);
+        iVar = RestartContainer.find_variable(cName);
+        species[iSpecies].density_scgc =
+          RestartContainer.get_element_value(iVar);
       } else {
-	RestartContainer.store_variable(cName,
-					density_unit,
-					species[iSpecies].density_scgc);
+        RestartContainer.store_variable(cName,
+                                        density_unit,
+                                        species[iSpecies].density_scgc);
       }
-      cName = temperature_name + " ("+species[iSpecies].cName+")";
+
+      cName = temperature_name + " (" + species[iSpecies].cName + ")";
+
       if (DoRead) {
-	iVar = RestartContainer.find_variable(cName);
-	species[iSpecies].temperature_scgc =
-	  RestartContainer.get_element_value(iVar);
+        iVar = RestartContainer.find_variable(cName);
+        species[iSpecies].temperature_scgc =
+          RestartContainer.get_element_value(iVar);
       } else {
-	RestartContainer.store_variable(cName,
-					temperature_unit,
-					species[iSpecies].temperature_scgc);
+        RestartContainer.store_variable(cName,
+                                        temperature_unit,
+                                        species[iSpecies].temperature_scgc);
       }
+
       // ----------------------------
       // Parallel Velocity (per ion)
       // ----------------------------
-      for (int iDir = 0; iDir < 3; iDir++) { 
-	cName = par_velocity_name[iDir] + " ("+species[iSpecies].cName+")";
-	if (DoRead) {
-	  iVar = RestartContainer.find_variable(cName);
-	  species[iSpecies].par_velocity_vcgc[iDir] =
-	    RestartContainer.get_element_value(iVar);
-	} else {
-	  RestartContainer.store_variable(cName,
-					  velocity_unit,
-					  species[iSpecies].
-					  par_velocity_vcgc[iDir]);
-	}
+      for (int iDir = 0; iDir < 3; iDir++) {
+        cName = par_velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
+        if (DoRead) {
+          iVar = RestartContainer.find_variable(cName);
+          species[iSpecies].par_velocity_vcgc[iDir] =
+            RestartContainer.get_element_value(iVar);
+        } else {
+          RestartContainer.store_variable(cName,
+                                          velocity_unit,
+                                          species[iSpecies].
+                                          par_velocity_vcgc[iDir]);
+        }
       }
+
       // ----------------------------
       // Perpendicular Velocity (per ion)
       // ----------------------------
       for (int iDir = 0; iDir < 3; iDir++) {
-	cName = perp_velocity_name[iDir] + " ("+species[iSpecies].cName+")";
-	if (DoRead) {
-	  iVar = RestartContainer.find_variable(cName);
-	  species[iSpecies].perp_velocity_vcgc[iDir] =
-	    RestartContainer.get_element_value(iVar);
-	  iVar++;
-	} else {
-	  RestartContainer.store_variable(cName,
-					  velocity_unit,
-					  species[iSpecies].
-					  perp_velocity_vcgc[iDir]);
-	}
+        cName = perp_velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
+        if (DoRead) {
+          iVar = RestartContainer.find_variable(cName);
+          species[iSpecies].perp_velocity_vcgc[iDir] =
+            RestartContainer.get_element_value(iVar);
+          iVar++;
+        } else {
+          RestartContainer.store_variable(cName,
+                                          velocity_unit,
+                                          species[iSpecies].
+                                          perp_velocity_vcgc[iDir]);
+        }
       }
     }
+
     // ----------------------------
     // Bulk ion and electron temperatures
     // ----------------------------
     cName = temperature_name + " (bulk ion)";
+
     if (DoRead) {
       iVar = RestartContainer.find_variable(cName);
       ion_temperature_scgc = RestartContainer.get_element_value(iVar);
     } else {
       RestartContainer.store_variable(cName,
-				      temperature_unit,
-				      ion_temperature_scgc);
+                                      temperature_unit,
+                                      ion_temperature_scgc);
     }
-  
+
     cName = temperature_name + " (electron)";
+
     if (DoRead) {
       iVar = RestartContainer.find_variable(cName);
       electron_temperature_scgc = RestartContainer.get_element_value(iVar);
     } else {
       RestartContainer.store_variable(temperature_name + " (electron)",
-				      temperature_unit,
-				      electron_temperature_scgc);
+                                      temperature_unit,
+                                      electron_temperature_scgc);
       RestartContainer.write();
     }
+
     RestartContainer.clear_variables();
   } catch (...) {
     std::cout << "Error reading in ion restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 

@@ -71,7 +71,7 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
   velocity_name.push_back("Zonal Wind");
   velocity_name.push_back("Meridional Wind");
   velocity_name.push_back("Vertical Wind");
-  
+
   // State variables:
 
   density_scgc.set_size(nLons, nLats, nAlts);
@@ -387,7 +387,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
   bool DidWork = true;
   int64_t iVar;
   std::string cName;
-  
+
   OutputContainer RestartContainer;
   RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
@@ -400,51 +400,59 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
       RestartContainer.set_version(0.1);
       RestartContainer.set_time(0.0);
     }
-  
+
     iVar = 0;
+
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       cName = species[iSpecies].cName;
+
       if (DoRead) {
-	iVar = RestartContainer.find_variable(cName);
-	species[iSpecies].density_scgc =
-	  RestartContainer.get_element_value(iVar);
-	iVar++;
+        iVar = RestartContainer.find_variable(cName);
+        species[iSpecies].density_scgc =
+          RestartContainer.get_element_value(iVar);
+        iVar++;
       } else {
-	RestartContainer.store_variable(cName,
-					density_unit,
-					species[iSpecies].density_scgc);
+        RestartContainer.store_variable(cName,
+                                        density_unit,
+                                        species[iSpecies].density_scgc);
       }
     }
+
     cName = temperature_name;
+
     if (DoRead) {
       iVar = RestartContainer.find_variable(cName);
       temperature_scgc = RestartContainer.get_element_value(iVar);
       iVar++;
-    } else{
+    } else {
       RestartContainer.store_variable(cName,
-				      temperature_unit,
-				      temperature_scgc);
+                                      temperature_unit,
+                                      temperature_scgc);
     }
+
     for (int iDir = 0; iDir < 3; iDir++) {
       cName = velocity_name[iDir];
+
       if (DoRead) {
-	iVar = RestartContainer.find_variable(cName);
-	velocity_vcgc[iDir] = RestartContainer.get_element_value(iVar);
-	iVar++;
+        iVar = RestartContainer.find_variable(cName);
+        velocity_vcgc[iDir] = RestartContainer.get_element_value(iVar);
+        iVar++;
       } else {
-	RestartContainer.store_variable(cName,
-					velocity_unit,
-					velocity_vcgc[iDir]);
+        RestartContainer.store_variable(cName,
+                                        velocity_unit,
+                                        velocity_vcgc[iDir]);
       }
     }
+
     if (!DoRead) {
       RestartContainer.write();
       RestartContainer.clear_variables();
     }
-  } catch(...) {
+  } catch (...) {
     std::cout << "Error reading in neutral restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 
