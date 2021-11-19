@@ -8,7 +8,6 @@
 
 /**************************************************************
  * \class Output
- *
  * \brief A containing to allow storage of variables for output
  * 
  * Writing output is a multi-step process now:
@@ -18,9 +17,7 @@
  *  4. Write the output
  *
  * \author Aaron Ridley
- *
  * \date 2021/10/21 
- *
  **************************************************************/
 
 class OutputContainer {
@@ -227,11 +224,11 @@ class OutputContainer {
    \param report allow reporting to occur
 **/
 
-int output(Neutrals neutrals,
-	   Ions ions,
-	   Grid grid,
+int output(const Neutrals &neutrals,
+	   const Ions &ions,
+	   const Grid &grid,
 	   Times time,
-	   Planets planet,
+	   const Planets &planet,
 	   Inputs args,
 	   Report &report);
 

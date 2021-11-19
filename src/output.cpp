@@ -22,11 +22,11 @@ using namespace netCDF::exceptions;
 //  Fills output containers and outputs them for common output types
 // -----------------------------------------------------------------------------
 
-int output(Neutrals neutrals,
-           Ions ions,
-           Grid grid,
+int output(const Neutrals &neutrals,
+           const Ions &ions,
+           const Grid &grid,
            Times time,
-           Planets planet,
+           const Planets &planet,
            Inputs args,
            Report &report) {
 
