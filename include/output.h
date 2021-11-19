@@ -70,6 +70,29 @@ class OutputContainer {
 		      arma_cube value);
 
   /**********************************************************************
+     \brief Get an arma_cube from the Container
+     \param iElement return the iElement arma_cube
+   **/
+  arma_cube get_element_value(int64_t iElement);
+
+  /**********************************************************************
+     \brief Get the variable name from the Container
+     \param iElement return the iElement name
+   **/
+  std::string get_element_name(int64_t iElement);
+
+  /**********************************************************************
+     \brief Get number of elements in output container
+   **/
+  int64_t get_nElements();
+
+  /**********************************************************************
+     \brief Get element number for specified variable name
+     \param var_to_find variable to find in the list
+   **/
+  int64_t find_variable(std::string var_to_find);
+
+  /**********************************************************************
      \brief set the time for the output
      \param time the current time for the simulation
    **/
@@ -105,6 +128,16 @@ class OutputContainer {
      \brief read from a file an load into the container
    **/
   void read();
+  
+  /**********************************************************************
+     \brief display information contained in the container
+   **/
+  void display();
+  
+  /**********************************************************************
+     \brief read a netcdf file - put the information in the container
+   **/
+  int read_container_netcdf();
   
   /**********************************************************************
      \brief clears the vector of variables 

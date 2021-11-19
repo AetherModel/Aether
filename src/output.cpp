@@ -52,6 +52,36 @@ void output_netcdf_3d(std::vector<size_t> count_start,
 }
 
 // -----------------------------------------------------------------------------
+// gets the number of elements in the output container
+// -----------------------------------------------------------------------------
+
+int64_t OutputContainer::get_nElements() {
+  return elements.size();
+}
+
+// -----------------------------------------------------------------------------
+// gets the ith element arma_cube in the output container
+// -----------------------------------------------------------------------------
+
+arma_cube OutputContainer::get_element_value(int64_t iElement) {
+  arma_cube val;
+  if (iElement < elements.size())
+    val = elements[iElement].value;
+  return val;
+}
+
+// -----------------------------------------------------------------------------
+// gets the ith element name in the output container
+// -----------------------------------------------------------------------------
+
+std::string OutputContainer::get_element_name(int64_t iElement) {
+  std::string val = "";
+  if (iElement < elements.size())
+    val = elements[iElement].cName;
+  return val;
+}
+
+// -----------------------------------------------------------------------------
 // sets the output type to be binary
 // -----------------------------------------------------------------------------
 
@@ -129,6 +159,19 @@ void OutputContainer::set_version(float in_version) {
 
 void OutputContainer::clear_variables() {
   elements.clear();
+}
+
+// -----------------------------------------------------------------------------
+// find the variable number for the given variable name
+// -----------------------------------------------------------------------------
+
+int64_t OutputContainer::find_variable(std::string var_to_find) {
+  int64_t nVars = elements.size();
+  int64_t iVarSave = -1;
+  for (int64_t iVar = 0; iVar < nVars; iVar++) 
+    if (elements[iVar].cName.compare(var_to_find) == 0)
+      iVarSave = iVar;
+  return iVarSave;
 }
 
 // -----------------------------------------------------------------------------
@@ -233,6 +276,96 @@ int OutputContainer::write_container_binary() {
 // dump the contents of the container out into a binary file
 // -----------------------------------------------------------------------------
 
+int OutputContainer::read_container_netcdf() {
+
+  int iErr = 0;
+  std::string whole_filename = directory + "/" + filename + ".nc";
+  std::string UNITS = "units";
+
+  try{
+    std::cout << "Reading NetCDF file into container : "
+	      << whole_filename << "\n";
+    NcFile ncdf_file_in(whole_filename, NcFile::read);
+
+    std::multimap<std::string,NcVar> variables_in_file;
+    std::multimap<std::string,NcVar>::iterator iter;
+
+    // Declare a string to store the variable name.
+    std::string variable_name;
+    std::string variable_unit;
+    // Declare a netCDF variable attribute object.
+    NcVarAtt attribute;
+
+    // Declare a vector of netCDF dimension objects.
+    std::vector <NcDim> dimensions;
+    std::string dimension_name;
+    std::vector<int> nPts(3);
+    
+    // Assign the variables in the netCDF file to the multimap.
+    variables_in_file = ncdf_file_in.getVars();
+
+    // Use the iterator to loop through the multimap.
+    for (iter = variables_in_file.begin();
+	 iter != variables_in_file.end(); iter++) {
+
+      variable_name = iter->first;
+
+      if (variable_name.compare("Time") != 0) {
+
+      	attribute = iter->second.getAtt("units");
+	attribute.getValues(variable_unit);
+	dimensions = iter->second.getDims();
+	int nDims =  dimensions.size();
+	int iTotal = 1;
+	
+	// For this specific app, we only want the 3d arrays.
+	if (nDims == 3) {
+	
+	  for (int iDim = 0; iDim < nDims; iDim++) {
+	    dimension_name = dimensions[iDim].getName();
+	    nPts[iDim] = dimensions[iDim].getSize();
+	    iTotal = iTotal * nPts[iDim];
+	  }
+	  float *variable_array = new float[iTotal];
+	  iter->second.getVar(variable_array);	
+
+	  arma_cube value_scgc;
+	  value_scgc.set_size(nPts[0], nPts[1], nPts[2]);
+	  int64_t index;
+	  
+	  // NetCDF ordering. 
+	  for (int64_t iX = 0; iX < nPts[0]; iX++) {
+	    for (int64_t iY = 0; iY < nPts[1]; iY++) {
+	      for (int64_t iZ = 0; iZ < nPts[2]; iZ++) {
+		index = iX * nPts[1] * nPts[2] + iY * nPts[2] + iZ;
+		value_scgc(iX, iY, iZ) = variable_array[index];
+	      }
+	    }
+	  }
+	  // Store in the container:
+	  store_variable(variable_name, variable_unit, value_scgc);
+	}	
+      } else {
+	double *time_array = new double[1], t;
+	iter->second.getVar(time_array);
+	t = time_array[0];
+	set_time(t);
+      }
+    }
+    ncdf_file_in.close();
+  } catch (...) {
+    std::cout << "Error reading netcdf file : "
+	      << whole_filename << "\n";
+    iErr = 1;
+  }
+
+  return iErr;
+}
+
+// -----------------------------------------------------------------------------
+// dump the contents of the container out into a binary file
+// -----------------------------------------------------------------------------
+
 int OutputContainer::write_container_netcdf() {
 
   int iErr = 0;
@@ -272,14 +405,32 @@ int OutputContainer::write_container_netcdf() {
       Var[iVar].putAtt(UNITS, elements[iVar].cUnit);
       output_netcdf_3d(startp, countp, elements[iVar].value, Var[iVar]);
     }
-
-    ncdf_file.close();
+    ncdf_file.close();    
   } catch (...) {
     std::cout << "Error writing header file : "
 	      << whole_filename << "\n";
     iErr = 1;
   }
   return iErr;
+}
+
+// -----------------------------------------------------------------------------
+// dump the contents of the container out into a binary file
+// -----------------------------------------------------------------------------
+
+void OutputContainer::display() {
+  std::cout << "Displaying Container Information:\n";
+  std::cout << "  time : ";
+  display_itime(itime);
+  std::cout << "  nX : " << elements[0].value.n_rows << "\n";
+  std::cout << "  nY : " << elements[0].value.n_cols << "\n";
+  std::cout << "  nZ : " << elements[0].value.n_slices << "\n";
+  int64_t nVars = elements.size();
+  std::cout << "  Number of Variables : " << nVars << "\n";
+  for (int64_t iVar = 0; iVar < nVars; iVar++) {
+    std::cout << "  Variable " << iVar << ": " << elements[iVar].cName << "\n";
+    std::cout << "      Unit  : " << elements[iVar].cUnit << "\n";
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -416,6 +567,7 @@ int output(Neutrals neutrals,
       AllOutputContainers[iOutput].clear_variables();
     }
   }
+  report.exit(function);  
   return iErr;
 }  
 
