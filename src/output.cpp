@@ -8,48 +8,200 @@
 using namespace netCDF;
 using namespace netCDF::exceptions;
 
-//----------------------------------------------------------------------
-// This is at the top so it doesn't have to go in the include file!
-// Output a given variable to the netCDF file.  The netCDF system
-// doesn't work with Armadillo cubes, so we have to transform the cube
-// to a C-array, and then output
-// ----------------------------------------------------------------------
+/* ---------------------------------------------------------------------
 
-void output_netcdf_3d(std::vector<size_t> count_start,
-                      std::vector<size_t> count_end,
-                      arma_cube value,
-                      NcVar variable) {
+   Fill output containers for certain output types.  Supported types:
+   states - neutral states, ion den., bulk ion vel., temp, elec. temp
+   neutrals - neutral states
+   ions - Ion densites, temperatures, par & perp velocities, elec temp
+   bfield - magnetic coordinates, b-field vector
 
-  // Get the size of the cube:
+ -------------------------------------------------------------------- */ 
 
-  int64_t nX = value.n_rows;
-  int64_t nY = value.n_cols;
-  int64_t nZ = value.n_slices;
-  int64_t iX, iY, iZ, iTotal, index;
+// -----------------------------------------------------------------------------
+//  Fills output containers and outputs them for common output types
+// -----------------------------------------------------------------------------
 
-  iTotal = nX * nY * nZ;
+int output(Neutrals neutrals,
+           Ions ions,
+           Grid grid,
+           Times time,
+           Planets planet,
+           Inputs args,
+           Report &report) {
 
-  // Create a temporary c-array to use to output the variable
+  std::string function = "output";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
-  float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
+  static bool IsFirstTime = true;
 
-  // Move the data from the cube to the c-array
+  int iErr = 0;
 
-  for (iX = 0; iX < nX; iX++) {
-    for (iY = 0; iY < nY; iY++) {
-      for (iZ = 0; iZ < nZ; iZ++) {
-        index = iX * nY * nZ + iY * nZ + iZ;
-        tmp_s3gc[index] = value(iX, iY, iZ);
+  int nOutputs = args.get_n_outputs();
+  static std::vector<OutputContainer> AllOutputContainers;
+
+  if (IsFirstTime) {
+    // Initialize all of the output containers for all of the output
+    // types requested
+    OutputContainer DummyOutputContainer;
+    std::string output_dir = "UA/output/";
+    DummyOutputContainer.set_netcdf();
+    DummyOutputContainer.set_directory(output_dir);
+    DummyOutputContainer.set_version(0.1);
+    for (int iOutput = 0; iOutput < nOutputs; iOutput++)
+      AllOutputContainers.push_back(DummyOutputContainer);
+    IsFirstTime = false;
+  }
+
+  for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
+
+    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+
+      // ------------------------------------------------------------
+      // Store time in all of the files:
+
+      AllOutputContainers[iOutput].set_time(time.get_current());
+
+      // ------------------------------------------------------------
+      // Put Lon, Lat, Alt into all output containers:
+
+      AllOutputContainers[iOutput].
+	store_variable("lon",
+		       "longitude",
+		       "degrees_east",
+		       grid.geoLon_scgc * cRtoD);
+      AllOutputContainers[iOutput].
+	store_variable("lat",
+		       "latitude",
+		       "degrees_north",
+		       grid.geoLat_scgc * cRtoD);
+      AllOutputContainers[iOutput].
+	store_variable("z",
+		       "height above mean sea level",
+		       "m",
+		       grid.geoAlt_scgc);
+
+      std::string type_output = args.get_type_output(iOutput);
+
+      // ------------------------------------------------------------
+      // Put certain variables into each file type
+
+      // Neutral Densities:
+      if (type_output == "neutrals" ||
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+          AllOutputContainers[iOutput].
+	    store_variable(neutrals.species[iSpecies].cName,
+			   neutrals.density_unit,
+			   neutrals.species[iSpecies].density_scgc);
+
+      // Neutral Temperature:
+      if (type_output == "neutrals" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].
+	  store_variable(neutrals.temperature_name,
+			 neutrals.temperature_unit,
+			 neutrals.temperature_scgc);
+
+      // Neutral Winds:
+      if (type_output == "neutrals" ||
+          type_output == "states")
+        for (int iDir = 0; iDir < 3; iDir++)
+          AllOutputContainers[iOutput].
+	    store_variable(neutrals.velocity_name[iDir],
+			   neutrals.velocity_unit,
+			   neutrals.velocity_vcgc[iDir]);
+
+      // Ion Densities:
+      if (type_output == "ions" ||
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+          AllOutputContainers[iOutput].
+	    store_variable(ions.species[iSpecies].cName,
+			   ions.density_unit,
+			   ions.species[iSpecies].density_scgc);
+
+      // Bulk Ion Drifts:
+      if (type_output == "states")
+        for (int iDir = 0; iDir < 3; iDir++)
+          AllOutputContainers[iOutput].store_variable("Bulk" +
+						      ions.velocity_name[iDir],
+						      ions.velocity_unit,
+						      ions.velocity_vcgc[iDir]);
+
+      // Electric Potential:
+      if (type_output == "ions" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].store_variable(ions.potential_name,
+						    ions.potential_unit,
+						    ions.potential_scgc);
+
+      if (type_output == "bfield") {
+        AllOutputContainers[iOutput].store_variable("mlat",
+						    "Magnetic Latitude",
+						    "degrees",
+						    grid.magLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("mlon",
+						    "Magnetic Longitude",
+						    "degrees",
+						    grid.magLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("mlt",
+						    "Magnetic Local Time",
+						    "hours",
+						    grid.magLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Beast",
+						    "nT",
+						    grid.bfield_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Bnorth",
+						    "nT",
+						    grid.bfield_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Bvertical",
+						    "nT",
+						    grid.bfield_vcgc[2]);
       }
+
+      // ------------------------------------------------------------
+      // Set output file names
+      
+      if (type_output == "neutrals")
+        AllOutputContainers[iOutput].set_filename("3DNEU_" +
+						  time.get_YMD_HMS());
+
+      if (type_output == "states")
+        AllOutputContainers[iOutput].set_filename("3DALL_" +
+						  time.get_YMD_HMS());
+
+      if (type_output == "ions")
+        AllOutputContainers[iOutput].set_filename("3DION_" +
+						  time.get_YMD_HMS());
+
+      if (type_output == "bfield")
+        AllOutputContainers[iOutput].set_filename("3DBFI_" +
+						  time.get_YMD_HMS());
+
+      // ------------------------------------------------------------
+      // write output container
+      
+      AllOutputContainers[iOutput].write();
+
+      // ------------------------------------------------------------
+      // Clear variables for next time
+      
+      AllOutputContainers[iOutput].clear_variables();
     }
   }
 
-  // Output the data to the netCDF file
-  variable.putVar(count_start, count_end, tmp_s3gc);
-
-  // delete the c-array
-  free(tmp_s3gc);
+  report.exit(function);
+  return iErr;
 }
+
+
+/* ---------------------------------------------------------------------
+
+   General Methods for the output containers
+
+ -------------------------------------------------------------------- */ 
 
 // -----------------------------------------------------------------------------
 // gets the number of elements in the output container
@@ -65,10 +217,20 @@ int64_t OutputContainer::get_nElements() {
 
 arma_cube OutputContainer::get_element_value(int64_t iElement) {
   arma_cube val;
-
   if (iElement < elements.size())
     val = elements[iElement].value;
+  return val;
+}
 
+// -----------------------------------------------------------------------------
+// gets the element arma_cube in the output container given name
+// -----------------------------------------------------------------------------
+
+arma_cube OutputContainer::get_element_value(std::string var_to_get) {
+  arma_cube val;
+  int64_t iElement = find_element(var_to_get);
+  if (iElement >=0)
+    val = elements[iElement].value;
   return val;
 }
 
@@ -78,11 +240,22 @@ arma_cube OutputContainer::get_element_value(int64_t iElement) {
 
 std::string OutputContainer::get_element_name(int64_t iElement) {
   std::string val = "";
-
   if (iElement < elements.size())
     val = elements[iElement].cName;
-
   return val;
+}
+
+// -----------------------------------------------------------------------------
+// find the element number for the given variable name
+// -----------------------------------------------------------------------------
+
+int64_t OutputContainer::find_element(std::string var_to_find) {
+  int64_t nVars = elements.size();
+  int64_t iVarSave = -1;
+  for (int64_t iVar = 0; iVar < nVars; iVar++)
+    if (elements[iVar].cName.compare(var_to_find) == 0)
+      iVarSave = iVar;
+  return iVarSave;
 }
 
 // -----------------------------------------------------------------------------
@@ -127,7 +300,7 @@ void OutputContainer::set_filename(std::string in_filename) {
 }
 
 // -----------------------------------------------------------------------------
-//
+// Store variable information into the output container
 // -----------------------------------------------------------------------------
 
 void OutputContainer::store_variable(std::string name,
@@ -142,7 +315,8 @@ void OutputContainer::store_variable(std::string name,
 }
 
 // -----------------------------------------------------------------------------
-//
+// Store variable information into the output container
+//   - add long_name (needed for netcdf standardization)
 // -----------------------------------------------------------------------------
 
 void OutputContainer::store_variable(std::string name,
@@ -183,21 +357,6 @@ void OutputContainer::clear_variables() {
 }
 
 // -----------------------------------------------------------------------------
-// find the variable number for the given variable name
-// -----------------------------------------------------------------------------
-
-int64_t OutputContainer::find_variable(std::string var_to_find) {
-  int64_t nVars = elements.size();
-  int64_t iVarSave = -1;
-
-  for (int64_t iVar = 0; iVar < nVars; iVar++)
-    if (elements[iVar].cName.compare(var_to_find) == 0)
-      iVarSave = iVar;
-
-  return iVarSave;
-}
-
-// -----------------------------------------------------------------------------
 // Initialize the output container
 // -----------------------------------------------------------------------------
 
@@ -225,6 +384,34 @@ void OutputContainer::write() {
   if (output_type == netcdf_type)
     iErr = write_container_netcdf();
 }
+
+// -----------------------------------------------------------------------------
+// display the contents of an output container to the screen
+// -----------------------------------------------------------------------------
+
+void OutputContainer::display() {
+  std::cout << "Displaying Container Information:\n";
+  std::cout << "  time : ";
+  display_itime(itime);
+  std::cout << "  nX : " << elements[0].value.n_rows << "\n";
+  std::cout << "  nY : " << elements[0].value.n_cols << "\n";
+  std::cout << "  nZ : " << elements[0].value.n_slices << "\n";
+  int64_t nVars = elements.size();
+  std::cout << "  Number of Variables : " << nVars << "\n";
+
+  for (int64_t iVar = 0; iVar < nVars; iVar++) {
+    std::cout << "  Variable " << iVar << ": " << elements[iVar].cName << "\n";
+    std::cout << "      Unit  : " << elements[iVar].cUnit << "\n";
+    if (elements[iVar].cLongName.length() > 0)
+      std::cout << "      Long Name  : " << elements[iVar].cLongName;
+  }
+}
+
+/* ---------------------------------------------------------------------
+
+   Output methods for binary files
+
+ -------------------------------------------------------------------- */ 
 
 // -----------------------------------------------------------------------------
 // Write a header file for the container.  This outputs into a json
@@ -274,6 +461,45 @@ int OutputContainer::write_container_header() {
   return iErr;
 }
 
+//----------------------------------------------------------------------
+// Output a given arma_cube to the binary file.
+// ----------------------------------------------------------------------
+
+void output_binary_3d(std::ofstream &binary,
+                      arma_cube value) {
+
+  // Get the size of the cube:
+
+  int64_t nX = value.n_rows;
+  int64_t nY = value.n_cols;
+  int64_t nZ = value.n_slices;
+  int64_t iX, iY, iZ, index;
+
+  int64_t nPts = nX * nY * nZ;
+  int64_t iTotalSize = nPts * sizeof(float);
+
+  // Create a temporary c-array to use to output the variable
+  float *tmp_s3gc = static_cast<float*>(malloc(iTotalSize));
+
+  // Move the data from the cube to the c-array
+
+  for (iZ = 0; iZ < nZ; iZ++) {
+    for (iY = 0; iY < nY; iY++) {
+      for (iX = 0; iX < nX; iX++) {
+        // Python ordering!
+        index = iX + iY * nX + iZ * nY * nX;
+        tmp_s3gc[index] = value(iX, iY, iZ);
+      }
+    }
+  }
+
+  // Output the data to the binary file
+  binary.write((char *) tmp_s3gc, iTotalSize);
+
+  // delete the c-array
+  free(tmp_s3gc);
+}
+
 // -----------------------------------------------------------------------------
 // dump the contents of the container out into a binary file
 // -----------------------------------------------------------------------------
@@ -302,8 +528,57 @@ int OutputContainer::write_container_binary() {
   return iErr;
 }
 
+/* ---------------------------------------------------------------------
+
+   Output and Input methods for netcdf files
+
+ -------------------------------------------------------------------- */ 
+
+//----------------------------------------------------------------------
+// This is at the top so it doesn't have to go in the include file!
+// Output a given variable to the netCDF file.  The netCDF system
+// doesn't work with Armadillo cubes, so we have to transform the cube
+// to a C-array, and then output
+// ----------------------------------------------------------------------
+
+void output_netcdf_3d(std::vector<size_t> count_start,
+                      std::vector<size_t> count_end,
+                      arma_cube value,
+                      NcVar variable) {
+
+  // Get the size of the cube:
+
+  int64_t nX = value.n_rows;
+  int64_t nY = value.n_cols;
+  int64_t nZ = value.n_slices;
+  int64_t iX, iY, iZ, iTotal, index;
+
+  iTotal = nX * nY * nZ;
+
+  // Create a temporary c-array to use to output the variable
+
+  float *tmp_s3gc = static_cast<float*>(malloc(iTotal * sizeof(float)));
+
+  // Move the data from the cube to the c-array
+
+  for (iX = 0; iX < nX; iX++) {
+    for (iY = 0; iY < nY; iY++) {
+      for (iZ = 0; iZ < nZ; iZ++) {
+        index = iX * nY * nZ + iY * nZ + iZ;
+        tmp_s3gc[index] = value(iX, iY, iZ);
+      }
+    }
+  }
+
+  // Output the data to the netCDF file
+  variable.putVar(count_start, count_end, tmp_s3gc);
+
+  // delete the c-array
+  free(tmp_s3gc);
+}
+
 // -----------------------------------------------------------------------------
-// dump the contents of the container out into a binary file
+// read contents of a netcdf file into an output container
 // -----------------------------------------------------------------------------
 
 int OutputContainer::read_container_netcdf() {
@@ -451,236 +726,6 @@ int OutputContainer::write_container_netcdf() {
 
   return iErr;
 }
-
-// -----------------------------------------------------------------------------
-// dump the contents of the container out into a binary file
-// -----------------------------------------------------------------------------
-
-void OutputContainer::display() {
-  std::cout << "Displaying Container Information:\n";
-  std::cout << "  time : ";
-  display_itime(itime);
-  std::cout << "  nX : " << elements[0].value.n_rows << "\n";
-  std::cout << "  nY : " << elements[0].value.n_cols << "\n";
-  std::cout << "  nZ : " << elements[0].value.n_slices << "\n";
-  int64_t nVars = elements.size();
-  std::cout << "  Number of Variables : " << nVars << "\n";
-
-  for (int64_t iVar = 0; iVar < nVars; iVar++) {
-    std::cout << "  Variable " << iVar << ": " << elements[iVar].cName << "\n";
-    std::cout << "      Unit  : " << elements[iVar].cUnit << "\n";
-    if (elements[iVar].cLongName.length() > 0)
-      std::cout << "      Long Name  : " << elements[iVar].cLongName;
-  }
-}
-
-// -----------------------------------------------------------------------------
-//  Fills output containers and outputs them for common output types
-// -----------------------------------------------------------------------------
-
-int output(Neutrals neutrals,
-           Ions ions,
-           Grid grid,
-           Times time,
-           Planets planet,
-           Inputs args,
-           Report &report) {
-
-  std::string function = "output";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  static bool IsFirstTime = true;
-
-  int iErr = 0;
-
-  int nOutputs = args.get_n_outputs();
-  static std::vector<OutputContainer> AllOutputContainers;
-
-  if (IsFirstTime) {
-    OutputContainer DummyOutputContainer;
-    std::string output_dir = "UA/output/";
-    DummyOutputContainer.set_netcdf();
-    DummyOutputContainer.set_directory(output_dir);
-    DummyOutputContainer.set_version(0.1);
-
-    for (int iOutput = 0; iOutput < nOutputs; iOutput++)
-      AllOutputContainers.push_back(DummyOutputContainer);
-
-    IsFirstTime = false;
-  }
-
-  for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
-
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
-
-      // Store time in all of the files:
-      AllOutputContainers[iOutput].set_time(time.get_current());
-
-      // Put Lon, Lat, Alt into all files:
-      AllOutputContainers[iOutput].
-	store_variable("lon",
-		       "longitude",
-		       "degrees_east",
-		       grid.geoLon_scgc * cRtoD);
-      AllOutputContainers[iOutput].
-	store_variable("lat",
-		       "latitude",
-		       "degrees_north",
-		       grid.geoLat_scgc * cRtoD);
-      AllOutputContainers[iOutput].
-	store_variable("z",
-		       "height above mean sea level",
-		       "m",
-		       grid.geoAlt_scgc);
-
-      std::string type_output = args.get_type_output(iOutput);
-
-      // Put certain variables into each file type
-
-      // Neutral Densities:
-      if (type_output == "neutrals" ||
-          type_output == "states")
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-          AllOutputContainers[iOutput].
-	    store_variable(neutrals.species[iSpecies].cName,
-			   neutrals.density_unit,
-			   neutrals.species[iSpecies].density_scgc);
-
-      // Neutral Temperature:
-      if (type_output == "neutrals" ||
-          type_output == "states")
-        AllOutputContainers[iOutput].
-	  store_variable(neutrals.temperature_name,
-			 neutrals.temperature_unit,
-			 neutrals.temperature_scgc);
-
-      // Neutral Winds:
-      if (type_output == "neutrals" ||
-          type_output == "states")
-        for (int iDir = 0; iDir < 3; iDir++)
-          AllOutputContainers[iOutput].
-	    store_variable(neutrals.velocity_name[iDir],
-			   neutrals.velocity_unit,
-			   neutrals.velocity_vcgc[iDir]);
-
-      // Ion Densities:
-      if (type_output == "ions" ||
-          type_output == "states")
-        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
-          AllOutputContainers[iOutput].
-	    store_variable(ions.species[iSpecies].cName,
-			   ions.density_unit,
-			   ions.species[iSpecies].density_scgc);
-
-      // Bulk Ion Drifts:
-      if (type_output == "states")
-        for (int iDir = 0; iDir < 3; iDir++)
-          AllOutputContainers[iOutput].store_variable("Bulk" +
-						      ions.velocity_name[iDir],
-						      ions.velocity_unit,
-						      ions.velocity_vcgc[iDir]);
-
-      // Electric Potential:
-      if (type_output == "ions" ||
-          type_output == "states")
-        AllOutputContainers[iOutput].store_variable(ions.potential_name,
-						    ions.potential_unit,
-						    ions.potential_scgc);
-
-      if (type_output == "bfield") {
-        AllOutputContainers[iOutput].store_variable("mlat",
-						    "Magnetic Latitude",
-						    "degrees",
-						    grid.magLat_scgc * cRtoD);
-        AllOutputContainers[iOutput].store_variable("mlon",
-						    "Magnetic Longitude",
-						    "degrees",
-						    grid.magLon_scgc * cRtoD);
-        AllOutputContainers[iOutput].store_variable("mlt",
-						    "Magnetic Local Time",
-						    "hours",
-						    grid.magLocalTime_scgc);
-        AllOutputContainers[iOutput].store_variable("Beast",
-						    "nT",
-						    grid.bfield_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("Bnorth",
-						    "nT",
-						    grid.bfield_vcgc[1]);
-        AllOutputContainers[iOutput].store_variable("Bvertical",
-						    "nT",
-						    grid.bfield_vcgc[2]);
-      }
-
-      if (type_output == "neutrals")
-        AllOutputContainers[iOutput].set_filename("3DNEU_" +
-						  time.get_YMD_HMS());
-
-      if (type_output == "states")
-        AllOutputContainers[iOutput].set_filename("3DALL_" +
-						  time.get_YMD_HMS());
-
-      if (type_output == "ions")
-        AllOutputContainers[iOutput].set_filename("3DION_" +
-						  time.get_YMD_HMS());
-
-      if (type_output == "bfield")
-        AllOutputContainers[iOutput].set_filename("3DBFI_" +
-						  time.get_YMD_HMS());
-
-      AllOutputContainers[iOutput].write();
-      AllOutputContainers[iOutput].clear_variables();
-    }
-  }
-
-  report.exit(function);
-  return iErr;
-}
-
-
-//----------------------------------------------------------------------
-// Output a given variable to the binary file.
-// ----------------------------------------------------------------------
-
-
-void output_binary_3d(std::ofstream &binary,
-                      arma_cube value) {
-
-  // Get the size of the cube:
-
-  int64_t nX = value.n_rows;
-  int64_t nY = value.n_cols;
-  int64_t nZ = value.n_slices;
-  int64_t iX, iY, iZ, index;
-
-  int64_t nPts = nX * nY * nZ;
-  int64_t iTotalSize = nPts * sizeof(float);
-
-  // Create a temporary c-array to use to output the variable
-  float *tmp_s3gc = static_cast<float*>(malloc(iTotalSize));
-
-  // Move the data from the cube to the c-array
-
-  for (iZ = 0; iZ < nZ; iZ++) {
-    for (iY = 0; iY < nY; iY++) {
-      for (iX = 0; iX < nX; iX++) {
-        // Python ordering!
-        index = iX + iY * nX + iZ * nY * nX;
-        tmp_s3gc[index] = value(iX, iY, iZ);
-      }
-    }
-  }
-
-  // Output the data to the binary file
-  binary.write((char *) tmp_s3gc, iTotalSize);
-
-  // delete the c-array
-  free(tmp_s3gc);
-}
-
-
-
-
 
 // -----------------------------------------------------------------------------
 //
