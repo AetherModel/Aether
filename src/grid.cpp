@@ -85,24 +85,27 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 // --------------------------------------------------------------------------
 
 bool Grid::write_restart(std::string dir) {
-  std::string filename;
   bool DidWork = true;
-  filename = dir + "/geolons.bin";
-
-  if (DidWork)
-    DidWork = geoLon_scgc.save(filename);
-
-  filename = dir + "/geolats.bin";
-
-  if (DidWork)
-    DidWork = geoLat_scgc.save(filename);
-
-  filename = dir + "/geoalts.bin";
-
-  if (DidWork)
-    DidWork = geoAlt_scgc.save(filename);
-
-  return DidWork;
+  try {
+    OutputContainer RestartContainer;
+    RestartContainer.set_netcdf();
+    RestartContainer.set_directory(dir);
+    RestartContainer.set_version(0.1);
+    //RestartContainers.set_time(time.get_current());
+    RestartContainer.set_time(0.0);
+    RestartContainer.set_filename("grid");
+    RestartContainer.store_variable(longitude_name,
+				    longitude_unit,
+				    geoLon_scgc);
+    RestartContainer.store_variable(latitude_name, latitude_unit, geoLat_scgc);
+    RestartContainer.store_variable(altitude_name, altitude_unit, geoAlt_scgc);
+    RestartContainer.write();
+    RestartContainer.clear_variables();
+  } catch(...) {
+    std::cout << "Error writing grid restart file!\n";
+    DidWork = false;
+  }
+    return DidWork;
 }
 
 // --------------------------------------------------------------------------
@@ -111,23 +114,27 @@ bool Grid::write_restart(std::string dir) {
 // --------------------------------------------------------------------------
 
 bool Grid::read_restart(std::string dir) {
-  std::string filename;
+
   bool DidWork = true;
-  filename = dir + "/geolons.bin";
-
-  if (DidWork)
-    DidWork = geoLon_scgc.load(filename);
-
-  filename = dir + "/geolats.bin";
-
-  if (DidWork)
-    DidWork = geoLat_scgc.load(filename);
-
-  filename = dir + "/geoalts.bin";
-
-  if (DidWork)
-    DidWork = geoAlt_scgc.load(filename);
-
+  int64_t iVar;
+  try {
+    OutputContainer RestartContainer;
+    RestartContainer.set_netcdf();
+    RestartContainer.set_directory(dir);
+    RestartContainer.set_version(0.1);
+    RestartContainer.set_filename("grid");
+    RestartContainer.read_container_netcdf();
+  
+    iVar = RestartContainer.find_variable(longitude_name);
+    geoLon_scgc = RestartContainer.get_element_value(iVar);
+    iVar = RestartContainer.find_variable(latitude_name);
+    geoLat_scgc = RestartContainer.get_element_value(iVar);
+    iVar = RestartContainer.find_variable(altitude_name);
+    geoAlt_scgc = RestartContainer.get_element_value(iVar);
+  } catch(...) {
+    std::cout << "Error reading grid restart file!\n";
+    DidWork = false;
+  }
   return DidWork;
 }
 

@@ -385,73 +385,66 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 
   std::string filename;
   bool DidWork = true;
-
+  int64_t iVar;
+  std::string cName;
+  
   OutputContainer RestartContainer;
   RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
-  RestartContainer.set_version(0.1);
-  //RestartContainers.set_time(time.get_current());
-  RestartContainer.set_time(0.0);
   RestartContainer.set_filename("neutrals");
-  
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) 
-    RestartContainer.store_variable(species[iSpecies].cName,
-				    density_unit,
-				    species[iSpecies].density_scgc);
-  RestartContainer.store_variable(temperature_name,
-				  temperature_unit,
-				  temperature_scgc);
-  for (int iDir = 0; iDir < 3; iDir++) 
-    RestartContainer.store_variable(velocity_name[iDir],
-				    velocity_unit,
-				    velocity_vcgc[iDir]);
-  RestartContainer.write();
-  RestartContainer.clear_variables();
 
-  json description;
-
-  // Output Densities
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    filename = dir + "/neu_s" + tostr(iSpecies, 2) + "_n.bin";
-
-    if (DidWork)
-      if (DoRead)
-        DidWork = species[iSpecies].density_scgc.load(filename);
-      else {
-        DidWork = species[iSpecies].density_scgc.save(filename);
-        description["density"][species[iSpecies].cName] = filename;
-      }
-  }
-
-  // Output Temperature
-  filename = dir + "/neu_t.bin";
-
-  if (DidWork)
+  try {
     if (DoRead)
-      DidWork = temperature_scgc.load(filename);
+      RestartContainer.read_container_netcdf();
     else {
-      DidWork = temperature_scgc.save(filename);
-      description["temperature"]["bulk"] = filename;
+      RestartContainer.set_version(0.1);
+      RestartContainer.set_time(0.0);
     }
-
-  // Output Velocity
-  for (int iComp = 0; iComp < 3; iComp++) {
-    filename = dir + "/neu_v" + tostr(iComp, 1) + ".bin";
-
-    if (DidWork)
-      if (DoRead)
-        DidWork = velocity_vcgc[iComp].load(filename);
-      else {
-        DidWork = velocity_vcgc[iComp].save(filename);
-        description["vel_comp" + tostr(iComp, 1)]["bulk"] = filename;
+  
+    iVar = 0;
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      cName = species[iSpecies].cName;
+      if (DoRead) {
+	iVar = RestartContainer.find_variable(cName);
+	species[iSpecies].density_scgc =
+	  RestartContainer.get_element_value(iVar);
+	iVar++;
+      } else {
+	RestartContainer.store_variable(cName,
+					density_unit,
+					species[iSpecies].density_scgc);
       }
+    }
+    cName = temperature_name;
+    if (DoRead) {
+      iVar = RestartContainer.find_variable(cName);
+      temperature_scgc = RestartContainer.get_element_value(iVar);
+      iVar++;
+    } else{
+      RestartContainer.store_variable(cName,
+				      temperature_unit,
+				      temperature_scgc);
+    }
+    for (int iDir = 0; iDir < 3; iDir++) {
+      cName = velocity_name[iDir];
+      if (DoRead) {
+	iVar = RestartContainer.find_variable(cName);
+	velocity_vcgc[iDir] = RestartContainer.get_element_value(iVar);
+	iVar++;
+      } else {
+	RestartContainer.store_variable(cName,
+					velocity_unit,
+					velocity_vcgc[iDir]);
+      }
+    }
+    if (!DoRead) {
+      RestartContainer.write();
+      RestartContainer.clear_variables();
+    }
+  } catch(...) {
+    std::cout << "Error reading in neutral restart file!\n";
+    DidWork = false;
   }
-
-  if (!DoRead && DidWork) {
-    filename = dir + "/neutrals.json";
-    DidWork = write_json(filename, description);
-  }
-
   return DidWork;
 }
 
