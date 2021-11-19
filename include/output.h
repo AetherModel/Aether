@@ -70,6 +70,18 @@ class OutputContainer {
 		      arma_cube value);
 
   /**********************************************************************
+     \brief store a variable to the list of variables to output
+     \param name name of the variable to output
+     \param long_name longer name of the variable to output
+     \param unit units of the output
+     \param value the array of the data to output
+   **/
+  void store_variable(std::string name,
+		      std::string long_name,
+		      std::string unit,
+		      arma_cube value);
+
+  /**********************************************************************
      \brief Get an arma_cube from the Container
      \param iElement return the iElement arma_cube
    **/
@@ -157,6 +169,8 @@ class OutputContainer {
   struct var_struct {
     /// Name of the variable to output
     std::string cName;
+    /// Long Name of the variable to output
+    std::string cLongName;
     /// Unit of the variable to output
     std::string cUnit;
     /// 3D array of the variable to output (this can be N x M x L, or
