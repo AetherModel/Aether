@@ -9,11 +9,11 @@ cp ../aether.whole.json ./aether.json
 # plot the output
 cd UA/output
 # [O]:
-run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.nc
 # Tn:
-run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.nc
 # [e-]
-run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.nc
 
 cd ../../..
 
@@ -29,11 +29,11 @@ cp ../aether.second.json ./aether.json
 # plot the output
 cd UA/output
 # [O]:
-run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.nc
 # Tn:
-run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.nc
 # [e-]
-run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.bin
+run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.nc
 
 cd ../../..
 
