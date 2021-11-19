@@ -83,9 +83,10 @@ int main() {
   if (time.check_time_gate(input.get_dt_output(0)))
     iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
-  // This is advancing now...
+  // This is advancing now... We are not coupling, so set dt_couple to the
+  // end of the simulation
 
-  double dt_couple = 1800.0;
+  double dt_couple = time.get_end() - time.get_current();
 
   // The way most codes are set up in the SWMF is that there are two
   // times, an end time which ends the simulation, and an intermediate
