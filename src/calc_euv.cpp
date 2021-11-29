@@ -49,9 +49,9 @@ int calc_euv(Planets planet,
 // -----------------------------------------------------------------------------
 
 void calc_ionization_heating(Euv euv,
-           Neutrals &neutrals,
-           Ions &ions,
-           Report &report) {
+                             Neutrals &neutrals,
+                             Ions &ions,
+                             Report &report) {
 
   int64_t iAlt, iWave, iSpecies;
   int i_, iIon, iIonization;
@@ -63,38 +63,40 @@ void calc_ionization_heating(Euv euv,
   // Zero out all source terms:
 
   neutrals.heating_euv_scgc.zeros();
-  for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     neutrals.species[iSpecies].ionization_scgc.zeros();
 
-  for (iSpecies=0; iSpecies < nIons; iSpecies++)
+  for (iSpecies = 0; iSpecies < nIons; iSpecies++)
     ions.species[iSpecies].ionization_scgc.zeros();
 
   int64_t nAlts = neutrals.heating_euv_scgc.n_slices;
 
-  fmat tau2d = neutrals.heating_euv_scgc.slice(0);
-  fmat intensity2d = neutrals.heating_euv_scgc.slice(0);
-  fmat ionization2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat tau2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat intensity2d = neutrals.heating_euv_scgc.slice(0);
+  arma_mat ionization2d = neutrals.heating_euv_scgc.slice(0);
 
-  for (iAlt = 2; iAlt < nAlts-2; iAlt++) {
-    for (iWave=0; iWave < euv.nWavelengths; iWave++) {
+  for (iAlt = 2; iAlt < nAlts - 2; iAlt++) {
+    for (iWave = 0; iWave < euv.nWavelengths; iWave++) {
 
       tau2d.zeros();
 
-      for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         if (neutrals.species[iSpecies].iEuvAbsId_ > -1) {
           i_ = neutrals.species[iSpecies].iEuvAbsId_;
           tau2d = tau2d +
-            euv.waveinfo[i_].values[iWave] *
-            neutrals.species[iSpecies].chapman_scgc.slice(iAlt);
+                  euv.waveinfo[i_].values[iWave] *
+                  neutrals.species[iSpecies].chapman_scgc.slice(iAlt);
         }
       }
 
-      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau2d);
+      intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
 
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
         // index of photo abs cross section
         i_ = neutrals.species[iSpecies].iEuvAbsId_;
+
         if (i_ > -1) {
           neutrals.heating_euv_scgc.slice(iAlt) =
             neutrals.heating_euv_scgc.slice(iAlt) +

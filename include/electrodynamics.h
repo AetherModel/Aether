@@ -44,6 +44,21 @@ class Electrodynamics {
   Electrodynamics(Inputs input, Report &report);
 
   /**************************************************************
+     \brief update the potential and aurora
+     \param planet need info about SZA and stuff to get MLTs
+     \param gGrid need grid
+     \param time need current time
+     \param ions Going to set the potential and aurora
+     \param report Need to pass Report class, so reporting can occur  
+   **/
+  
+  int update(Planets planet,
+	     Grid gGrid,
+	     Times time,
+	     Ions &ions,
+	     Report &report);
+  
+  /**************************************************************
      \brief used in main.cpp to ensure electrodynamics times and
       aether input times match up. Returns false if times are
       misaligned, true if they are aligned
@@ -58,16 +73,25 @@ class Electrodynamics {
   /**************************************************************
      \brief used in advance.cpp to get potential, eflux, avee
 
+  std::tuple<arma_cube,
+	     arma_mat,
+	     arma_mat> get_electrodynamics(arma_cube magLat,
+					   arma_cube magLocalTime,
+					   Report &report);
 
+  /**************************************************************
+     \brief used in advance.cpp to get potential, eflux, avee
      \param magLat magnetic latitude
-
      \param magLocalTime magnetic local time
-
      \param report reporting
    **/
 
-  std::tuple<fcube, fmat, fmat> get_electrodynamics(fcube magLat, fcube magLocalTime, Report &report);
-
+  std::tuple<arma_cube,
+	     arma_mat,
+	     arma_mat> get_electrodynamics(arma_cube magLat,
+					   arma_cube magLocalTime,
+					   Report &report);
+  
   /**************************************************************
      \brief Gets interpolation indices
 
@@ -77,7 +101,7 @@ class Electrodynamics {
      \param search The vector of values to interpolate over  
    **/
 
-  fmat get_interpolation_indices(fmat vals, fvec search);
+  arma_mat get_interpolation_indices(arma_mat vals, arma_vec search);
 
   /**************************************************************
      \brief Sets time needed for electrodynamics
@@ -104,68 +128,85 @@ class Electrodynamics {
      \param mlts a 2D matrix of magnetic local times to interpolate to
      \param report Need to pass Report class, so reporting can occur  
    **/
-  void set_grid(fmat lats, fmat mlts, Report &report);
+  void set_grid(arma_mat lats, arma_mat mlts, Report &report);
+
 
   /**************************************************************
      \brief Set the IMF Bx for internal usage
      \param value Value to assign to IMF Bx (nT)
    **/
-  void set_imf_bx(float value);
+
+  void set_imf_bx(precision_t value);
 
   /**************************************************************
      \brief Set the IMF By for internal usage
      \param value Value to assign to IMF By (nT)
    **/
-  void set_imf_by(float value);
+
+  void set_imf_by(precision_t value);
+
 
   /**************************************************************
      \brief  Set the IMF Bz for internal usage
      \param value Value to assign to IMF Bz (nT)
    **/
-  void set_imf_bz(float value);
+
+  void set_imf_bz(precision_t value);
+
 
   /**************************************************************
      \brief Set the Solar Wind Velocity for internal usage
      \param value Value to assign to Solar wind velocity (km/s)
    **/
-  void set_sw_v(float value);
+
+  void set_sw_v(precision_t value);
+
 
   /**************************************************************
      \brief Set the Solar Wind Density for internal usage
      \param value Value to assign to Solar Wind Density (/cc)
    **/
-  void set_sw_n(float value);
+
+  void set_sw_n(precision_t value);
 
   /**************************************************************
      \brief Set the Hemispheric Power for internal usage
      \param value Value to assign to Hemispheric Power (GW)
      \param
    **/
-  void set_hp(float value);
+
+  void set_hp(precision_t value);
+
 
   /**************************************************************
      \brief Set the AU index for internal usage
      \param value Value to assign to Auroral Upper Index (nT)
    **/
-  void set_au(float value);
+
+  void set_au(precision_t value);
+
 
   /**************************************************************
      \brief Set the AL index for internal usage
      \param value Value to assign to Auroral Lower Index (nT)
    **/
-  void set_al(float value);
+
+  void set_al(precision_t value);
+
 
   /**************************************************************
      \brief Set the AE Index for internal usage
      \param value Value to assign to Auroral Electrojet Index (nT)
    **/
-  void set_ae(float value);
+
+  void set_ae(precision_t value);
+
 
   /**************************************************************
      \brief Set the Kp Index for internal usage
      \param value Value to assign to Kp index
    **/
-  void set_kp(float value);
+  void set_kp(precision_t value);
   
   /**************************************************************
      \brief Get 2D electric potential on specified grid
@@ -181,8 +222,9 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fcube get_potential(fcube magLat, fcube magLocalTime, Report &report);
-
+  arma_cube get_potential(arma_cube magLat,
+			  arma_cube magLocalTime,
+			  Report &report);
   /**************************************************************
      \brief Get 2D electron energy flux on specified grid
 
@@ -197,7 +239,9 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_eflux(fcube magLat, fcube magLocalTime, Report &report);
+
+  arma_mat get_eflux(arma_cube magLat, arma_cube magLocalTime, Report &report);
+
 
   /**************************************************************
      \brief Get 2D electron average energy on specified grid
@@ -213,7 +257,9 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_avee(fcube magLat, fcube magLocalTime, Report &report);
+
+  arma_mat get_avee(arma_cube magLat, arma_cube magLocalTime, Report &report);
+
 
   /**************************************************************
      \brief Get 2D ion energy flux on specified grid
@@ -229,7 +275,9 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_ion_eflux(Report &report);
+
+  arma_mat get_ion_eflux(Report &report);
+
 
   /**************************************************************
      \brief Get 2D ion average energy on specified grid
@@ -245,7 +293,9 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  fmat get_ion_avee(Report &report);
+
+  arma_mat get_ion_avee(Report &report);
+
   
  private:
 
@@ -265,6 +315,9 @@ class Electrodynamics {
   /// The input file to read that contains the grid of electrodynamics:
   std::string input_file;
 
+  ///
+  bool HaveElectrodynamics;
+
   /// Variables needed by user - all set by set_ functions:
 
   /// This is the time needed:
@@ -272,23 +325,25 @@ class Electrodynamics {
 
   /// A 2d array of magnetic latitude needed. Can set interpolation
   /// coefficients in all of the grids when this is called:
-  fmat lats_needed;
+
+  arma_mat lats_needed;
 
   /// A 2d array of magnetic local times needed. Can set interpolation
   /// coefficients in all of the grids when this is called:
-  fmat mlts_needed;
+  arma_mat mlts_needed;
   
   /// These are all indices that may be needed by sub-models:
-  float imf_bx_needed;
-  float imf_by_needed;
-  float imf_bz_needed;
-  float sw_v_needed;
-  float sw_n_needed;
-  float hp_needed;
-  float au_needed;
-  float al_needed;
-  float ae_needed;
-  float kp_needed;
+  precision_t imf_bx_needed;
+  precision_t imf_by_needed;
+  precision_t imf_bz_needed;
+  precision_t sw_v_needed;
+  precision_t sw_n_needed;
+  precision_t hp_needed;
+  precision_t au_needed;
+  precision_t al_needed;
+  precision_t ae_needed;
+  precision_t kp_needed;
+
 
   /// If we read in an electrodyanmics file, set this to 1. Otherwise,
   /// set it to 0:
@@ -302,12 +357,15 @@ class Electrodynamics {
   /// set to an auroral model to use.  Need to add model types.
   std::string auroral_model_to_use;
   
-  /// interpolation indices, for each one, the integer portion is
-  /// the index, while the decimal part is the percentage of the way
-  /// between the index and index + 1
-  /// for time, we are assuming that all grids have the same times or that
+
+  /// Set the interpolation indices as a float. For each interpolation index,
+  /// the integer portion is the current index, and the decimal part is the 
+  /// percentage of the distance between the current index and the next
+  /// index.  For example, a distance midway between index 45 and 46 
+  /// would give an interpolation index of 45.5.
+  /// For time, we are assuming that all grids have the same times or that
   /// there are no overlaps in time, I think.
-  float time_index;
+  precision_t time_index;
 
   /**************************************************************
    * input_electrodynamics_struct is a structure that contains
@@ -325,37 +383,42 @@ class Electrodynamics {
     int nLats;
     int nMlts;
 
-    /// vectors of magnetic latitudes and magnetic local times:
-    fvec mlats;
-    fvec mlts;
+
+    /// Vectors of magnetic latitudes and magnetic local times:
+    arma_vec mlats;
+    arma_vec mlts;
+
 
     /// Vector of times (in seconds):
     std::vector<double> times;
 
     /// Vector of 2d electric potentials (in Volts):
-    std::vector<fmat> potential;
-    /// potential at current time:
-    fmat potential_current;
+
+    std::vector<arma_mat> potential;
+
+    /// Potential at current time:
+    arma_mat potential_current;
     
     /// Vector of 2d electron energy flux (in ergs/cm2/s):
-    std::vector<fmat> energy_flux;
-    /// at current time:
-    fmat energy_flux_current;
+    std::vector<arma_mat> energy_flux;
+    /// Said energy flux at the current time:
+    arma_mat energy_flux_current;
     
     /// Vector of 2d electron average energy (in keV):
-    std::vector<fmat> average_energy;
-    /// average energy at current time:
-    fmat average_energy_current;
+    std::vector<arma_mat> average_energy;
+    /// Average energy at current time:
+    arma_mat average_energy_current;
     
     /// Vector of 2d ion energy flux (in ergs/cm2/s):
-    std::vector<fmat> ion_energy_flux;
+    std::vector<arma_mat> ion_energy_flux;
     /// ion energy flux at current time:
-    fmat ion_energy_flux_current;
+    arma_mat ion_energy_flux_current;
     
     /// Vector of 2d ion average energy (in keV):
-    std::vector<fmat> ion_average_energy;
+    std::vector<arma_mat> ion_average_energy;
     /// ion average energy at current time:
-    fmat ion_average_energy_current;
+    arma_mat ion_average_energy_current;
+
 
     /// Set to 1 if ion precipitation is included, else set to 0:
     int DoesIncludeIonPrecip;
@@ -372,11 +435,12 @@ class Electrodynamics {
     /// interpolation indices for latitudes. If the requested latitude
     /// is outside of the latitude range of the grid, then the
     /// interpolation index should be set to -1:
-    fmat lats_indices;
+
+    arma_mat lats_indices;
     /// interpolation indices for mlts. If the requested mlt
     /// is outside of the mlt range of the grid, then the
     /// interpolation index should be set to -1:
-    fmat mlts_indices;
+    arma_mat mlts_indices;
     
   };
   
@@ -442,7 +506,9 @@ class Electrodynamics {
      \param values_old the output of this function for the last grid
   **/  
   
-  fmat get_values(fmat matToInterpolateOn, int rows, int cols);
+
+  arma_mat get_values(arma_mat matToInterpolateOn, int rows, int cols);
+
 };
 
 #endif // INCLUDE_ELECTRODYNAMICS_H_

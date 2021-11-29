@@ -8,8 +8,12 @@
 // We should create more sophisticated ones, but this is ok for now.
 // -----------------------------------------------------------------------
 
-fcube solver_chemistry(fcube density, fcube source, fcube loss, float dt) {
-  fcube normalized_loss = loss / (density + 1e-6);
-  fcube new_density = (density + dt * source) / (1.0 + dt * normalized_loss);
+arma_cube solver_chemistry(arma_cube density,
+                           arma_cube source,
+                           arma_cube loss,
+                           precision_t dt) {
+  arma_cube normalized_loss = loss / (density + 1e-6);
+  arma_cube new_density = (density + dt * source) /
+                          (1.0 + dt * normalized_loss);
   return new_density;
 }

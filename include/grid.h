@@ -13,6 +13,7 @@ class Grid {
 public:
 
   int get_IsGeoGrid();
+  bool get_HasBField();
   void set_IsGeoGrid(int value);
 
   int64_t get_nPointsInGrid();
@@ -28,30 +29,32 @@ public:
   int64_t get_nGCs();
 
   // Armidillo Cube Versions:
-  fcube geoLon_scgc, geoX_scgc;
-  fcube geoLat_scgc, geoY_scgc;
-  fcube geoAlt_scgc, geoZ_scgc;
-  fcube geoLocalTime_scgc;
+  arma_cube geoLon_scgc, geoX_scgc;
+  arma_cube geoLat_scgc, geoY_scgc;
+  arma_cube geoAlt_scgc, geoZ_scgc;
+  arma_cube geoLocalTime_scgc;
   
   // These define the magnetic grid:
   // Armidillo Cube Versions:
-  fcube magLon_scgc, magX_scgc, magPhi_scgc;
-  fcube magLat_scgc, magY_scgc, magP_scgc;
-  fcube magAlt_scgc, magZ_scgc, magQ_scgc;
-  fcube magLocalTime_scgc;
+
+  arma_cube magLon_scgc, magX_scgc, magPhi_scgc;
+  arma_cube magLat_scgc, magY_scgc, magP_scgc;
+  arma_cube magAlt_scgc, magZ_scgc, magQ_scgc;
+  arma_cube magLocalTime_scgc;
+
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
-  fvec mag_pole_north_ll;
-  fvec mag_pole_south_ll;
+  arma_vec mag_pole_north_ll;
+  arma_vec mag_pole_south_ll;
 
   // pole gse -> needs to be for each altitude, so we can compute
   // magnetic local time. We want to use some GSE conversion function,
-  // so this type has to a vector of fcubes:
-  std::vector<fcube> mag_pole_north_gse;
-  std::vector<fcube> mag_pole_south_gse;
+  // so this type has to a vector of arma_cubes:
+  std::vector<arma_cube> mag_pole_north_gse;
+  std::vector<arma_cube> mag_pole_south_gse;
   
-  std::vector<fcube> GSE_XYZ_vcgc;
+  std::vector<arma_cube> GSE_XYZ_vcgc;
 
   std::string altitude_name = "Altitude";
   std::string altitude_unit = "meters";
@@ -64,20 +67,29 @@ public:
 
   // These are derived variables from the grid:
 
-  // Switch to armadillo variables (float cubes):
-  fcube radius_scgc;
-  fcube radius2_scgc;
-  fcube radius2i_scgc;
-  fcube gravity_scgc;
+  // Switch to armadillo variables (precision_t cubes):
+  arma_cube radius_scgc;
+  arma_cube radius2_scgc;
+  arma_cube radius2i_scgc;
+  arma_cube gravity_scgc;
 
-  fcube sza_scgc;
-  fcube cos_sza_scgc;
+  arma_cube sza_scgc;
+  arma_cube cos_sza_scgc;
 
-  fcube dalt_center_scgc;
-  fcube dalt_lower_scgc;
+  arma_cube dalt_center_scgc;
+  arma_cube dalt_lower_scgc;
+  arma_cube dalt_ratio_scgc;
+  arma_cube dalt_ratio_sq_scgc;
 
-  std::vector<fcube> bfield_vcgc;
-  fcube bfield_mag_scgc;
+  arma_cube dlon_center_scgc;
+  arma_cube dlon_center_dist_scgc;
+
+  arma_cube dlat_center_scgc;
+  arma_cube dlat_center_dist_scgc;
+  
+  std::vector<arma_cube> bfield_vcgc;
+  arma_cube bfield_mag_scgc;
+  std::vector<arma_cube> bfield_unit_vcgc;
 
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
@@ -87,12 +99,18 @@ public:
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
   void init_geo_grid(Planets planet, Inputs input, Report &report);
-  void fill_grid_bfield(Planets planet, Inputs input, Report &report);
   void init_mag_grid(Planets planet, Inputs input, Report &report);
+  void create_simple_lat_lon_alt_grid(Inputs input, Report &report);
+  void fill_grid_bfield(Planets planet, Inputs input, Report &report);
+  bool read_restart(std::string dir);
+  bool write_restart(std::string dir);
+  void report_grid_boundaries();
+  
+ private:
 
-private:
 
   int IsGeoGrid;
+  bool HasBField;
 
   int64_t nX, nLons;
   int64_t nY, nLats;

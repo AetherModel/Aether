@@ -7,36 +7,37 @@
 // The armadillo library is to allow the use of 3d cubes and other
 // array types, with array math built in. This eliminates loops!
 #include <armadillo>
+#include "aether.h"
 using namespace arma;
 
-void copy_cube_to_array(fcube cube_in,
+void copy_cube_to_array(arma_cube cube_in,
                         float *array_out);
 
 void copy_vector_to_array(std::vector<float> vector_in,
 			  int64_t nElements,
 			  float *array_out);
 
-std::vector<fcube> transform_llr_to_xyz_3d(std::vector<fcube> llr);
-std::vector<fcube> rotate_around_x_3d(std::vector<fcube> XYZ_in, float angle);
-std::vector<fcube> rotate_around_y_3d(std::vector<fcube> XYZ_in, float angle);
-std::vector<fcube> rotate_around_z_3d(std::vector<fcube> XYZ_in, float angle);
+std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr);
+std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
+std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
+std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
 
-void transform_llr_to_xyz(float llr_in[3], float xyz_out[3]);
-void transform_rot_z(float xyz_in[3], float angle_in, float xyz_out[3]);
-void transform_rot_y(float xyz_in[3], float angle_in, float xyz_out[3]);
+void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3]);
+void transform_rot_z(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]);
+void transform_rot_y(precision_t xyz_in[3], precision_t angle_in, precision_t xyz_out[3]);
 void transform_float_vector_to_array(std::vector<float> input,
-                                     float output[3]);
+                                     precision_t output[3]);
 
-void transform_vector_xyz_to_env(float xyz_in[3],
-                                 float lon,
-                                 float lat,
-                                 float env_out[3]);
+void transform_vector_xyz_to_env(precision_t xyz_in[3],
+                                 precision_t lon,
+                                 precision_t lat,
+                                 precision_t env_out[3]);
 
 // These are not really transformations, but are placeholders
 
-void vector_diff(float vect_in_1[3],
-                 float vect_in_2[3],
-                 float vect_out[3]);
+void vector_diff(precision_t vect_in_1[3],
+                 precision_t vect_in_2[3],
+                 precision_t vect_out[3]);
 
 void vector_add(float vect_in_1[3],
                  float vect_in_2[3],

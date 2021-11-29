@@ -9,7 +9,7 @@ Overall Design Philosophy
 Directory Structure:
 
 - Try to stick to standard names that other projects use (src, doc, etc.)
-- No capitol letters
+- No capital letters
 - Use underscores to between words
 - Names should be short but descriptive (less than 25 characters)
 - Source term files should start with `calc`

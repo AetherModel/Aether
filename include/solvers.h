@@ -9,25 +9,24 @@
 #include <armadillo>
 using namespace arma;
 
-fvec solver_conduction(fvec value,
-		       fvec lambda,
-		       fvec front,
-		       float dt,
-		       fvec dx);
+arma_vec solver_conduction(arma_vec value,
+			   arma_vec lambda,
+			   arma_vec front,
+			   precision_t dt,
+			   arma_vec dx);
 
 
-fcube solver_chemistry(fcube density,
-		       fcube source,
-		       fcube loss,
-		       float dt);
+arma_cube solver_chemistry(arma_cube density,
+			   arma_cube source,
+			   arma_cube loss,
+			   precision_t dt);
 
-/// Use the previous value:
+
+/// Set flag values that indicate whether the previous, next, closest,
+/// or an interpolated value should be used.
 const int iPrevious_ = 1;
-/// Use the next value:
 const int iNext_ = 2;
-// Use the closest value:
 const int iClosest_ = 3; 
-/// Interpolate:
 const int iInterp_ = 4;
 
 double interpolate_1d_get_index_doubles(double intime,
@@ -43,11 +42,16 @@ double interpolate_1d_w_index(std::vector<float> values,
 double interpolate_1d_w_index(std::vector<float> values,
 			      float interpolation_index,
 			      int interpolation_type);
-double interpolate_1d_w_index(fvec values,
+double interpolate_1d_w_index(arma_vec values,
 			      double interpolation_index,
 			      int interpolation_type);
 fmat interpolate_1d_w_index(std::vector<fmat> values,
 			    double interpolation_index,
 			    int interpolation_type);
 
+arma_cube calc_gradient_lon(arma_cube value, Grid grid);
+arma_cube calc_gradient_lat(arma_cube value, Grid grid);
+arma_cube calc_gradient_alt(arma_cube value, Grid grid);
+std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
+  
 #endif  // INCLUDE_SOLVERS_H_

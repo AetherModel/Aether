@@ -10,7 +10,7 @@
 
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
-// The setting of initial values should probably be moved. 
+// The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
 Inputs::Inputs(Times &time, Report &report) {
@@ -28,7 +28,7 @@ Inputs::Inputs(Times &time, Report &report) {
 
   //for geo grid
   geo_grid_input.alt_file = "";
-  geo_grid_input.IsUniformAlt = 1;
+  geo_grid_input.IsUniformAlt = true;
   geo_grid_input.alt_min = 100.0 * 1000.0;
   geo_grid_input.dalt = 5.0 * 1000.0;
 
@@ -41,15 +41,15 @@ Inputs::Inputs(Times &time, Report &report) {
     geo_grid_input.lon_max = 0.0;
   } else {
     geo_grid_input.lon_min = 0.0;
-    geo_grid_input.lon_max = 2.0*cPI;
+    geo_grid_input.lon_max = 2.0 * cPI;
   }
 
   if (nLatsGeo == 1) {
     geo_grid_input.lat_min = 0.0;
     geo_grid_input.lat_max = 0.0;
   } else {
-    geo_grid_input.lat_min = -cPI/2;
-    geo_grid_input.lat_max = cPI/2;
+    geo_grid_input.lat_min = -cPI / 2;
+    geo_grid_input.lat_max = cPI / 2;
   }
   //for mag grid
   mag_grid_input.alt_file = "";
@@ -89,24 +89,122 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  int iErr = read(time, report);
-  if (iErr > 0) std::cout << "Error in reading input file!\n";
+  int iErr = read_inputs_json(time, report);
+
+  if (iErr > 0)
+    std::cout << "Error in reading input file!\n";
+}
+
+
+// -----------------------------------------------------------------------
+// Return value of a key in the json formatted inputs
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_settings_str(std::string key1) {
+  std::string value = "unknown";
+
+  if (settings.contains(key1))
+    value = settings.at(key1);
+
+  return value;
+}
+
+std::string Inputs::get_settings_str(std::string key1,
+                                     std::string key2) {
+  std::string value = "unknown";
+
+  if (settings.contains(key1))
+    if (settings.at(key1).contains(key2))
+      value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+std::vector<int> Inputs::get_settings_intarr(std::string key1) {
+  std::vector<int> value;
+
+  if (settings.contains(key1)) {
+    int nPts = settings.at(key1).size();
+
+    for (int i = 0; i < nPts; i++)
+      value.push_back(settings.at(key1).at(i));
+  }
+
+  return value;
+}
+
+std::vector<int> Inputs::get_settings_timearr(std::string key1) {
+  int nPtsTime = 7;
+  std::vector<int> outarr(nPtsTime, 0);
+  std::vector<int> timearr = get_settings_intarr(key1);
+
+  int nPts = timearr.size();
+
+  if (nPts > nPtsTime)
+    nPts = nPtsTime;
+
+  for (int i = 0; i < nPts; i++)
+    outarr[i] = timearr[i];
+
+  return outarr;
 }
 
 // -----------------------------------------------------------------------
 // Return characteristics of the geo grid that are entered by the user
 // -----------------------------------------------------------------------
 
-Inputs::grid_input_struct Inputs::get_geo_grid_inputs() {
+Inputs::grid_input_struct Inputs::get_grid_inputs() {
+  // First Get Values:
+  geo_grid_input.alt_file = settings["GeoGrid"]["AltFile"];
+  geo_grid_input.IsUniformAlt = settings["GeoGrid"]["IsUniformAlt"];
+  geo_grid_input.alt_min = settings["GeoGrid"]["MinAlt"];
+  geo_grid_input.dalt = settings["GeoGrid"]["dAlt"];
+  geo_grid_input.lat_min = settings["GeoGrid"]["MinLat"];
+  geo_grid_input.lat_max = settings["GeoGrid"]["MaxLat"];
+  geo_grid_input.lon_min = settings["GeoGrid"]["MinLon"];
+  geo_grid_input.lon_max = settings["GeoGrid"]["MaxLon"];
+
+  // Second Change Units
+  geo_grid_input.alt_min = geo_grid_input.alt_min * cKMtoM;
+  geo_grid_input.dalt = geo_grid_input.dalt * cKMtoM;
+  geo_grid_input.lat_min = geo_grid_input.lat_min * cDtoR;
+  geo_grid_input.lat_max = geo_grid_input.lat_max * cDtoR;
+  geo_grid_input.lon_min = geo_grid_input.lon_min * cDtoR;
+  geo_grid_input.lon_max = geo_grid_input.lon_max * cDtoR;
+
   return geo_grid_input;
 }
 
 // -----------------------------------------------------------------------
-// Return characteristics of the mag grid that are entered by the user
+// Return whether to restart or not
 // -----------------------------------------------------------------------
 
-Inputs::grid_input_struct Inputs::get_mag_grid_inputs() {
-  return mag_grid_input;
+bool Inputs::get_do_restart() {
+  return settings["Restart"]["do"];
+}
+
+// -----------------------------------------------------------------------
+// Return restart OUT directory
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_restartout_dir() {
+  return settings["Restart"]["OutDir"];
+}
+
+// -----------------------------------------------------------------------
+// Return restart OUT directory
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_restartin_dir() {
+  return settings["Restart"]["InDir"];
+}
+
+// -----------------------------------------------------------------------
+// dt for writing restart files
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_dt_write_restarts() {
+  return settings["Restart"]["dt"];
 }
 
 // -----------------------------------------------------------------------
@@ -114,7 +212,7 @@ Inputs::grid_input_struct Inputs::get_mag_grid_inputs() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_bfield_type() {
-  return bfield;
+  return settings["BField"];
 }
 
 // -----------------------------------------------------------------------
@@ -122,39 +220,39 @@ std::string Inputs::get_bfield_type() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_model() {
-  return euv_model;
+  return settings["Euv"]["Model"];
 }
 
 // -----------------------------------------------------------------------
 // Return the heating efficiency of the neutrals for EUV
 // -----------------------------------------------------------------------
 
-float Inputs::get_euv_heating_eff_neutrals() {
-  return euv_heating_eff_neutrals;
+precision_t Inputs::get_euv_heating_eff_neutrals() {
+  return settings["Euv"]["HeatingEfficiency"];
 }
 
 // -----------------------------------------------------------------------
 // Return how often to calculate EUV energy deposition
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_euv() {
-  return dt_euv;
+precision_t Inputs::get_dt_euv() {
+  return settings["Euv"]["dt"];
 }
 
 // -----------------------------------------------------------------------
 // Return how often to report progress of simulation
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_report() {
-  return dt_report;
+precision_t Inputs::get_dt_report() {
+  return settings["Debug"]["dt"];
 }
 
 // -----------------------------------------------------------------------
 // Return number of output types
 // -----------------------------------------------------------------------
 
-float Inputs::get_n_outputs() {
-  return dt_output.size();
+precision_t Inputs::get_n_outputs() {
+  return settings["Outputs"]["type"].size();
 }
 
 // -----------------------------------------------------------------------
@@ -162,15 +260,15 @@ float Inputs::get_n_outputs() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_nLonsGeo() {
-  return nLonsGeo;
+  return settings["GeoBlockSize"]["nLons"];
 }
 
 int Inputs::get_nLatsGeo() {
-  return nLatsGeo;
+  return settings["GeoBlockSize"]["nLats"];;
 }
 
 int Inputs::get_nAltsGeo() {
-  return nAltsGeo;
+  return settings["GeoBlockSize"]["nAlts"];
 }
 
 // -----------------------------------------------------------------------
@@ -193,10 +291,13 @@ int Inputs::get_nAltsMag() {
 // Return how often to output a given output type
 // -----------------------------------------------------------------------
 
-float Inputs::get_dt_output(int iOutput) {
-  float value = 0.0;
-  int iSize = dt_output.size();
-  if (iOutput < iSize) value = dt_output[iOutput];
+precision_t Inputs::get_dt_output(int iOutput) {
+  precision_t value = 0.0;
+  int nOutputs = settings.at("Outputs").at("type").size();
+
+  if (iOutput < nOutputs)
+    value = settings.at("Outputs").at("dt").at(iOutput);
+
   return value;
 }
 
@@ -206,8 +307,11 @@ float Inputs::get_dt_output(int iOutput) {
 
 std::string Inputs::get_type_output(int iOutput) {
   std::string value = "";
-  int iSize = dt_output.size();
-  if (iOutput < iSize) value = type_output[iOutput];
+  int nOutputs = settings.at("Outputs").at("type").size();
+
+  if (iOutput < nOutputs)
+    value = settings.at("Outputs").at("type").at(iOutput);
+
   return value;
 }
 
@@ -216,7 +320,15 @@ std::string Inputs::get_type_output(int iOutput) {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_file() {
-  return euv_file;
+  return settings["Euv"]["File"];
+}
+
+// -----------------------------------------------------------------------
+// Return aurora file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_aurora_file() {
+  return settings["AuroraFile"];
 }
 
 // -----------------------------------------------------------------------
@@ -224,7 +336,7 @@ std::string Inputs::get_euv_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_chemistry_file() {
-  return chemistry_file;
+  return settings["ChemistryFile"];
 }
 
 // -----------------------------------------------------------------------
@@ -232,15 +344,16 @@ std::string Inputs::get_chemistry_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_collision_file() {
-  return collision_file;
+  return settings["CollisionsFile"];
 }
+
 
 // -----------------------------------------------------------------------
 // Return total number of OMNIWeb files to read
 // -----------------------------------------------------------------------
 
 int Inputs::get_number_of_omniweb_files() {
-  return omniweb_files.size();
+  return settings["OmniwebFiles"].size();
 }
 
 // -----------------------------------------------------------------------
@@ -248,6 +361,12 @@ int Inputs::get_number_of_omniweb_files() {
 // -----------------------------------------------------------------------
 
 std::vector<std::string> Inputs::get_omniweb_files() {
+  std::vector<std::string> omniweb_files;
+  int nFiles = settings["OmniwebFiles"].size();
+
+  for (int i = 0; i < nFiles; i++)
+    omniweb_files.push_back(settings.at("OmniwebFiles").at(i));
+
   return omniweb_files;
 }
 
@@ -256,7 +375,7 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_f107_file() {
-  return f107_file;
+  return settings["F107File"];
 }
 
 // -----------------------------------------------------------------------
@@ -264,7 +383,7 @@ std::string Inputs::get_f107_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
-  return planet;
+  return settings["Planet"];
 }
 
 // -----------------------------------------------------------------------
@@ -272,7 +391,7 @@ std::string Inputs::get_planet() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planetary_file() {
-  return planetary_file;
+  return settings["PlanetCharacteristicsFile"];
 }
 
 // -----------------------------------------------------------------------
@@ -281,9 +400,10 @@ std::string Inputs::get_planetary_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet_species_file() {
-  return planet_species_file;
+  return settings["PlanetSpeciesFile"];
 }
 
-std::string Inputs::get_electrodynamics_file(){
-  return electrodynamics_file;
+std::string Inputs::get_electrodynamics_file() {
+  return settings["ElectrodynamicsFile"];
 }
+

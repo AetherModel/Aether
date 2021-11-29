@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "../include/aether.h"
+
 // -------------------------------------------------------------------
 // Read a line of the file, set to lower case, remove spaces until
 // the end of the line or 2+ spaces are reached.
@@ -15,8 +17,10 @@
 std::string make_lower(std::string instring) {
   std::string outstring = instring;
   int len = instring.length();
+
   for (int i = 0; i < len; i++)
     outstring[i] = tolower(outstring[i]);
+
   return outstring;
 }
 
@@ -30,17 +34,21 @@ std::string strip_string_end(std::string instring) {
   int iStart = -1;
   std::string outstring;
   int len = instring.length();
+
   for (i = 0; i < len; i++) {
     if (instring[i] == ' ') {
-      if (i > 0 && iStart == i-1) break;
+      if (i > 0 && iStart == i - 1)
+        break;
       else
         iStart = i;
     }
   }
+
   if (iStart > -1 && i < len)
     outstring = instring.substr(0, iStart);
   else
     outstring = instring;
+
   return outstring;
 }
 
@@ -52,11 +60,12 @@ std::string strip_spaces(std::string instring) {
   int i;
   std::string outstring;
   int len = instring.length();
+
   for (i = 0; i < len; i++) {
-    if (instring[i] != ' ') {
-      outstring = outstring+instring[i];
-    }
+    if (instring[i] != ' ')
+      outstring = outstring + instring[i];
   }
+
   return outstring;
 }
 
@@ -69,16 +78,20 @@ std::string replace_spaces_with_commas(std::string instring) {
   std::string outstring;
   int len = instring.length();
   i = 0;
+
   while (i < len) {
     if (instring[i] != ' ') {
-      outstring = outstring+instring[i];
+      outstring = outstring + instring[i];
       i++;
     } else {
-      outstring = outstring+',';
+      outstring = outstring + ',';
       i++;
-      while (i < len && instring[i] == ' ') i++;
+
+      while (i < len && instring[i] == ' ')
+        i++;
     }
   }
+
   return outstring;
 }
 
@@ -98,6 +111,7 @@ std::string read_string(std::ifstream &file_ptr, std::string hash) {
     // Clearly these could all be combined, but I like separating them:
     line = strip_string_end(line);
     line = strip_spaces(line);
+
     if (line.length() < 1) {
       std::cout << "Issue in read_inputs!\n";
       std::cout << "Should be:\n";
@@ -105,6 +119,7 @@ std::string read_string(std::ifstream &file_ptr, std::string hash) {
       std::cout << "string variable with length > 0\n";
     }
   }
+
   return line;
 }
 
@@ -123,10 +138,10 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
   } else {
     getline(file_ptr, line);
     line = strip_string_end(line);
+
     try {
       output = stoi(line);
-    }
-    catch(...) {
+    } catch (...) {
       std::cout << "Issue in read_integer!\n";
       std::cout << "In hash: ";
       std::cout << hash << "\n";
@@ -134,6 +149,7 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
       std::cout << line << "\n";
     }
   }
+
   return output;
 }
 
@@ -141,10 +157,10 @@ int read_int(std::ifstream &file_ptr, std::string hash) {
 // Read a string, clean it up, and convert it to an float
 // -------------------------------------------------------------------
 
-float read_float(std::ifstream &file_ptr, std::string hash) {
+precision_t read_float(std::ifstream &file_ptr, std::string hash) {
 
   std::string line = "";
-  float output = -1;
+  precision_t output = -1;
 
   if (!file_ptr.is_open()) {
     std::cout << "File is not open (read_float)!\n";
@@ -152,10 +168,10 @@ float read_float(std::ifstream &file_ptr, std::string hash) {
   } else {
     getline(file_ptr, line);
     line = strip_string_end(line);
+
     try {
       output = stoi(line);
-    }
-    catch(...) {
+    } catch (...) {
       std::cout << "Issue in read_float!\n";
       std::cout << "In hash: ";
       std::cout << hash << "\n";
@@ -163,6 +179,7 @@ float read_float(std::ifstream &file_ptr, std::string hash) {
       std::cout << line << "\n";
     }
   }
+
   return output;
 }
 
@@ -174,17 +191,21 @@ std::string find_next_hash(std::ifstream &file_ptr) {
 
   std::string line;
 
-  if (!file_ptr.is_open()) {
+  if (!file_ptr.is_open())
     std::cout << "File is not open (find_next_hash)!\n";
-  } else {
+
+  else {
     while (getline(file_ptr, line)) {
       // Clearly these could all be combined, but I like separating them:
       line = strip_string_end(line);
       line = strip_spaces(line);
       line = make_lower(line);
-      if (line[0] == '#') return line;
+
+      if (line[0] == '#')
+        return line;
     }
   }
+
   line = "";
   return line;
 }
@@ -200,9 +221,8 @@ std::vector<std::string> parse_csv_row_into_vector(std::string line) {
   std::string col;
   std::stringstream ss(line);
 
-  while (getline(ss, col, ',')) {
+  while (getline(ss, col, ','))
     row.push_back(col);
-  }
 
   return row;
 }
@@ -222,9 +242,10 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {
   std::string line, col;
   line = "  ";
 
-  if (!file_ptr.is_open()) {
+  if (!file_ptr.is_open())
     std::cout << "File is not open (read_csv)!\n";
-  } else {
+
+  else {
     // This assumes that the CSV file's layout is perfect - that the
     // number of columns is the same in each row.  If that is not the
     // case, then bad stuff happens.  I need to add more debugging
@@ -236,6 +257,7 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {
       data.push_back(row);
     }
   }
+
   return data;
 }
 
@@ -254,9 +276,10 @@ std::vector<std::vector<std::string>> read_ssv(std::ifstream &file_ptr) {
   std::string line, col;
   line = "  ";
 
-  if (!file_ptr.is_open()) {
+  if (!file_ptr.is_open())
     std::cout << "File is not open (read_ssv)!\n";
-  } else {
+
+  else {
     // This assumes that the SSV file's layout is perfect - that the
     // number of columns is the same in each row.  If that is not the
     // case, then bad stuff happens.  I need to add more debugging
@@ -267,6 +290,7 @@ std::vector<std::vector<std::string>> read_ssv(std::ifstream &file_ptr) {
       data.push_back(row);
     }
   }
+
   return data;
 }
 
@@ -283,18 +307,20 @@ std::vector<int> read_itime(std::ifstream &file_ptr, std::string hash) {
 
   // Interpret whether it is a column (first) or row (second):
   if (stimes.size() == 6) {  // column
-    for (int i = 0; i < 6; i++) itime[i] = stoi(stimes[i][0]);
+    for (int i = 0; i < 6; i++)
+      itime[i] = stoi(stimes[i][0]);
   } else {
     if (stimes.size() == 1 && stimes[0].size() >= 6) {  // row
-      for (int i = 0; i < 6; i++) itime[i] = stoi(stimes[0][i]);
-    } else {
+      for (int i = 0; i < 6; i++)
+        itime[i] = stoi(stimes[0][i]);
+    } else
       iErr = 1;
-    }
   }
 
-  if (iErr == 0) {
+  if (iErr == 0)
     itime[6] = 0;
-  } else {
+
+  else {
     itime[0] = -1;
     std::cout << "Issue in read_inputs!\n";
     std::cout << "Should be:\n";
@@ -311,5 +337,6 @@ std::vector<int> read_itime(std::ifstream &file_ptr, std::string hash) {
     std::cout << hash << "\n";
     std::cout << "year, month, day, hour, minute, second\n";
   }
+
   return itime;
 }

@@ -31,7 +31,7 @@ OBJECTS = \
 	fill_grid.o\
 	init_geo_grid.o\
 	init_mag_grid.o\
-	output.o\
+	output_binary.o\
 	read_collision_file.o\
 	read_f107_file.o\
 	read_input_file.o\

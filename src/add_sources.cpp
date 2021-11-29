@@ -16,7 +16,7 @@ void Neutrals::add_sources(Times time, Report &report) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  float dt = time.get_dt();
+  precision_t dt = time.get_dt();
 
   temperature_scgc =
     temperature_scgc +

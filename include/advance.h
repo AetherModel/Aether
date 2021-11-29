@@ -4,15 +4,19 @@
 #ifndef INCLUDE_ADVANCE_H_
 #define INCLUDE_ADVANCE_H_
 
-#include "../include/electrodynamics.h"
-#include "../include/times.h"
-#include "../include/inputs.h"
-#include "../include/neutrals.h"
-#include "../include/euv.h"
-#include "../include/grid.h"
-#include "../include/planets.h"
-#include "../include/ions.h"
 
+/**************************************************************
+ * 
+ * advance:
+ *
+ * - Function that advances the states in Aether by one time step
+ *
+ *   Pretty much all classes have to be passed into this function
+ *   this function calls a bunch of functions that alters all
+ *   of the states in the system.
+ **************************************************************/
+
+#include "../include/aether.h"
 
 int advance(Planets &planet,
             Grid &gGrid,

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <chrono>
 
-#include "../include/report.h"
+#include "../include/aether.h"
 
 // -----------------------------------------------------------------------
 // Initialize class Report
@@ -17,7 +17,8 @@ Report::Report() {
   iVerbose = 0;
   divider = ">";
   divider_length = divider.length();
-  iLevel = 0;
+  // Set iLevel to -1, so that the call in main takes it to 0:
+  iLevel = -1;
 }
 
 // -----------------------------------------------------------------------
@@ -37,10 +38,13 @@ void Report::enter(std::string input, int &iFunction) {
   if (iFunction > -1)
     if (current_entry == entries[iFunction].entry)
       iEntry = iFunction;
+
   if (iEntry == -1) {
     for (int i = 0; i < nEntries; i++)
-      if (current_entry == entries[i].entry) iEntry = i;
+      if (current_entry == entries[i].entry)
+        iEntry = i;
   }
+
   if (iEntry == -1) {
     item_struct tmp;
     tmp.entry = current_entry;
@@ -50,19 +54,22 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.iLastEntry = iCurrentFunction;
     entries.push_back(tmp);
     nEntries++;
-    iEntry = nEntries-1;
+    iEntry = nEntries - 1;
     iFunction = iEntry;
   }
 
   // This was taken from
   // https://stackoverflow.com/questions/19555121/how-to-get-current-timestamp-in-milliseconds-since-1970-just-the-way-java-gets
-  unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>
+                           (std::chrono::system_clock::now().time_since_epoch()).count();
 
   entries[iEntry].timing_start = now;
   iLevel++;
   entries[iEntry].iLevel = iLevel;
   iCurrentFunction = iEntry;
 
+  // Sometimes it is good to uncomment this line and see what is happening:
+  //std::cout << "iLevel : " << iLevel << " " << current_entry << "\n";
   print(iLevel, "Entering function : " + current_entry);
 }
 
@@ -82,12 +89,17 @@ void Report::exit(std::string input) {
     std::cout << "Report::exit Error!!! Could not find valid entry!\n";
     std::cout << "current_entry : " << current_entry << "\n";
   } else {
+
+    if (DoReportOnExit)
+      print(iLevel, "Exiting function : " + current_entry);
+
     // Get current system time:
-    unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>
+                             (std::chrono::system_clock::now().time_since_epoch()).count();
 
     // Calculate the difference in times, do get the total timing:
     entries[iEntry].timing_total = entries[iEntry].timing_total +
-      float(now - entries[iEntry].timing_start)/1000.0;
+                                   float(now - entries[iEntry].timing_start) / 1000.0;
 
     // Increment the total number of times that the function has been called:
     entries[iEntry].nTimes++;
@@ -105,12 +117,19 @@ void Report::exit(std::string input) {
 
 void Report::times() {
   std::cout << "Timing Summary :\n";
-  for (int i=0; i < nEntries; i++) {
+
+  for (int i = 0; i < nEntries; i++) {
     if (entries[i].iLevel <= iTimingDepth) {
       std::cout << entries[i].entry << "\n";
-      for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+
+      for (int j = 0; j < entries[i].iLevel; j++)
+        std::cout << "  ";
+
       std::cout << "nTimes called : " << entries[i].nTimes << "\n";
-      for (int j=0; j < entries[i].iLevel; j++) std::cout << "  ";
+
+      for (int j = 0; j < entries[i].iLevel; j++)
+        std::cout << "  ";
+
       std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
     }
   }
@@ -121,7 +140,8 @@ void Report::times() {
 // -----------------------------------------------------------------------
 
 void Report::print(int iLevel, std::string output_string) {
-  if (test_verbose(iLevel)) std::cout << output_string << "\n";
+  if (test_verbose(iLevel))
+    std::cout << output_string << "\n";
 }
 
 // -----------------------------------------------------------------------
@@ -130,11 +150,16 @@ void Report::print(int iLevel, std::string output_string) {
 
 int Report::test_verbose(int iLevel) {
   int iPass = 0;
+
   if (iLevel <= iVerbose) {
     iPass = 1;
-    for (int iL = 0; iL < iLevel; iL++) std::cout << "=";
+
+    for (int iL = 0; iL < iLevel; iL++)
+      std::cout << "=";
+
     std::cout << "> ";
   }
+
   return iPass;
 }
 

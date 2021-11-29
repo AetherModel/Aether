@@ -13,15 +13,17 @@ public:
 
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
+  int read_inputs_json(Times &time, Report &report);
   int get_verbose();
-  float get_dt_euv();
-  float get_dt_report();
-  float get_n_outputs();
-  float get_dt_output(int iOutput);
+  precision_t get_dt_euv();
+  precision_t get_dt_report();
+  precision_t get_n_outputs();
+  precision_t get_dt_output(int iOutput);
   std::string get_type_output(int iOutput);
-  float get_euv_heating_eff_neutrals();
+  precision_t get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
+  std::string get_aurora_file();
   std::string get_chemistry_file();
   std::vector<std::string> get_omniweb_files();
   int get_number_of_omniweb_files();
@@ -32,24 +34,29 @@ public:
   std::string get_collision_file();
   std::string get_bfield_type();
   std::string get_electrodynamics_file();
-
+  bool get_do_restart();
+  std::string get_restartout_dir();
+  std::string get_restartin_dir();
+  precision_t get_dt_write_restarts();
+  
   // ------------------------------
   // Grid inputs:
 
   struct grid_input_struct {
     std::string alt_file;
-    int IsUniformAlt;
-    float alt_min;
-    float dalt;
-    float lat_min;
-    float lat_max;
-    float lon_min;
-    float lon_max;
+    bool IsUniformAlt;
+    precision_t alt_min;
+    precision_t dalt;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t lon_min;
+    precision_t lon_max;
   };
 
-  grid_input_struct get_geo_grid_inputs();
-  grid_input_struct get_mag_grid_inputs();
-
+  //grid_input_struct get_geo_grid_inputs();
+  //grid_input_struct get_mag_grid_inputs();
+  grid_input_struct get_grid_inputs();
+  
   int get_nLonsGeo();
   int get_nLatsGeo();
   int get_nAltsGeo();
@@ -61,9 +68,17 @@ public:
   int iVerbose;
   int iTimingDepth;
 
+  std::string get_settings_str(std::string key1);
+  std::string get_settings_str(std::string key1, std::string key2);
+  std::vector<int> get_settings_timearr(std::string key1);
+  std::vector<int> get_settings_intarr(std::string key1);
+  
 private:
 
+  json settings;
+  
   std::string euv_file = "UA/inputs/euv.csv";
+  std::string aurora_file = "UA/inputs/aurora_earth.csv";
   std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
   std::string collision_file =
     "UA/inputs/ion_neutral_collision_frequencies.csv";
@@ -82,13 +97,21 @@ private:
 
   grid_input_struct mag_grid_input;
 
-  float euv_heating_eff_neutrals;
-  float euv_heating_eff_electrons;
+  //float euv_heating_eff_neutrals;
+  //float euv_heating_eff_electrons;
+  precision_t euv_heating_eff_neutrals;
+  precision_t euv_heating_eff_electrons;
 
   std::vector<float> dt_output;
   std::vector<std::string> type_output;
-  float dt_euv;
-  float dt_report;
+  std::string output_directory = "UA/output";
+  std::string restart_out_directory = "UA/restartOut";
+  std::string restart_in_directory = "UA/restartIn";
+
+  bool DoRestart;
+  
+  precision_t dt_euv;
+  precision_t dt_report;
 
   int nLonsGeo;
   int nLatsGeo;

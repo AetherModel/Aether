@@ -25,9 +25,9 @@ void Neutrals::calc_mass_density(Report &report) {
   rho_scgc.zeros();
   density_scgc.zeros();
 
-  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
-      species[iSpecies].mass * species[iSpecies].density_scgc;
+               species[iSpecies].mass * species[iSpecies].density_scgc;
     density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
 
@@ -58,20 +58,20 @@ void Neutrals::calc_specific_heat(Report &report) {
   gamma_scgc.zeros();
   kappa_scgc.zeros();
 
-  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     Cv_scgc = Cv_scgc +
-      (species[iSpecies].vibe - 2) *
-      species[iSpecies].density_scgc *
-      cKB / species[iSpecies].mass;
+              (species[iSpecies].vibe - 2) *
+              species[iSpecies].density_scgc *
+              cKB / species[iSpecies].mass;
     gamma_scgc = gamma_scgc +
-      species[iSpecies].density_scgc / (species[iSpecies].vibe-2);
+                 species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
     kappa_scgc = kappa_scgc +
-      species[iSpecies].thermal_cond *
-      species[iSpecies].density_scgc %
-      pow(temperature_scgc, species[iSpecies].thermal_exp);
+                 species[iSpecies].thermal_cond *
+                 species[iSpecies].density_scgc %
+                 pow(temperature_scgc, species[iSpecies].thermal_exp);
   }
 
-  Cv_scgc = Cv_scgc / (2*density_scgc);
+  Cv_scgc = Cv_scgc / (2 * density_scgc);
   gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
   kappa_scgc = kappa_scgc / density_scgc;
 
@@ -113,7 +113,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   double y, dy;
 
-  float grad_xp, grad_in, Xg, in, int_g, int_p;
+  precision_t grad_xp, grad_in, Xg, in, int_g, int_p;
   int64_t iiAlt;
 
   std::string function = "Neutrals::calc_chapman";
@@ -127,23 +127,23 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   // New way of doing it with 3D arrays:
 
-  fcube integral3d(nLons, nLats, nAlts);
-  fcube log_int3d(nLons, nLats, nAlts);
-  fcube xp3d(nLons, nLats, nAlts);
-  fcube y3d(nLons, nLats, nAlts);
-  fcube erfcy3d(nLons, nLats, nAlts);
+  arma_cube integral3d(nLons, nLats, nAlts);
+  arma_cube log_int3d(nLons, nLats, nAlts);
+  arma_cube xp3d(nLons, nLats, nAlts);
+  arma_cube y3d(nLons, nLats, nAlts);
+  arma_cube erfcy3d(nLons, nLats, nAlts);
 
-  fvec integral1d(nAlts);
-  fvec log_int1d(nAlts);
-  fvec xp1d(nAlts);
-  fvec y1d(nAlts);
-  fvec erfcy1d(nAlts);
-  fvec dAlt1d(nAlts);
-  fvec sza1d(nAlts);
-  fvec radius1d(nAlts);
-  fvec H1d(nAlts);
+  arma_vec integral1d(nAlts);
+  arma_vec log_int1d(nAlts);
+  arma_vec xp1d(nAlts);
+  arma_vec y1d(nAlts);
+  arma_vec erfcy1d(nAlts);
+  arma_vec dAlt1d(nAlts);
+  arma_vec sza1d(nAlts);
+  arma_vec radius1d(nAlts);
+  arma_vec H1d(nAlts);
 
-  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
@@ -151,7 +151,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
-    iAlt = nAlts-1;
+    iAlt = nAlts - 1;
 
     integral3d.fill(0.0);
 
@@ -159,15 +159,18 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    for (iAlt = nAlts-1; iAlt >= 0; iAlt--) {
-      if (iAlt < nAlts-1) {
-        integral3d.slice(iAlt) = integral3d.slice(iAlt+1) +
-          species[iSpecies].density_scgc.slice(iAlt) %
-          grid.dalt_lower_scgc.slice(iAlt+1);
+    for (iAlt = nAlts - 1; iAlt >= 0; iAlt--) {
+      if (iAlt < nAlts - 1) {
+        integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
+                                 species[iSpecies].density_scgc.slice(iAlt) %
+                                 grid.dalt_lower_scgc.slice(iAlt + 1);
       }
     }
 
-    erfcy3d = (a + b * y3d) / (c + d*y3d + y3d % y3d);
+    species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
+
+    erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
+
     for (iLon = 0; iLon < nLons ; iLon++)
       for (iLat = 0; iLat < nLats ; iLat++)
         for (iAlt = 0; iAlt < nAlts ; iAlt++)
@@ -195,25 +198,28 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
           // This is on the dayside:
-          if (sza1d(iAlt) < cPI/2 || sza1d(iAlt) > 3*cPI/2) {
+          if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
             species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
               integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
           } else {
             // This is on the nghtside of the terminator:
 
-            y = radius1d(iAlt) * abs(cos(sza1d(iAlt)-cPI/2));
+            y = radius1d(iAlt) * abs(cos(sza1d(iAlt) - cPI / 2));
 
             // This sort of assumes that nGeoGhosts >= 2:
             if (y > radius1d(nGCs)) {
 
               iiAlt = iAlt;
-              while (radius1d(iiAlt-1) > y) iiAlt--;
+
+              while (radius1d(iiAlt - 1) > y)
+                iiAlt--;
+
               iiAlt--;
 
               // make sure to use the proper cell spacing (iiAlt+1 & lower):
-              grad_xp = (xp1d(iiAlt+1) - xp1d(iiAlt)) / dAlt1d(iiAlt+1);
-              grad_in = (log_int1d(iiAlt+1) - log_int1d(iiAlt)) /
-                        dAlt1d(iiAlt+1);
+              grad_xp = (xp1d(iiAlt + 1) - xp1d(iiAlt)) / dAlt1d(iiAlt + 1);
+              grad_in = (log_int1d(iiAlt + 1) - log_int1d(iiAlt)) /
+                        dAlt1d(iiAlt + 1);
 
               // Linearly interpolate H and X:
               dy = y - radius1d(iiAlt);
@@ -227,7 +233,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
                 sqrt(0.5 * cPI * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
               if (species[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
-		  max_chapman)
+                  max_chapman)
                 species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
 
             } else {
@@ -251,7 +257,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
 void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
-  float dt;
+  precision_t dt;
 
   int64_t iLon, iLat;
 
@@ -263,20 +269,20 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
 
-  fcube rhocvr23d(nLons, nLats, nAlts);
-  fcube lambda3d(nLons, nLats, nAlts);
-  fcube prandtl3d(nLons, nLats, nAlts);
+  arma_cube rhocvr23d(nLons, nLats, nAlts);
+  arma_cube lambda3d(nLons, nLats, nAlts);
+  arma_cube prandtl3d(nLons, nLats, nAlts);
 
   rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
   // Need to make this eddy * rho * cv:
   prandtl3d.zeros();
   lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
-  fvec temp1d(nAlts);
-  fvec lambda1d(nAlts);
-  fvec rhocvr21d(nAlts);
-  fvec dalt1d(nAlts);
-  fvec conduction1d(nAlts);
+  arma_vec temp1d(nAlts);
+  arma_vec lambda1d(nAlts);
+  arma_vec rhocvr21d(nAlts);
+  arma_vec dalt1d(nAlts);
+  arma_vec conduction1d(nAlts);
 
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iLat = 0; iLat < nLats; iLat++) {
@@ -297,5 +303,6 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
       conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
     }  // lat
   }  // lon
+
   report.exit(function);
 }
