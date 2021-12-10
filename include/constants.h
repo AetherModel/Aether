@@ -134,4 +134,10 @@ const float cNTtoT = 1e-9;  // nT to T
 const bool DoRead = true;
 const bool DoWrite = false;
 
+// -------------------------------------------------------------------------
+// Define a small value
+// -------------------------------------------------------------------------
+
+const precision_t cSmall = 1e-6;
+
 #endif  // INCLUDE_CONSTANTS_H_
