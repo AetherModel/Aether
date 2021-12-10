@@ -8,6 +8,8 @@
 // array types, with array math built in. This eliminates loops!
 #include <armadillo>
 
+#include "mpi.h"
+
 // Types
 // Precision compile-time aliasing
 #ifdef AETHER_USE_PRECISION_DOUBLE
@@ -17,7 +19,6 @@ using precision_t = double;
 /// Precision type compile-time default to float.
 using precision_t = float;
 #endif
-
 
 /// Armadillo type vector (single column) with compile-time precision.
 using arma_vec = arma::Col<precision_t>;
@@ -110,5 +111,8 @@ using json = nlohmann::json;
 
 // not done
 #include "calc_grid_derived.h"
+
+// not done
+#include "parallel.h"
 
 #endif  // INCLUDE_AETHER_H_
