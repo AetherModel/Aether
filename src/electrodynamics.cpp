@@ -235,16 +235,14 @@ void Electrodynamics::set_time(double time, Report &report) {
   iLow = 0;
   iHigh = times.size() - 1;
 
-  if (intime <= times[iLow]) {
+  if (intime < times[iLow]) {
     interpolation_index = 0.0;
-    std::cout <<
-              "Warning: current time below first available potential-vector time, using first time"
-              << "\n";
-  } else if (intime >= times[iHigh]) {
+    report.print(0, "Warning: current time below first available\n");
+    report.print(0, "potential-vector time, using first time\n");
+  } else if (intime > times[iHigh]) {
     interpolation_index = iHigh;
-    std::cout <<
-              "Warning: current time above last available potential-vector time, using last time"
-              << "\n";
+    report.print(0, "Warning: current time above last available\n");
+    report.print(0, "potential-vector time, using last time\n");
   }
 
   // At this point, we know that it is somewhere between the highest
