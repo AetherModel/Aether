@@ -57,6 +57,12 @@ if(OPENMP_FOUND)
   target_link_libraries(aether PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
+find_package(MPI)
+if (MPI_FOUND)
+  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES})
+endif()
+
 #if(USE_NETCDF)
 set(NETCDF_CXX "YES")
 find_package(NetCDF REQUIRED)
