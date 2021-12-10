@@ -7,6 +7,16 @@
 // Convert an integer to a zero-padded string
 // -----------------------------------------------------------------------------
 
+bool compare(precision_t value1, precision_t value2) {
+  precision_t diff = fabs(value1 - value2);
+  if (diff < cSmall) return true;
+  else return false;
+}
+
+// -----------------------------------------------------------------------------
+// Convert an integer to a zero-padded string
+// -----------------------------------------------------------------------------
+
 std::string tostr(int64_t num_to_convert, int64_t zero_padding_len) {
   std::ostringstream ss;
   ss << std::setw( zero_padding_len ) << std::setfill( '0' ) << num_to_convert;

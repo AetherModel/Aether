@@ -23,4 +23,6 @@ std::string tostr(int64_t num_to_convert, int64_t zero_padding_len);
 json read_json(std::string json_file);
 bool write_json(std::string json_file, json json_output);
 
+bool compare(precision_t value1, precision_t value2);
+
 #endif  // INCLUDE_TOOLS_H_
