@@ -163,22 +163,24 @@ int output(const Neutrals &neutrals,
 
       // ------------------------------------------------------------
       // Set output file names
+
+      std::string filename;
       
       if (type_output == "neutrals")
-        AllOutputContainers[iOutput].set_filename("3DNEU_" +
-						  time.get_YMD_HMS());
+        filename = "3DNEU_";
 
       if (type_output == "states")
-        AllOutputContainers[iOutput].set_filename("3DALL_" +
-						  time.get_YMD_HMS());
+        filename = "3DALL_";
 
       if (type_output == "ions")
-        AllOutputContainers[iOutput].set_filename("3DION_" +
-						  time.get_YMD_HMS());
+        filename = "3DION_";
 
       if (type_output == "bfield")
-        AllOutputContainers[iOutput].set_filename("3DBFI_" +
-						  time.get_YMD_HMS());
+        filename = "3DBFI_";
+      
+      filename = filename + time.get_YMD_HMS() + "_" + cMember + "_" + cGrid;
+      report.print(0, "Writing file : " + filename);
+      AllOutputContainers[iOutput].set_filename(filename);
 
       // ------------------------------------------------------------
       // write output container
@@ -446,7 +448,6 @@ int OutputContainer::write_container_header() {
     {"variables", variables},
     {"units", units} });
   std::string whole_filename = directory + "/" + filename + ".json";
-  std::cout << "Writing file : " << whole_filename << "\n";
 
   try {
     std::ofstream file(whole_filename);
@@ -682,7 +683,6 @@ int OutputContainer::write_container_netcdf() {
   std::string LONG_NAME = "long_name";
 
   try {
-    std::cout << "Writing File : " << whole_filename << "\n";
     NcFile ncdf_file(whole_filename, NcFile::replace);
     // Add dimensions:
     NcDim xDim = ncdf_file.addDim("lon", elements[0].value.n_rows);
