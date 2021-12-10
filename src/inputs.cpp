@@ -227,7 +227,7 @@ precision_t Inputs::get_n_outputs() {
 }
 
 // -----------------------------------------------------------------------
-// Return number of longitudes, latitudes, and altitudes in grid
+// Return number of longitudes, latitudes, and altitudes in Geo grid
 // -----------------------------------------------------------------------
 
 int Inputs::get_nLonsGeo() {
@@ -240,6 +240,38 @@ int Inputs::get_nLatsGeo() {
 
 int Inputs::get_nAltsGeo() {
   return settings["GeoBlockSize"]["nAlts"];
+}
+
+// -----------------------------------------------------------------------
+// Return number of Blocks of longitudes and latitudes in Geo grid
+// -----------------------------------------------------------------------
+
+int Inputs::get_nBlocksLonGeo() {
+  return settings["GeoBlockSize"]["nBlocksLon"];
+}
+
+int Inputs::get_nBlocksLatGeo() {
+  return settings["GeoBlockSize"]["nBlocksLat"];;
+}
+
+// -----------------------------------------------------------------------
+// Return number of ensemble members
+// -----------------------------------------------------------------------
+
+int Inputs::get_nMembers() {
+  return settings["Ensembles"]["nMembers"];
+}
+
+// -----------------------------------------------------------------------
+// Return verbose variables
+// -----------------------------------------------------------------------
+
+int Inputs::get_verbose() {
+  return settings["Debug"]["iVerbose"];
+}
+
+int Inputs::get_verbose_proc() {
+  return settings["Debug"]["iProc"];
 }
 
 // -----------------------------------------------------------------------
