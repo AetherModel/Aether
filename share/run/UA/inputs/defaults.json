@@ -21,7 +21,9 @@
 
     "GeoBlockSize" : {
 	"nLons" : 36,
+	"nBlocksLon" : 1,
 	"nLats" : 36,
+	"nBlocksLat" : 1,
 	"nAlts" : 50},
 
     "GeoGrid" : {
@@ -34,6 +36,9 @@
         "AltFile" : "",
 	"IsUniformAlt" : true},
 
+    "Ensembles" : {
+        "nMembers" : 1},
+    
     "F107File" : "UA/inputs/f107.txt",
     "ChemistryFile" : "UA/inputs/chemistry_earth.csv",
     "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
