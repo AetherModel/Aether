@@ -391,7 +391,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
   OutputContainer RestartContainer;
   RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("neutrals");
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
 
   try {
     if (DoRead)
