@@ -23,6 +23,9 @@ int main() {
   // Create inputs (reading the input file):
   Inputs input(time, report);
 
+  // Initialize MPI and parallel aspects of the code:
+  iErr = init_parallel(input, report);
+  
   // Initialize the EUV system:
   Euv euv(input, report);
 
@@ -35,8 +38,8 @@ int main() {
 
   // Initialize Geographic grid:
   Grid gGrid(input.get_nLonsGeo(),
-             input.get_nLatsGeo(),
-             input.get_nAltsGeo(),
+	     input.get_nLatsGeo(),
+	     input.get_nAltsGeo(),
 	     nGeoGhosts);
   gGrid.init_geo_grid(planet, input, report);
   gGrid.fill_grid(planet, report);
@@ -63,8 +66,8 @@ int main() {
   // works with input time
   Electrodynamics electrodynamics(input, report);
   bool times_are_aligned = electrodynamics.check_times(time.get_current(),
-                                                       time.get_end());
-
+						       time.get_end());
+  
   if (!times_are_aligned) {
     iErr = 1;
     std::cout << "Times don't align with electrodynamics file! ";
@@ -94,7 +97,7 @@ int main() {
   // the advance functions should only go to this intermediate time,
   // then a loop around that goes to the end time.  Then, the code can
   // be made into a library and run externally.
-
+    
   while (time.get_current() < time.get_end()) {
 
     time.increment_intermediate(dt_couple);
@@ -102,16 +105,16 @@ int main() {
     // Increment until the intermediate time:
     while (time.get_current() < time.get_intermediate())
       iErr = advance(planet,
-                     gGrid,
-                     time,
-                     euv,
-                     neutrals,
-                     ions,
-                     chemistry,
-                     electrodynamics,
-                     indices,
-                     input,
-                     report);
+		     gGrid,
+		     time,
+		     euv,
+		     neutrals,
+		     ions,
+		     chemistry,
+		     electrodynamics,
+		     indices,
+		     input,
+		     report);
 
     // Should write out some restart files every time we are done with
     // intermediate times.  Just so when we restart, we know that we can
@@ -129,8 +132,13 @@ int main() {
       ions.restart_file(input.get_restartout_dir(), DoWrite);
       time.restart_file(input.get_restartout_dir(), DoWrite);
     }
-    // Do some coupling here. But we have no coupling to do. Sad.
-  }
+
+    // Do some coupling here. But we have no coupling to do. Sad.      
+      
+  } // End of outer time loop - done with run!
+
+  // End parallel tasks:
+  iErr = MPI_Finalize();
 
   report.exit(function);
   report.times();
