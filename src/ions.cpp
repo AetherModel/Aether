@@ -253,7 +253,7 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
   OutputContainer RestartContainer;
   RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("ions");
+  RestartContainer.set_filename("ions_" + cMember + "_" + cGrid);
 
   try {
     if (DoRead)
