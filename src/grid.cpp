@@ -87,24 +87,31 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 bool Grid::write_restart(std::string dir) {
   bool DidWork = true;
 
-  try {
-    OutputContainer RestartContainer;
-    RestartContainer.set_netcdf();
-    RestartContainer.set_directory(dir);
-    RestartContainer.set_version(0.1);
-    //RestartContainers.set_time(time.get_current());
-    RestartContainer.set_time(0.0);
-    RestartContainer.set_filename("grid");
-    RestartContainer.store_variable(longitude_name,
-                                    longitude_unit,
-                                    geoLon_scgc);
-    RestartContainer.store_variable(latitude_name, latitude_unit, geoLat_scgc);
-    RestartContainer.store_variable(altitude_name, altitude_unit, geoAlt_scgc);
-    RestartContainer.write();
-    RestartContainer.clear_variables();
-  } catch (...) {
-    std::cout << "Error writing grid restart file!\n";
-    DidWork = false;
+  // All Ensemble member grids should be the same, so only need to write
+  // out the 0th member
+  if (iMember == 0) {
+    try {
+      OutputContainer RestartContainer;
+      RestartContainer.set_netcdf();
+      RestartContainer.set_directory(dir);
+      RestartContainer.set_version(0.1);
+      RestartContainer.set_time(0.0);
+      RestartContainer.set_filename("grid_"+cGrid);
+      RestartContainer.store_variable(longitude_name,
+				      longitude_unit,
+				      geoLon_scgc);
+      RestartContainer.store_variable(latitude_name,
+				      latitude_unit,
+				      geoLat_scgc);
+      RestartContainer.store_variable(altitude_name,
+				      altitude_unit,
+				      geoAlt_scgc);
+      RestartContainer.write();
+      RestartContainer.clear_variables();
+    } catch (...) {
+      std::cout << "Error writing grid restart file!\n";
+      DidWork = false;
+    }
   }
 
   return DidWork;
@@ -120,14 +127,16 @@ bool Grid::read_restart(std::string dir) {
   bool DidWork = true;
   int64_t iVar;
 
+  // While only the 0th ensemble member writes, all ensemble members have
+  // to read the grid.
+  
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_netcdf();
     RestartContainer.set_directory(dir);
     RestartContainer.set_version(0.1);
-    RestartContainer.set_filename("grid");
+    RestartContainer.set_filename("grid_"+cGrid);
     RestartContainer.read_container_netcdf();
-
     geoLon_scgc = RestartContainer.get_element_value(longitude_name);
     geoLat_scgc = RestartContainer.get_element_value(latitude_name);
     geoAlt_scgc = RestartContainer.get_element_value(altitude_name);
