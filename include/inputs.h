@@ -16,6 +16,7 @@ public:
   int read_inputs_json(Times &time, Report &report);
   json read_json(std::string json_file);
   int get_verbose();
+  int get_verbose_proc();
   precision_t get_dt_euv();
   precision_t get_dt_report();
   precision_t get_n_outputs();
@@ -60,7 +61,13 @@ public:
   int get_nLatsGeo();
   int get_nAltsGeo();
 
+  int get_nBlocksLonGeo();
+  int get_nBlocksLatGeo();
+
+  int get_nMembers();
+
   int iVerbose;
+  int iVerboseProc;
   int iTimingDepth;
 
   std::string get_settings_str(std::string key1);
