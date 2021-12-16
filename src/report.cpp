@@ -116,9 +116,8 @@ void Report::exit(std::string input) {
 // -----------------------------------------------------------------------
 
 void Report::times() {
-  std::cout << "Timing Summary :\n";
-
   if (iVerbose >= 0) {  
+    std::cout << "Timing Summary :\n";
     for (int i = 0; i < nEntries; i++) {
       if (entries[i].iLevel <= iTimingDepth) {
 	std::cout << entries[i].entry << "\n";
