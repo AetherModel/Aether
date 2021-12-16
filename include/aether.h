@@ -4,11 +4,15 @@
 #ifndef INCLUDE_AETHER_H_
 #define INCLUDE_AETHER_H_
 
-// The armadillo library is to allow the use of 3d cubes and other
-// array types, with array math built in. This eliminates loops!
+/// The armadillo library is to allow the use of 3d cubes and other
+/// array types, with array math built in. This eliminates loops!
 #include <armadillo>
 
-#include "mpi.h"
+/// This is used for timing and the random seed generator:
+#include <chrono>
+
+/// This is for generating random numbers:
+#include <random>
 
 // Types
 // Precision compile-time aliasing
