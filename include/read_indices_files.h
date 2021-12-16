@@ -27,7 +27,7 @@
   \param args info about how user has configured things
   \param report allow reporting to occur
 **/
-int read_and_store_indices(Indices &indices, Inputs args, Report &report);
+bool read_and_store_indices(Indices &indices, Inputs args, Report &report);
 
 /**********************************************************************
   \brief Read the NGDC F10.7 file format and store in the index_file struct
