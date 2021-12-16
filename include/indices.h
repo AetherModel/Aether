@@ -112,6 +112,13 @@ class Indices {
   int get_ae_index_id();
   int get_au_index_id();
   int get_al_index_id();
+
+  /**************************************************************
+   \brief Return the indices index of the variable name
+   \param name the name of the variable to find the index for
+   **/
+  
+  int lookup_index_id(std::string name);
   
   /**************************************************************
    \brief This function sets the f107, does an 81 day ave, sets f107a too
@@ -127,10 +134,37 @@ class Indices {
    \param values vector of values for each index value
    \param missing value for missing data
    **/
-  void set_index(int index_id,
+  bool set_index(int index_id,
 		 std::vector<double> time,
 		 std::vector<float> values,
 		 precision_t missing);
+
+  /**************************************************************
+   \brief set the index array into the indices class
+   \param index_name which index is being checked in (bx, by, kp, ae, etc)
+   \param time vector of time for each index value
+   \param values vector of values for each index value
+   \param missing value for missing data
+   **/
+  bool set_index(std::string index_name,
+		 std::vector<double> timearray,
+		 std::vector<float> indexarray,
+		 precision_t missing);
+  
+  /**************************************************************
+   \brief Perturbs the indices requested by user input
+   \param args info about how user has configured things
+   \param report allow reporting to occur
+   **/
+  bool perturb(Inputs args, Report &report);
+
+  /**************************************************************
+   \brief Perturbs the specific indices based on the user input
+   \param iIndex which index to perturb
+   \param seed random seed for perturbations
+   \param style characteristics of the perturbations (+/*, mean/std, const)
+   **/
+  void perturb_index(int iIndex, int seed, json style);
 
 // -----------------------------------------------------------------------
 // Private functions and variables
@@ -145,7 +179,7 @@ private:
     int64_t nValues;
 
     /// a vector of values for the index:
-    std::vector<float> values;
+    std::vector<precision_t> values;
 
     /// a vector of times for the values:
     std::vector<double> times;
@@ -174,12 +208,16 @@ private:
   /// number of indices that system is capable of keeping track of:
   int nIndices = 13;
 
+  /// this will let us go back and forth between names and ids:
+  json indices_lookup;
+  
   /**************************************************************
    \brief The general function that returns the index value at the time
    \param time the time in seconds that the index is requested at
    \param the index to return (i.e., one of the constants defined above)
    **/
   precision_t get_index(double time, int index);
+
 };
 
 
