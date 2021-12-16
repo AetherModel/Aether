@@ -4,6 +4,9 @@
 #ifndef INCLUDE_PARALLEL_H_
 #define INCLUDE_PARALLEL_H_
 
+/// Need MPI (message passing interface) to do parallel stuff: 
+#include "mpi.h"
+
 extern int nProcs;
 extern int iProc;
 extern std::string cProc;
@@ -16,6 +19,8 @@ extern int nGrids;
 extern int iGrid;
 extern std::string cGrid;
 
-int init_parallel(Inputs input, Report &report);
+extern MPI_Comm aether_communicator;
+
+int init_parallel(Inputs &input, Report &report);
 
 #endif  // INCLUDE_PARALLEL_H_
