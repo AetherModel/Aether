@@ -4,6 +4,35 @@
 #include "../include/aether.h"
 
 // -----------------------------------------------------------------------------
+// Generate a vector of normally distributed random doubles
+// -----------------------------------------------------------------------------
+
+std::vector<double> get_normal_random_vect(double mean,
+					   double std,
+					   int64_t nValues,
+					   int seed) {
+  std::default_random_engine generator(seed); 
+  std::normal_distribution<double> distribution(mean, std);
+  std::vector<double> values(nValues);
+  for (int64_t iVal = 0; iVal < nValues; iVal++)
+    values[iVal] = distribution(generator);
+  return values;
+}
+
+// -----------------------------------------------------------------------------
+// Generate a vector of uniformly distributed random unsigned ints
+// -----------------------------------------------------------------------------
+
+std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
+						   int seed) {
+  std::default_random_engine get_random(seed);
+  std::vector<unsigned int> values(nValues);
+  for (int64_t iVal = 0; iVal < nValues; iVal++)
+    values[iVal] = get_random();
+  return values;
+}
+
+// -----------------------------------------------------------------------------
 // Convert an integer to a zero-padded string
 // -----------------------------------------------------------------------------
 
@@ -144,4 +173,31 @@ std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
   // Vertical:
   cross.push_back(vec1[0] % vec2[1] - vec1[1] % vec2[0]);
   return cross;
+}
+
+// -----------------------------------------------------------------------------
+// calculate mean of vector
+// -----------------------------------------------------------------------------
+
+precision_t mean(std::vector<precision_t> values) {
+  int64_t nValues = values.size();
+  precision_t m = 0.0;
+  for (int64_t iValue = 0; iValue < nValues; iValue++)
+    m = m + values[iValue];
+  m = m/nValues;
+  return m;
+}
+
+// -----------------------------------------------------------------------------
+// calculate standard deviation of vector
+// -----------------------------------------------------------------------------
+
+precision_t standard_deviation(std::vector<precision_t> values) {
+  int64_t nValues = values.size();
+  precision_t m = mean(values);
+  precision_t s = 0;
+  for (int64_t iValue = 0; iValue < nValues; iValue++)
+    s = s + (m - values[iValue]) * (m - values[iValue]);
+  s = sqrt(s/nValues);
+  return s;
 }
