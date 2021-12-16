@@ -66,6 +66,19 @@ Inputs::Inputs(Times &time, Report &report) {
     std::cout << "Error in reading input file!\n";
 }
 
+// -----------------------------------------------------------------------
+// output the settings json to a file (for restart)
+// -----------------------------------------------------------------------
+
+bool Inputs::write_restart() {
+  bool DidWork = true;
+  if (iProc == 0) {
+    std::string filename = settings["Restart"]["OutDir"];
+    filename = filename + "/settings.json";
+    DidWork = write_json(filename, settings);
+  }
+  return DidWork;
+}
 
 // -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
@@ -227,6 +240,33 @@ precision_t Inputs::get_n_outputs() {
 }
 
 // -----------------------------------------------------------------------
+// Return original random number seed
+// -----------------------------------------------------------------------
+
+int Inputs::get_original_seed() {
+  return settings["Seed"];
+}
+
+// -----------------------------------------------------------------------
+// Set random number seed
+// -----------------------------------------------------------------------
+
+void Inputs::set_seed(int seed) {
+  settings["Seed"] = seed;
+  updated_seed = seed;
+}
+
+// -----------------------------------------------------------------------
+// Return random number seed that has been updated
+// -----------------------------------------------------------------------
+
+int Inputs::get_updated_seed() {
+  std::default_random_engine get_random(updated_seed);
+  updated_seed = get_random();
+  return updated_seed;
+}
+
+// -----------------------------------------------------------------------
 // Return number of longitudes, latitudes, and altitudes in Geo grid
 // -----------------------------------------------------------------------
 
@@ -335,6 +375,14 @@ std::string Inputs::get_collision_file() {
 }
 
 // -----------------------------------------------------------------------
+// Return Indices Lookup Filename
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_indices_lookup_file() {
+  return settings["IndicesLookupFile"];
+}
+
+// -----------------------------------------------------------------------
 // Return total number of OMNIWeb files to read
 // -----------------------------------------------------------------------
 
@@ -391,4 +439,15 @@ std::string Inputs::get_planet_species_file() {
 
 std::string Inputs::get_electrodynamics_file() {
   return settings["ElectrodynamicsFile"];
+}
+
+// -----------------------------------------------------------------------
+// 
+// -----------------------------------------------------------------------
+
+json Inputs::get_perturb_values() {
+  json values;
+  if (settings.contains("Perturb"))
+    values = settings["Perturb"];
+  return values;
 }

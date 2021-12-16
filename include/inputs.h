@@ -14,7 +14,6 @@ public:
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
   int read_inputs_json(Times &time, Report &report);
-  json read_json(std::string json_file);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
@@ -27,6 +26,7 @@ public:
   std::string get_euv_file();
   std::string get_aurora_file();
   std::string get_chemistry_file();
+  std::string get_indices_lookup_file();
   std::vector<std::string> get_omniweb_files();
   int get_number_of_omniweb_files();
   std::string get_f107_file();
@@ -40,6 +40,11 @@ public:
   std::string get_restartout_dir();
   std::string get_restartin_dir();
   precision_t get_dt_write_restarts();
+  int get_original_seed();
+  int get_updated_seed();
+  void set_seed(int seed);
+  bool write_restart();
+  json get_perturb_values();  
   
   // ------------------------------
   // Grid inputs:
@@ -114,6 +119,9 @@ private:
   int nLonsGeo;
   int nLatsGeo;
   int nAltsGeo;
+
+  int updated_seed;
+  
 };
 
 #endif  // INCLUDE_INPUTS_H_
