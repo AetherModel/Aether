@@ -11,6 +11,7 @@
 int main() {
 
   int iErr = 0;
+  bool DidWork = true;
 
   Times time;
   Report report;
@@ -25,6 +26,9 @@ int main() {
 
   // Initialize MPI and parallel aspects of the code:
   iErr = init_parallel(input, report);
+
+  // Everything should be set for the inputs now, so write a restart file:
+  input.write_restart();
   
   // Initialize the EUV system:
   Euv euv(input, report);
@@ -32,10 +36,12 @@ int main() {
   // Initialize the planet:
   Planets planet(input, report);
 
-  // Initialize the indices (and read the files):
+  // Initialize the indices, read the files, and perturb:
   Indices indices(input);
-  iErr = read_and_store_indices(indices, input, report);
-
+  DidWork = read_and_store_indices(indices, input, report);
+  if (DidWork)
+    indices.perturb(input, report);
+  
   // Initialize Geographic grid:
   Grid gGrid(input.get_nLonsGeo(),
 	     input.get_nLatsGeo(),
