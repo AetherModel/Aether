@@ -163,7 +163,7 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
     }
   }
 
-  if (report.test_verbose(0)) 
+  if (report.test_verbose(2)) 
     std::cout << "connectivity : "
 	      << "  iProc : " << iProc
 	      << "  isnorth : " << DoesTouchNorthPole
