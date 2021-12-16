@@ -38,6 +38,8 @@
 
     "Ensembles" : {
         "nMembers" : 1},
+
+    "Seed" : 0,
     
     "F107File" : "UA/inputs/f107.txt",
     "ChemistryFile" : "UA/inputs/chemistry_earth.csv",
