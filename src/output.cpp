@@ -177,8 +177,12 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
-      
-      filename = filename + time.get_YMD_HMS() + "_" + cMember + "_" + cGrid;
+
+      filename = filename + time.get_YMD_HMS();
+      if (nMembers > 1)
+	filename = filename + "_" + cMember;
+      if (nGrids > 1)
+	filename = filename + "_" + cGrid;
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
 
