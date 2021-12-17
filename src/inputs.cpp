@@ -72,11 +72,13 @@ Inputs::Inputs(Times &time, Report &report) {
 
 bool Inputs::write_restart() {
   bool DidWork = true;
+
   if (iProc == 0) {
     std::string filename = settings["Restart"]["OutDir"];
     filename = filename + "/settings.json";
     DidWork = write_json(filename, settings);
   }
+
   return DidWork;
 }
 
@@ -442,12 +444,14 @@ std::string Inputs::get_electrodynamics_file() {
 }
 
 // -----------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------
 
 json Inputs::get_perturb_values() {
   json values;
+
   if (settings.contains("Perturb"))
     values = settings["Perturb"];
+
   return values;
 }

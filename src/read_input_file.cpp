@@ -31,7 +31,7 @@ int Inputs::read_inputs_json(Times &time, Report &report) {
   // Set the planet-specific file (user can change this in aether.in file!):
   settings["PlanetSpeciesFile"] =
     "UA/inputs/" + get_settings_str("Planet") + ".in";
-  
+
   // Then read in user perturbations on those defaults:
   user_inputs = read_json("aether.json");
 
@@ -45,7 +45,7 @@ int Inputs::read_inputs_json(Times &time, Report &report) {
     restart_inputs = read_json(restart_file);
     settings.merge_patch(restart_inputs);
   }
-  
+
   // Merge the defaults/restart settings with the user provided
   // settings, with the default/restart settings being the default:
   settings.merge_patch(user_inputs);

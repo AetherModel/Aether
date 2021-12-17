@@ -119,20 +119,21 @@ void Report::times() {
   if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
     float min_timing = entries[0].timing_total * TimingPercent / 100.0;
+
     for (int i = 0; i < nEntries; i++) {
       if (entries[i].iLevel <= iTimingDepth &&
-	  entries[i].timing_total >= min_timing) {
-	std::cout << entries[i].entry << "\n";
+          entries[i].timing_total >= min_timing) {
+        std::cout << entries[i].entry << "\n";
 
-	for (int j = 0; j < entries[i].iLevel; j++)
-	  std::cout << "  ";
+        for (int j = 0; j < entries[i].iLevel; j++)
+          std::cout << "  ";
 
-	std::cout << "nTimes called : " << entries[i].nTimes << "\n";
+        std::cout << "nTimes called : " << entries[i].nTimes << "\n";
 
-	for (int j = 0; j < entries[i].iLevel; j++)
-	  std::cout << "  ";
+        for (int j = 0; j < entries[i].iLevel; j++)
+          std::cout << "  ";
 
-	std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
+        std::cout << "timing_total (s) : " << entries[i].timing_total << "\n";
       }
     }
   }

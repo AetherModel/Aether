@@ -270,20 +270,22 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
       // Density and Temperature (per ion)
       // ----------------------------
       cName = species[iSpecies].cName;
-      if (DoRead) 
+
+      if (DoRead)
         species[iSpecies].density_scgc =
           RestartContainer.get_element_value(cName);
-      else 
+      else
         RestartContainer.store_variable(cName,
                                         density_unit,
                                         species[iSpecies].density_scgc);
 
       cName = temperature_name + " (" + species[iSpecies].cName + ")";
+
       if (DoRead)
         species[iSpecies].temperature_scgc =
           RestartContainer.get_element_value(cName);
       else
-	RestartContainer.store_variable(cName,
+        RestartContainer.store_variable(cName,
                                         temperature_unit,
                                         species[iSpecies].temperature_scgc);
 
@@ -292,6 +294,7 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
       // ----------------------------
       for (int iDir = 0; iDir < 3; iDir++) {
         cName = par_velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
         if (DoRead)
           species[iSpecies].par_velocity_vcgc[iDir] =
             RestartContainer.get_element_value(cName);
@@ -307,10 +310,11 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
       // ----------------------------
       for (int iDir = 0; iDir < 3; iDir++) {
         cName = perp_velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
         if (DoRead)
           species[iSpecies].perp_velocity_vcgc[iDir] =
             RestartContainer.get_element_value(cName);
-	else
+        else
           RestartContainer.store_variable(cName,
                                           velocity_unit,
                                           species[iSpecies].
@@ -322,6 +326,7 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
     // Bulk ion and electron temperatures
     // ----------------------------
     cName = temperature_name + " (bulk ion)";
+
     if (DoRead)
       ion_temperature_scgc = RestartContainer.get_element_value(cName);
     else
@@ -330,12 +335,14 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
                                       ion_temperature_scgc);
 
     cName = temperature_name + " (electron)";
+
     if (DoRead)
       electron_temperature_scgc = RestartContainer.get_element_value(cName);
     else
       RestartContainer.store_variable(temperature_name + " (electron)",
                                       temperature_unit,
                                       electron_temperature_scgc);
+
     if (!DoRead)
       RestartContainer.write();
 

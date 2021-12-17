@@ -18,7 +18,7 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   report.enter(function, iFunction);
 
   IsLatLonGrid = true;
-  
+
   // This is just an example:
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
@@ -59,9 +59,9 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   if (report.test_verbose(2)) {
     std::cout << "Grid Initialization :\n";
     std::cout << "  lon0 : " << lon0 * cRtoD
-	      << "; lat0 : " << lat0 * cRtoD << "\n";
+              << "; lat0 : " << lat0 * cRtoD << "\n";
   }
-  
+
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
@@ -85,18 +85,19 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   int nCols = input.get_nBlocksLonGeo();
   int iRow = iProc / nCols;
   int iLeftMost = iRow * nCols;
-  int iRightMost = iLeftMost + nCols-1;
+  int iRightMost = iLeftMost + nCols - 1;
   int iCol = iProc % nCols;
 
   // Determine y-minus (connectivity to south):
-  
+
   // Figure out if the grid is touching the south pole:
-  if (compare(lat0, -cPI/2)) {
+  if (compare(lat0, -cPI / 2)) {
     DoesTouchSouthPole = true;
     // Touching the south pole -> just shift by 180 degrees:
-    iProcYm = iLeftMost + (iCol + nCols/2) % nCols;
+    iProcYm = iLeftMost + (iCol + nCols / 2) % nCols;
   } else {
     DoesTouchSouthPole = false;
+
     if (iBlockLat == 0)
       // Not touching the south pole, but no blocks to the south:
       iProcYm = -1;
@@ -109,13 +110,15 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 
   // Figure out if the grid is touching the north pole:
   precision_t latmax = lat0 + (nLats - 2 * nGCs) * dlat;
-  if (compare(latmax, cPI/2)) {
+
+  if (compare(latmax, cPI / 2)) {
     DoesTouchNorthPole = true;
     // Touching the north pole -> just shift by 180 degrees:
-    iProcYp = iLeftMost + (iCol + nCols/2) % nCols;
+    iProcYp = iLeftMost + (iCol + nCols / 2) % nCols;
   } else {
     DoesTouchNorthPole = false;
-    if (iBlockLat == input.get_nBlocksLatGeo()-1)
+
+    if (iBlockLat == input.get_nBlocksLatGeo() - 1)
       // Not touching the north pole, but no blocks to the north:
       iProcYp = -1;
     else
@@ -124,56 +127,58 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   }
 
   // Determine x-minus (connectivity to west):
-  
-  if (iCol > 0) {
+
+  if (iCol > 0)
     iProcXm = iProc - 1;
-  } else {
+
+  else {
     // Figure out whether grid is touching East/West:
     if (compare(grid_input.lon_min, 0) &&
-	compare(grid_input.lon_max, cTWOPI)) {
+        compare(grid_input.lon_max, cTWOPI)) {
       // wrapped completely around the Earth
       if (iCol == 0)
-	// wrap around to the right-most point:
-	iProcXm = iRightMost;
+        // wrap around to the right-most point:
+        iProcXm = iRightMost;
     } else {
       // doesn't wrap around the earth, so need fixed boundaries
       if (iBlockLon == 0)
-	// Fixed BCs to the west:
-	iProcXm = -1;
-    }
-  }
-      
-  // Determine x-plus (connectivity to east):
-  
-  if (iCol < nCols-1) {
-    iProcXp = iProc + 1;
-  } else {
-    // Figure out whether grid is touching East/West:
-    if (compare(grid_input.lon_min, 0) &&
-	compare(grid_input.lon_max, cTWOPI)) {
-      // wrapped completely around the Earth
-      if (iBlockLon == nCols-1)
-	// wrap around to the left-most point:
-	iProcXp = iLeftMost;
-    } else {
-      // doesn't wrap around the earth, so need fixed boundaries
-      if (iBlockLon == nCols-1)
-	// Fixed BCs to the east:
-	iProcXp = -1;
+        // Fixed BCs to the west:
+        iProcXm = -1;
     }
   }
 
-  if (report.test_verbose(2)) 
+  // Determine x-plus (connectivity to east):
+
+  if (iCol < nCols - 1)
+    iProcXp = iProc + 1;
+
+  else {
+    // Figure out whether grid is touching East/West:
+    if (compare(grid_input.lon_min, 0) &&
+        compare(grid_input.lon_max, cTWOPI)) {
+      // wrapped completely around the Earth
+      if (iBlockLon == nCols - 1)
+        // wrap around to the left-most point:
+        iProcXp = iLeftMost;
+    } else {
+      // doesn't wrap around the earth, so need fixed boundaries
+      if (iBlockLon == nCols - 1)
+        // Fixed BCs to the east:
+        iProcXp = -1;
+    }
+  }
+
+  if (report.test_verbose(2))
     std::cout << "connectivity : "
-	      << "  iProc : " << iProc
-	      << "  isnorth : " << DoesTouchNorthPole
-	      << "  issouth : " << DoesTouchSouthPole
-	      << "  iProcYm : " << iProcYm
-	      << "  iProcYp : " << iProcYp
-	      << "  iProcXm : " << iProcXm
-	      << "  iProcXp : " << iProcXp
-	      << "\n";
-  
+              << "  iProc : " << iProc
+              << "  isnorth : " << DoesTouchNorthPole
+              << "  issouth : " << DoesTouchSouthPole
+              << "  iProcYm : " << iProcYm
+              << "  iProcYp : " << iProcYp
+              << "  iProcXm : " << iProcXm
+              << "  iProcXp : " << iProcXp
+              << "\n";
+
   report.exit(function);
 }
 

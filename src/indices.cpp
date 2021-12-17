@@ -28,21 +28,24 @@ Indices::Indices(Inputs args) {
   // from the indices lookup file.
   // First, figure out how many indices are included in the file:
   nIndices = 0;
+
   for (auto it = indices_lookup.begin(); it != indices_lookup.end(); ++it) {
     if (it.value() > nIndices)
       nIndices = it.value();
   }
+
   nIndices++;
 
   for (iIndex = 0; iIndex < nIndices; iIndex++) {
     all_indices_arrays.push_back(single_index);
+
     for (auto it = indices_lookup.begin(); it != indices_lookup.end(); ++it) {
       if (it.value() == iIndex) {
-	if (all_indices_arrays[iIndex].name.length() < 1)
-	  all_indices_arrays[iIndex].name = it.key();
+        if (all_indices_arrays[iIndex].name.length() < 1)
+          all_indices_arrays[iIndex].name = it.key();
       }
     }
-  } 
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -100,12 +103,13 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
         print_index_file_output_struct(file_contents);
 
       int nVars = file_contents.nVars;
+
       for (int iVar = 0; iVar < nVars ; iVar++) {
-	if (file_contents.nTimes > 0) {
+        if (file_contents.nTimes > 0) {
           DidWork = indices.set_index(file_contents.var_names[iVar],
-				      file_contents.times,
-				      file_contents.values[iVar],
-				      file_contents.missing_values[iVar]);
+                                      file_contents.times,
+                                      file_contents.values[iVar],
+                                      file_contents.missing_values[iVar]);
         }  // if
       }  // for iVar
     }  // for iFile
@@ -129,18 +133,24 @@ bool Indices::perturb(Inputs args, Report &report) {
     // User has entered some perturb values
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
-      if (report.test_verbose(0)) 
-	std::cout << "Perturbing Index : " << name << "\n";
+
+      if (report.test_verbose(0))
+        std::cout << "Perturbing Index : " << name << "\n";
+
       int iIndex = lookup_index_id(name);
+
       if (iIndex > -1) {
-	int seed = args.get_updated_seed();
-	if (report.test_verbose(0)) 
-	  std::cout << "Index found: " << iIndex
-		    << " seed : " << seed << "\n";
-	perturb_index(iIndex, seed, it.value());
+        int seed = args.get_updated_seed();
+
+        if (report.test_verbose(0))
+          std::cout << "Index found: " << iIndex
+                    << " seed : " << seed << "\n";
+
+        perturb_index(iIndex, seed, it.value());
       }
     }
   }
+
   return DidWork;
 }
 
@@ -156,29 +166,37 @@ void Indices::perturb_index(int iIndex, int seed, json style) {
   precision_t std;
   bool add = true;
   bool constant = false;
+
   if (style.contains("Mean"))
     mean = style["Mean"];
+
   if (style.contains("Std"))
     std = style["Std"];
   else
     std = standard_deviation(all_indices_arrays[iIndex].values);
+
   // Add or Multiply the random values
   if (style.contains("Add"))
     add = style["Add"];
+
   // Only one value for all elements or individual values for elements
   if (style.contains("Constant"))
     constant = style["Constant"];
+
   if (constant)
     nV = 1;
+
   std::vector<double> perturbations = get_normal_random_vect(mean,
-							     std,
-							     nV,
-							     seed);
+                                                             std,
+                                                             nV,
+                                                             seed);
   int64_t iV = 0;
+
   for (int64_t iValue = 0; iValue < nValues; iValue++) {
     if (!constant)
       iV = iValue;
-    if (add) 
+
+    if (add)
       all_indices_arrays[iIndex].values[iValue] += perturbations[iV];
     else
       all_indices_arrays[iIndex].values[iValue] *= perturbations[iV];
@@ -320,16 +338,18 @@ bool Indices::set_index(std::string index_name,
                         precision_t missing) {
   bool DidWork = true;
   int id = lookup_index_id(index_name);
+
   if (id >= 0)
     DidWork = set_index(id, timearray, indexarray, missing);
   else {
     std::cout << "Attempting to set index " << index_name
-	      << " but can't locate it.  Skipping.\n";
+              << " but can't locate it.  Skipping.\n";
     DidWork = false;
   }
+
   return DidWork;
 }
-  
+
 // ----------------------------------------------------------------------
 // This function takes a time array and index aray and combines them
 // to link them together
@@ -341,6 +361,7 @@ bool Indices::set_index(int index,
                         precision_t missing) {
 
   bool DidWork = true;
+
   if (timearray.size() != indexarray.size()) {
     std::cout << "In set_index. Size of time and index arrays don't match!\n";
     std::cout << "  timearray : " << timearray.size() << "\n";
@@ -349,6 +370,7 @@ bool Indices::set_index(int index,
   } else {
     int64_t iSize = timearray.size();
     all_indices_arrays[index].nValues = 0;
+
     for (int64_t i = 0; i < iSize; i++) {
       if (indexarray[i] != missing) {
         all_indices_arrays[index].times.push_back(timearray[i]);
@@ -357,6 +379,7 @@ bool Indices::set_index(int index,
       }
     }
   }
+
   return DidWork;
 }
 
@@ -413,8 +436,10 @@ int Indices::lookup_index_id(std::string name) {
   std::string name_lower = make_lower(name);
   std::string name_strip = strip_spaces(name_lower);
   int ind = -1;
+
   if (indices_lookup.contains(name_strip))
     ind = indices_lookup[name_strip];
+
   return ind;
 }
 

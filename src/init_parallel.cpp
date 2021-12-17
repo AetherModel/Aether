@@ -24,25 +24,25 @@ std::string cGrid;
 MPI_Comm aether_communicator;
 
 int init_parallel(Inputs &input,
-		  Report &report) {
+                  Report &report) {
 
   int iErr = 0;
 
   MPI_Init(NULL, NULL);
 
   aether_communicator = MPI_COMM_WORLD;
-  
+
   // Get the number of processes
   MPI_Comm_size(aether_communicator, &nProcs);
 
   // Get the rank of the process
-  MPI_Comm_rank(aether_communicator, &iProc);  
+  MPI_Comm_rank(aether_communicator, &iProc);
 
   // Modify the verbosity of the code by turning of verbose on all
   // processors except specified processor:
   if (iProc != input.get_verbose_proc())
     report.set_verbose(-1);
-  
+
   nMembers = input.get_nMembers();
 
   // Check to see if we have enough processors to do this stuff:
@@ -57,10 +57,11 @@ int init_parallel(Inputs &input,
     // Get Ensemble member number and grid number:
     iMember = iProc / nGrids;
     iGrid = iProc % nGrids;
+
     if (report.test_verbose(2))
       std::cout << "iProc : " << iProc
-		<< "; iMember : " << iMember
-		<< "; iGrid : " << iGrid << "\n";
+                << "; iMember : " << iMember
+                << "; iGrid : " << iGrid << "\n";
 
     // Create strings to allow for easier output filename creation:
     cProc = "p" + tostr(iProc, 4);
@@ -69,16 +70,19 @@ int init_parallel(Inputs &input,
 
     // Need to initialize the random number seeds:
     int seed = input.get_original_seed();
+
     if (seed == 0) {
       // need to generate a real seed and pass it to all processors:
-      if (iProc == 0) {
-	seed = int(std::chrono::system_clock::now().time_since_epoch().count());
-      }
+      if (iProc == 0)
+        seed = int(std::chrono::system_clock::now().time_since_epoch().count());
+
       MPI_Bcast(&seed, 1, MPI_INT, 0, aether_communicator);
     }
+
     // Make each seed unique for the ensemble member:
     seed = seed + iMember;
     input.set_seed(seed);
+
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
@@ -92,5 +96,6 @@ int init_parallel(Inputs &input,
     std::cout << "   which is greater than nProcs : " << nProcs << "\n";
     iErr = 1;
   }
-  return iErr;  
+
+  return iErr;
 }
