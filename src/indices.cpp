@@ -127,14 +127,13 @@ bool Indices::perturb(Inputs args, Report &report) {
   bool DidWork = true;
 
   json perturb_values = args.get_perturb_values();
-  std::cout << perturb_values << "\n";
 
   if (!perturb_values.empty()) {
     // User has entered some perturb values
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (report.test_verbose(0))
+      if (report.test_verbose(2))
         std::cout << "Perturbing Index : " << name << "\n";
 
       int iIndex = lookup_index_id(name);
@@ -142,7 +141,7 @@ bool Indices::perturb(Inputs args, Report &report) {
       if (iIndex > -1) {
         int seed = args.get_updated_seed();
 
-        if (report.test_verbose(0))
+        if (report.test_verbose(2))
           std::cout << "Index found: " << iIndex
                     << " seed : " << seed << "\n";
 
