@@ -53,6 +53,7 @@ int Inputs::read_inputs_json(Times &time, Report &report) {
   // Debug Stuff:
   report.set_verbose(settings["Debug"]["iVerbose"]);
   report.set_timing_depth(settings["Debug"]["iTimingDepth"]);
+  report.set_timing_percent(settings["Debug"]["TimingPercent"]);
 
   // Capture time information:
   std::vector<int> istart = get_settings_timearr("StartTime");

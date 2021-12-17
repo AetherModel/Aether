@@ -116,10 +116,12 @@ void Report::exit(std::string input) {
 // -----------------------------------------------------------------------
 
 void Report::times() {
-  if (iVerbose >= 0) {  
+  if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
+    float min_timing = entries[0].timing_total * TimingPercent / 100.0;
     for (int i = 0; i < nEntries; i++) {
-      if (entries[i].iLevel <= iTimingDepth) {
+      if (entries[i].iLevel <= iTimingDepth &&
+	  entries[i].timing_total >= min_timing) {
 	std::cout << entries[i].entry << "\n";
 
 	for (int j = 0; j < entries[i].iLevel; j++)
@@ -178,6 +180,14 @@ void Report::set_verbose(int input) {
 
 void Report::set_timing_depth(int input) {
   iTimingDepth = input;
+}
+
+// -----------------------------------------------------------------------
+// Set the percent to report for timing at the end of the run
+// -----------------------------------------------------------------------
+
+void Report::set_timing_percent(float input) {
+  TimingPercent = input;
 }
 
 // -----------------------------------------------------------------------

@@ -66,6 +66,12 @@ public:
   void set_timing_depth(int input);
 
   /**************************************************************
+   \brief limit the timing report to functions that take long time to run
+   \param input minimum percent of total time to report
+   **/
+  void set_timing_percent(float input);
+
+  /**************************************************************
    \brief Print message if iLevel <= verbose level of code
    \param iLevel test against verbose level of the code
    \param output_string string to output if iLevel <= verbose level
@@ -121,6 +127,8 @@ private:
   int iVerbose;
   /// the depth of the reporting for the timing at the end of the simulation
   int iTimingDepth;
+  /// Only report times above the given percentage of the total run time:
+  float TimingPercent;
 
   /// This is the information needed to be stored for each "entry" (when the
   /// enter function is called - typically a function, but could just be a
