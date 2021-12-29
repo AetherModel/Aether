@@ -25,10 +25,10 @@
 // -----------------------------------------------------------------------------
 
 bool pack_border(const arma_cube &value,
-		 precision_t *packed,
-		 int64_t *iCounter,
-		 int64_t nG,
-		 int iDir) {
+                 precision_t *packed,
+                 int64_t *iCounter,
+                 int64_t nG,
+                 int iDir) {
 
   bool DidWork = true;
   static int64_t nX = value.n_rows;
@@ -37,11 +37,13 @@ bool pack_border(const arma_cube &value,
 
   int64_t iXstart, iXend;
   int64_t iYstart, iYend;
+
   // ----------------------------
   // left / right message passing
   if (iDir == 0 || iDir == 2) {
     iYstart = nG;
     iYend = nY - nG;
+
     if (iDir == 0) {
       // left -> right
       iXstart = nX - 2 * nG;
@@ -58,6 +60,7 @@ bool pack_border(const arma_cube &value,
   if (iDir == 1 || iDir == 3) {
     iXstart = nG;
     iXend = nX - nG;
+
     if (iDir == 1) {
       // bottom -> top
       iYstart = nY - 2 * nG;
@@ -72,15 +75,16 @@ bool pack_border(const arma_cube &value,
   try {
     for (int64_t iZ = nG; iZ < nZ - nG; iZ++) {
       for (int64_t iY = iYstart; iY < iYend; iY++) {
-	for (int64_t iX = iXstart; iX < iXend; iX++) {
-	  packed[*iCounter] = value(iX, iY, iZ);
-	  *iCounter = *iCounter + 1;
-	}
+        for (int64_t iX = iXstart; iX < iXend; iX++) {
+          packed[*iCounter] = value(iX, iY, iZ);
+          *iCounter = *iCounter + 1;
+        }
       }
     }
   } catch (...) {
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -100,11 +104,11 @@ bool pack_border(const arma_cube &value,
 // -----------------------------------------------------------------------------
 
 bool unpack_border(arma_cube &value,
-		   precision_t *packed,
-		   int64_t *iCounter,
-		   int64_t nG,
-		   int iDir,
-		   bool IsPole) {
+                   precision_t *packed,
+                   int64_t *iCounter,
+                   int64_t nG,
+                   int iDir,
+                   bool IsPole) {
 
   bool DidWork = true;
   static int64_t nX = value.n_rows;
@@ -120,6 +124,7 @@ bool unpack_border(arma_cube &value,
   if (iDir == 0 || iDir == 2) {
     iYstart = nG;
     iYend = nY - nG;
+
     if (iDir == 0) {
       // left -> right
       iXstart = 0;
@@ -130,7 +135,7 @@ bool unpack_border(arma_cube &value,
       iXend = nX - 1;
     }
   }
-  
+
   // ----------------------------
   // top / bottom message passing
   if (iDir == 1 || iDir == 3) {
@@ -142,7 +147,8 @@ bool unpack_border(arma_cube &value,
       iXend = nG;
       iXstart = nX - nG;
       xInc = -1;
-    }      
+    }
+
     if (iDir == 1) {
       // bottom -> top
       iYstart = 0;
@@ -157,15 +163,16 @@ bool unpack_border(arma_cube &value,
   try {
     for (int64_t iZ = nG; iZ < nZ - nG; iZ++) {
       for (int64_t iY = iYstart; iY < iYend; iY++) {
-	for (int64_t iX = iXstart; iX < iXend; iX += xInc) {
-	  value(iX, iY, iZ) = packed[*iCounter];
-	  *iCounter = *iCounter + 1;
-	}
+        for (int64_t iX = iXstart; iX < iXend; iX += xInc) {
+          value(iX, iY, iZ) = packed[*iCounter];
+          *iCounter = *iCounter + 1;
+        }
       }
     }
   } catch (...) {
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -179,9 +186,9 @@ bool unpack_border(arma_cube &value,
 // -----------------------------------------------------------------------------
 
 bool Neutrals::exchange_one_face(int iReceiver, int iSender,
-				 precision_t *buffer,
-				 int64_t iTotalSize,
-				 int nG, int iDir) {
+                                 precision_t *buffer,
+                                 int64_t iTotalSize,
+                                 int nG, int iDir) {
 
   bool DidWork = true;
   int64_t iP;
@@ -195,40 +202,48 @@ bool Neutrals::exchange_one_face(int iReceiver, int iSender,
   // Current PE is the sender, so check if receiver exists:
   if (iReceiver > -1) {
     iP = 0;
+
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      if (species[iSpecies].DoAdvect) 
-	DidWork = pack_border(species[iSpecies].density_scgc,
-			      buffer, &iP, nG, iDir);
+      if (species[iSpecies].DoAdvect)
+        DidWork = pack_border(species[iSpecies].density_scgc,
+                              buffer, &iP, nG, iDir);
     }
+
     DidWork = pack_border(temperature_scgc, buffer, &iP, nG, iDir);
+
     for (int iComp = 0; iComp < 3; iComp++) {
       if (IsPole && iComp < 2)
-	// Need to mirror zonal and meridional winds across pole:
-	DidWork = pack_border(-velocity_vcgc[iComp], buffer, &iP, nG, iDir);
+        // Need to mirror zonal and meridional winds across pole:
+        DidWork = pack_border(-velocity_vcgc[iComp], buffer, &iP, nG, iDir);
       else
-	DidWork = pack_border(velocity_vcgc[iComp], buffer, &iP, nG, iDir);
+        DidWork = pack_border(velocity_vcgc[iComp], buffer, &iP, nG, iDir);
     }
+
     MPI_Isend(buffer, iTotalSize, MPI_BYTE,
-	      iReceiver, iTag, aether_comm, &request);
+              iReceiver, iTag, aether_comm, &request);
   }
 
   // Now we can switch to being the receiver, so check if sender exists:
   if (iSender > -1) {
     MPI_Recv(buffer, iTotalSize, MPI_BYTE, iSender, iTag, aether_comm,
-	     MPI_STATUS_IGNORE);
+             MPI_STATUS_IGNORE);
 
     iP = 0;
+
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      if (species[iSpecies].DoAdvect) 
-	DidWork = unpack_border(species[iSpecies].density_scgc,
-				buffer, &iP, nG, iDir, IsPole);
+      if (species[iSpecies].DoAdvect)
+        DidWork = unpack_border(species[iSpecies].density_scgc,
+                                buffer, &iP, nG, iDir, IsPole);
     }
+
     DidWork = unpack_border(temperature_scgc, buffer, &iP, nG, iDir, IsPole);
+
     for (int iComp = 0; iComp < 3; iComp++) {
       DidWork = unpack_border(velocity_vcgc[iComp], buffer, &iP,
-			      nG, iDir, IsPole);
+                              nG, iDir, IsPole);
     }
   }
+
   if (iReceiver > -1)
     MPI_Wait(&request, MPI_STATUS_IGNORE);
 
@@ -266,16 +281,17 @@ bool Neutrals::exchange(Grid grid, Report &report) {
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     if (species[iSpecies].DoAdvect)
       nVarsToPass++;
+
   // Temperature + Velocities
-  nVarsToPass += (1 + 3); 
-  
+  nVarsToPass += (1 + 3);
+
   int64_t iTotalSizeX = nVarsToPass * nPtsX * sizeof(precision_t);
   int64_t iTotalSizeY = nVarsToPass * nPtsY * sizeof(precision_t);
 
   // Create a temporary c-array to use to message pass the variables
   static precision_t *xBuffer = static_cast<precision_t*>(malloc(iTotalSizeX));
   static precision_t *yBuffer = static_cast<precision_t*>(malloc(iTotalSizeY));
-  
+
   int64_t iP;
 
   // -------------------------
@@ -283,14 +299,14 @@ bool Neutrals::exchange(Grid grid, Report &report) {
   // -------------------------
   iDir = 0;
   DidWork = exchange_one_face(grid.iProcXp, grid.iProcXm, xBuffer,
-  			      iTotalSizeX, nG, iDir); 
+                              iTotalSizeX, nG, iDir);
 
   // -------------------------
   // Pass from right -> left
   // -------------------------
   iDir = 2;
   DidWork = exchange_one_face(grid.iProcXm, grid.iProcXp, xBuffer,
-			      iTotalSizeX, nG, iDir); 
+                              iTotalSizeX, nG, iDir);
 
   // -------------------------
   // Pass from bottom -> top (not poles!)
@@ -298,18 +314,21 @@ bool Neutrals::exchange(Grid grid, Report &report) {
   iDir = 1;
   int iUpPe = grid.iProcYp;
   int iDownPe = grid.iProcYm;
+
   if (grid.DoesTouchNorthPole)
     iUpPe = -1;
+
   if (grid.DoesTouchSouthPole)
     iDownPe = -1;
-  DidWork = exchange_one_face(iUpPe, iDownPe, yBuffer, iTotalSizeY, nG, iDir); 
-  
+
+  DidWork = exchange_one_face(iUpPe, iDownPe, yBuffer, iTotalSizeY, nG, iDir);
+
   // -------------------------
   // Pass from top -> bottom (not poles!)
   // -------------------------
   iDir = 3;
-  DidWork = exchange_one_face(iDownPe, iUpPe, yBuffer, iTotalSizeY, nG, iDir); 
-  
+  DidWork = exchange_one_face(iDownPe, iUpPe, yBuffer, iTotalSizeY, nG, iDir);
+
   // -------------------------
   // Pass Across North Poles - symmetric message passing
   // -------------------------
@@ -319,7 +338,7 @@ bool Neutrals::exchange(Grid grid, Report &report) {
     int iDownPe = grid.iProcYp;
     DidWork = exchange_one_face(iUpPe, iDownPe, yBuffer, iTotalSizeY, nG, iDir);
   }
-  
+
   // -------------------------
   // Pass Across South Poles - symmetric message passing
   // -------------------------
@@ -329,9 +348,9 @@ bool Neutrals::exchange(Grid grid, Report &report) {
     int iDownPe = grid.iProcYm;
     DidWork = exchange_one_face(iUpPe, iDownPe, yBuffer, iTotalSizeY, nG, iDir);
   }
-  
+
   report.exit(function);
-  
+
   return DidWork;
 }
 

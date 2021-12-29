@@ -42,11 +42,11 @@ int Inputs::read_inputs_json(Times &time, Report &report) {
   if (user_inputs.contains("Restart")) {
     if (user_inputs["Restart"].contains("do")) {
       if (user_inputs["Restart"]["do"]) {
-	std::string restart_file = settings["Restart"]["InDir"];
-	restart_file = restart_file + "/settings.json";
-	json restart_inputs;
-	restart_inputs = read_json(restart_file);
-	settings.merge_patch(restart_inputs);
+        std::string restart_file = settings["Restart"]["InDir"];
+        restart_file = restart_file + "/settings.json";
+        json restart_inputs;
+        restart_inputs = read_json(restart_file);
+        settings.merge_patch(restart_inputs);
       }
     }
   }
