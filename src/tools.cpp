@@ -43,7 +43,7 @@ std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
 bool compare(precision_t value1, precision_t value2) {
   precision_t diff = fabs(value1 - value2);
 
-  if (diff < cSmall)
+  if (diff <= cSmall * (fabs(value1) + fabs(value2) + cSmall))
     return true;
   else
     return false;
