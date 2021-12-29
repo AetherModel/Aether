@@ -21,7 +21,7 @@ std::string cProc;
 std::string cMember;
 std::string cGrid;
 
-MPI_Comm aether_communicator;
+MPI_Comm aether_comm;
 
 int init_parallel(Inputs &input,
                   Report &report) {
@@ -30,13 +30,13 @@ int init_parallel(Inputs &input,
 
   MPI_Init(NULL, NULL);
 
-  aether_communicator = MPI_COMM_WORLD;
+  aether_comm = MPI_COMM_WORLD;
 
   // Get the number of processes
-  MPI_Comm_size(aether_communicator, &nProcs);
+  MPI_Comm_size(aether_comm, &nProcs);
 
   // Get the rank of the process
-  MPI_Comm_rank(aether_communicator, &iProc);
+  MPI_Comm_rank(aether_comm, &iProc);
 
   // Modify the verbosity of the code by turning of verbose on all
   // processors except specified processor:
@@ -76,7 +76,7 @@ int init_parallel(Inputs &input,
       if (iProc == 0)
         seed = int(std::chrono::system_clock::now().time_since_epoch().count());
 
-      MPI_Bcast(&seed, 1, MPI_INT, 0, aether_communicator);
+      MPI_Bcast(&seed, 1, MPI_INT, 0, aether_comm);
     }
 
     // Make each seed unique for the ensemble member:
