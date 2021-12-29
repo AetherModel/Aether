@@ -3,6 +3,7 @@
     "Debug" : {
 	"iVerbose" : 0,
 	"dt" : 60.0,
+	"TimingPercent" : 1.0,
 	"iTimingDepth" : 5,
 	"iProc" : 0},
 
