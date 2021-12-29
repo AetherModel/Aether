@@ -65,6 +65,8 @@ int advance(Planets &planet,
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
+  neutrals.exchange(gGrid, report);
+
   time.increment_time();
 
   if (time.check_time_gate(input.get_dt_write_restarts())) {
