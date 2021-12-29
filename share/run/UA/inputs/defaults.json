@@ -46,7 +46,8 @@
     "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
     "PlanetCharacteristicsFile" : "UA/inputs/orbits.csv",
     "AuroraFile" : "UA/inputs/aurora_earth.csv",
-
+    "IndicesLookupFile" : "UA/inputs/indices_lookup.json",
+    
     "OnmiwebFile" : [""],
     "ElectrodynamicsFile" : [""],
 
