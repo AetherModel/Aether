@@ -66,6 +66,21 @@ class Ions {
   arma_mat eflux;
   arma_mat avee;
 
+  // names and units
+  const std::string density_name = "Neutral Bulk Density";
+  const std::string density_unit = "/m3";
+
+  std::vector<std::string> velocity_name;
+  std::vector<std::string> par_velocity_name;
+  std::vector<std::string> perp_velocity_name;
+  const std::string velocity_unit = "m/s";
+
+  const std::string temperature_name = "Temperature";
+  const std::string temperature_unit = "K";
+
+  const std::string potential_name = "Potential";
+  const std::string potential_unit = "Volts";
+  
   // ------------------------------
   // Functions:
 

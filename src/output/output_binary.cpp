@@ -6,46 +6,6 @@
 #include <fstream>
 
 //----------------------------------------------------------------------
-// Output a given variable to the binary file.
-// ----------------------------------------------------------------------
-
-
-void output_variable_3d(std::ofstream &binary,
-                        arma_cube value) {
-
-  // Get the size of the cube:
-
-  int64_t nX = value.n_rows;
-  int64_t nY = value.n_cols;
-  int64_t nZ = value.n_slices;
-  int64_t iX, iY, iZ, index;
-
-  int64_t nPts = nX * nY * nZ;
-  int64_t iTotalSize = nPts * sizeof(float);
-
-  // Create a temporary c-array to use to output the variable
-  float *tmp_s3gc = static_cast<float*>(malloc(iTotalSize));
-
-  // Move the data from the cube to the c-array
-
-  for (iZ = 0; iZ < nZ; iZ++) {
-    for (iY = 0; iY < nY; iY++) {
-      for (iX = 0; iX < nX; iX++) {
-        // Python ordering!
-        index = iX + iY * nX + iZ * nY * nX;
-        tmp_s3gc[index] = value(iX, iY, iZ);
-      }
-    }
-  }
-
-  // Output the data to the binary file
-  binary.write((char *) tmp_s3gc, iTotalSize);
-
-  // delete the c-array
-  free(tmp_s3gc);
-}
-
-//----------------------------------------------------------------------
 // Figure out which variables to the binary file.
 // ----------------------------------------------------------------------
 

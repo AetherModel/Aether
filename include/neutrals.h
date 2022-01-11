@@ -150,15 +150,15 @@ class Neutrals {
   float *initial_temperatures, *initial_altitudes;
   int nInitial_temps = 0;
 
-  // names and units
+  /// names and units
   std::string density_name = "Neutral Bulk Density";
-  std::string density_unit = "(/m3)";
+  std::string density_unit = "/m3";
 
   std::vector<std::string> velocity_name;
-  std::string velocity_unit = "(m/s)";
+  std::string velocity_unit = "m/s";
 
   std::string temperature_name = "Temperature";
-  std::string temperature_unit = "(K)";
+  std::string temperature_unit = "K";
 
   // --------------------------------------------------------------------
   // Functions:
