@@ -43,6 +43,7 @@ sudo port install netcdf-cxx4 +gcc10
 On Ubuntu, gcc is the default compiler, it seems like you can probably just do:
 ```bash
 sudo apt-get install libnetcdf-dev
+sudo apt install libnetcdf-c++4-dev
 ```
 
 3. Aether uses the nlohman json package for reading and writing json files.
