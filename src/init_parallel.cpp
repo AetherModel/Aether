@@ -52,7 +52,7 @@ bool init_parallel(Inputs &input,
   nGrids = nBlocksLonGeo * nBlocksLatGeo;
   int nProcsNeeded = nMembers * nGrids;
 
-  if (nProcsNeeded <= nProcs) {
+  if (nProcsNeeded == nProcs) {
 
     // Get Ensemble member number and grid number:
     iMember = iProc / nGrids;
@@ -87,13 +87,15 @@ bool init_parallel(Inputs &input,
       std::cout << "seed : " << seed << "\n";
 
   } else {
-    std::cout << "Number of processors needed is not set correctly!\n";
-    std::cout << "nProcs needs to be greater that multiplication of :\n";
-    std::cout << "   nMembers : " << nMembers << "\n";
-    std::cout << "   nBlocksLonGeo : " << nBlocksLonGeo << "\n";
-    std::cout << "   nBlocksLatGeo : " << nBlocksLatGeo << "\n";
-    std::cout << "   total needed : " << nProcsNeeded << "\n";
-    std::cout << "   which is greater than nProcs : " << nProcs << "\n";
+    if (iProc == 0) {
+      std::cout << "Number of processors needed is not set correctly!\n";
+      std::cout << "nProcs needs to be equal to the multiplication of :\n";
+      std::cout << "   nMembers : " << nMembers << "\n";
+      std::cout << "   nBlocksLonGeo : " << nBlocksLonGeo << "\n";
+      std::cout << "   nBlocksLatGeo : " << nBlocksLatGeo << "\n";
+      std::cout << "      total needed : " << nProcsNeeded << "\n";
+      std::cout << "      which is not equal to nProcs : " << nProcs << "\n";
+    }
     DidWork = false;
   }
 
