@@ -3,6 +3,12 @@
 
 #include "../include/aether.h"
 
+bool sync_across_all_procs(bool value) {
+  bool global_value;
+  MPI_Allreduce(&value, &global_value, 1, MPI_C_BOOL, MPI_LAND, aether_comm);
+  return global_value;
+}
+
 // -----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // -----------------------------------------------------------------------------
@@ -37,7 +43,7 @@ std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
 }
 
 // -----------------------------------------------------------------------------
-// Convert an integer to a zero-padded string
+// Compare two numbers and fail if the difference is too large
 // -----------------------------------------------------------------------------
 
 bool compare(precision_t value1, precision_t value2) {

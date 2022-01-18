@@ -96,7 +96,7 @@ public:
   void calc_mlt(Report &report);
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
-  void init_geo_grid(Planets planet, Inputs input, Report &report);
+  bool init_geo_grid(Planets planet, Inputs input, Report &report);
   void create_simple_lat_lon_alt_grid(Inputs input, Report &report);
   void fill_grid_bfield(Planets planet, Inputs input, Report &report);
   bool read_restart(std::string dir);

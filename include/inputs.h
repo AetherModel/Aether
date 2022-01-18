@@ -13,7 +13,7 @@ public:
 
   Inputs(Times &time, Report &report);
   int read(Times &time, Report &report);
-  int read_inputs_json(Times &time, Report &report);
+  bool read_inputs_json(Times &time, Report &report);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
@@ -80,6 +80,12 @@ public:
   std::vector<int> get_settings_timearr(std::string key1);
   std::vector<int> get_settings_intarr(std::string key1);
   
+  /**********************************************************************
+     \brief Check to see if internal state of class is ok
+   **/
+  
+  bool is_ok();
+  
 private:
 
   json settings;
@@ -122,6 +128,8 @@ private:
 
   int updated_seed;
   
+  /// An internal variable to hold the state of the class
+  bool IsOk;
 };
 
 #endif  // INCLUDE_INPUTS_H_

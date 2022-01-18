@@ -113,7 +113,13 @@ public:
      \param ions Needs names of the ions
      \param report allow reporting to occur
    **/
-  int pair_euv(Neutrals &neutrals, Ions ions, Report report);
+  bool pair_euv(Neutrals &neutrals, Ions ions, Report report);
+
+  /**********************************************************************
+     \brief Check to see if internal state of class is ok
+   **/
+  
+  bool is_ok();
   
 private:
 
@@ -127,7 +133,7 @@ private:
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  int read_file(Inputs args, Report report);
+  bool read_file(Inputs args, Report report);
 
   /**********************************************************************
      \brief Interprets the EUV CSV rows and returns the relevant row
@@ -140,10 +146,13 @@ private:
      \return values The values in the CSV row that matches the item (and item2) 
      \param report Allow reporting to occur
    **/
-  int slot_euv(std::string item,
-               std::string item2,
-               std::vector<float> &values,
-               Report report);
+  bool slot_euv(std::string item,
+		std::string item2,
+		std::vector<float> &values,
+		Report report);
+
+  /// An internal variable to hold the state of the class
+  bool IsOk;
 };
 
 #endif  // INCLUDE_EUV_H_

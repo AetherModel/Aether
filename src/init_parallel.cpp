@@ -23,10 +23,10 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-int init_parallel(Inputs &input,
-                  Report &report) {
+bool init_parallel(Inputs &input,
+                   Report &report) {
 
-  int iErr = 0;
+  bool DidWork = true;
 
   MPI_Init(NULL, NULL);
 
@@ -94,8 +94,8 @@ int init_parallel(Inputs &input,
     std::cout << "   nBlocksLatGeo : " << nBlocksLatGeo << "\n";
     std::cout << "   total needed : " << nProcsNeeded << "\n";
     std::cout << "   which is greater than nProcs : " << nProcs << "\n";
-    iErr = 1;
+    DidWork = false;
   }
 
-  return iErr;
+  return DidWork;
 }

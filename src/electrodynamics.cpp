@@ -8,10 +8,25 @@
 // netCDF file.
 // -----------------------------------------------------------------------------
 
-Electrodynamics::Electrodynamics(Inputs input, Report &report) {
+Electrodynamics::Electrodynamics(Times time, Inputs input, Report &report) {
+
+  IsOk = true;
 
   HaveElectrodynamics = false;
   read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
+
+  bool times_are_aligned = check_times(time.get_current(), time.get_end());
+
+  if (!times_are_aligned) {
+    IsOk = false;
+
+    if (iProc == 0) {
+      std::cout << "Times don't align with electrodynamics file! ";
+      std::cout << "Please check this!\n";
+    }
+  }
+
+  IsOk = sync_across_all_procs(IsOk);
 }
 
 // -----------------------------------------------------------------------------
@@ -420,4 +435,12 @@ void Electrodynamics::set_ae(precision_t value) {
 
 void Electrodynamics::set_kp(precision_t value) {
   kp_needed = value;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Electrodynamics::is_ok() {
+  return IsOk;
 }

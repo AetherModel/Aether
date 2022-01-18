@@ -114,6 +114,7 @@ bool Grid::write_restart(std::string dir) {
     }
   }
 
+  DidWork = sync_across_all_procs(DidWork);
   return DidWork;
 }
 
@@ -145,6 +146,7 @@ bool Grid::read_restart(std::string dir) {
     DidWork = false;
   }
 
+  DidWork = sync_across_all_procs(DidWork);
   return DidWork;
 }
 

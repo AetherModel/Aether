@@ -60,9 +60,9 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  int iErr = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time, report);
 
-  if (iErr > 0)
+  if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
 }
 
@@ -79,6 +79,7 @@ bool Inputs::write_restart() {
     DidWork = write_json(filename, settings);
   }
 
+  DidWork = sync_across_all_procs(DidWork);
   return DidWork;
 }
 
@@ -454,4 +455,12 @@ json Inputs::get_perturb_values() {
     values = settings["Perturb"];
 
   return values;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Inputs::is_ok() {
+  return IsOk;
 }

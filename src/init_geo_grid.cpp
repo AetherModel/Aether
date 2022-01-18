@@ -189,7 +189,7 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 // of the lon, lat, and alt can be a function of the other variables.
 // ----------------------------------------------------------------------
 
-void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
+bool Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -220,4 +220,5 @@ void Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
   fill_grid_bfield(planet, input, report);
 
   report.exit(function);
+  return DidWork;
 }

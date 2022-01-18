@@ -14,12 +14,12 @@
 // -----------------------------------------------------------------------------
 
 Planets::Planets(Inputs args, Report report) {
-  int iErr = 0;
+  IsOk = read_file(args, report);
 
-  iErr = read_file(args, report);
+  if (IsOk)
+    IsOk = set_planet(args, report);
 
-  if (iErr == 0)
-    iErr = set_planet(args, report);
+  IsOk = sync_across_all_procs(IsOk);
 }
 
 // -----------------------------------------------------------------------------
@@ -274,9 +274,9 @@ int Planets::update(Times time) {
 // move the appropriate data over to the planet structure
 // -----------------------------------------------------------------------------
 
-int Planets::set_planet(Inputs args, Report report) {
+bool Planets::set_planet(Inputs args, Report report) {
 
-  int iErr = 0;
+  bool DidWork = true;
   int IsFound = 0;
 
   int iSize = planets.size();
@@ -316,7 +316,7 @@ int Planets::set_planet(Inputs args, Report report) {
         std::cout << "Calculated from SMA : "
                   << loy * cStoD << " (days)\n";
         std::cout << "Trusting SMA version!\n";
-        iErr = 1;
+        DidWork = false;
       }
 
       planet.length_of_year = loy;
@@ -356,10 +356,10 @@ int Planets::set_planet(Inputs args, Report report) {
   if (!IsFound) {
     std::cout << "Can't file planet " << args.get_planet()
               << " in planet file information!\n";
-    iErr = 1;
+    DidWork = false;
   }
 
-  return iErr;
+  return DidWork;
 }
 
 // -----------------------------------------------------------------------------
@@ -367,21 +367,23 @@ int Planets::set_planet(Inputs args, Report report) {
 // information for all of the different planets.
 // -----------------------------------------------------------------------------
 
-int Planets::read_file(Inputs args, Report report) {
+bool Planets::read_file(Inputs args, Report report) {
 
   planet_chars tmp;
   std::string line, col;
   std::ifstream myFile;
-  int iErr = 0;
+  bool DidWork = true;
 
   report.print(1, "Reading planetary file : " + args.get_planetary_file());
 
   myFile.open(args.get_planetary_file());
 
   if (!myFile.is_open()) {
-    std::cout << "Could not open planetary file : "
-              << args.get_planetary_file() << "\n";
-    iErr = 1;
+    if (iProc == 0)
+      std::cout << "Could not open planetary file : "
+                << args.get_planetary_file() << "\n";
+
+    DidWork = false;
   } else {
 
     if (myFile.good()) {
@@ -390,10 +392,10 @@ int Planets::read_file(Inputs args, Report report) {
 
       int nLines = csv.size();
 
-      if (nLines <= 2)
-        iErr = 1;
-
-      else {
+      if (nLines <= 2) {
+        report.print(0, "Number of lines in planetary CSV file too small");
+        DidWork = false;
+      } else {
 
         for (int iLine = 2; iLine < nLines; iLine++) {
 
@@ -438,5 +440,13 @@ int Planets::read_file(Inputs args, Report report) {
     myFile.close();
   }  // else open file
 
-  return iErr;
+  return DidWork;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Planets::is_ok() {
+  return IsOk;
 }

@@ -41,7 +41,7 @@ class Electrodynamics {
 
      \param report Need to pass Report class, so reporting can occur  
    **/
-  Electrodynamics(Inputs input, Report &report);
+  Electrodynamics(Times time, Inputs input, Report &report);
 
   /**************************************************************
      \brief update the potential and aurora
@@ -269,6 +269,12 @@ class Electrodynamics {
    **/
   arma_mat get_ion_avee(Report &report);
   
+  /**********************************************************************
+     \brief Check to see if internal state of class is ok
+   **/
+  
+  bool is_ok();
+  
  private:
 
   /// This is the interpolation method for time:
@@ -423,6 +429,9 @@ class Electrodynamics {
   
   /// Number of input grids for electrodynamics:
   int nElectrodynamicsGrids;
+  
+  /// An internal variable to hold the state of the class
+  bool IsOk;
   
   /**************************************************************
      \brief Reads a netcdf file that has the electrodynamics specification
