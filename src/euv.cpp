@@ -15,23 +15,22 @@
 
 Euv::Euv(Inputs args, Report report) {
 
-  int iErr;
   precision_t ave;
 
-  iErr = 0;
+  IsOk = true;
 
   // Read in the EUV file:
-  iErr = read_file(args, report);
+  IsOk = read_file(args, report);
 
-  if (!iErr) {
+  if (IsOk) {
     // Slot the short and long wavelengths into their arrays:
-    iErr = slot_euv("Long", "", wavelengths_long, report);
+    IsOk = slot_euv("Long", "", wavelengths_long, report);
 
-    if (!iErr)
-      iErr = slot_euv("Short", "", wavelengths_short, report);
+    if (IsOk)
+      IsOk = slot_euv("Short", "", wavelengths_short, report);
 
     // This means we found both long and short wavelengths:
-    if (!iErr) {
+    if (IsOk) {
       for (int iWave = 0; iWave < nWavelengths; iWave++) {
         ave = (wavelengths_short[iWave] + wavelengths_long[iWave]) / 2.0 * cAtoM;
         wavelengths_energy.push_back(cH * cC / ave);
@@ -44,10 +43,12 @@ Euv::Euv(Inputs args, Report report) {
 
     // Slot the EUVAC model coefficients:
     if (args.get_euv_model() == "euvac") {
-      iErr = slot_euv("F74113", "", euvac_f74113, report);
-      iErr = slot_euv("AFAC", "", euvac_afac, report);
+      IsOk = slot_euv("F74113", "", euvac_f74113, report);
+      IsOk = slot_euv("AFAC", "", euvac_afac, report);
     }
   }
+
+  IsOk = sync_across_all_procs(IsOk);
 }
 
 // ---------------------------------------------------------------------------
@@ -55,21 +56,23 @@ Euv::Euv(Inputs args, Report report) {
 // cross sections
 // ---------------------------------------------------------------------------
 
-int Euv::read_file(Inputs args, Report report) {
+bool Euv::read_file(Inputs args, Report report) {
 
   waveinfotype tmp;
   std::string line, col;
   precision_t mulfac;
   std::ifstream infile_ptr;
-  int iErr = 0;
+  bool DidWork = true;
 
   report.print(1, "Reading EUV File : " + args.get_euv_file());
 
   infile_ptr.open(args.get_euv_file());
 
   if (!infile_ptr.is_open()) {
-    std::cout << "Could not open euv file!\n";
-    iErr = 1;
+    if (iProc == 0)
+      std::cout << "Could not open euv file!\n";
+
+    DidWork = false;
   } else {
     nLines = 0;
 
@@ -118,12 +121,12 @@ int Euv::read_file(Inputs args, Report report) {
       }
 
     } else
-      iErr = 1;
+      DidWork = false;
 
     infile_ptr.close();
   }
 
-  return iErr;
+  return DidWork;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,12 +134,12 @@ int Euv::read_file(Inputs args, Report report) {
 // sections and spectra
 // ---------------------------------------------------------------------------
 
-int Euv::slot_euv(std::string item,
-                  std::string item2,
-                  std::vector<float> &values,
-                  Report report) {
+bool Euv::slot_euv(std::string item,
+                   std::string item2,
+                   std::vector<float> &values,
+                   Report report) {
 
-  int iErr = 0;
+  bool DidWork = true;
   int iLine;
   int IgnoreItem2 = 0;
 
@@ -156,7 +159,7 @@ int Euv::slot_euv(std::string item,
   }
 
   if (iLine >= nLines)
-    iErr = 1;
+    DidWork = false;
 
   else {
     if (report.test_verbose(2)) {
@@ -173,7 +176,7 @@ int Euv::slot_euv(std::string item,
       values.push_back(waveinfo[iLine].values[iWavelength]);
   }
 
-  return iErr;
+  return DidWork;
 }
 
 //----------------------------------------------------------------------
@@ -186,9 +189,9 @@ int Euv::slot_euv(std::string item,
 // out which ion it is producing (the "to" column).
 // ---------------------------------------------------------------------
 
-int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
+bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
 
-  int iErr = 0;
+  bool DidWork = true;
 
   if (report.test_verbose(3))
     std::cout << "Euv::pair_euv \n";
@@ -240,7 +243,7 @@ int Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
     }  // for iEuv
   }  // for iSpecies
 
-  return iErr;
+  return DidWork;
 }
 
 
@@ -307,4 +310,12 @@ int Euv::euvac(Times time,
 
   report.exit(function);
   return iErr;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Euv::is_ok() {
+  return IsOk;
 }

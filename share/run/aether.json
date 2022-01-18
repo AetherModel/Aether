@@ -5,6 +5,10 @@
 	"iVerbose" : 0,
 	"dt" : 10.0},
 
+    "GeoBlockSize" : {
+	"nBlocksLon" : 2,
+	"nBlocksLat" : 2},
+    
     "Mysetting" : {
 	"setting1" : "this_is_an_example",
 	"setting2" : 42,

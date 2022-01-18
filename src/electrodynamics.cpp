@@ -8,10 +8,25 @@
 // netCDF file.
 // -----------------------------------------------------------------------------
 
-Electrodynamics::Electrodynamics(Inputs input, Report &report) {
+Electrodynamics::Electrodynamics(Times time, Inputs input, Report &report) {
+
+  IsOk = true;
 
   HaveElectrodynamics = false;
   read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
+
+  bool times_are_aligned = check_times(time.get_current(), time.get_end());
+
+  if (!times_are_aligned) {
+    IsOk = false;
+
+    if (iProc == 0) {
+      std::cout << "Times don't align with electrodynamics file! ";
+      std::cout << "Please check this!\n";
+    }
+  }
+
+  IsOk = sync_across_all_procs(IsOk);
 }
 
 // -----------------------------------------------------------------------------
@@ -235,16 +250,14 @@ void Electrodynamics::set_time(double time, Report &report) {
   iLow = 0;
   iHigh = times.size() - 1;
 
-  if (intime <= times[iLow]) {
+  if (intime < times[iLow]) {
     interpolation_index = 0.0;
-    std::cout <<
-              "Warning: current time below first available potential-vector time, using first time"
-              << "\n";
-  } else if (intime >= times[iHigh]) {
+    report.print(0, "Warning: current time below first available\n");
+    report.print(0, "potential-vector time, using first time\n");
+  } else if (intime > times[iHigh]) {
     interpolation_index = iHigh;
-    std::cout <<
-              "Warning: current time above last available potential-vector time, using last time"
-              << "\n";
+    report.print(0, "Warning: current time above last available\n");
+    report.print(0, "potential-vector time, using last time\n");
   }
 
   // At this point, we know that it is somewhere between the highest
@@ -422,4 +435,12 @@ void Electrodynamics::set_ae(precision_t value) {
 
 void Electrodynamics::set_kp(precision_t value) {
   kp_needed = value;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Electrodynamics::is_ok() {
+  return IsOk;
 }

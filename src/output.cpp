@@ -16,7 +16,7 @@ using namespace netCDF::exceptions;
    ions - Ion densites, temperatures, par & perp velocities, elec temp
    bfield - magnetic coordinates, b-field vector
 
- -------------------------------------------------------------------- */ 
+ -------------------------------------------------------------------- */
 
 // -----------------------------------------------------------------------------
 //  Fills output containers and outputs them for common output types
@@ -49,8 +49,10 @@ int output(const Neutrals &neutrals,
     DummyOutputContainer.set_netcdf();
     DummyOutputContainer.set_directory(output_dir);
     DummyOutputContainer.set_version(0.1);
+
     for (int iOutput = 0; iOutput < nOutputs; iOutput++)
       AllOutputContainers.push_back(DummyOutputContainer);
+
     IsFirstTime = false;
   }
 
@@ -67,20 +69,20 @@ int output(const Neutrals &neutrals,
       // Put Lon, Lat, Alt into all output containers:
 
       AllOutputContainers[iOutput].
-	store_variable("lon",
-		       "longitude",
-		       "degrees_east",
-		       grid.geoLon_scgc * cRtoD);
+      store_variable("lon",
+                     "longitude",
+                     "degrees_east",
+                     grid.geoLon_scgc * cRtoD);
       AllOutputContainers[iOutput].
-	store_variable("lat",
-		       "latitude",
-		       "degrees_north",
-		       grid.geoLat_scgc * cRtoD);
+      store_variable("lat",
+                     "latitude",
+                     "degrees_north",
+                     grid.geoLat_scgc * cRtoD);
       AllOutputContainers[iOutput].
-	store_variable("z",
-		       "height above mean sea level",
-		       "m",
-		       grid.geoAlt_scgc);
+      store_variable("z",
+                     "height above mean sea level",
+                     "m",
+                     grid.geoAlt_scgc);
 
       std::string type_output = args.get_type_output(iOutput);
 
@@ -92,102 +94,111 @@ int output(const Neutrals &neutrals,
           type_output == "states")
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
-	    store_variable(neutrals.species[iSpecies].cName,
-			   neutrals.density_unit,
-			   neutrals.species[iSpecies].density_scgc);
+          store_variable(neutrals.species[iSpecies].cName,
+                         neutrals.density_unit,
+                         neutrals.species[iSpecies].density_scgc);
 
       // Neutral Temperature:
       if (type_output == "neutrals" ||
           type_output == "states")
         AllOutputContainers[iOutput].
-	  store_variable(neutrals.temperature_name,
-			 neutrals.temperature_unit,
-			 neutrals.temperature_scgc);
+        store_variable(neutrals.temperature_name,
+                       neutrals.temperature_unit,
+                       neutrals.temperature_scgc);
 
       // Neutral Winds:
       if (type_output == "neutrals" ||
           type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
           AllOutputContainers[iOutput].
-	    store_variable(neutrals.velocity_name[iDir],
-			   neutrals.velocity_unit,
-			   neutrals.velocity_vcgc[iDir]);
+          store_variable(neutrals.velocity_name[iDir],
+                         neutrals.velocity_unit,
+                         neutrals.velocity_vcgc[iDir]);
 
       // Ion Densities:
       if (type_output == "ions" ||
           type_output == "states")
         for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
           AllOutputContainers[iOutput].
-	    store_variable(ions.species[iSpecies].cName,
-			   ions.density_unit,
-			   ions.species[iSpecies].density_scgc);
+          store_variable(ions.species[iSpecies].cName,
+                         ions.density_unit,
+                         ions.species[iSpecies].density_scgc);
 
       // Bulk Ion Drifts:
       if (type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
           AllOutputContainers[iOutput].store_variable("Bulk" +
-						      ions.velocity_name[iDir],
-						      ions.velocity_unit,
-						      ions.velocity_vcgc[iDir]);
+                                                      ions.velocity_name[iDir],
+                                                      ions.velocity_unit,
+                                                      ions.velocity_vcgc[iDir]);
 
       // Electric Potential:
       if (type_output == "ions" ||
           type_output == "states")
         AllOutputContainers[iOutput].store_variable(ions.potential_name,
-						    ions.potential_unit,
-						    ions.potential_scgc);
+                                                    ions.potential_unit,
+                                                    ions.potential_scgc);
 
       if (type_output == "bfield") {
         AllOutputContainers[iOutput].store_variable("mlat",
-						    "Magnetic Latitude",
-						    "degrees",
-						    grid.magLat_scgc * cRtoD);
+                                                    "Magnetic Latitude",
+                                                    "degrees",
+                                                    grid.magLat_scgc * cRtoD);
         AllOutputContainers[iOutput].store_variable("mlon",
-						    "Magnetic Longitude",
-						    "degrees",
-						    grid.magLon_scgc * cRtoD);
+                                                    "Magnetic Longitude",
+                                                    "degrees",
+                                                    grid.magLon_scgc * cRtoD);
         AllOutputContainers[iOutput].store_variable("mlt",
-						    "Magnetic Local Time",
-						    "hours",
-						    grid.magLocalTime_scgc);
+                                                    "Magnetic Local Time",
+                                                    "hours",
+                                                    grid.magLocalTime_scgc);
         AllOutputContainers[iOutput].store_variable("Beast",
-						    "nT",
-						    grid.bfield_vcgc[0]);
+                                                    "nT",
+                                                    grid.bfield_vcgc[0]);
         AllOutputContainers[iOutput].store_variable("Bnorth",
-						    "nT",
-						    grid.bfield_vcgc[1]);
+                                                    "nT",
+                                                    grid.bfield_vcgc[1]);
         AllOutputContainers[iOutput].store_variable("Bvertical",
-						    "nT",
-						    grid.bfield_vcgc[2]);
+                                                    "nT",
+                                                    grid.bfield_vcgc[2]);
       }
 
       // ------------------------------------------------------------
       // Set output file names
-      
+
+      std::string filename;
+
       if (type_output == "neutrals")
-        AllOutputContainers[iOutput].set_filename("3DNEU_" +
-						  time.get_YMD_HMS());
+        filename = "3DNEU_";
 
       if (type_output == "states")
-        AllOutputContainers[iOutput].set_filename("3DALL_" +
-						  time.get_YMD_HMS());
+        filename = "3DALL_";
 
       if (type_output == "ions")
-        AllOutputContainers[iOutput].set_filename("3DION_" +
-						  time.get_YMD_HMS());
+        filename = "3DION_";
 
       if (type_output == "bfield")
-        AllOutputContainers[iOutput].set_filename("3DBFI_" +
-						  time.get_YMD_HMS());
+        filename = "3DBFI_";
+
+      filename = filename + time.get_YMD_HMS();
+
+      if (nMembers > 1)
+        filename = filename + "_" + cMember;
+
+      if (nGrids > 1)
+        filename = filename + "_" + cGrid;
+
+      report.print(0, "Writing file : " + filename);
+      AllOutputContainers[iOutput].set_filename(filename);
 
       // ------------------------------------------------------------
       // write output container
-      
+
       AllOutputContainers[iOutput].write();
 
       // ------------------------------------------------------------
       // Clear variables for next time
-      
+
       AllOutputContainers[iOutput].clear_variables();
     }
   }
@@ -201,7 +212,7 @@ int output(const Neutrals &neutrals,
 
    General Methods for the output containers
 
- -------------------------------------------------------------------- */ 
+ -------------------------------------------------------------------- */
 
 // -----------------------------------------------------------------------------
 // gets the number of elements in the output container
@@ -217,8 +228,10 @@ int64_t OutputContainer::get_nElements() {
 
 arma_cube OutputContainer::get_element_value(int64_t iElement) {
   arma_cube val;
+
   if (iElement < elements.size())
     val = elements[iElement].value;
+
   return val;
 }
 
@@ -229,8 +242,10 @@ arma_cube OutputContainer::get_element_value(int64_t iElement) {
 arma_cube OutputContainer::get_element_value(std::string var_to_get) {
   arma_cube val;
   int64_t iElement = find_element(var_to_get);
-  if (iElement >=0)
+
+  if (iElement >= 0)
     val = elements[iElement].value;
+
   return val;
 }
 
@@ -240,8 +255,10 @@ arma_cube OutputContainer::get_element_value(std::string var_to_get) {
 
 std::string OutputContainer::get_element_name(int64_t iElement) {
   std::string val = "";
+
   if (iElement < elements.size())
     val = elements[iElement].cName;
+
   return val;
 }
 
@@ -252,9 +269,11 @@ std::string OutputContainer::get_element_name(int64_t iElement) {
 int64_t OutputContainer::find_element(std::string var_to_find) {
   int64_t nVars = elements.size();
   int64_t iVarSave = -1;
+
   for (int64_t iVar = 0; iVar < nVars; iVar++)
     if (elements[iVar].cName.compare(var_to_find) == 0)
       iVarSave = iVar;
+
   return iVarSave;
 }
 
@@ -320,7 +339,7 @@ void OutputContainer::store_variable(std::string name,
 // -----------------------------------------------------------------------------
 
 void OutputContainer::store_variable(std::string name,
-				     std::string long_name,
+                                     std::string long_name,
                                      std::string unit,
                                      arma_cube value) {
   var_struct single;
@@ -402,6 +421,7 @@ void OutputContainer::display() {
   for (int64_t iVar = 0; iVar < nVars; iVar++) {
     std::cout << "  Variable " << iVar << ": " << elements[iVar].cName << "\n";
     std::cout << "      Unit  : " << elements[iVar].cUnit << "\n";
+
     if (elements[iVar].cLongName.length() > 0)
       std::cout << "      Long Name  : " << elements[iVar].cLongName;
   }
@@ -411,7 +431,7 @@ void OutputContainer::display() {
 
    Output methods for binary files
 
- -------------------------------------------------------------------- */ 
+ -------------------------------------------------------------------- */
 
 // -----------------------------------------------------------------------------
 // Write a header file for the container.  This outputs into a json
@@ -446,7 +466,6 @@ int OutputContainer::write_container_header() {
     {"variables", variables},
     {"units", units} });
   std::string whole_filename = directory + "/" + filename + ".json";
-  std::cout << "Writing file : " << whole_filename << "\n";
 
   try {
     std::ofstream file(whole_filename);
@@ -532,7 +551,7 @@ int OutputContainer::write_container_binary() {
 
    Output and Input methods for netcdf files
 
- -------------------------------------------------------------------- */ 
+ -------------------------------------------------------------------- */
 
 //----------------------------------------------------------------------
 // This is at the top so it doesn't have to go in the include file!
@@ -682,7 +701,6 @@ int OutputContainer::write_container_netcdf() {
   std::string LONG_NAME = "long_name";
 
   try {
-    std::cout << "Writing File : " << whole_filename << "\n";
     NcFile ncdf_file(whole_filename, NcFile::replace);
     // Add dimensions:
     NcDim xDim = ncdf_file.addDim("lon", elements[0].value.n_rows);
@@ -712,8 +730,10 @@ int OutputContainer::write_container_netcdf() {
     for (int64_t iVar = 0; iVar < nVars; iVar++) {
       Var.push_back(ncdf_file.addVar(elements[iVar].cName, ncFloat, dimVector));
       Var[iVar].putAtt(UNITS, elements[iVar].cUnit);
+
       if (elements[iVar].cLongName.length() > 0)
-	Var[iVar].putAtt(LONG_NAME, elements[iVar].cLongName);
+        Var[iVar].putAtt(LONG_NAME, elements[iVar].cLongName);
+
       output_netcdf_3d(startp, countp, elements[iVar].value, Var[iVar]);
     }
 

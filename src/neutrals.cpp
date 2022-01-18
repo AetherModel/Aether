@@ -391,7 +391,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
   OutputContainer RestartContainer;
   RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("neutrals");
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
 
   try {
     if (DoRead)
@@ -403,6 +403,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       cName = species[iSpecies].cName;
+
       if (DoRead)
         species[iSpecies].density_scgc =
           RestartContainer.get_element_value(cName);
@@ -413,6 +414,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     }
 
     cName = temperature_name;
+
     if (DoRead)
       temperature_scgc = RestartContainer.get_element_value(cName);
     else
@@ -422,6 +424,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 
     for (int iDir = 0; iDir < 3; iDir++) {
       cName = velocity_name[iDir];
+
       if (DoRead)
         velocity_vcgc[iDir] = RestartContainer.get_element_value(cName);
       else
