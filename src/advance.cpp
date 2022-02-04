@@ -28,7 +28,8 @@ int advance(Planets &planet,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (time.check_time_gate(input.get_dt_report()))
+  if (time.check_time_gate(input.get_dt_report()) &&
+      report.test_verbose(0))
     time.display();
 
   gGrid.calc_sza(planet, time, report);
@@ -63,6 +64,8 @@ int advance(Planets &planet,
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
+
+  neutrals.exchange(gGrid, report);
 
   time.increment_time();
 

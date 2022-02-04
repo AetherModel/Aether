@@ -60,12 +60,28 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  int iErr = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time, report);
 
-  if (iErr > 0)
+  if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
 }
 
+// -----------------------------------------------------------------------
+// output the settings json to a file (for restart)
+// -----------------------------------------------------------------------
+
+bool Inputs::write_restart() {
+  bool DidWork = true;
+
+  if (iProc == 0) {
+    std::string filename = settings["Restart"]["OutDir"];
+    filename = filename + "/settings.json";
+    DidWork = write_json(filename, settings);
+  }
+
+  DidWork = sync_across_all_procs(DidWork);
+  return DidWork;
+}
 
 // -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
@@ -227,7 +243,34 @@ precision_t Inputs::get_n_outputs() {
 }
 
 // -----------------------------------------------------------------------
-// Return number of longitudes, latitudes, and altitudes in grid
+// Return original random number seed
+// -----------------------------------------------------------------------
+
+int Inputs::get_original_seed() {
+  return settings["Seed"];
+}
+
+// -----------------------------------------------------------------------
+// Set random number seed
+// -----------------------------------------------------------------------
+
+void Inputs::set_seed(int seed) {
+  settings["Seed"] = seed;
+  updated_seed = seed;
+}
+
+// -----------------------------------------------------------------------
+// Return random number seed that has been updated
+// -----------------------------------------------------------------------
+
+int Inputs::get_updated_seed() {
+  std::default_random_engine get_random(updated_seed);
+  updated_seed = get_random();
+  return updated_seed;
+}
+
+// -----------------------------------------------------------------------
+// Return number of longitudes, latitudes, and altitudes in Geo grid
 // -----------------------------------------------------------------------
 
 int Inputs::get_nLonsGeo() {
@@ -240,6 +283,38 @@ int Inputs::get_nLatsGeo() {
 
 int Inputs::get_nAltsGeo() {
   return settings["GeoBlockSize"]["nAlts"];
+}
+
+// -----------------------------------------------------------------------
+// Return number of Blocks of longitudes and latitudes in Geo grid
+// -----------------------------------------------------------------------
+
+int Inputs::get_nBlocksLonGeo() {
+  return settings["GeoBlockSize"]["nBlocksLon"];
+}
+
+int Inputs::get_nBlocksLatGeo() {
+  return settings["GeoBlockSize"]["nBlocksLat"];;
+}
+
+// -----------------------------------------------------------------------
+// Return number of ensemble members
+// -----------------------------------------------------------------------
+
+int Inputs::get_nMembers() {
+  return settings["Ensembles"]["nMembers"];
+}
+
+// -----------------------------------------------------------------------
+// Return verbose variables
+// -----------------------------------------------------------------------
+
+int Inputs::get_verbose() {
+  return settings["Debug"]["iVerbose"];
+}
+
+int Inputs::get_verbose_proc() {
+  return settings["Debug"]["iProc"];
 }
 
 // -----------------------------------------------------------------------
@@ -303,6 +378,14 @@ std::string Inputs::get_collision_file() {
 }
 
 // -----------------------------------------------------------------------
+// Return Indices Lookup Filename
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_indices_lookup_file() {
+  return settings["IndicesLookupFile"];
+}
+
+// -----------------------------------------------------------------------
 // Return total number of OMNIWeb files to read
 // -----------------------------------------------------------------------
 
@@ -359,4 +442,25 @@ std::string Inputs::get_planet_species_file() {
 
 std::string Inputs::get_electrodynamics_file() {
   return settings["ElectrodynamicsFile"];
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+json Inputs::get_perturb_values() {
+  json values;
+
+  if (settings.contains("Perturb"))
+    values = settings["Perturb"];
+
+  return values;
+}
+
+// --------------------------------------------------------------------------
+// check to see if class is ok
+// --------------------------------------------------------------------------
+
+bool Inputs::is_ok() {
+  return IsOk;
 }

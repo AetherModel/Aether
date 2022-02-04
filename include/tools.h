@@ -4,6 +4,28 @@
 #ifndef INCLUDE_TOOLS_H_
 #define INCLUDE_TOOLS_H_
 
+// -----------------------------------------------------------------------------
+// synchronize a variable across all processors
+// -----------------------------------------------------------------------------
+
+bool sync_across_all_procs(bool value);
+
+// -----------------------------------------------------------------------------
+// Generate a vector of normally distributed random doubles
+// -----------------------------------------------------------------------------
+
+std::vector<double> get_normal_random_vect(double mean,
+					   double std,
+					   int64_t nValues,
+					   int seed);
+
+// -----------------------------------------------------------------------------
+// Generate a vector of uniformly distributed random unsigned ints
+// -----------------------------------------------------------------------------
+
+std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
+						   int seed);
+
 std::vector<arma_cube> make_cube_vector(int64_t nLons,
 				    int64_t nLats,
 				    int64_t nAlts,
@@ -22,5 +44,20 @@ std::string tostr(int64_t num_to_convert, int64_t zero_padding_len);
 
 json read_json(std::string json_file);
 bool write_json(std::string json_file, json json_output);
+
+bool compare(precision_t value1, precision_t value2);
+
+// -----------------------------------------------------------------------------
+// calculate mean of vector
+// -----------------------------------------------------------------------------
+
+precision_t mean(std::vector<precision_t> values);
+
+// -----------------------------------------------------------------------------
+// calculate standard deviation of vector
+// -----------------------------------------------------------------------------
+
+precision_t standard_deviation(std::vector<precision_t> values);
+
 
 #endif  // INCLUDE_TOOLS_H_

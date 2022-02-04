@@ -96,12 +96,28 @@ public:
   void calc_mlt(Report &report);
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
-  void init_geo_grid(Planets planet, Inputs input, Report &report);
+  bool init_geo_grid(Planets planet, Inputs input, Report &report);
   void create_simple_lat_lon_alt_grid(Inputs input, Report &report);
   void fill_grid_bfield(Planets planet, Inputs input, Report &report);
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);
   void report_grid_boundaries();
+
+  // Need to move these to private at some point:
+  
+  bool IsLatLonGrid;
+  bool IsCubeSphereGrid;
+  bool DoesTouchNorthPole;
+  bool DoesTouchSouthPole;
+
+  /// The processor to the East/Right/X+:
+  int iProcXp;
+  /// The processor to the West/Left/X-:
+  int iProcXm;
+  /// The processor to the North/Up/Y+:
+  int iProcYp;
+  /// The processor to the South/Down/Y-:
+  int iProcYm;
   
  private:
 
@@ -113,7 +129,7 @@ public:
   int64_t nZ, nAlts;
 
   int nGCs; // number of ghostcells
-
+  
 };
 
 #endif  // INCLUDE_GRID_H_

@@ -10,13 +10,8 @@ set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
-# Executable decision
-if(USE_NETCDF)
-  set(SRC_FILES ${OUT_DIR}/output_netcdf.cpp ${SRC_FILES})
-else()
-  set(SRC_FILES ${OUT_DIR}/output_binary.cpp ${SRC_FILES})
-endif()
 add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
+
 if(USE_DOUBLE_PRECISION)
   add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
 endif()
@@ -61,13 +56,19 @@ if(OPENMP_FOUND)
   target_link_libraries(aether PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-if(USE_NETCDF)
-  set(NETCDF_CXX "YES")
-  find_package(NetCDF REQUIRED)
-  target_include_directories(aether PUBLIC ${NETCDF_INCLUDES})
-  target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_CXX})
-  target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
+find_package(MPI)
+if (MPI_FOUND)
+  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES})
 endif()
+
+#if(USE_NETCDF)
+set(NETCDF_CXX "YES")
+find_package(NetCDF REQUIRED)
+target_include_directories(aether PUBLIC ${NETCDF_INCLUDES})
+target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_CXX})
+target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
+#endif()
 
 # Set up links for executable
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/aether

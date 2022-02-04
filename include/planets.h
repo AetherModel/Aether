@@ -106,6 +106,12 @@ public:
    **/
   precision_t get_dipole_strength();
   
+  /**********************************************************************
+     \brief Check to see if internal state of class is ok
+   **/
+  
+  bool is_ok();
+  
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
@@ -211,6 +217,9 @@ public:
   /// The chose planet is stored here
   planet_chars planet;
 
+  /// An internal variable to hold the state of the class
+  bool IsOk;
+
   // --------------------------------------------------------------------
   // Functions:
 
@@ -223,7 +232,7 @@ public:
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  int set_planet(Inputs args, Report report);
+  bool set_planet(Inputs args, Report report);
 
   /**********************************************************************
      \brief Updates the planetary characteristics that depend on time
@@ -240,7 +249,7 @@ public:
      \param args info about how user has configured things
      \param report allow reporting to occur
    **/
-  int read_file(Inputs args, Report report);
+  bool read_file(Inputs args, Report report);
 };
 
 #endif  // INCLUDE_PLANETS_H_

@@ -150,15 +150,15 @@ class Neutrals {
   float *initial_temperatures, *initial_altitudes;
   int nInitial_temps = 0;
 
-  // names and units
+  /// names and units
   std::string density_name = "Neutral Bulk Density";
-  std::string density_unit = "(/m3)";
+  std::string density_unit = "/m3";
 
   std::vector<std::string> velocity_name;
-  std::string velocity_unit = "(m/s)";
+  std::string velocity_unit = "m/s";
 
   std::string temperature_name = "Temperature";
-  std::string temperature_unit = "(K)";
+  std::string temperature_unit = "K";
 
   // --------------------------------------------------------------------
   // Functions:
@@ -264,6 +264,35 @@ class Neutrals {
      \param DoRead read the restart files if true, write if false
    **/
   bool restart_file(std::string dir, bool DoRead);  
+
+  /**********************************************************************
+     \brief Exchange messages between processors
+     \param grid The grid to define the neutrals on
+     \param report allow reporting to occur
+   **/
+  bool exchange(Grid grid, Report &report);
+
+  /**********************************************************************
+     \brief Exchange one face for the NEUTRALS
+
+     1. pack all of the variables (den, temp, vel)
+     2. send the buffer
+     3. receive the buffer
+     4. Unpack all of the variables (den, temp, vel)
+     5. Wait for everyone to finish (technically the send...)
+
+     \param iReceiver which processor to get data from
+     \param iSender which processor to send data too
+     \param buffer the buffer to use for the message pass
+     \param iTotalSize buffer size for the message pass
+     \param nG number of ghost cells
+     \param iDir direction for message pass (0-3)
+   **/
+
+  bool exchange_one_face(int iReceiver, int iSender,
+			 precision_t *buffer,
+			 int64_t iTotalSize,
+			 int nG, int iDir);
 
 };
 

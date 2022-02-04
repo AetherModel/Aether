@@ -4,9 +4,15 @@
 #ifndef INCLUDE_AETHER_H_
 #define INCLUDE_AETHER_H_
 
-// The armadillo library is to allow the use of 3d cubes and other
-// array types, with array math built in. This eliminates loops!
+/// The armadillo library is to allow the use of 3d cubes and other
+/// array types, with array math built in. This eliminates loops!
 #include <armadillo>
+
+/// This is used for timing and the random seed generator:
+#include <chrono>
+
+/// This is for generating random numbers:
+#include <random>
 
 // Types
 // Precision compile-time aliasing
@@ -17,7 +23,6 @@ using precision_t = double;
 /// Precision type compile-time default to float.
 using precision_t = float;
 #endif
-
 
 /// Armadillo type vector (single column) with compile-time precision.
 using arma_vec = arma::Col<precision_t>;
@@ -112,5 +117,8 @@ using json = nlohmann::json;
 
 // not done
 #include "calc_grid_derived.h"
+
+// not done
+#include "parallel.h"
 
 #endif  // INCLUDE_AETHER_H_

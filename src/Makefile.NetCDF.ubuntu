@@ -1,7 +1,0 @@
-# (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
-# Full license can be found in License.md
-
-NETCDF_INCLUDE_DIR = -I/usr/include
-NETCDF_LIB_DIR = -L/usr/lib/x86_64-linux-gnu
-NETCDF_LIB = -lnetcdf_c++4
-

@@ -2,6 +2,7 @@
 // Full license can be found in License.md
 
 #include <netcdf>
+#include <cmath>
 
 #include "aether.h"
 
@@ -71,6 +72,9 @@ int output(Neutrals neutrals,
   int64_t nAlts = grid.get_nAlts();
   double time_array[1];
 
+  // Compute pi using the cmath atan function. pi = atan(1)*4
+  double rad_to_deg = 180.0/(atan(1)*4);
+
   std::string function = "output";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -87,6 +91,7 @@ int output(Neutrals neutrals,
       std::string file_name;
       std::string file_ext = ".nc";
       std::string UNITS = "units";
+      std::string LONG_NAME = "long_name";
       std::string file_pre;
 
       std::string type_output = args.get_type_output(iOutput);
@@ -108,11 +113,11 @@ int output(Neutrals neutrals,
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
-      NcDim lonDim = ncdf_file.addDim("Longitude", nLons);
-      NcDim latDim = ncdf_file.addDim("Latitude", nLats);
-      NcDim altDim = ncdf_file.addDim("Altitude", nAlts);
+      NcDim lonDim = ncdf_file.addDim("lon", nLons);
+      NcDim latDim = ncdf_file.addDim("lat", nLats);
+      NcDim altDim = ncdf_file.addDim("z", nAlts);
 
-      NcDim timeDim = ncdf_file.addDim("Time", 1);
+      NcDim timeDim = ncdf_file.addDim("time", 1);
 
       // Define the Coordinate Variables
 
@@ -124,15 +129,18 @@ int output(Neutrals neutrals,
       dimVector.push_back(latDim);
       dimVector.push_back(altDim);
 
-      NcVar timeVar = ncdf_file.addVar("Time", ncDouble, timeDim);
-      NcVar lonVar = ncdf_file.addVar("Longitude", ncFloat, dimVector);
-      NcVar latVar = ncdf_file.addVar("Latitude", ncFloat, dimVector);
-      NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, dimVector);
+      NcVar timeVar = ncdf_file.addVar("time", ncDouble, timeDim);
+      NcVar lonVar = ncdf_file.addVar("lon", ncFloat, dimVector);
+      NcVar latVar = ncdf_file.addVar("lat", ncFloat, dimVector);
+      NcVar altVar = ncdf_file.addVar("z", ncFloat, dimVector);
 
       timeVar.putAtt(UNITS, "seconds");
-      lonVar.putAtt(UNITS, "radians");
-      latVar.putAtt(UNITS, "radians");
-      altVar.putAtt(UNITS, "meters");
+      lonVar.putAtt(UNITS, "degrees_east");
+      lonVar.putAtt(LONG_NAME, "latitude");
+      latVar.putAtt(UNITS, "degrees_north");
+      latVar.putAtt(LONG_NAME, "longitude");
+      altVar.putAtt(UNITS, "m");
+      altVar.putAtt(LONG_NAME, "height above mean sea level");
 
       std::vector<size_t> startp, countp;
       startp.push_back(0);
@@ -150,8 +158,8 @@ int output(Neutrals neutrals,
 
       // Output longitude, latitude, altitude 3D arrays:
 
-      output_variable_3d(startp, countp, grid.geoLon_scgc, lonVar);
-      output_variable_3d(startp, countp, grid.geoLat_scgc, latVar);
+      output_variable_3d(startp, countp, grid.geoLon_scgc*rad_to_deg, lonVar);
+      output_variable_3d(startp, countp, grid.geoLat_scgc*rad_to_deg, latVar);
       output_variable_3d(startp, countp, grid.geoAlt_scgc, altVar);
 
       // ----------------------------------------------

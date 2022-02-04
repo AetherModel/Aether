@@ -53,7 +53,7 @@ index_file_output_struct read_f107_file(std::string f107_file,
 
     if (IsFound) {
 
-      if (IsAdjusted)
+      if (IsAdjusted && report.test_verbose(0))
         std::cout << "Need to NOT adjust F10.7, but that isn't included yet!!!"
                   << '\n';
 
