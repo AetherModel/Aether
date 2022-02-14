@@ -58,8 +58,9 @@ endif()
 
 find_package(MPI)
 if (MPI_FOUND)
-  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES})
+  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_PATH})
+  target_compile_options(aether PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 endif()
 
 #if(USE_NETCDF)
