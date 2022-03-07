@@ -2,6 +2,7 @@
 #define INCLUDE_CUBESPHERE_H_
 
 #include "aether.h"
+#include <memory>
 #include <armadillo>
 
 /*************************************************
@@ -43,45 +44,61 @@ arma_vec cartesian_location(const uint& face, const uint& subdivisions,
  */
 class QTNode {
       unsigned short m_pixnum;
-      unsigned int m_resolution = 1;
+      unsigned int m_max_depth = 1;
       unsigned int m_depth = 0;
       std::shared_ptr<QTNode> m_children[4];
       /// Position in cube.
-      arma_vec m_position = {0, 0, 0};
+      arma_vec m_cube_position = {0, 0, 0};
       /// Center position in cube sphere.
-      arma_vec m_cell_center = {0, 0, 0};
+      arma_vec m_sphere_position = {0, 0, 0};
       // other details to add
 
       public:
       /// Constructor
-      QTNode(const uint& face,
-             const arma_vec& position,
-             const uint& resolution,
-             const uint& depth);
+      QTNode(Grid grid,
+             const uint& face,
+             const arma_vec& cube_position,
+             const uint& depth,
+             const uint& max_depth);
       /// Destructor
       ~QTNode();
       /// Returns if the node is a leaf based on resolution.
       bool is_leaf();
       };
 
-/// The normalized origins of each face of the cube (i.e centers).
+/// The normalized origins of each face of the cube (i.e. corner)
 static const arma_mat ORIGINS = {
-      {-1.0, 0.0, 0.0},
-      {0.0, -1.0, 0.0},
-      {0.0, 0.0, -1.0},
-      {1.0, 0.0, 0.0},
-      {0.0, 1.0, 0.0},
-      {0.0, 0.0, 1.0},
-    };
+    {-1.0, 0.0, 0.0},
+    {0.0, -1.0, 0.0},
+    {0.0, 0.0, -1.0},
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0},
+};
 
-/// Directions of refinement of the cube.
-static const arma_mat DIRECTIONS = {
-      {-1.0, -1.0},
-      {-1.0, 1.0},
-      {1.0, -1.0},
-      {1.0, 1.0} 
+/// Normalized right steps in cube
+static const arma_mat RIGHTS = {
+		{2.0, 0.0, 0.0},
+		{0.0, 0.0, 2.0},
+		{-2.0, 0.0, 0.0},
+		{0.0, 0.0, -2.0},
+		{2.0, 0.0, 0.0},
+		{2.0, 0.0, 0.0}
+};
+
+/// Normalized right steps in cube
+static const arma_mat UPS = {
+		{0.0, 2.0, 0.0},
+		{0.0, 2.0, 0.0},
+		{0.0, 2.0, 0.0},
+		{0.0, 2.0, 0.0},
+		{0.0, 0.0, 2.0},
+		{0.0, 0.0, -2.0}
 };
 
 } // CubeSphere::
+
+class CubeSphereGrid : public Grid {
+};
 
 #endif  // INCLUDE_CUBESPHERE_H_

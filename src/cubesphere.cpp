@@ -37,22 +37,43 @@ arma_vec CubeSphere::cube2sphere(const arma_vec& p){
     return ret_val;
     }
 
-CubeSphere::QTNode::QTNode(const uint& face,
-                           const arma_vec& position,
-                           const uint& resolution,
-                           const uint& depth){
-    m_position = position;
+CubeSphere::QTNode::QTNode(Grid grid,
+                           const uint& face,
+                           const arma_vec& cube_position,
+                           const uint& depth,
+                           const uint& max_depth){
+    m_cube_position = cube_position;
     m_depth = depth;
 
-    if (resolution != depth) {
-        // m_children = std::make_shared<QTNode>(position-
+    // refine further
+    if (max_depth != depth) {
+        const arma_vec right = CubeSphere::RIGHTS.row(face);
+        const arma_vec up = CubeSphere::UPS.row(face);
+
+        // refine the quad tree
+        uint child = 0;
+        for (int j=0; j<2; j++) {
+            for (int i=0; i<2; i++) {
+                // new corner position
+                const arma_vec position = m_cube_position + 2.0*(right*i + up*j)*pow(0.5, depth);
+                m_children[child] = std::shared_ptr<QTNode>(
+                        new QTNode(grid, face, position, depth+1, max_depth));
+                child++;
+            }
         }
+
+    } else {
+        // create grid
     }
+}
 
 CubeSphere::QTNode::~QTNode(){
     // Place holder just in case.
 }
 
 bool CubeSphere::QTNode::is_leaf(){
-    return m_resolution == m_depth;
+    for (int i=0; i<4; i++) {
+        if (m_children[i] != nullptr) { return false; }
+    }
+    return true;
 }
