@@ -9,7 +9,8 @@
 // read in from the CSV file.
 // -----------------------------------------------------------------------------
 
-void Ions::calc_ion_neutral_coll_freq(Neutrals neutrals, Report &report) {
+// removed this from the ions class // MB
+void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions, Report &report) {
 
   std::string function = "Ions::calc_ion_neutral_coll_freq";
   static int iFunction = -1;
@@ -17,7 +18,7 @@ void Ions::calc_ion_neutral_coll_freq(Neutrals neutrals, Report &report) {
   arma_cube t, one_minus_log;
 
   for (int iIon = 0; iIon < nIons; iIon++) {
-    if (species[iIon].nu_ion_neutral_coef.size() > 0) {
+    if (ions.species[iIon].nu_ion_neutral_coef.size() > 0) {
       for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
         species[iIon].nu_ion_neutral_vcgc[iNeutral].zeros();
 

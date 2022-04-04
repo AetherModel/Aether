@@ -91,7 +91,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   std::vector<arma_cube> total_forcing = make_cube_vector(nX, nY, nZ, 3);
 
   report.print(5, "going into collision frequencies");
-  calc_ion_neutral_coll_freq(neutrals, report);
+  calc_ion_neutral_coll_freq(neutrals, ions, report);
 
   int64_t iIon, iNeutral;
 

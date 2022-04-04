@@ -52,7 +52,8 @@ int advance(Planets &planet,
                                 time,
                                 ions,
                                 report);
-
+// brought collision frequencies to exist outside ions and neutrals // MB
+  calc_ion_neutral_coll_freq(neutrals, ions, report);
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
 
   calc_aurora(gGrid, neutrals, ions, input, report);
