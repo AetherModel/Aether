@@ -17,7 +17,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
-            Electrodynamics &electrodynamics,
+	    Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
             Report &report) {
@@ -52,7 +52,6 @@ int advance(Planets &planet,
                                 time,
                                 ions,
                                 report);
-// brought collision frequencies to exist outside ions and neutrals // MB
   calc_ion_neutral_coll_freq(neutrals, ions, report);
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
 
@@ -61,7 +60,7 @@ int advance(Planets &planet,
   neutrals.calc_conduction(gGrid, time, report);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
   neutrals.add_sources(time, report);
-  ions.calc_ion_temperature(neutrals, gGrid, report);
+  ions.calc_ion_temperature(neutrals, gGrid, time, report);
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);

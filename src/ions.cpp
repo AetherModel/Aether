@@ -81,8 +81,8 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   density_scgc.set_size(nLons, nLats, nAlts);
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-  ion_temperature_scgc.set_size(nLons, nLats, nAlts);
-  ion_temperature_scgc.ones();
+  temperature_scgc.set_size(nLons, nLats, nAlts);
+  temperature_scgc.ones();
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
   electron_temperature_scgc.ones();
 
@@ -93,6 +93,8 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
 
   potential_scgc.set_size(nLons, nLats, nAlts);
   potential_scgc.zeros();
+
+  conduction_scgc.set_size(nLons, nLats, nAlts);
 
   eflux.set_size(nLons, nLats);
   eflux.zeros();
@@ -188,6 +190,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
 
   return iErr;
 }
+
 
 // -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
@@ -328,11 +331,11 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
     cName = temperature_name + " (bulk ion)";
 
     if (DoRead)
-      ion_temperature_scgc = RestartContainer.get_element_value(cName);
+      temperature_scgc = RestartContainer.get_element_value(cName);
     else
       RestartContainer.store_variable(cName,
                                       temperature_unit,
-                                      ion_temperature_scgc);
+                                      temperature_scgc);
 
     cName = temperature_name + " (electron)";
 

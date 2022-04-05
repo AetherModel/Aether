@@ -41,8 +41,7 @@ class Ions {
     std::vector<arma_cube> perp_velocity_vcgc;
 
     arma_cube temperature_scgc;
-
-    // Sources and Losses:
+    arma_cube conduction_scgc;
 
     arma_cube ionization_scgc;
 
@@ -53,7 +52,8 @@ class Ions {
   // bulk quantities (states):
   arma_cube density_scgc;
   std::vector<arma_cube> velocity_vcgc;
-  arma_cube ion_temperature_scgc;
+  arma_cube temperature_scgc;
+  arma_cube conduction_scgc;
   arma_cube electron_temperature_scgc;
 
   // This is the vector that will contain all of the different species:
@@ -87,6 +87,7 @@ class Ions {
   Ions(Grid grid, Inputs input, Report report);
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
+  void init_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
   void fill_electrons(Report &report);
   int get_species_id(std::string name, Report &report);
   void calc_efield(Grid grid, Report &report);
@@ -95,11 +96,10 @@ class Ions {
 		      Grid grid,
 		      precision_t dt,
 		      Report &report);
-  void calc_ion_neutral_coll_freq(Neutrals neutrals, Report &report);
   std::vector<arma_cube> calc_ion_electron_pressure_gradient(int64_t iIon,
 							     Grid grid,
 							     Report &report);
-  void calc_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
+  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time, Report &report);
 
   bool restart_file(std::string dir, bool DoRead);
 

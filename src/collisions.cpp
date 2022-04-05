@@ -25,7 +25,7 @@ void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions, Report &report) 
           t = (ions.species[iIon].nu_in_res_tn_frac[iNeutral] *
                neutrals.temperature_scgc +
                ions.species[iIon].nu_in_res_tn_frac[iNeutral] *
-               ions.ion_temperature_scgc);
+               ions.temperature_scgc);
           one_minus_log =
             (1.0 - ions.species[iIon].nu_in_res_coef2[iNeutral] *
              log10(t));
