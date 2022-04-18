@@ -76,6 +76,21 @@ void read_collision_file(Neutrals &neutrals,
 
     }
 
+      // ---------------------------
+      // #Bst for ion-ion interactions
+      // ---------------------------
+
+      if (hash == "#bst") {
+        std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
+
+        if (csv.size() > 1)
+          parse_bst_in_table(csv, neutrals, ions, report);
+
+        else
+          std::cout << "Bst table is empty!!! Yikes!!!\n";
+      }
+
+
     infile_ptr.close();
     check_collision_frequncies(ions, neutrals, report);
   }
@@ -313,3 +328,68 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
   return;
 }
 
+
+// -----------------------------------------------------------------------------
+// parse Bst table
+// -----------------------------------------------------------------------------
+
+void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
+                                Neutrals &neutrals,
+                                Ions &ions,
+                                Report &report) {
+
+  std::string function = "parse_bst_in_table";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int nLines = csv.size();                // set number of lines in table
+  int nCol = csv[0].size();               // set number of columns in table
+  int iIon, iIonS, iIonT, iCol, iLine;
+
+  std::vector<int> iIonSIds_;
+
+  // 1. check to see that we have a coefficient in the last line:
+  float coef = stof(csv[nLines - 1][0]);
+
+  // 2. Read ion specie names across first row of table
+  for (iCol = 1; iCol < nCol; iCol++) {
+    iIonSIds_.push_back(ions.get_species_id(csv[0][iCol],report));
+    if (report.test_verbose(4))
+      std::cout << "iCol : " << iCol
+                << " " << csv[0][iCol]
+                << " " << iIonS << "\n";
+  }
+
+  // 3. Read ion specie names down first column of table and read self collisions Bst
+  for (iLine = 1; iLine < nLines - 1; iLine++) {
+    iIonT = ions.get_species_id(csv[iLine][0], report);
+
+    if (report.test_verbose(4))
+      std::cout << "iLine : " << iLine
+                << " " << csv[iLine][0]
+                << " " << iIonT << "\n";
+
+    if (iIonT > -1) {
+
+      // Set the array size and fill with zeros:
+      for (iIon = 0; iIon < nSpecies; iIon++) {
+        ions.species[iIon].nu_ion_ion.push_back(0.0);
+      }
+
+      // Now go through all of the species and see which we have:
+      for (iCol = 1; iCol < nCols; iCol++) {
+        // Check to see if a matching specie exists:
+        if (iIonSIds_[iCol - 1] > -1) {
+              ions.species[iIon].nu_ion_ion[iIonSIds_[iCol - 1]] = 
+                   stof(csv[iLine][iCol]) * coef;
+        if (report.test_verbose(4))
+          std::cout << "nu_ion_ion : " << stof(csv[iLine][iCol]) * coef << "\n";
+        // sanity check needed to confirm indexing is correct...
+        }
+      }
+    }
+  }
+
+  report.exit(function);
+  return;
+}
