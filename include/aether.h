@@ -102,8 +102,10 @@ using json = nlohmann::json;
 #include "calc_euv.h"
 // not done
 #include "chemistry.h"
-// not done
+
+// Reads collision frequency from csv table
 #include "read_collision_file.h"
+
 // not done
 #include "output.h"
 // not done

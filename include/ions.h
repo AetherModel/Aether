@@ -99,8 +99,10 @@ class Ions {
   std::vector<arma_cube> calc_ion_electron_pressure_gradient(int64_t iIon,
 							     Grid grid,
 							     Report &report);
-  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time, Report &report);
-
+  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time, 
+		            Inputs input, Report &report);
+  void calc_electron_temperature(Neutrals neutrals, Grid grid, Report &report);
+  
   bool restart_file(std::string dir, bool DoRead);
 
 };

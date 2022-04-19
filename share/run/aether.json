@@ -15,6 +15,8 @@
 	"setting3" : true},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin"
 
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : false
 }

@@ -30,13 +30,13 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid, 
-                                    Times time, Report &report) {
+                                Times time, Inputs input, Report &report) {
   
   std::string function = "Ions::calc_ion_temperature";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int64_t iIon, iLon, iLat, nSpecies;   
+  int64_t iIon, iLon, iLat, nSpecs;   
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
@@ -47,14 +47,16 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   arma_vec dalt1d(nAlts);
   arma_vec conduction1d(nAlts);
 
+  arma_cube tempT(nLons, nLats, nAlts);
+
   // Get the time step size
   precision_t dt = time.get_dt();
 
   // Loop over all species or assume only bulk calculation
-  if (DoCalcBulkIonTemp==true)  nSpecies=1; // First ion specie only, is O+?
-  if (DoCalcBulkIonTemp==false) nSpecies=nIons;
+  if (input.get_do_calc_bulk_ion_temp()==true)  nSpecs=1; // First ion specie only, is O+?
+  if (input.get_do_calc_bulk_ion_temp()==false) nSpecs=nIons;
 
-  for (iIon = 0; iIon < nSpecies; iIon++) {
+  for (iIon = 0; iIon < nSpecs; iIon++) {
 
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
@@ -62,19 +64,13 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         // --------------------------------------------------------------------------
         // Calculate heat flux (conduction) in 1D; loop over all lat,lon positions
         // --------------------------------------------------------------------------
+        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);     // ion temperature
+        lambda1d = 25 / 8 * pow(cKB,2) * pow(temp1d,2.5) / 
+		   species[iIon].mass / species[iIon].nu_ion_ion[iIon]; // thermal conductivity
+        front1d  = 2/3/species[iIon].density_scgc.tube(iLon,iLat)/cKB;  // front matter of the term
+        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);               // grid thing for solver
 
-        // lambdas=25/8*kb^2*Ts(:,:,is).^(5/2)/ms/(Css(is)*1e-6);
-        // Css is ion self collisions, diagional from the Bst table, 
-        // Css is species[iIon].nu_ion_ion since the calc_ion_temperature is a function 
-        // within the ion class, nu_ion_ion is a vector of length number-of-ion-species
-
-        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat); // ion temperature
-        lambda1d = 25/8*pow(cKB,2)*pow(temp1d,(5/2))/species[iIon].mass/
-                   (ions.species[iIon].nu_ion_ion);         // thermal conductivity
-        front1d.ones(); //... need to look up what is the front matter of the term being solved;
-        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);   // grid thing for solver
-
-        conduction1d.zeros();                               // set temp variable to zero
+        conduction1d.zeros();                                           // set temp variable to zero
 
         conduction1d = solver_conduction(temp1d, lambda1d, front1d, dt, dalt1d);
 
@@ -89,20 +85,21 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     // As more temperature terms get coded, they are added to the parenthesis 
     // for inclusion in the advancement of the ion temperature
     // --------------------------------------------------------------------------
-    if (DoCalcBulkIonTemp==false) {
+    if (input.get_do_calc_bulk_ion_temp()==false) {
       species[iIon].temperature_scgc = species[iIon].temperature_scgc + 
                                          dt * (conduction_scgc);
     }
   } //ions
 
-  if (DoCalcBulkIonTemp==false) {
+  if (input.get_do_calc_bulk_ion_temp()==false) {
     // Use the density averaged temperature to fill the bulk temperature 
-    // do I need to loop this??? bleh.
-    // from ions.cpp : density_scgc = species[nIons].density_scgc; It is electron density.
-    temperature_scgc = (species.temperature_scgc * species.density_scgc) / density_scgc;
+    tempT.ones();
+    for (iIon = 0; iIon < nIons; iIon++)
+      tempT = tempT + (species[iIon].temperature_scgc % species[iIon].density_scgc);
+    temperature_scgc = tempT / density_scgc;
   }
 
-  if (DoCalcBulkIonTemp==true) {
+  if (input.get_do_calc_bulk_ion_temp()==true) {
     // Add temperature terms together to advance bulk ion temperature
     temperature_scgc = temperature_scgc + dt * (conduction_scgc);
 

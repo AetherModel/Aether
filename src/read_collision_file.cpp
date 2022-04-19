@@ -57,7 +57,7 @@ void read_collision_file(Neutrals &neutrals,
           parse_nu_in_table(csv, neutrals, ions, report);
 
         else
-          std::cout << "NU_in table is empty!!! Yikes!!!\n";
+          std::cout << "Nu_in table is empty!!! Yikes!!!\n";
       }
 
       // ---------------------------
@@ -74,14 +74,12 @@ void read_collision_file(Neutrals &neutrals,
           std::cout << "Resonant_nu_in table is empty!!! Yikes!!!\n";
       }
 
-    }
-
       // ---------------------------
       // #Bst for ion-ion interactions
       // ---------------------------
 
       if (hash == "#bst") {
-        std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
+	std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
           parse_bst_in_table(csv, neutrals, ions, report);
@@ -90,6 +88,7 @@ void read_collision_file(Neutrals &neutrals,
           std::cout << "Bst table is empty!!! Yikes!!!\n";
       }
 
+    }
 
     infile_ptr.close();
     check_collision_frequncies(ions, neutrals, report);
@@ -330,7 +329,8 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
 
 
 // -----------------------------------------------------------------------------
-// parse Bst table
+// parse Bst table - Coulomb collision frequency coefficients 
+//                 - Ionospheres Book, Table 4.3
 // -----------------------------------------------------------------------------
 
 void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
@@ -348,19 +348,28 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   std::vector<int> iIonSIds_;
 
-  // 1. check to see that we have a coefficient in the last line:
+  if (report.test_verbose(4))
+    std::cout << "Size of Bst table: " << nCol << " " << nLines << "\n";
+
+  // Look for a coefficient in the last line:
   float coef = stof(csv[nLines - 1][0]);
 
-  // 2. Read ion specie names across first row of table
+  // Read ion specie names across first row of table
   for (iCol = 1; iCol < nCol; iCol++) {
     iIonSIds_.push_back(ions.get_species_id(csv[0][iCol],report));
+
     if (report.test_verbose(4))
       std::cout << "iCol : " << iCol
-                << " " << csv[0][iCol]
-                << " " << iIonS << "\n";
+                << " " << csv[0][iCol] 
+		<< " " << iIonSIds_[iCol - 1] << "\n";
   }
 
-  // 3. Read ion specie names down first column of table and read self collisions Bst
+  // Set the array size and fill with zeros
+  for (iIon = 0; iIon < nSpecies; iIon++) {
+    ions.species[iIon].nu_ion_ion.push_back(0.0);
+  }
+
+  //  Read ion specie names down first column of table
   for (iLine = 1; iLine < nLines - 1; iLine++) {
     iIonT = ions.get_species_id(csv[iLine][0], report);
 
@@ -369,23 +378,21 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
                 << " " << csv[iLine][0]
                 << " " << iIonT << "\n";
 
-    if (iIonT > -1) {
+    // Found a used specie, time to extract Bst table data
+    if (iIonT > -1) { 
 
-      // Set the array size and fill with zeros:
-      for (iIon = 0; iIon < nSpecies; iIon++) {
-        ions.species[iIon].nu_ion_ion.push_back(0.0);
-      }
+      // Cycle through all of the species
+      for (iCol = 1; iCol < nCol; iCol++) {
 
-      // Now go through all of the species and see which we have:
-      for (iCol = 1; iCol < nCols; iCol++) {
-        // Check to see if a matching specie exists:
-        if (iIonSIds_[iCol - 1] > -1) {
-              ions.species[iIon].nu_ion_ion[iIonSIds_[iCol - 1]] = 
-                   stof(csv[iLine][iCol]) * coef;
-        if (report.test_verbose(4))
-          std::cout << "nu_ion_ion : " << stof(csv[iLine][iCol]) * coef << "\n";
-        // sanity check needed to confirm indexing is correct...
-        }
+        // If a matching specie exists extract Bst from table
+	if (iIonSIds_[iCol - 1] > -1) {	
+          ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol-1]] = stof(csv[iLine][iCol]) * coef;
+
+	  if (report.test_verbose(4)){
+            std::cout << "Species s vs t : " << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+            std::cout << "nu_ion_ion     : " << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol-1]] << "\n";
+	  }
+	}
       }
     }
   }
