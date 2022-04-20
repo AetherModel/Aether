@@ -365,7 +365,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   }
 
   // Set the array size and fill with zeros
-  for (iIon = 0; iIon < nSpecies; iIon++) {
+  for (iIon = 0; iIon < ions.species.size(); iIon++) {
     ions.species[iIon].nu_ion_ion.push_back(0.0);
   }
 

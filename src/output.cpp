@@ -70,12 +70,12 @@ int output(const Neutrals &neutrals,
 
       AllOutputContainers[iOutput].
       store_variable("lon",
-                     "longitude",
+                     "Longitude",
                      "degrees_east",
                      grid.geoLon_scgc * cRtoD);
       AllOutputContainers[iOutput].
       store_variable("lat",
-                     "latitude",
+                     "Latitude",
                      "degrees_north",
                      grid.geoLat_scgc * cRtoD);
       AllOutputContainers[iOutput].
@@ -124,10 +124,27 @@ int output(const Neutrals &neutrals,
                          ions.density_unit,
                          ions.species[iSpecies].density_scgc);
 
+      // Ion Temperatures:
+      if (type_output == "ions" ||
+          type_output == "states")
+	for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+          AllOutputContainers[iOutput].
+          store_variable(ions.species[iSpecies].cName + " " + ions.temperature_name,
+			 ions.temperature_unit,
+			 ions.species[iSpecies].temperature_scgc);
+
+      // Bulk Ion Temperature:
+      if (type_output == "ions" || 
+	  type_output == "states")
+        AllOutputContainers[iOutput].store_variable("Bulk Ion " +
+                                                    ions.temperature_name,
+                                                    ions.temperature_unit,
+                                                    ions.temperature_scgc);
+
       // Bulk Ion Drifts:
       if (type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
-          AllOutputContainers[iOutput].store_variable("Bulk" +
+          AllOutputContainers[iOutput].store_variable("Bulk " +
                                                       ions.velocity_name[iDir],
                                                       ions.velocity_unit,
                                                       ions.velocity_vcgc[iDir]);

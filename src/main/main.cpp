@@ -87,6 +87,9 @@ int main() {
     // Read in the collision frequencies and other diffusion coefficients:
     read_collision_file(neutrals, ions, input, report);
 
+    // Initialize ion temperatures from neutral temperature
+    ions.init_ion_temperature(neutrals, gGrid, report);
+
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
     Electrodynamics electrodynamics(time, input, report);
