@@ -44,8 +44,6 @@
 
     "Seed" : 0,
     
-    "DoCalcBulkIonTemp" : 0,
-
     "F107File" : "UA/inputs/f107.txt",
     "ChemistryFile" : "UA/inputs/chemistry_earth.csv",
     "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
