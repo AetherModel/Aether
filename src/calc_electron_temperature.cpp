@@ -7,10 +7,11 @@
 // Hack to just set the electon temperature to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Report &report) {
+void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
+                                     Report &report) {
 
   electron_temperature_scgc = neutrals.temperature_scgc;
-  
+
 }
 
 

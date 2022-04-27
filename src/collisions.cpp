@@ -9,7 +9,8 @@
 // read in from the CSV file.
 // -----------------------------------------------------------------------------
 
-void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions, Report &report) {
+void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions,
+                                Report &report) {
 
   std::string function = "calc_ion_neutral_coll_freq";
   static int iFunction = -1;

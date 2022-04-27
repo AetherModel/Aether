@@ -445,7 +445,8 @@ std::string Inputs::get_electrodynamics_file() {
 }
 
 // -----------------------------------------------------------------------
-// Return bulk ion temperature only flag
+// Flag to do the bulk ion temperature calculation instead 
+// of individual ion specie temperature calculations
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_calc_bulk_ion_temp() {

@@ -15,25 +15,24 @@
 
 using json = nlohmann::json;
 
-int main()
-{
-    std::ifstream infile_ptr("../inputs/aether_in.json");
-    json commands;
-    infile_ptr >> commands;
-    
-    //this is how to access the values attached to the main keys (commands)
-    std::cout << "Read the ather input json file!\n\n";
-    std::cout << "Debug: " << commands.at("Debug") << "\n";
-    std::cout << "Planet: " << commands.at("Planet") << "\n";
-    std::cout << "Starttime: " << commands.at("Starttime") << "\n";
-    std::cout << "Endtime: " << commands.at("Endtime") << "\n";
-    std::cout << "F107File: " << commands.at("F107File") << "\n";
-    std::cout << "BField: " << commands.at("BField") << "\n";
-    std::cout << "Output: " << commands.at("Output") << "\n" << "\n";
+int main() {
+  std::ifstream infile_ptr("../inputs/aether_in.json");
+  json commands;
+  infile_ptr >> commands;
 
-    //individual elements in an array can also be accessed
-    //for example, the individual values in the starttime array
-    std::cout << "Starttime Year: " << commands.at("Starttime").at(0) << "\n";
-    infile_ptr.close();
-    
+  //this is how to access the values attached to the main keys (commands)
+  std::cout << "Read the ather input json file!\n\n";
+  std::cout << "Debug: " << commands.at("Debug") << "\n";
+  std::cout << "Planet: " << commands.at("Planet") << "\n";
+  std::cout << "Starttime: " << commands.at("Starttime") << "\n";
+  std::cout << "Endtime: " << commands.at("Endtime") << "\n";
+  std::cout << "F107File: " << commands.at("F107File") << "\n";
+  std::cout << "BField: " << commands.at("BField") << "\n";
+  std::cout << "Output: " << commands.at("Output") << "\n" << "\n";
+
+  //individual elements in an array can also be accessed
+  //for example, the individual values in the starttime array
+  std::cout << "Starttime Year: " << commands.at("Starttime").at(0) << "\n";
+  infile_ptr.close();
+
 }

@@ -127,15 +127,15 @@ int output(const Neutrals &neutrals,
       // Ion Temperatures:
       if (type_output == "ions" ||
           type_output == "states")
-	for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
           AllOutputContainers[iOutput].
           store_variable(ions.species[iSpecies].cName + " " + ions.temperature_name,
-			 ions.temperature_unit,
-			 ions.species[iSpecies].temperature_scgc);
+                         ions.temperature_unit,
+                         ions.species[iSpecies].temperature_scgc);
 
       // Bulk Ion Temperature:
-      if (type_output == "ions" || 
-	  type_output == "states")
+      if (type_output == "ions" ||
+          type_output == "states")
         AllOutputContainers[iOutput].store_variable("Bulk Ion " +
                                                     ions.temperature_name,
                                                     ions.temperature_unit,

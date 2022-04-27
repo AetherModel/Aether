@@ -10,10 +10,6 @@
 #include "neutrals.h"
 #include "ions.h"
 
-// -------------------------------------------------------------------------
-//
-// -------------------------------------------------------------------------
-
 void calc_ion_neutral_coll_freq(Neutrals &neutrals,
                  Ions &ions,
 		 Report &report);

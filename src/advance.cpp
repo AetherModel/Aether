@@ -17,7 +17,7 @@ int advance(Planets &planet,
             Neutrals &neutrals,
             Ions &ions,
             Chemistry &chemistry,
-	    Electrodynamics &electrodynamics,
+            Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
             Report &report) {
