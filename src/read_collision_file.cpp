@@ -382,11 +382,11 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
                       << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
             std::cout << "nu_ion_ion     : "
                       << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] << "\n";
-          }
-        }
-      }
-    }
-  }
+	  }
+	}  // End iIonSIds_
+      }  // End iCol
+    }  // End iIonT
+  }  // End iLine
 
   // Copy Bst from O+ to O+2P and O+2D since the sub-flavors of O+ don't exist in table
   iIonT = ions.get_species_id("O+", report);
