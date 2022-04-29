@@ -4,7 +4,7 @@
 #include "../include/aether.h"
 
 // --------------------------------------------------------------------------
-// Hack to just set the electon temperature to the neutral temperature
+// TODO (#24): this currently just sets the electron temperature to the neutral temperature
 // --------------------------------------------------------------------------
 
 void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
