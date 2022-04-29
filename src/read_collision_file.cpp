@@ -342,8 +342,8 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int nLines = csv.size();                // set number of lines in table
-  int nCol = csv[0].size();               // set number of columns in table
+  int nLines = csv.size();  // set number of lines in table
+  int nCol = csv[0].size();  // set number of columns in table
   int iIonS, iIonT, iIonP, iIonD;
   int iIon, iCol, iLine;
 
