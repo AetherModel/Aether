@@ -352,7 +352,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   // Look for a coefficient in the last line:
   float coef = stof(csv[nLines - 1][0]);
 
-  // Read ion specie names across first row of table
+  // Read ion specie names across first row of table, cell[0][0] is empty
   for (iCol = 1; iCol < nCol; iCol++)
     iIonSIds_.push_back(ions.get_species_id(csv[0][iCol], report));
 
