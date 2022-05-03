@@ -54,10 +54,10 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   precision_t dt = time.get_dt();
 
   // Loop over all species or assume only bulk calculation
-  if (input.get_do_calc_bulk_ion_temp() == true)
-    nSpecs = 1; // First ion specie only, currently is O+
-
-  if (input.get_do_calc_bulk_ion_temp() == false)
+  if (input.get_do_calc_bulk_ion_temp())
+    // First ion specie only, currently is O+
+    nSpecs = 1; 
+  else
     nSpecs = nIons;
 
   if (report.test_verbose(4)) {
@@ -71,14 +71,15 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
 
-        // --------------------------------------------------------------------------
-        // Calculate heat flux (conduction) in 1D; loop over all lat,lon positions
-        // --------------------------------------------------------------------------
-        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);   // ion temperature
-        lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
-                   / species[iIon].nu_ion_ion[iIon] / 8.0;            // thermal conductivity
-        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat) / cKB / 3.0;  // scaling
-        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);             // grid info for solver
+        // ---------------------------------------------------------------------
+        // Calculate heat flux (conduction) in 1D; loop over all lat,lon 
+        // ---------------------------------------------------------------------
+        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);   
+	lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
+                   / species[iIon].nu_ion_ion[iIon] / 8.0; 
+        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat) 
+		   / cKB / 3.0; 
+        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat); 
 
         conduction1d.zeros();    // reset temp variable to zero
 
@@ -90,11 +91,11 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       } // Lats
     } // Lons
 
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Add temperature terms together to advance ion temperature
     // As more temperature terms get coded, they are added to the parenthesis
     // for inclusion in the advancement of the ion temperature
-    // --------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     if (input.get_do_calc_bulk_ion_temp() == false) {
       species[iIon].temperature_scgc = species[iIon].temperature_scgc +
                                        dt * (conduction_scgc);
