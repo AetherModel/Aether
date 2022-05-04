@@ -44,7 +44,7 @@ arma_vec solver_conduction(arma_vec value,
   int64_t i;
 
   for (i = 2; i < nPts - 2; i++)
-    dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r[i]);
+    dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r(i));
 
   arma_vec a = di / du22 % r - dl / du12 % r % r;
   arma_vec c = di / du22 + dl / du12;

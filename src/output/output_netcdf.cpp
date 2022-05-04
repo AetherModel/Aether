@@ -73,7 +73,7 @@ int output(Neutrals neutrals,
   double time_array[1];
 
   // Compute pi using the cmath atan function. pi = atan(1)*4
-  double rad_to_deg = 180.0/(atan(1)*4);
+  double rad_to_deg = 180.0 / (atan(1) * 4);
 
   std::string function = "output";
   static int iFunction = -1;
@@ -158,8 +158,8 @@ int output(Neutrals neutrals,
 
       // Output longitude, latitude, altitude 3D arrays:
 
-      output_variable_3d(startp, countp, grid.geoLon_scgc*rad_to_deg, lonVar);
-      output_variable_3d(startp, countp, grid.geoLat_scgc*rad_to_deg, latVar);
+      output_variable_3d(startp, countp, grid.geoLon_scgc * rad_to_deg, lonVar);
+      output_variable_3d(startp, countp, grid.geoLat_scgc * rad_to_deg, latVar);
       output_variable_3d(startp, countp, grid.geoAlt_scgc, altVar);
 
       // ----------------------------------------------
