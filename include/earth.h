@@ -22,5 +22,5 @@
 #define iHeP_ 5
 #define iOP_2D_ 6
 #define iOP_2P_ 7
-#define iElec_ 8
-#define nIons 8
+#define iHP_ 8
+#define nIons 9

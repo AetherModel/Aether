@@ -95,6 +95,7 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
   potential_scgc.zeros();
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
+  electron_conduction_scgc.set_size(nLons, nLats, nAlts);
 
   eflux.set_size(nLons, nLats);
   eflux.zeros();
@@ -173,11 +174,6 @@ int Ions::read_planet_file(Inputs input, Report report) {
             species[iSpecies].charge = stoi(lines[iSpecies + 1][2]);
             species[iSpecies].DoAdvect = stoi(lines[iSpecies + 1][3]);
           }
-
-          species[nIons].cName = "e-";
-          species[nIons].mass = cME;
-          species[nIons].charge = -1;
-          species[nIons].DoAdvect = 0;
         }
       }
 
@@ -204,13 +200,10 @@ void Ions::fill_electrons(Report &report) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  species[nIons].density_scgc.zeros();
+  density_scgc.zeros();
 
   for (iSpecies = 0; iSpecies < nIons; iSpecies++)
-    species[nIons].density_scgc =
-      species[nIons].density_scgc + species[iSpecies].density_scgc;
-
-  density_scgc = species[nIons].density_scgc;
+    density_scgc = density_scgc + species[iSpecies].density_scgc;
 
   report.exit(function);
   return;
@@ -219,7 +212,6 @@ void Ions::fill_electrons(Report &report) {
 //----------------------------------------------------------------------
 // return the index of the requested species
 // This will return -1 if the species is not found or name is empty
-// Will return nIons for electrons
 //----------------------------------------------------------------------
 
 int Ions::get_species_id(std::string name, Report &report) {
@@ -232,7 +224,7 @@ int Ions::get_species_id(std::string name, Report &report) {
   int id_ = -1;
 
   if (name.length() > 0) {
-    for (iSpecies = 0; iSpecies <= nIons; iSpecies++)
+    for (iSpecies = 0; iSpecies < nIons; iSpecies++)
       if (name == species[iSpecies].cName) {
         id_ = iSpecies;
         break;
