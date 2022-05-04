@@ -55,7 +55,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   // Loop over all species or assume only bulk calculation
   if (input.get_do_calc_bulk_ion_temp())
-    // First ion specie only, currently is O+
+    // First ion species only, currently is O+
     nSpecs = 1; 
   else
     nSpecs = nIons;
@@ -96,26 +96,28 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     // As more temperature terms get coded, they are added to the parenthesis
     // for inclusion in the advancement of the ion temperature
     // -------------------------------------------------------------------------
-    if (input.get_do_calc_bulk_ion_temp() == false) {
+    if (!input.get_do_calc_bulk_ion_temp()) {
       species[iIon].temperature_scgc = species[iIon].temperature_scgc +
                                        dt * (conduction_scgc);
     }
   } // Ions
 
-  if (input.get_do_calc_bulk_ion_temp() == false) {
+  if (!input.get_do_calc_bulk_ion_temp()) {
     // Use the density averaged temperature to fill the bulk temperature
     tempT.zeros();
     tempD.zeros();
 
     for (iIon = 0; iIon < nIons; iIon++) {
-      tempT = tempT + (species[iIon].temperature_scgc % species[iIon].density_scgc);
-      tempD = tempD + species[iIon].density_scgc;
+      tempT = tempT +
+	species[iIon].temperature_scgc % species[iIon].density_scgc;
+      tempD = tempD +
+	species[iIon].density_scgc;
     }
 
     temperature_scgc = tempT / tempD;
   }
 
-  if (input.get_do_calc_bulk_ion_temp() == true) {
+  if (input.get_do_calc_bulk_ion_temp()) {
     // Add temperature terms together to advance bulk ion temperature
     temperature_scgc = temperature_scgc + dt * (conduction_scgc);
 
