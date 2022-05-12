@@ -37,6 +37,9 @@
         "AltFile" : "",
 	"IsUniformAlt" : true},
 
+    "CubeSphere" : {
+	"is" : False},
+
     "Ensembles" : {
         "nMembers" : 1},
 
