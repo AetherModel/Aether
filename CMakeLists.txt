@@ -17,7 +17,7 @@ if(USE_DOUBLE_PRECISION)
 endif()
 
 # Tests executable
-add_executable(tests ${TESTS_DIR}/electrodynamics_unit_tests.cpp)
+# add_executable(tests ${TESTS_DIR}/electrodynamics_unit_tests.cpp)
 
 # Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
