@@ -11,7 +11,102 @@
 //    - if not restarting, initialize the grid
 // ----------------------------------------------------------------------
 
-void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
+void Grid::create_cubesphere_grid(Quadtree quadtree,
+				  Inputs input,
+				  Report &report) {
+
+  std::string function = "Grid::create_cubesphere_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  IsLatLonGrid = false;
+
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec middle_norm = quadtree.get_vect("MID");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  arma_vec down_norm = middle_norm - size_up_norm;
+  arma_vec up_norm = middle_norm + size_up_norm;
+  arma_vec left_norm = middle_norm - size_right_norm;
+  arma_vec right_norm = middle_norm + size_right_norm;
+  
+  iProcYm = quadtree.find_point(down_norm);
+  iProcYp = quadtree.find_point(up_norm);
+  iProcXm = quadtree.find_point(left_norm);
+  iProcXp = quadtree.find_point(right_norm);
+
+  int64_t iProcSelf = quadtree.find_point(middle_norm);
+  
+  arma_vec dr(3), du(3), ll(3);
+  double xn, yn, zn, rn;
+  double xp, yp, zp, rp, latp, lonp;
+  
+  double a = sqrt(3);
+
+  dr = size_right_norm * a / (nLons - 2 * nGCs);
+  du = size_up_norm * a / (nLats - 2 * nGCs);
+  ll = lower_left_norm * a;
+  
+  arma_mat lat2d(nLons, nLats), lon2d(nLons, nLats);
+
+  for (int iDU = 0; iDU < nLats; iDU++) {
+    for (int iLR = 0; iLR < nLons; iLR++) {
+      
+      double iD = iDU - nGCs + 0.5;
+      double iL = iLR - nGCs + 0.5;
+      
+      xn = ll(0) + dr(0)*iL + du(0)*iD;
+      yn = ll(1) + dr(1)*iL + du(1)*iD;
+      zn = ll(2) + dr(2)*iL + du(2)*iD;
+      rn = sqrt(xn * xn + yn * yn + zn * zn);
+
+      xp = xn / rn;
+      yp = yn / rn;
+      zp = zn / rn;
+      rp = sqrt(xp * xp + yp * yp + zp * zp);
+
+      latp = asin(zp / rp);
+      lonp = atan2(yp, xp);
+      if (lonp < 0.0)
+	lonp = lonp + cTWOPI;
+      lat2d(iLR, iDU) = latp;
+      lon2d(iLR, iDU) = lonp;
+	    
+    }
+  }
+  
+  int64_t iAlt, iLon, iLat;
+  
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_scgc.slice(iAlt) = lon2d;
+    geoLat_scgc.slice(iAlt) = lat2d;
+  }
+  
+  arma_vec alt1d(nAlts);
+
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  if (grid_input.IsUniformAlt) {
+    for (iAlt = 0; iAlt < nAlts; iAlt++)
+      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
+  }
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++)
+      geoAlt_scgc.tube(iLon, iLat) = alt1d;
+  }
+  
+}
+
+// ----------------------------------------------------------------------
+// Create a geographic grid
+//    - if restarting, read in the grid
+//    - if not restarting, initialize the grid
+// ----------------------------------------------------------------------
+
+void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
+					  Inputs input,
+					  Report &report) {
 
   std::string function = "Grid::create_simple_lat_lon_alt_grid";
   static int iFunction = -1;
@@ -19,17 +114,36 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 
   IsLatLonGrid = true;
 
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec middle_norm = quadtree.get_vect("MID");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  arma_vec down_norm = middle_norm - size_up_norm;
+  arma_vec up_norm = middle_norm + size_up_norm;
+  arma_vec left_norm = middle_norm - size_right_norm;
+  arma_vec right_norm = middle_norm + size_right_norm;
+  
+  iProcYm = quadtree.find_point(down_norm);
+  iProcYp = quadtree.find_point(up_norm);
+  iProcXm = quadtree.find_point(left_norm);
+  iProcXp = quadtree.find_point(right_norm);
+
+  // Check if touching South Pole:
+  if (lower_left_norm(1) == quadtree.limit_low(1))
+    DoesTouchSouthPole = true;
+  // Check if touching North Pole:
+  if (lower_left_norm(1) == quadtree.limit_high(1))
+    DoesTouchNorthPole = true;  
+  
   // This is just an example:
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
   int64_t iLon, iLat, iAlt;
 
-  // Figure out dlon and lon0:
-  int64_t nLonsTotal = (nLons - 2 * nGCs) * input.get_nBlocksLonGeo();
-  int64_t iBlockLon = iGrid % input.get_nBlocksLonGeo();
-  precision_t dlon = (grid_input.lon_max - grid_input.lon_min) / nLonsTotal;
-  precision_t lon0 = grid_input.lon_min + iBlockLon * (nLons - 2 * nGCs) * dlon;
+  precision_t dlon = size_right_norm(0) * cPI / (nLons - 2 * nGCs);
+  precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
 
   // Longitudes:
@@ -43,11 +157,8 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
       geoLon_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
   }
 
-  // Figure out dlat and lat0:
-  int64_t nLatsTotal = (nLats - 2 * nGCs) * input.get_nBlocksLatGeo();
-  int64_t iBlockLat = iGrid / input.get_nBlocksLonGeo();
-  precision_t dlat = (grid_input.lat_max - grid_input.lat_min) / nLatsTotal;
-  precision_t lat0 = grid_input.lat_min + iBlockLat * (nLats - 2 * nGCs) * dlat;
+  precision_t dlat = size_up_norm(1) * cPI / (nLats - 2 * nGCs);
+  precision_t lat0 = lower_left_norm(1) * cPI;
   arma_vec lat1d(nLats);
 
   // Latitudes:
@@ -55,12 +166,6 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   // - copy it into the 3d cube
   for (iLat = 0; iLat < nLats; iLat++)
     lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
-
-  if (report.test_verbose(2)) {
-    std::cout << "Grid Initialization :\n";
-    std::cout << "  lon0 : " << lon0 * cRtoD
-              << "; lat0 : " << lat0 * cRtoD << "\n";
-  }
 
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -79,105 +184,15 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
   }
 
-  // --------------------------------------------------------------
-  // Figure out message passing connectivity information
-
-  int nCols = input.get_nBlocksLonGeo();
-  int iRow = iProc / nCols;
-  int iLeftMost = iRow * nCols;
-  int iRightMost = iLeftMost + nCols - 1;
-  int iCol = iProc % nCols;
-
-  // Determine y-minus (connectivity to south):
-
-  // Figure out if the grid is touching the south pole:
-  if (compare(lat0, -cPI / 2)) {
-    DoesTouchSouthPole = true;
-    // Touching the south pole -> just shift by 180 degrees:
-    iProcYm = iLeftMost + (iCol + nCols / 2) % nCols;
-  } else {
-    DoesTouchSouthPole = false;
-
-    if (iBlockLat == 0)
-      // Not touching the south pole, but no blocks to the south:
-      iProcYm = -1;
-    else
-      // Not touching the south pole, and there is a block to the south:
-      iProcYm = iProc - input.get_nBlocksLonGeo();
-  }
-
-  // Determine y-plus (connectivity to north):
-
-  // Figure out if the grid is touching the north pole:
-  precision_t latmax = lat0 + (nLats - 2 * nGCs) * dlat;
-
-  if (compare(latmax, cPI / 2)) {
-    DoesTouchNorthPole = true;
-    // Touching the north pole -> just shift by 180 degrees:
-    iProcYp = iLeftMost + (iCol + nCols / 2) % nCols;
-  } else {
-    DoesTouchNorthPole = false;
-
-    if (iBlockLat == input.get_nBlocksLatGeo() - 1)
-      // Not touching the north pole, but no blocks to the north:
-      iProcYp = -1;
-    else
-      // Not touching the north pole, and there is a block to the north:
-      iProcYp = iProc + input.get_nBlocksLonGeo();
-  }
-
-  // Determine x-minus (connectivity to west):
-
-  if (iCol > 0)
-    iProcXm = iProc - 1;
-
-  else {
-    // Figure out whether grid is touching East/West:
-    if (compare(grid_input.lon_min, 0) &&
-        compare(grid_input.lon_max, cTWOPI)) {
-      // wrapped completely around the Earth
-      if (iCol == 0)
-        // wrap around to the right-most point:
-        iProcXm = iRightMost;
-    } else {
-      // doesn't wrap around the earth, so need fixed boundaries
-      if (iBlockLon == 0)
-        // Fixed BCs to the west:
-        iProcXm = -1;
-    }
-  }
-
-  // Determine x-plus (connectivity to east):
-
-  if (iCol < nCols - 1)
-    iProcXp = iProc + 1;
-
-  else {
-    // Figure out whether grid is touching East/West:
-    if (compare(grid_input.lon_min, 0) &&
-        compare(grid_input.lon_max, cTWOPI)) {
-      // wrapped completely around the Earth
-      if (iBlockLon == nCols - 1)
-        // wrap around to the left-most point:
-        iProcXp = iLeftMost;
-    } else {
-      // doesn't wrap around the earth, so need fixed boundaries
-      if (iBlockLon == nCols - 1)
-        // Fixed BCs to the east:
-        iProcXp = -1;
-    }
-  }
-
   if (report.test_verbose(2))
     std::cout << "connectivity : "
-              << "  iProc : " << iProc
-              << "  isnorth : " << DoesTouchNorthPole
-              << "  issouth : " << DoesTouchSouthPole
-              << "  iProcYm : " << iProcYm
-              << "  iProcYp : " << iProcYp
-              << "  iProcXm : " << iProcXm
-              << "  iProcXp : " << iProcXp
-              << "\n";
+              << "  iProc : " << iProc << "\n"
+              << "  isnorth : " << DoesTouchNorthPole << "\n"
+              << "  issouth : " << DoesTouchSouthPole << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
+              << "  iProcYp : " << iProcYp << "\n"
+              << "  iProcXm : " << iProcXm << "\n"
+              << "  iProcXp : " << iProcXp << "\n";
 
   report.exit(function);
 }
@@ -189,7 +204,10 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 // of the lon, lat, and alt can be a function of the other variables.
 // ----------------------------------------------------------------------
 
-bool Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
+bool Grid::init_geo_grid(Quadtree quadtree,
+			 Planets planet,
+			 Inputs input,
+			 Report &report) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -198,19 +216,20 @@ bool Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   IsGeoGrid = 1;
 
+  // Logic here is flawed:
+  //   - the "create" functions both make the grid and build connections
+  //   - the restart simply builds the grid.
+  // Need to separate the two.
+  
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
-    create_simple_lat_lon_alt_grid(input, report);
+    if (input.get_is_cubesphere())
+      create_cubesphere_grid(quadtree, input, report);
+    else
+      create_simple_lat_lon_alt_grid(quadtree, input, report);
     DidWork = write_restart(input.get_restartout_dir());
-  }
-
-  if (report.test_verbose(3)) {
-    std::cout << "init_geo_grid testing\n";
-    std::cout << "   DidWork (reading/writing restart files): "
-              << DidWork << "\n";
-    report_grid_boundaries();
   }
 
   // Calculate the radius, etc:
