@@ -163,6 +163,14 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether grid is cubesphere or spherical
+// -----------------------------------------------------------------------
+
+bool Inputs::get_is_cubesphere() {
+  return settings["CubeSphere"]["is"];
+}
+
+// -----------------------------------------------------------------------
 // Return whether to restart or not
 // -----------------------------------------------------------------------
 
