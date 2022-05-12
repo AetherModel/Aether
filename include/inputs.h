@@ -45,6 +45,9 @@ public:
   void set_seed(int seed);
   bool write_restart();
   json get_perturb_values();  
+
+  bool get_is_cubesphere();
+
   
   // ------------------------------
   // Grid inputs:
