@@ -739,7 +739,7 @@ int OutputContainer::write_container_netcdf() {
 
     ncdf_file.close();
   } catch (...) {
-    std::cout << "Error writing header file : "
+    std::cout << "Error writing netcdf container file : "
               << whole_filename << "\n";
     iErr = 1;
   }
