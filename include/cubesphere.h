@@ -1,3 +1,6 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
 #ifndef INCLUDE_CUBESPHERE_H_
 #define INCLUDE_CUBESPHERE_H_
 
@@ -6,7 +9,7 @@
 #include <armadillo>
 
 /*************************************************
- * \brief A namespace withe all quad sphere grid logic.
+ * \brief A namespace with all quad sphere grid logic.
  *************************************************/
 namespace CubeSphere {
 
@@ -32,73 +35,44 @@ arma_vec cube2sphere(const arma_vec& p);
 /** Returns normalized x, y, z locations based on number of subdivisions per
  * face
  */
-arma_cube sphere_face_locations(const uint& face, const uint& subdivisions);
+arma_cube sphere_face_locations(const uint64_t& face, const uint64_t& subdivisions);
 
 /** Returns the normalized x, y, z coordinate locations of a cell in the
  * cubesphere grid.
  */
-arma_vec cartesian_location(const uint& face, const uint& subdivisions,
-                            const uint& row, const uint& column);
-
-/** Quad Tree Node base class.
- */
-class QTNode {
-      unsigned short m_pixnum;
-      unsigned int m_max_depth = 1;
-      unsigned int m_depth = 0;
-      std::shared_ptr<QTNode> m_children[4];
-      /// Position in cube.
-      arma_vec m_cube_position = {0, 0, 0};
-      /// Center position in cube sphere.
-      arma_vec m_sphere_position = {0, 0, 0};
-      // other details to add
-
-      public:
-      /// Constructor
-      QTNode(Grid grid,
-             const uint& face,
-             const arma_vec& cube_position,
-             const uint& depth,
-             const uint& max_depth);
-      /// Destructor
-      ~QTNode();
-      /// Returns if the node is a leaf based on resolution.
-      bool is_leaf();
-      };
+arma_vec cartesian_location(const uint64_t& face, const uint64_t& subdivisions,
+                            const uint64_t& row, const uint64_t& column);
 
 /// The normalized origins of each face of the cube (i.e. corner)
 static const arma_mat ORIGINS = {
-    {-1.0, 0.0, 0.0},
-    {0.0, -1.0, 0.0},
-    {0.0, 0.0, -1.0},
-    {1.0, 0.0, 0.0},
-    {0.0, 1.0, 0.0},
-    {0.0, 0.0, 1.0},
+    {-1.0, -1.0, -1.0},
+    { 1.0, -1.0, -1.0},
+    { 1.0,  1.0, -1.0},
+    {-1.0,  1.0, -1.0},
+    {-1.0, -1.0, -1.0},
+    {-1.0, -1.0,  1.0},
 };
 
 /// Normalized right steps in cube
 static const arma_mat RIGHTS = {
-		{2.0, 0.0, 0.0},
-		{0.0, 0.0, 2.0},
-		{-2.0, 0.0, 0.0},
-		{0.0, 0.0, -2.0},
-		{2.0, 0.0, 0.0},
-		{2.0, 0.0, 0.0}
+		{ 2.0,  0.0, 0.0},
+		{ 0.0,  2.0, 0.0},
+		{-2.0,  0.0, 0.0},
+		{ 0.0, -2.0, 0.0},
+		{ 0.0,  2.0, 0.0},
+		{ 0.0,  2.0, 0.0}
 };
 
 /// Normalized right steps in cube
 static const arma_mat UPS = {
-		{0.0, 2.0, 0.0},
-		{0.0, 2.0, 0.0},
-		{0.0, 2.0, 0.0},
-		{0.0, 2.0, 0.0},
-		{0.0, 0.0, 2.0},
-		{0.0, 0.0, -2.0}
+		{ 0.0, 0.0, 2.0},
+		{ 0.0, 0.0, 2.0},
+		{ 0.0, 0.0, 2.0},
+		{ 0.0, 0.0, 2.0},
+		{ 2.0, 0.0, 0.0},
+		{ 2.0, 0.0, 0.0}
 };
 
 } // CubeSphere::
-
-class CubeSphereGrid : public Grid {
-};
 
 #endif  // INCLUDE_CUBESPHERE_H_

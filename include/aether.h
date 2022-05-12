@@ -75,6 +75,11 @@ using json = nlohmann::json;
 #include "planets.h"
 
 // not done
+#include "cubesphere.h"
+#include "sphere.h"
+#include "quadtree.h"
+
+// not done
 #include "grid.h"
 
 // Contains the neutral states and derived quantities
@@ -95,8 +100,6 @@ using json = nlohmann::json;
 // Defines the Extreme Ultraviolet radiation above the atmosphere
 #include "euv.h"
 
-// not done
-#include "cubesphere.h"
 // not done
 #include "calc_euv.h"
 // not done
