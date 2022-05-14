@@ -41,6 +41,7 @@ public:
     uint64_t iProc_up;
     uint64_t iProc_left;
     uint64_t iProc_right;
+    uint64_t iSide;
 
   };
 
@@ -50,6 +51,7 @@ public:
 
   arma_vec limit_low = {0.0, 0.0, 0.0};
   arma_vec limit_high = {0.0, 0.0, 0.0};
+  uint64_t iSide = -1;
   
   /// Constructor
 
@@ -59,7 +61,8 @@ public:
 		  arma_vec size_right_norm_in,
 		  arma_vec size_up_norm_in,
 		  uint64_t &iProc_in_out,
-		  uint64_t depth_in);
+		  uint64_t depth_in,
+		  uint64_t iSide);
 
   arma_vec get_vect(qtnode node, std::string which);
   arma_vec get_vect(std::string which);
