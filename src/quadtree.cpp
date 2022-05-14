@@ -76,7 +76,7 @@ void Quadtree::build(Inputs input, Report report) {
   }
   
   qtnode tmp;
-  for (int64_t iNode = 0; iNode < nRootNodes; iNode++) {
+  for (uint64_t iNode = 0; iNode < nRootNodes; iNode++) {
     if (report.test_verbose(0))
       std::cout << "Making quadtree node : " << iNode << "\n";
     uint64_t iP = iNode * pow(2, max_depth);
@@ -86,7 +86,7 @@ void Quadtree::build(Inputs input, Report report) {
       r(i) = rights(iNode, i);
       u(i) = ups(iNode, i);
     }
-    tmp = new_node(o, r, u, iP, iDepth);
+    tmp = new_node(o, r, u, iP, iDepth, iNode);
     root_nodes.push_back(tmp);
   }
 }
@@ -99,7 +99,8 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 				    arma_vec size_right_norm_in,
 				    arma_vec size_up_norm_in,
 				    uint64_t &iProc_in_out,
-				    uint64_t depth_in) {
+				    uint64_t depth_in,
+				    uint64_t iSide_in) {
 
   qtnode tmp, tmp_child;
   
@@ -107,6 +108,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
   tmp.size_right_norm = size_right_norm_in;
   tmp.size_up_norm = size_up_norm_in;
   tmp.depth = depth_in;
+  tmp.iSide = iSide_in;
 
   // refine further
   if (tmp.depth < max_depth) {
@@ -128,7 +130,8 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 			     size_right_norm_child,
 			     size_up_norm_child,
 			     iProc_in_out,
-			     tmp.depth + 1);
+			     tmp.depth + 1,
+			     iSide_in);
 	
 	tmp.children.push_back(tmp_child);
 
@@ -137,6 +140,8 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
     }  // nLR
   }  else {
     tmp.iProcNode = iProc_in_out;
+    if (iProc == iProc_in_out)
+      iSide = iSide_in;
     iProc_in_out++;
   }
   return tmp;
@@ -237,14 +242,18 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
 	  std::cout << "found du : " << iDU_ << "\n";
       }
     }
-    if (node.lower_left_norm(iCO_) == point(iCO_))
+    if (abs(node.lower_left_norm(iCO_) - point(iCO_)) < 1.0e-6)
       iFound++;
 
-    if (point(iLR_) >= node.lower_left_norm(iLR_) &&
-	point(iLR_) < node.lower_left_norm(iLR_) + node.size_right_norm(iLR_))
+    if ((point(iLR_) >= node.lower_left_norm(iLR_) &&
+	 point(iLR_) < node.lower_left_norm(iLR_) + node.size_right_norm(iLR_)) ||
+	(point(iLR_) >= node.lower_left_norm(iLR_) + node.size_right_norm(iLR_) &&
+	 point(iLR_) < node.lower_left_norm(iLR_)))
       iFound++;
-    if (point(iDU_) >= node.lower_left_norm(iDU_) &&
-	point(iDU_) < node.lower_left_norm(iDU_) + node.size_up_norm(iDU_))
+    if ((point(iDU_) >= node.lower_left_norm(iDU_) &&
+	 point(iDU_) < node.lower_left_norm(iDU_) + node.size_up_norm(iDU_)) ||
+	(point(iDU_) >= node.lower_left_norm(iDU_) + node.size_up_norm(iDU_) &&
+	 point(iDU_) < node.lower_left_norm(iDU_)))
       iFound++;
 
     if (iFound == 3) {
@@ -321,17 +330,74 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 
   arma_vec wrap_point = point;
 
-  int64_t iEdge_ = -1;
+  int64_t iComp_ = -1;
+  double delta = 0.0, limit = 0.0;
+
+  // First, determine if we go off the current face.
+  //  - check the limits in the each direction to see if they are exceeded
+  //  - if they are, calculate how far we go off, since we will wrap that much
+  //  - store limit - we can use that to determine face to move to
   for (int i = 0; i < 3; i++) {
-    if (point(i) < limit_low(i) ||
-	point(i) > limit_high(i)) {
-      iEdge_ = i;
+    if (point(i) < limit_low(i)) {
+      iComp_ = i;
+      delta = limit_low(i) - point(i);
+      wrap_point(i) = limit_low(i);
+      limit = limit_low(i);
+      break;
+    }
+    if (point(i) > limit_high(i)) {
+      iComp_ = i;
+      delta = point(i) - limit_high(i);
+      wrap_point(i) = limit_high(i);
+      limit = limit_high(i);
       break;
     }
   }
 
-  return wrap_point;
+  if (iComp_ > -1) {
 
+    // Try to figure out which face we are going to land on:
+    
+    int64_t iFaceFrom_ = iSide;
+    int64_t iFaceTo_ = -1;
+    int64_t iFace = 0;
+    for (iFace = 0; iFace < 6; iFace++) {
+      if (CubeSphere::RIGHTS(iFace, iComp_) == 0 &&
+	  CubeSphere::UPS(iFace, iComp_) == 0 &&
+	  CubeSphere::ORIGINS(iFace, iComp_) == limit)
+	iFaceTo_ = iFace;
+    }
+
+    // in theory, the line should now be touching the limits of
+    // the face. How to really test this?
+
+    int64_t iCompTo_ = -1;
+    double sn = 1.0;
+    for (int i = 0; i < 3; i++) {
+      if (CubeSphere::RIGHTS(iFaceFrom_, i) == 0 &&
+	  CubeSphere::UPS(iFaceFrom_, i) == 0) {
+	iCompTo_ = i;
+	if (CubeSphere::ORIGINS(iFaceFrom_, i) > 0)
+	  sn = -1.0;
+      }
+    }
+
+    // move away from the edge now:
+    wrap_point(iCompTo_) = wrap_point(iCompTo_) + sn * delta;
+    
+    if (iProc == 100) {
+      std::cout << " point out of bounds!  Wrapping : \n" << point << "\n";
+      std::cout << "   delta : " << delta << "\n";
+      std::cout << "   limit : " << limit << "\n";
+      std::cout << "   face from : " << iFaceFrom_ << "\n";
+      std::cout << "   face to : " << iFaceTo_ << "\n";
+      std::cout << "   comp from : " << iComp_ << "\n";
+      std::cout << "   comp to : " << iCompTo_ << "\n";
+      std::cout << "     sign : " << sn << "\n";
+      std::cout << "   new point : \n" << wrap_point << "\n";
+    }
+  }
+  return wrap_point;
 }
 
 
