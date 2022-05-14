@@ -36,6 +36,16 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   iProcXm = quadtree.find_point(left_norm);
   iProcXp = quadtree.find_point(right_norm);
 
+  if (report.test_verbose(0))
+    std::cout << "connectivity : "
+              << "  iProc : " << iProc << "\n"
+              << "  isnorth : " << DoesTouchNorthPole << "\n"
+              << "  issouth : " << DoesTouchSouthPole << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
+              << "  iProcYp : " << iProcYp << "\n"
+              << "  iProcXm : " << iProcXm << "\n"
+              << "  iProcXp : " << iProcXp << "\n";
+
   int64_t iProcSelf = quadtree.find_point(middle_norm);
   
   arma_vec dr(3), du(3), ll(3);
