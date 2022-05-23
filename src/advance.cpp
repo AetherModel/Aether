@@ -61,7 +61,7 @@ int advance(Planets &planet,
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
   neutrals.add_sources(time, report);
   ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
-  ions.calc_electron_temperature(neutrals, gGrid, report);
+  ions.calc_electron_temperature(neutrals, gGrid, time, report);
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);

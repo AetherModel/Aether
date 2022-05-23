@@ -55,6 +55,7 @@ class Ions {
   arma_cube temperature_scgc;
   arma_cube conduction_scgc;
   arma_cube electron_temperature_scgc;
+  arma_cube electron_conduction_scgc;
 
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;
@@ -88,6 +89,7 @@ class Ions {
   species_chars create_species(Grid grid);
   int read_planet_file(Inputs input, Report report);
   void init_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
+  void init_electron_temperature(Neutrals neutrals, Grid grid, Report &report);
   void fill_electrons(Report &report);
   int get_species_id(std::string name, Report &report);
   void calc_efield(Grid grid, Report &report);
@@ -101,7 +103,8 @@ class Ions {
 							     Report &report);
   void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time, 
 		            Inputs input, Report &report);
-  void calc_electron_temperature(Neutrals neutrals, Grid grid, Report &report);
+  void calc_electron_temperature(Neutrals neutrals, Grid grid, Times time, 
+		                 Report &report);
   
   bool restart_file(std::string dir, bool DoRead);
 

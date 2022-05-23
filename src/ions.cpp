@@ -161,7 +161,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
           std::cout << "num of ion species (nIons) defined in planet.h file : "
                     << nIons << "\n";
           std::cout << "number of ions defined in planet.in file : "
-                    << lines.size() << "\n";
+                    << lines.size() - 1 << "\n";
           std::cout << "These don't match!\n";
           iErr = 1;
         } else {
