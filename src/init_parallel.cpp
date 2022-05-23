@@ -96,6 +96,7 @@ bool init_parallel(Inputs &input,
       std::cout << "      total needed : " << nProcsNeeded << "\n";
       std::cout << "      which is not equal to nProcs : " << nProcs << "\n";
     }
+
     DidWork = false;
   }
 

@@ -23,35 +23,41 @@ int main() {
   report.enter(function, iFunction);
 
   try {
-  
+
     // Create inputs (reading the input file):
     Inputs input(time, report);
+
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
     // Initialize MPI and parallel aspects of the code:
     DidWork = init_parallel(input, report);
+
     if (!DidWork)
       throw std::string("init_parallel failed!");
-  
+
     // Everything should be set for the inputs now, so write a restart file:
     DidWork = input.write_restart();
+
     if (!DidWork)
       throw std::string("input.write_restart failed!");
-    
+
     // Initialize the EUV system:
     Euv euv(input, report);
+
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
-    
+
     // Initialize the planet:
     Planets planet(input, report);
+
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
     // Initialize the indices, read the files, and perturb:
     Indices indices(input);
     DidWork = read_and_store_indices(indices, input, report);
+
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
 
@@ -60,10 +66,11 @@ int main() {
 
     // Initialize Geographic grid:
     Grid gGrid(input.get_nLonsGeo(),
-	       input.get_nLatsGeo(),
-	       input.get_nAltsGeo(),
-	       nGeoGhosts);
+               input.get_nLatsGeo(),
+               input.get_nAltsGeo(),
+               nGeoGhosts);
     DidWork = gGrid.init_geo_grid(planet, input, report);
+
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
 
@@ -94,14 +101,16 @@ int main() {
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
     Electrodynamics electrodynamics(time, input, report);
+
     if (!electrodynamics.is_ok())
       throw std::string("electrodynamics initialization failed!");
 
     if (input.get_do_restart()) {
       report.print(1, "Restarting! Reading time file!");
       DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
+
       if (!DidWork)
-	throw std::string("Reading Restart for time Failed!!!\n");
+        throw std::string("Reading Restart for time Failed!!!\n");
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
@@ -126,17 +135,17 @@ int main() {
 
       // Increment until the intermediate time:
       while (time.get_current() < time.get_intermediate())
-	iErr = advance(planet,
-		       gGrid,
-		       time,
-		       euv,
-		       neutrals,
-		       ions,
-		       chemistry,
-		       electrodynamics,
-		       indices,
-		       input,
-		       report);
+        iErr = advance(planet,
+                       gGrid,
+                       time,
+                       euv,
+                       neutrals,
+                       ions,
+                       chemistry,
+                       electrodynamics,
+                       indices,
+                       input,
+                       report);
 
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
@@ -149,19 +158,22 @@ int main() {
       // wrote out restart files, so we only need to do this if we
       // didn't just do it.  So, check the negative here:
       if (!time.check_time_gate(input.get_dt_write_restarts())) {
-	report.print(3, "Writing restart files");
+        report.print(3, "Writing restart files");
 
-	DidWork = neutrals.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
-	  throw std::string("Writing Restart for Neutrals Failed!!!\n");	
+        DidWork = neutrals.restart_file(input.get_restartout_dir(), DoWrite);
 
-	DidWork = ions.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
-	  throw std::string("Writing Restart for Ions Failed!!!\n");	
+        if (!DidWork)
+          throw std::string("Writing Restart for Neutrals Failed!!!\n");
 
-	DidWork = time.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
-	  throw std::string("Writing Restart for time Failed!!!\n");	
+        DidWork = ions.restart_file(input.get_restartout_dir(), DoWrite);
+
+        if (!DidWork)
+          throw std::string("Writing Restart for Ions Failed!!!\n");
+
+        DidWork = time.restart_file(input.get_restartout_dir(), DoWrite);
+
+        if (!DidWork)
+          throw std::string("Writing Restart for time Failed!!!\n");
       }
 
       // Do some coupling here. But we have no coupling to do. Sad.
@@ -179,7 +191,7 @@ int main() {
     }
   }
 
-    
+
   // End parallel tasks:
   iErr = MPI_Finalize();
 

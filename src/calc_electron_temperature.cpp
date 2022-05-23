@@ -19,8 +19,8 @@ void Ions::init_electron_temperature(Neutrals neutrals, Grid grid,
 // Calculate the electron temperature
 // --------------------------------------------------------------------------
 
-void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, 
-		                     Times time, Report &report) {
+void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
+                                     Times time, Report &report) {
 
   std::string function = "Ions::calc_electron_temperature";
   static int iFunction = -1;
@@ -41,25 +41,26 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
   precision_t dt = time.get_dt();
 
   // Loop over Lon,Lat positions
-  for(iLon = 0; iLon < nLons; iLon++) {
-    for(iLat = 0; iLat < nLats; iLat++) {
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
 
       // ----------------------------------------------------------------------
       // Calculate heat flux (conduction) in 1D; loop over all lat,lon
       // ----------------------------------------------------------------------
       temp1d = electron_temperature_scgc.tube(iLon, iLat);
-      lambda1d = 1.60217646e-19 * 100.0 * 7.7e5 
-        * pow(electron_temperature_scgc.tube(iLon, iLat),(5/2))
-	/ (1.0 + 3.22e4 * pow(electron_temperature_scgc.tube(iLon, iLat),2) 
-	/ density_scgc.tube(iLon, iLat) %
-	  (neutrals.species[iO_].density_scgc.tube(iLon, iLat) * 1.1e-16
-	% (1.0 + 5.7e-4 * electron_temperature_scgc.tube(iLon, iLat)) + 
-	   neutrals.species[iN2_].density_scgc.tube(iLon, iLat) * 2.82e-17 
-	% sqrt(electron_temperature_scgc.tube(iLon, iLat)) 
-	% (1.0 - 1.21e-4 * electron_temperature_scgc.tube(iLon, iLat)) +
-	   neutrals.species[iO2_].density_scgc.tube(iLon, iLat) * 2.2e-16 
-	% (1.0 + 3.6e-2 * sqrt(electron_temperature_scgc.tube(iLon, iLat))) ) );
-      front1d = 2.0 / 3.0 / cKB / density_scgc.tube(iLon, iLat); 
+      lambda1d = 1.60217646e-19 * 100.0 * 7.7e5
+         * pow(electron_temperature_scgc.tube(iLon, iLat), (5 / 2))
+         / (1.0 + 3.22e4 * pow(electron_temperature_scgc.tube(iLon, iLat), 2)
+            / density_scgc.tube(iLon, iLat) %
+            (neutrals.species[iO_].density_scgc.tube(iLon, iLat) * 1.1e-16
+             % (1.0 + 5.7e-4 * electron_temperature_scgc.tube(iLon, iLat)) +
+             neutrals.species[iN2_].density_scgc.tube(iLon, iLat) * 2.82e-17
+             % sqrt(electron_temperature_scgc.tube(iLon, iLat))
+             % (1.0 - 1.21e-4 * electron_temperature_scgc.tube(iLon, iLat)) +
+             neutrals.species[iO2_].density_scgc.tube(iLon, iLat) * 2.2e-16
+             % (1.0 + 3.6e-2 
+		* sqrt(electron_temperature_scgc.tube(iLon, iLat))) ) );
+      front1d = 2.0 / 3.0 / cKB / density_scgc.tube(iLon, iLat);
       dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
 
       conduction1d.zeros();
@@ -73,8 +74,8 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
   }  // iLon
 
   // Add temperature terms together to advance electron temperature
-  electron_temperature_scgc = electron_temperature_scgc + 
-	                      dt * (electron_conduction_scgc);
+  electron_temperature_scgc = electron_temperature_scgc +
+                              dt * (electron_conduction_scgc);
 
   report.exit(function);
   return;
