@@ -4,6 +4,8 @@
 #ifndef INCLUDE_GRID_H_
 #define INCLUDE_GRID_H_
 
+#include "mpi.h"
+
 // ----------------------------------------------------------------------------
 // Grid class
 // ----------------------------------------------------------------------------
@@ -96,8 +98,13 @@ public:
   void calc_mlt(Report &report);
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
-  bool init_geo_grid(Quadtree quadtree, Planets planet, Inputs input, Report &report);
-  void create_simple_lat_lon_alt_grid(Quadtree quadtree, Inputs input, Report &report);
+  bool init_geo_grid(Quadtree quadtree,
+		     Planets planet,
+		     Inputs input,
+		     Report &report);
+  void create_simple_lat_lon_alt_grid(Quadtree quadtree,
+				      Inputs input,
+				      Report &report);
   void create_cubesphere_grid(Quadtree quadtree,
 			      Inputs input,
 			      Report &report);
@@ -112,7 +119,6 @@ public:
   bool IsCubeSphereGrid;
   bool DoesTouchNorthPole;
   bool DoesTouchSouthPole;
-
   /// The processor to the East/Right/X+:
   int iProcXp;
   /// The processor to the West/Left/X-:
@@ -121,6 +127,47 @@ public:
   int iProcYp;
   /// The processor to the South/Down/Y-:
   int iProcYm;
+
+  arma_vec edge_Xp;
+  arma_vec edge_Yp;
+  arma_vec edge_Xm;
+  arma_vec edge_Ym;
+
+  int64_t iRoot;
+  int64_t iRootXp;
+  int64_t iRootXm;
+  int64_t iRootYp;
+  int64_t iRootYm;
+  
+  struct messages_struct {
+    int64_t iFace;
+    int64_t iProc_to;
+    int64_t iSizeTotal;
+    int64_t iTag;
+    bool IsPole;
+    bool DoReverseX;
+    bool DoReverseY;
+    bool XbecomesY;
+    
+    /// Variables needed for asynchronous message passing
+    MPI_Request requests;
+    precision_t* buffer;
+    precision_t* rbuffer;    
+  };
+
+  std::vector<messages_struct> interchanges;
+    
+  messages_struct make_new_interconnection(int64_t iDir,
+					   int64_t nVars,
+					   int64_t iProc_to,
+					   arma_vec edge_center,
+					   bool IsPole,
+					   bool DoReverseX,
+					   bool DoReverseY,
+					   bool XbecomesY);
+
+  bool send_one_face(int64_t iFace);
+  bool receive_one_face(int64_t iFace);
   
  private:
 
