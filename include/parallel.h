@@ -77,6 +77,8 @@ bool unpack_border(arma_cube &value,
 		   int64_t *iCounter,
 		   int64_t nG,
 		   int iDir,
-		   bool IsPole);
+		   bool DoReverseX,
+		   bool DoReverseY,
+		   bool XbecomesY);
 
 #endif  // INCLUDE_PARALLEL_H_
