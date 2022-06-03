@@ -270,7 +270,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param report allow reporting to occur
    **/
-  bool exchange(Grid grid, Report &report);
+  bool exchange(Grid &grid, Report &report);
 
   /**********************************************************************
      \brief Exchange one face for the NEUTRALS
@@ -294,6 +294,18 @@ class Neutrals {
 			 int64_t iTotalSize,
 			 int nG, int iDir);
 
+  bool pack_one_face(int iReceiver,
+		     precision_t *buffer,
+		     int nG, int iDir,
+		     bool IsPole);
+  bool unpack_one_face(int iSender,
+		       precision_t *buffer,
+		       int nG, int iDir,
+		       bool DoReverseX,
+		       bool DoReverseY,
+		       bool XbecomesY);
+
+  
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
