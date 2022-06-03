@@ -43,6 +43,11 @@ public:
     uint64_t iProc_right;
     uint64_t iSide;
 
+    uint64_t iRoot_down;
+    uint64_t iRoot_up;
+    uint64_t iRoot_left;
+    uint64_t iRoot_right;
+    uint64_t iRoot;
   };
 
   int64_t nRootNodes;
@@ -69,6 +74,7 @@ public:
 
   int64_t find_point(arma_vec point);
   int64_t find_point(arma_vec point, qtnode node);
+  int64_t find_root(arma_vec point);
 
   arma_vec wrap_point_sphere(arma_vec point);
   arma_vec wrap_point_cubesphere(arma_vec point);
