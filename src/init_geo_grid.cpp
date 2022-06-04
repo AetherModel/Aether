@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "aether.h"
+#include <math.h>
 
 // ----------------------------------------------------------------------
 // Create a geographic grid
@@ -12,8 +13,8 @@
 // ----------------------------------------------------------------------
 
 void Grid::create_cubesphere_grid(Quadtree quadtree,
-				  Inputs input,
-				  Report &report) {
+                                  Inputs input,
+                                  Report &report) {
 
   std::string function = "Grid::create_cubesphere_grid";
   static int iFunction = -1;
@@ -30,13 +31,27 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   arma_vec up_norm = middle_norm + size_up_norm;
   arma_vec left_norm = middle_norm - size_right_norm;
   arma_vec right_norm = middle_norm + size_right_norm;
-  
+
   iProcYm = quadtree.find_point(down_norm);
   iProcYp = quadtree.find_point(up_norm);
   iProcXm = quadtree.find_point(left_norm);
   iProcXp = quadtree.find_point(right_norm);
 
-  if (report.test_verbose(0))
+  iRoot = quadtree.find_root(middle_norm);
+  iRootYm = quadtree.find_root(down_norm);
+  iRootYp = quadtree.find_root(up_norm);
+  iRootXm = quadtree.find_root(left_norm);
+  iRootXp = quadtree.find_root(right_norm);
+
+  // These should be the exact edge of the face.
+  // The from and to processors should get these in the same place,
+  // so they can be used to match which processor to send / receive info
+  edge_Xp = middle_norm + size_right_norm / 2.0;
+  edge_Xm = middle_norm - size_right_norm / 2.0;
+  edge_Yp = middle_norm + size_up_norm / 2.0;
+  edge_Ym = middle_norm - size_up_norm / 2.0;
+
+  if (report.test_verbose(2))
     std::cout << "connectivity : "
               << "  iProc : " << iProc << "\n"
               << "  isnorth : " << DoesTouchNorthPole << "\n"
@@ -44,31 +59,36 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
               << "  iProcYm : " << iProcYm << "\n"
               << "  iProcYp : " << iProcYp << "\n"
               << "  iProcXm : " << iProcXm << "\n"
-              << "  iProcXp : " << iProcXp << "\n";
+              << "  iProcXp : " << iProcXp << "\n"
+              << "  iRoot   : " << iRoot << "\n"
+              << "  iRootYm : " << iRootYm << "\n"
+              << "  iRootYp : " << iRootYp << "\n"
+              << "  iRootXm : " << iRootXm << "\n"
+              << "  iRootXp : " << iRootXp << "\n";
 
   int64_t iProcSelf = quadtree.find_point(middle_norm);
-  
+
   arma_vec dr(3), du(3), ll(3);
   double xn, yn, zn, rn;
   double xp, yp, zp, rp, latp, lonp;
-  
+
   double a = sqrt(3);
 
   dr = size_right_norm * a / (nLons - 2 * nGCs);
   du = size_up_norm * a / (nLats - 2 * nGCs);
   ll = lower_left_norm * a;
-  
+
   arma_mat lat2d(nLons, nLats), lon2d(nLons, nLats);
 
-  for (int iDU = 0; iDU < nLats; iDU++) {
-    for (int iLR = 0; iLR < nLons; iLR++) {
-      
+  for (int iDU = 0; iDU < nY; iDU++) {
+    for (int iLR = 0; iLR < nX; iLR++) {
+
       double iD = iDU - nGCs + 0.5;
       double iL = iLR - nGCs + 0.5;
-      
-      xn = ll(0) + dr(0)*iL + du(0)*iD;
-      yn = ll(1) + dr(1)*iL + du(1)*iD;
-      zn = ll(2) + dr(2)*iL + du(2)*iD;
+
+      xn = ll(0) + dr(0) * iL + du(0) * iD;
+      yn = ll(1) + dr(1) * iL + du(1) * iD;
+      zn = ll(2) + dr(2) * iL + du(2) * iD;
       rn = sqrt(xn * xn + yn * yn + zn * zn);
 
       xp = xn / rn;
@@ -77,25 +97,31 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
       rp = sqrt(xp * xp + yp * yp + zp * zp);
 
       latp = asin(zp / rp);
-      lonp = atan2(yp, xp);
+      lonp = atan2(yp, xp) + 3 * cPI / 4;
+
+      if (lonp > cTWOPI)
+        lonp = lonp - cTWOPI;
+
       if (lonp < 0.0)
-	lonp = lonp + cTWOPI;
+        lonp = lonp + cTWOPI;
+
       lat2d(iLR, iDU) = latp;
       lon2d(iLR, iDU) = lonp;
-	    
+
     }
   }
-  
+
   int64_t iAlt, iLon, iLat;
-  
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_scgc.slice(iAlt) = lon2d;
     geoLat_scgc.slice(iAlt) = lat2d;
   }
-  
+
   arma_vec alt1d(nAlts);
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
@@ -105,7 +131,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
     for (iLat = 0; iLat < nLats; iLat++)
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
   }
-  
+
 }
 
 // ----------------------------------------------------------------------
@@ -115,8 +141,8 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
 // ----------------------------------------------------------------------
 
 void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
-					  Inputs input,
-					  Report &report) {
+                                          Inputs input,
+                                          Report &report) {
 
   std::string function = "Grid::create_simple_lat_lon_alt_grid";
   static int iFunction = -1;
@@ -129,24 +155,65 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   arma_vec size_right_norm = quadtree.get_vect("SR");
   arma_vec size_up_norm = quadtree.get_vect("SU");
 
+  std::cout << "middle : " << iProc << " "
+            << middle_norm(0) << " "
+            << middle_norm(1) << " "
+            << middle_norm(2) << "\n";
+
   arma_vec down_norm = middle_norm - size_up_norm;
   arma_vec up_norm = middle_norm + size_up_norm;
   arma_vec left_norm = middle_norm - size_right_norm;
   arma_vec right_norm = middle_norm + size_right_norm;
-  
+
+  // The first component could wrap around:
+  right_norm(0) = fmod(right_norm(0), quadtree.limit_high(0));
+  left_norm(0) = fmod((left_norm(0) + quadtree.limit_high(0)),
+                      quadtree.limit_high(0));
+
+  // These should be the exact edge of the face.
+  // The from and to processors should get these in the same place,
+  // so they can be used to match which processor to send / receive info
+  edge_Xp = middle_norm + size_right_norm / 2.0;
+  // wrap in longitude:
+  edge_Xp(0) = fmod(edge_Xp(0), quadtree.limit_high(0));
+  edge_Xm = middle_norm - size_right_norm / 2.0;
+  edge_Yp = middle_norm + size_up_norm / 2.0;
+  edge_Ym = middle_norm - size_up_norm / 2.0;
+
   iProcYm = quadtree.find_point(down_norm);
   iProcYp = quadtree.find_point(up_norm);
   iProcXm = quadtree.find_point(left_norm);
   iProcXp = quadtree.find_point(right_norm);
 
+  iRoot = quadtree.find_root(middle_norm);
+  iRootYm = quadtree.find_root(down_norm);
+  iRootYp = quadtree.find_root(up_norm);
+  iRootXm = quadtree.find_root(left_norm);
+  iRootXp = quadtree.find_root(right_norm);
+
   // Check if touching South Pole:
-  if (lower_left_norm(1) == quadtree.limit_low(1))
+  if (lower_left_norm(1) == quadtree.limit_low(1)) {
     DoesTouchSouthPole = true;
+
+    // edges need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Ym(0) < 1.0)
+      edge_Ym(0) += 0.5;
+    else
+      edge_Ym(0) -= 0.5;
+  }
+
   // Check if touching North Pole:
-  if (lower_left_norm(1) == quadtree.limit_high(1))
-    DoesTouchNorthPole = true;  
-  
-  // This is just an example:
+  if (lower_left_norm(1) + size_up_norm(1) == quadtree.limit_high(1)) {
+    DoesTouchNorthPole = true;
+
+    // edge need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Yp(0) < 1.0)
+      edge_Yp(0) += 0.5;
+    else
+      edge_Yp(0) -= 0.5;
+  }
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
@@ -215,9 +282,9 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
 // ----------------------------------------------------------------------
 
 bool Grid::init_geo_grid(Quadtree quadtree,
-			 Planets planet,
-			 Inputs input,
-			 Report &report) {
+                         Planets planet,
+                         Inputs input,
+                         Report &report) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -230,7 +297,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //   - the "create" functions both make the grid and build connections
   //   - the restart simply builds the grid.
   // Need to separate the two.
-  
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
@@ -239,6 +306,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
       create_cubesphere_grid(quadtree, input, report);
     else
       create_simple_lat_lon_alt_grid(quadtree, input, report);
+
     DidWork = write_restart(input.get_restartout_dir());
   }
 
