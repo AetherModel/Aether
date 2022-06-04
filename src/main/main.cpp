@@ -70,7 +70,6 @@ int main() {
     DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
-
     gGrid.fill_grid(planet, report);
 
     // Initialize Magnetic grid:
