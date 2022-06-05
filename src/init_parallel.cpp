@@ -52,7 +52,7 @@ bool init_parallel(Inputs &input,
   if (report.test_verbose(2))
     std::cout << "Number of PEs per root node available: " << nProcsPerNode << "\n";
 
-  quadtree.max_depth = log(nProcsPerNode) / log(4);
+  quadtree.max_depth = round(log(nProcsPerNode) / log(4));
 
   if (report.test_verbose(2))
     std::cout << "Quadtree max depth : " << quadtree.max_depth << "\n";
