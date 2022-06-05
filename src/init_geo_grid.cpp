@@ -56,15 +56,15 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
               << "  iProc : " << iProc << "\n"
               << "  isnorth : " << DoesTouchNorthPole << "\n"
               << "  issouth : " << DoesTouchSouthPole << "\n"
-              << "  iProcYm : " << iProcYm << "\n"
+              << "  iProcXp : " << iProcXp << "\n"
               << "  iProcYp : " << iProcYp << "\n"
               << "  iProcXm : " << iProcXm << "\n"
-              << "  iProcXp : " << iProcXp << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
               << "  iRoot   : " << iRoot << "\n"
-              << "  iRootYm : " << iRootYm << "\n"
+              << "  iRootXp : " << iRootXp << "\n"
               << "  iRootYp : " << iRootYp << "\n"
               << "  iRootXm : " << iRootXm << "\n"
-              << "  iRootXp : " << iRootXp << "\n";
+              << "  iRootYm : " << iRootYm << "\n";
 
   int64_t iProcSelf = quadtree.find_point(middle_norm);
 
