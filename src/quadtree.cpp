@@ -84,9 +84,12 @@ void Quadtree::build(Inputs input, Report report) {
     if (report.test_verbose(2))
       std::cout << "Making quadtree node : " << iNode << "\n";
 
-    uint64_t iP = iNode * pow(2, max_depth + 1);
+    uint64_t iP = iNode * pow(4, max_depth);
     uint64_t iDepth = 0;
 
+    if (report.test_verbose(2))
+      std::cout << "  iProcessor Start : " << iP << "\n";
+    
     for (int i = 0; i < 3; i++) {
       o(i) = origins(iNode, i);
       r(i) = rights(iNode, i);
@@ -145,11 +148,12 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
         tmp.children.push_back(tmp_child);
 
         if (iProc == 100) {
-          std::cout << "depth_in : " << depth_in << " "
+          std::cout << "      depth_in : " << depth_in << " "
                     << max_depth << " "
                     << iDU << " "
                     << iLR << " "
-                    << iSide_in << "\n";
+                    << iSide_in << " "
+		    << tmp_child.iProcNode << "\n";
         }
 
         iChild++;
@@ -227,9 +231,12 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
 
   int64_t iNode = -1;
 
-  if (iProc == 100)
-    std::cout << "depth : " << node.depth << " "
+  if (iProc == 100) {
+    std::cout << "find_point - depth : " << node.depth << " "
               << node.children.size() << "\n";
+    std::cout << "point : ";
+    display_vector(point);
+  }
 
   if (node.children.size() > 0) {
     for (uint64_t iChild = 0; iChild < 4; iChild++) {
@@ -274,7 +281,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
       }
     }
 
-    if (abs(node.lower_left_norm(iCO_) - point(iCO_)) < 1.0e-6)
+    if (fabs(node.lower_left_norm(iCO_) - point(iCO_)) < 1.0e-6)
       iFound++;
 
     if ((point(iLR_) >= node.lower_left_norm(iLR_) &&
@@ -292,12 +299,15 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
     if (iFound == 3)
       iNode = node.iProcNode;
 
-    if (iProc == 100) {
-      std::cout << "iFound : " << iFound << "\n";
-      std::cout << "   " << node.lower_left_norm << "\n";
-      std::cout << "   " << point << "\n";
-      std::cout << "   " << node.size_right_norm << "\n";
-      std::cout << "   " << node.size_up_norm << "\n";
+    if (iProc == 100 && iFound == 3) {
+      std::cout << "Found on iNode : " << iNode << "\n   point     : ";
+      display_vector(point);
+      std::cout << "   lower left : ";
+      display_vector(node.lower_left_norm);
+      std::cout << "   size_right : ";
+      display_vector(node.size_right_norm);
+      std::cout << "   size_up    : ";
+      display_vector(node.size_up_norm);
     }
 
   }
@@ -428,7 +438,8 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
     wrap_point(iCompTo_) = wrap_point(iCompTo_) + sn * delta;
 
     if (iProc == 100) {
-      std::cout << " point out of bounds!  Wrapping : \n" << point << "\n";
+      std::cout << " point out of bounds!  Wrapping : ";
+      display_vector(point);
       std::cout << "   delta : " << delta << "\n";
       std::cout << "   limit : " << limit << "\n";
       std::cout << "   face from : " << iFaceFrom_ << "\n";
@@ -436,7 +447,8 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
       std::cout << "   comp from : " << iComp_ << "\n";
       std::cout << "   comp to : " << iCompTo_ << "\n";
       std::cout << "     sign : " << sn << "\n";
-      std::cout << "   new point : \n" << wrap_point << "\n";
+      std::cout << "   new point : ";
+      display_vector(wrap_point);
     }
   }
 
