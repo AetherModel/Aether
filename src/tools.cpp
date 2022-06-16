@@ -4,20 +4,21 @@
 #include "../include/aether.h"
 
 // ----------------------------------------------------------------------------
-// 
+//
 // ----------------------------------------------------------------------------
 
 void display_vector(arma_vec vec) {
 
   for (int64_t i = 0; i < vec.n_rows; i++)
     std::cout << vec(i) << " ";
+
   std::cout << "\n";
-  
+
 }
 
 
 // ----------------------------------------------------------------------------
-// 
+//
 // ----------------------------------------------------------------------------
 
 bool sync_across_all_procs(bool value) {
@@ -235,3 +236,4 @@ precision_t standard_deviation(std::vector<precision_t> values) {
   s = sqrt(s / nValues);
   return s;
 }
+
