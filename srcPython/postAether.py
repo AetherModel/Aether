@@ -230,13 +230,12 @@ def write_netcdf(allBlockData, fileName):
     lat_dim = ncfile.createDimension('lat', nLats)
     z_dim = ncfile.createDimension('z', nZ)
     block_dim = ncfile.createDimension('block', None)
-    time_dim = ncfile.createDimension('time', 1)
+    time_dim = ncfile.createDimension('time', None)
 
-    t = ncfile.createVariable('time', np.float64, ('time',))
-    
     oneBlock = allBlockData[0]
 
-    t = datetime_to_epoch(oneBlock["time"])
+    time_out = ncfile.createVariable('time', np.float64, ('time',))
+    time_out[0] = datetime_to_epoch(oneBlock["time"])
         
     allNetCDFVars = []
     # create all of the variables
@@ -250,11 +249,9 @@ def write_netcdf(allBlockData, fileName):
         allNetCDFVars[-1].units = unitName
         allNetCDFVars[-1].long_name = longName
 
-    # loop through variables now
-    for iV, v in enumerate(varList):
         for iB, oneBlock in enumerate(allBlockData):
             tmp = np.asarray(oneBlock[iV])
-            allNetCDFVars[iB][:,:,:] = tmp
+            allNetCDFVars[-1][iB,:,:,:] = tmp
         
     ncfile.close()
 
@@ -271,6 +268,6 @@ for coreFile in files:
 
     plotFile = coreFile + '.png'
     #print(allBlockData[0]['vars'])
-    var = allBlockData[0]['vars'][14]
+    var = allBlockData[0]['vars'][-1]
     plot_all_blocks(allBlockData, var, 10, plotFile)
     
