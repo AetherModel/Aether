@@ -89,7 +89,7 @@ void Quadtree::build(Inputs input, Report report) {
 
     if (report.test_verbose(2))
       std::cout << "  iProcessor Start : " << iP << "\n";
-    
+
     for (int i = 0; i < 3; i++) {
       o(i) = origins(iNode, i);
       r(i) = rights(iNode, i);
@@ -153,7 +153,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
                     << iDU << " "
                     << iLR << " "
                     << iSide_in << " "
-		    << tmp_child.iProcNode << "\n";
+                    << tmp_child.iProcNode << "\n";
         }
 
         iChild++;
