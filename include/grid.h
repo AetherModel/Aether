@@ -35,6 +35,17 @@ public:
   arma_cube geoLat_scgc, geoY_scgc;
   arma_cube geoAlt_scgc, geoZ_scgc;
   arma_cube geoLocalTime_scgc;
+
+  arma_cube geoLon_Left;
+  arma_cube geoLon_Down;
+  arma_cube geoLon_Corner;
+  
+  arma_cube geoLat_Left;
+  arma_cube geoLat_Down;
+  arma_cube geoLat_Corner;
+
+  arma_cube geoAlt_Below;
+  arma_cube geoAlt_Corner;
   
   // These define the magnetic grid:
   // Armidillo Cube Versions:

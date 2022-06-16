@@ -24,6 +24,20 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   geoAlt_scgc.set_size(nX, nY, nZ);
   geoLocalTime_scgc.set_size(nX, nY, nZ);
 
+
+  geoLon_Left.set_size(nX + 1, nY, nZ);
+  geoLat_Left.set_size(nX + 1, nY, nZ);
+
+  geoLon_Down.set_size(nX, nY + 1, nZ);
+  geoLat_Down.set_size(nX, nY + 1, nZ);
+
+  geoLon_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  geoLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  geoAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+
+  geoAlt_Below.set_size(nX, nY, nZ + 1);
+
+
   geoX_scgc.set_size(nX, nY, nZ);
   geoY_scgc.set_size(nX, nY, nZ);
   geoZ_scgc.set_size(nX, nY, nZ);

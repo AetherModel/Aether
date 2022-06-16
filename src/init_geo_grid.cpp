@@ -7,6 +7,61 @@
 #include <math.h>
 
 // ----------------------------------------------------------------------
+// This function takes the normalized coordinates and makes latitude
+// and longitude arrays from them.  It can do this for the corners or
+// edges, depending on the offset.
+// ----------------------------------------------------------------------
+
+void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
+                                        arma_vec dr,
+                                        arma_vec du,
+                                        arma_vec ll,
+                                        int64_t nGCs,
+                                        precision_t left_off,
+                                        precision_t down_off,
+                                        arma_mat &lat2d,
+                                        arma_mat &lon2d) {
+
+  int64_t nX = lat2d.n_rows;
+  int64_t nY = lat2d.n_cols;
+
+  double xn, yn, zn, rn;
+  double xp, yp, zp, rp, latp, lonp;
+
+  double a = sqrt(3);
+
+  arma_vec xyz, xyzn, xyz_wrapped;
+
+  for (int iDU = 0; iDU < nY; iDU++) {
+    for (int iLR = 0; iLR < nX; iLR++) {
+
+      double iD = iDU - nGCs + down_off;
+      double iL = iLR - nGCs + left_off;
+
+      xyz = ll + dr * iL + du * iD;
+      xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      xyzn = normalise(xyz_wrapped);
+      xp = xyzn(0);
+      yp = xyzn(1);
+      zp = xyzn(2);
+
+      latp = asin(zp);
+      lonp = atan2(yp, xp) + 3 * cPI / 4;
+
+      if (lonp > cTWOPI)
+        lonp = lonp - cTWOPI;
+
+      if (lonp < 0.0)
+        lonp = lonp + cTWOPI;
+
+      lat2d(iLR, iDU) = latp;
+      lon2d(iLR, iDU) = lonp;
+    }
+  }
+}
+
+
+// ----------------------------------------------------------------------
 // Create a geographic grid
 //    - if restarting, read in the grid
 //    - if not restarting, initialize the grid
@@ -74,48 +129,58 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
 
   double a = sqrt(3);
 
-  dr = size_right_norm * a / (nLons - 2 * nGCs);
-  du = size_up_norm * a / (nLats - 2 * nGCs);
-  ll = lower_left_norm * a;
-
-  arma_mat lat2d(nLons, nLats), lon2d(nLons, nLats);
-
-  for (int iDU = 0; iDU < nY; iDU++) {
-    for (int iLR = 0; iLR < nX; iLR++) {
-
-      double iD = iDU - nGCs + 0.5;
-      double iL = iLR - nGCs + 0.5;
-
-      xn = ll(0) + dr(0) * iL + du(0) * iD;
-      yn = ll(1) + dr(1) * iL + du(1) * iD;
-      zn = ll(2) + dr(2) * iL + du(2) * iD;
-      rn = sqrt(xn * xn + yn * yn + zn * zn);
-
-      xp = xn / rn;
-      yp = yn / rn;
-      zp = zn / rn;
-      rp = sqrt(xp * xp + yp * yp + zp * zp);
-
-      latp = asin(zp / rp);
-      lonp = atan2(yp, xp) + 3 * cPI / 4;
-
-      if (lonp > cTWOPI)
-        lonp = lonp - cTWOPI;
-
-      if (lonp < 0.0)
-        lonp = lonp + cTWOPI;
-
-      lat2d(iLR, iDU) = latp;
-      lon2d(iLR, iDU) = lonp;
-
-    }
-  }
+  dr = size_right_norm / (nLons - 2 * nGCs);
+  du = size_up_norm / (nLats - 2 * nGCs);
+  ll = lower_left_norm;
 
   int64_t iAlt, iLon, iLat;
 
+  // ---------------------------------------------
+  // Cell Centers
+  // ---------------------------------------------
+  arma_mat lat2d(nLons, nLats);
+  arma_mat lon2d(nLons, nLats);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.5,
+                                     lat2d, lon2d);
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_scgc.slice(iAlt) = lon2d;
     geoLat_scgc.slice(iAlt) = lat2d;
+  }
+
+  // ---------------------------------------------
+  // Left Sides - edges on left side (no offset left)
+  // ---------------------------------------------
+  arma_mat lat2d_left(nLons + 1, nLats);
+  arma_mat lon2d_left(nLons + 1, nLats);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.5,
+                                     lat2d_left, lon2d_left);
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Left.slice(iAlt) = lon2d_left;
+    geoLat_Left.slice(iAlt) = lat2d_left;
+  }
+
+  // ---------------------------------------------
+  // Down Sides - edges on down side (no offset down)
+  // ---------------------------------------------
+  arma_mat lat2d_down(nLons, nLats + 1);
+  arma_mat lon2d_down(nLons, nLats + 1);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.0,
+                                     lat2d_down, lon2d_down);
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Down.slice(iAlt) = lon2d_down;
+    geoLat_Down.slice(iAlt) = lat2d_down;
+  }
+
+  // ---------------------------------------------
+  // Corners (lower left) - no offsets
+  // ---------------------------------------------
+  arma_mat lat2d_corner(nLons + 1, nLats + 1);
+  arma_mat lon2d_corner(nLons + 1, nLats + 1);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.0,
+                                     lat2d_corner, lon2d_corner);
+  for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+    geoLon_Corner.slice(iAlt) = lon2d_corner;
+    geoLat_Corner.slice(iAlt) = lat2d_corner;
   }
 
   arma_vec alt1d(nAlts);
@@ -127,10 +192,20 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
       alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
   }
 
+  arma_vec alt1d_below = calc_bin_edges(alt1d);
+
   for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++)
+    for (iLat = 0; iLat < nLats; iLat++) {
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
+      geoAlt_Below.tube(iLon, iLat) = alt1d_below;
+    }
   }
+
+  for (iLon = 0; iLon < nLons + 1; iLon++) {
+    for (iLat = 0; iLat < nLats + 1; iLat++)
+      geoAlt_Corner.tube(iLon, iLat) = alt1d_below;
+  }
+
 
 }
 
@@ -150,16 +225,13 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
 
   IsLatLonGrid = true;
 
+  // Get some coordinates and sizes in normalized coordinates:
   arma_vec lower_left_norm = quadtree.get_vect("LL");
   arma_vec middle_norm = quadtree.get_vect("MID");
   arma_vec size_right_norm = quadtree.get_vect("SR");
   arma_vec size_up_norm = quadtree.get_vect("SU");
 
-  std::cout << "middle : " << iProc << " "
-            << middle_norm(0) << " "
-            << middle_norm(1) << " "
-            << middle_norm(2) << "\n";
-
+  // Move to the next block in 4 directions:
   arma_vec down_norm = middle_norm - size_up_norm;
   arma_vec up_norm = middle_norm + size_up_norm;
   arma_vec left_norm = middle_norm - size_right_norm;
@@ -194,7 +266,6 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // Check if touching South Pole:
   if (lower_left_norm(1) == quadtree.limit_low(1)) {
     DoesTouchSouthPole = true;
-
     // edges need to be adjusted to deal with longitudes, since the
     // pole will 180deg different for the from and to processors
     if (edge_Ym(0) < 1.0)
@@ -206,7 +277,6 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // Check if touching North Pole:
   if (lower_left_norm(1) + size_up_norm(1) == quadtree.limit_high(1)) {
     DoesTouchNorthPole = true;
-
     // edge need to be adjusted to deal with longitudes, since the
     // pole will 180deg different for the from and to processors
     if (edge_Yp(0) < 1.0)
@@ -249,6 +319,54 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
       geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
   }
 
+  // ---------------------------------------------
+  // Left Sides - edges on left side (no offset left)
+  // ---------------------------------------------
+  arma_mat lat2d_left(nLons + 1, nLats);
+  arma_mat lon2d_left(nLons + 1, nLats);
+  for (iLat = 0; iLat < nLats; iLat++) {
+    for (iLon = 0; iLon < nLons + 1; iLon++) {
+      lat2d_left(iLon, iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
+      lon2d_left(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
+    }
+  }
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Left.slice(iAlt) = lon2d_left;
+    geoLat_Left.slice(iAlt) = lat2d_left;
+  }
+
+  // ---------------------------------------------
+  // Down Sides - edges on down side (no offset lat)
+  // ---------------------------------------------
+  arma_mat lat2d_down(nLons, nLats + 1);
+  arma_mat lon2d_down(nLons, nLats + 1);
+  for (iLat = 0; iLat < nLats + 1; iLat++) {
+    for (iLon = 0; iLon < nLons; iLon++) {
+      lat2d_down(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
+      lon2d_down(iLon, iLat) = lon0 + (iLon - nGCs + 0.5) * dlon;
+    }
+  }
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_down.slice(iAlt) = lon2d_down;
+    geoLat_down.slice(iAlt) = lat2d_down;
+  }
+
+  // ---------------------------------------------
+  // Corner Sides - corner (no offset lat or lon)
+  // ---------------------------------------------
+  arma_mat lat2d_corner(nLons + 1, nLats + 1);
+  arma_mat lon2d_corner(nLons + 1, nLats + 1);
+  for (iLat = 0; iLat < nLats + 1; iLat++) {
+    for (iLon = 0; iLon < nLons + 1; iLon++) {
+      lat2d_corner(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
+      lon2d_corner(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
+    }
+  }
+  for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+    geoLon_corner.slice(iAlt) = lon2d_corner;
+    geoLat_corner.slice(iAlt) = lat2d_corner;
+  }
+  
   arma_vec alt1d(nAlts);
 
   if (grid_input.IsUniformAlt) {
