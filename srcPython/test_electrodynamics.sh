@@ -10,6 +10,7 @@
 # make electrodynamics files
 ./electrodynamics_write.py -startdate=20130317 -enddate=20130318 -dt=1 -real -ions -outfile=b20130317n_omni_ions.bin
 ./electrodynamics_write.py -startdate=20130317 -enddate=20130318 -dt=1 -real -ions -outfile=b20130317s_omni_ions.bin -south
+omni_download_write_swmf.py 20130317 20130318
 
 # plot:
 ./amie_read_binary.py -step=60 b20130317n_omni_ions.bin
