@@ -1,0 +1,27 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"iTimingDepth" : 1,
+	"dt" : 10.0},
+
+    "Outputs" : {
+	"type" : ["states", "bfield", "corners"],
+	"dt" : [900, 0.0, 0.0] },
+    
+    "CubeSphere" : {
+	"is" : true},
+
+    "GeoBlockSize" : {
+	"nLons" : 20,
+	"nLats" : 20,
+	"nAlts" : 40},
+
+    "StartTime" : [2013, 3, 17, 0, 0, 0],
+    "EndTime" : [2013, 3, 17, 12, 0, 0],
+
+    "OmniwebFiles" : ["omni_20130317.txt"],
+    "ElectrodynamicsFile" : "b20130317n_omni_ions.bin"
+
+}

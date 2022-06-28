@@ -1,0 +1,25 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "Outputs" : {
+	"type" : ["states", "bfield", "corners"],
+	"dt" : [300, 0.0, 0.0] },
+    
+    "CubeSphere" : {
+	"false" : true},
+
+    "GeoBlockSize" : {
+	"nLons" : 40,
+	"nLats" : 40,
+	"nAlts" : 50},
+
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin"
+
+}
