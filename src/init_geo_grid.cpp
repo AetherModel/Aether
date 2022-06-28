@@ -347,8 +347,8 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
     }
   }
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
-    geoLon_down.slice(iAlt) = lon2d_down;
-    geoLat_down.slice(iAlt) = lat2d_down;
+    geoLon_Down.slice(iAlt) = lon2d_down;
+    geoLat_Down.slice(iAlt) = lat2d_down;
   }
 
   // ---------------------------------------------
@@ -363,8 +363,8 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
     }
   }
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
-    geoLon_corner.slice(iAlt) = lon2d_corner;
-    geoLat_corner.slice(iAlt) = lat2d_corner;
+    geoLon_Corner.slice(iAlt) = lon2d_corner;
+    geoLat_Corner.slice(iAlt) = lat2d_corner;
   }
   
   arma_vec alt1d(nAlts);
