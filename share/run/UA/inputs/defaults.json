@@ -38,7 +38,7 @@
 	"IsUniformAlt" : true},
 
     "CubeSphere" : {
-	"is" : False},
+	"is" : false},
 
     "Ensembles" : {
         "nMembers" : 1},
