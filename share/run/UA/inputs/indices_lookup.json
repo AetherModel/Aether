@@ -36,6 +36,7 @@
     "swt" : 9,
     "sw_t" : 9,
     "temperature,k" : 9,
+    "protontemperature,k" : 9,
     "ae" : 10,
     "ae-index,nt" : 10,
     "al" : 11,

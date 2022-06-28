@@ -343,6 +343,8 @@ bool Indices::set_index(std::string index_name,
   else {
     std::cout << "Attempting to set index " << index_name
               << " but can't locate it.  Skipping.\n";
+    std::cout << "  -> Modify the file indices_lookup.json file";
+    std::cout << " in the UA/inputs directory\n";
     DidWork = false;
   }
 
