@@ -187,6 +187,11 @@ int pair_omniweb_index(std::string var_name, Indices indices) {
   if (test != std::string::npos)
     index = indices.get_swt_index_id();
 
+  test = var_name.find("Proton Temperature");
+
+  if (test != std::string::npos)
+    index = indices.get_swt_index_id();
+
   test = var_name.find("AE-index");
 
   if (test != std::string::npos)
@@ -252,6 +257,11 @@ precision_t get_omniweb_missing_value(std::string var_name) {
     missing = 999.99;
 
   test = var_name.find("Temperature");
+
+  if (test != std::string::npos)
+    missing = 999999.0;
+
+  test = var_name.find("Proton Temperature");
 
   if (test != std::string::npos)
     missing = 999999.0;
