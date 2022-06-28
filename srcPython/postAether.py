@@ -10,6 +10,25 @@ import numpy as np
 import matplotlib.cm as cm
 from netCDF4 import Dataset
 from aetherpy.utils.time_conversion import datetime_to_epoch
+import argparse
+import os
+
+# ----------------------------------------------------------------------
+# Function to parse input arguments
+# ----------------------------------------------------------------------
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(description = 'Post process Aether files')
+    parser.add_argument('-rm', \
+                        help='removes processed files', \
+                        action="store_true")
+
+    args = parser.parse_args()
+
+    return args
+
+
 
 #----------------------------------------------------------------------------
 # This returns the core of the filename without the _g????.nc
@@ -200,7 +219,7 @@ def read_block_files(coreFile):
         print('  Reading file : ', file)
         data = read_routines.read_aether_file(file, file_vars=header['vars'])
         allBlockData.append(data)
-    return allBlockData
+    return allBlockData, fileList
 
 #----------------------------------------------------------------------------
 # return the nLons (nX), nLats (nY), and nAlts (nZ) of a block's data
@@ -258,14 +277,21 @@ def write_netcdf(allBlockData, fileName):
 #----------------------------------------------------------------------------
 # main code
 #----------------------------------------------------------------------------
-        
+
+args = parse_args()
+
 files = get_base_files()
 
 for coreFile in files:
-    allBlockData = read_block_files(coreFile)
+    allBlockData, filelist = read_block_files(coreFile)
     netcdfName = coreFile + '.nc'
     write_netcdf(allBlockData, netcdfName)
-
+    if (args.rm):
+        print('  ---> Removing files...')
+        for file in filelist:
+            command = 'rm -f '+file
+            os.system(command)
+    
     plotFile = coreFile + '.png'
     #print(allBlockData[0]['vars'])
     var = allBlockData[0]['vars'][-1]
