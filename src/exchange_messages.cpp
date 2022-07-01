@@ -121,7 +121,7 @@ bool pack_border(const arma_cube &value,
 //     3 - bottom
 //   DoReverseX and DoReverseY are because packing always happens from
 //     lower left to upper right, while face we are unpacking too may
-//     have a different (left -right and up - down) geometry
+//     have a different (left - right and up - down) geometry
 //   XbecomesY as above, but in this case, the L-R and U-D could change.
 //     This is really for the CubeSphere dealing with the top/bottom to
 //     sides geometry.
@@ -145,6 +145,20 @@ bool unpack_border(arma_cube &value,
   int64_t iYstart, iYend;
   int64_t xInc = 1, yInc = 1;
 
+  int64_t iXOff = 0;
+  int64_t nCx = nX - 2 * nG;
+
+  // This is for over the pole message passing on one processor:
+  if (nProcs == 1 && (iDir == 1 || iDir == 3)) {
+    if (nCx % 2 > 0) {
+      std::cout << "If you are running on one processor, and you want to\n";
+      std::cout << "model the whole Earth, it is highly recommended that\n";
+      std::cout << "nLons is EVEN, so that the message passing across the\n";
+      std::cout << "pole works as it should.\n";
+    }
+    iXOff = nCx/2;
+  }
+  
   // ----------------------------
   // left / right message passing
   if (iDir == 0 || iDir == 2) {
@@ -212,6 +226,12 @@ bool unpack_border(arma_cube &value,
 
             if (DoReverseX)
               iXp = iXend - 1 - (iX - iXstart);
+
+	    if (iXOff > 0) {
+	      iXp = (iXp + iXOff) % nCx;
+	      if (iXp < nG)
+		iXp += nCx;
+	    }
 
             value(iXp, iYp, iZ) = packed[*iCounter];
             *iCounter = *iCounter + 1;
