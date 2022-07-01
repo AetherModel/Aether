@@ -79,7 +79,7 @@ int output(const Neutrals &neutrals,
                      "degrees_north",
                      grid.geoLat_scgc * cRtoD);
       AllOutputContainers[iOutput].
-      store_variable("z",
+      store_variable("alt",
                      "height above mean sea level",
                      "m",
                      grid.geoAlt_scgc);
@@ -720,8 +720,8 @@ int OutputContainer::write_container_netcdf() {
   try {
     NcFile ncdf_file(whole_filename, NcFile::replace);
     // Add dimensions:
-    NcDim xDim = ncdf_file.addDim("lon", elements[0].value.n_rows);
-    NcDim yDim = ncdf_file.addDim("lat", elements[0].value.n_cols);
+    NcDim xDim = ncdf_file.addDim("x", elements[0].value.n_rows);
+    NcDim yDim = ncdf_file.addDim("y", elements[0].value.n_cols);
     NcDim zDim = ncdf_file.addDim("z", elements[0].value.n_slices);
     NcDim tDim = ncdf_file.addDim("time", 1);
 
