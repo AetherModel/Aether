@@ -132,7 +132,7 @@ bool unpack_border(arma_cube &value,
     } else {
       // right -> left
       iXstart = nX - nG;
-      iXend = nX - 1;
+      iXend = nX;
     }
   }
 
@@ -156,7 +156,7 @@ bool unpack_border(arma_cube &value,
     } else {
       // top -> bottom
       iYstart = nY - nG;
-      iYend = nY - 1;
+      iYend = nY;
     }
   }
 
