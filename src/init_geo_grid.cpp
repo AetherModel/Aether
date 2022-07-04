@@ -142,6 +142,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   arma_mat lon2d(nLons, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.5,
                                      lat2d, lon2d);
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_scgc.slice(iAlt) = lon2d;
     geoLat_scgc.slice(iAlt) = lat2d;
@@ -154,6 +155,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   arma_mat lon2d_left(nLons + 1, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.5,
                                      lat2d_left, lon2d_left);
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Left.slice(iAlt) = lon2d_left;
     geoLat_Left.slice(iAlt) = lat2d_left;
@@ -166,6 +168,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   arma_mat lon2d_down(nLons, nLats + 1);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.0,
                                      lat2d_down, lon2d_down);
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Down.slice(iAlt) = lon2d_down;
     geoLat_Down.slice(iAlt) = lat2d_down;
@@ -178,6 +181,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
   arma_mat lon2d_corner(nLons + 1, nLats + 1);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.0,
                                      lat2d_corner, lon2d_corner);
+
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
     geoLon_Corner.slice(iAlt) = lon2d_corner;
     geoLat_Corner.slice(iAlt) = lat2d_corner;
@@ -266,6 +270,7 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // Check if touching South Pole:
   if (lower_left_norm(1) == quadtree.limit_low(1)) {
     DoesTouchSouthPole = true;
+
     // edges need to be adjusted to deal with longitudes, since the
     // pole will 180deg different for the from and to processors
     if (edge_Ym(0) < 1.0)
@@ -277,6 +282,7 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // Check if touching North Pole:
   if (lower_left_norm(1) + size_up_norm(1) == quadtree.limit_high(1)) {
     DoesTouchNorthPole = true;
+
     // edge need to be adjusted to deal with longitudes, since the
     // pole will 180deg different for the from and to processors
     if (edge_Yp(0) < 1.0)
@@ -324,12 +330,14 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // ---------------------------------------------
   arma_mat lat2d_left(nLons + 1, nLats);
   arma_mat lon2d_left(nLons + 1, nLats);
+
   for (iLat = 0; iLat < nLats; iLat++) {
     for (iLon = 0; iLon < nLons + 1; iLon++) {
       lat2d_left(iLon, iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
       lon2d_left(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
     }
   }
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Left.slice(iAlt) = lon2d_left;
     geoLat_Left.slice(iAlt) = lat2d_left;
@@ -340,12 +348,14 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // ---------------------------------------------
   arma_mat lat2d_down(nLons, nLats + 1);
   arma_mat lon2d_down(nLons, nLats + 1);
+
   for (iLat = 0; iLat < nLats + 1; iLat++) {
     for (iLon = 0; iLon < nLons; iLon++) {
       lat2d_down(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
       lon2d_down(iLon, iLat) = lon0 + (iLon - nGCs + 0.5) * dlon;
     }
   }
+
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Down.slice(iAlt) = lon2d_down;
     geoLat_Down.slice(iAlt) = lat2d_down;
@@ -356,17 +366,19 @@ void Grid::create_simple_lat_lon_alt_grid(Quadtree quadtree,
   // ---------------------------------------------
   arma_mat lat2d_corner(nLons + 1, nLats + 1);
   arma_mat lon2d_corner(nLons + 1, nLats + 1);
+
   for (iLat = 0; iLat < nLats + 1; iLat++) {
     for (iLon = 0; iLon < nLons + 1; iLon++) {
       lat2d_corner(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
       lon2d_corner(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
     }
   }
+
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
     geoLon_Corner.slice(iAlt) = lon2d_corner;
     geoLat_Corner.slice(iAlt) = lat2d_corner;
   }
-  
+
   arma_vec alt1d(nAlts);
 
   if (grid_input.IsUniformAlt) {

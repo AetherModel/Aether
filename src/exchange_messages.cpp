@@ -156,9 +156,10 @@ bool unpack_border(arma_cube &value,
       std::cout << "nLons is EVEN, so that the message passing across the\n";
       std::cout << "pole works as it should.\n";
     }
-    iXOff = nCx/2;
+
+    iXOff = nCx / 2;
   }
-  
+
   // ----------------------------
   // left / right message passing
   if (iDir == 0 || iDir == 2) {
@@ -227,11 +228,12 @@ bool unpack_border(arma_cube &value,
             if (DoReverseX)
               iXp = iXend - 1 - (iX - iXstart);
 
-	    if (iXOff > 0) {
-	      iXp = (iXp + iXOff) % nCx;
-	      if (iXp < nG)
-		iXp += nCx;
-	    }
+            if (iXOff > 0) {
+              iXp = (iXp + iXOff) % nCx;
+
+              if (iXp < nG)
+                iXp += nCx;
+            }
 
             value(iXp, iYp, iZ) = packed[*iCounter];
             *iCounter = *iCounter + 1;
