@@ -344,48 +344,46 @@ arma_mat Electrodynamics::get_interpolation_indices(arma_mat vals,
       int64_t iLow, iMid, iHigh, N;
       double interpolation_index, x, dx;
 
-      // Check to see if the time is below the bottom time in the vector:
       iLow = 0;
-
-      if (in <= search(iLow))
-        interpolation_index = 0.0;
-
-      // Check to see if the time is above the top time in the vector:
       iHigh = search.n_rows - 1;
 
-      if (in >= search(iHigh))
-        interpolation_index = iHigh;
+      // Check to see if the time is below or above the vector:
 
-      // At this point, we know that it is somewhere between the highest
-      // and lowest values:
+      if (in < search(iLow) || in > search(iHigh)) {
+        interpolation_index = 0.0;
+      } else {
 
-      iMid = (iHigh + iLow) / 2;
+        // At this point, we know that it is somewhere between the highest
+        // and lowest values:
 
-      while (iHigh - iLow > 1) {
-        // Break if iMid <= time < iMid+1
-        if (search[iMid] == in)
-          break;
+        iMid = (iHigh + iLow) / 2;
 
-        if (search[iMid] <= in &&
-            search[iMid + 1] > in)
-          break;
+        while (iHigh - iLow > 1) {
+          // Break if iMid <= time < iMid+1
+          if (search[iMid] == in)
+            break;
 
-        // Upper Half:
-        if (search[iMid] < in) {
-          iLow = iMid;
-          iMid = (iHigh + iLow) / 2;
-        } else {
-          iHigh = iMid;
-          iMid = (iHigh + iLow) / 2;
+          if (search[iMid] <= in &&
+              search[iMid + 1] > in)
+            break;
+
+          // Upper Half:
+          if (search[iMid] < in) {
+            iLow = iMid;
+            iMid = (iHigh + iLow) / 2;
+          } else {
+            iHigh = iMid;
+            iMid = (iHigh + iLow) / 2;
+          }
         }
+
+        // At this point, time should be between iMid and iMid+1:
+
+        dx = (search[iMid + 1] - search[iMid]);
+        x = (in - search[iMid]) / dx;
+
+        interpolation_index = iMid + x;
       }
-
-      // At this point, time should be between iMid and iMid+1:
-
-      dx = (search[iMid + 1] - search[iMid]);
-      x = (in - search[iMid]) / dx;
-
-      interpolation_index = iMid + x;
       res(i, j) = interpolation_index;
     }
   }
