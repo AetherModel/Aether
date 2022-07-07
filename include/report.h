@@ -5,7 +5,7 @@
 #define INCLUDE_REPORT_H_
 
 /**************************************************************
- * \class Report 
+ * \class Report
  *
  * \brief A system for reporting within the program
 
@@ -17,7 +17,7 @@
  *
  * \author Aaron Ridley
  *
- * \date 2021/04/16 
+ * \date 2021/04/16
  **************************************************************/
 
 #include <string>
@@ -30,7 +30,7 @@ class Report {
 // -----------------------------------------------------------------------
 // Public functions and variables
 // -----------------------------------------------------------------------
-  
+
 public:
 
   // Functions:
@@ -47,7 +47,7 @@ public:
    user of the code. Some thoughts on levels:
    0 - essentially only report timing information
    1 - report only broadest level of detail
-   2 - report going in and out of functions, and maybe things that are 
+   2 - report going in and out of functions, and maybe things that are
        done once per iteration
    3-4 - Once per iteration types of outputs. More details at higher levels
    5+ - get into grid iterations. Produces a HUGE amount of info.
@@ -100,9 +100,9 @@ public:
    - Records the name of the function and number of the function for exit.
 
    \param function_name The name of the function that is being entered
-   \param iFunction first time entered, this should be -1 or something, 
-                    then this is altered to be the number of the function. 
-                    when the function is called again, this number saves 
+   \param iFunction first time entered, this should be -1 or something,
+                    then this is altered to be the number of the function.
+                    when the function is called again, this number saves
                     a string compare
    **/
   void enter(std::string function_name, int &iFunction);
@@ -117,7 +117,7 @@ public:
    \brief Loop through all reported functions and report their run times
    **/
   void times();
-  
+
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
@@ -169,7 +169,7 @@ private:
   int iLevel;
 
   /// Report when leaving a function
-  bool DoReportOnExit = false;
+  bool DoReportOnExit = true;
 };
 
 #endif  // INCLUDE_REPORT_H_
