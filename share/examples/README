@@ -1,0 +1,15 @@
+
+This directory contains examples of Aether input files.
+
+aether_cubesphere.json - runs 10 minutes of cubesphere grid, outputs corners.
+  - 6 processors needed.
+
+aether_sphere.json - runs 10 minutes of spherical grid, outputs corners.
+  - 4 processors recommended.
+
+To run part of the March 17, 2013 storm:
+  - go into the srcPython directory
+  - run test_electrodynamics.sh, which produces binary electrodynamics files and
+    png files that show the potential and aurora.
+    copy the b20130317n_omni_ions.bin and omni_20130317.txt files to the run directory.
+  - go into the run directory and copy the aether_20130317.json to aether.json.

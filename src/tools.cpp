@@ -3,15 +3,33 @@
 
 #include "../include/aether.h"
 
+// ----------------------------------------------------------------------------
+//
+// ----------------------------------------------------------------------------
+
+void display_vector(arma_vec vec) {
+
+  for (int64_t i = 0; i < vec.n_rows; i++)
+    std::cout << vec(i) << " ";
+
+  std::cout << "\n";
+
+}
+
+
+// ----------------------------------------------------------------------------
+//
+// ----------------------------------------------------------------------------
+
 bool sync_across_all_procs(bool value) {
   bool global_value;
   MPI_Allreduce(&value, &global_value, 1, MPI_C_BOOL, MPI_LAND, aether_comm);
   return global_value;
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 std::vector<double> get_normal_random_vect(double mean,
                                            double std,
@@ -27,9 +45,9 @@ std::vector<double> get_normal_random_vect(double mean,
   return values;
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Generate a vector of uniformly distributed random unsigned ints
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
                                                    int seed) {
@@ -218,3 +236,4 @@ precision_t standard_deviation(std::vector<precision_t> values) {
   s = sqrt(s / nValues);
   return s;
 }
+

@@ -4,6 +4,140 @@
 #include <iostream>
 
 #include "aether.h"
+#include <math.h>
+
+// ----------------------------------------------------------------------
+// Create connectivity between the nodes for message passing for cubesphere
+// ----------------------------------------------------------------------
+
+void Grid::create_cubesphere_connection(Quadtree quadtree,
+                                        Inputs input,
+                                        Report &report) {
+
+  std::string function = "Grid::create_cubesphere_connection";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  IsLatLonGrid = false;
+
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec middle_norm = quadtree.get_vect("MID");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  // These points go off the edge to the next block in each direction:
+  arma_vec down_norm = middle_norm - size_up_norm;
+  arma_vec up_norm = middle_norm + size_up_norm;
+  arma_vec left_norm = middle_norm - size_right_norm;
+  arma_vec right_norm = middle_norm + size_right_norm;
+
+  // Find those points in the quadtree to figure out which processor
+  // they are on
+  iProcYm = quadtree.find_point(down_norm);
+  iProcYp = quadtree.find_point(up_norm);
+  iProcXm = quadtree.find_point(left_norm);
+  iProcXp = quadtree.find_point(right_norm);
+
+  // Need to know which side the current block is on and which side each
+  // of the blocks in the different directions is on.  Need this so we can
+  // know how to unpack the variables after the message pass.
+  iRoot = quadtree.find_root(middle_norm);
+  iRootYm = quadtree.find_root(down_norm);
+  iRootYp = quadtree.find_root(up_norm);
+  iRootXm = quadtree.find_root(left_norm);
+  iRootXp = quadtree.find_root(right_norm);
+
+  // These should be the exact edge of the face.
+  // The from and to processors should get these in the same place,
+  // so they can be used to match which processor to send / receive info
+  edge_Xp = middle_norm + size_right_norm / 2.0;
+  edge_Xm = middle_norm - size_right_norm / 2.0;
+  edge_Yp = middle_norm + size_up_norm / 2.0;
+  edge_Ym = middle_norm - size_up_norm / 2.0;
+
+  if (report.test_verbose(2))
+    std::cout << "connectivity : "
+              << "  iProc : " << iProc << "\n"
+              << "  isnorth : " << DoesTouchNorthPole << "\n"
+              << "  issouth : " << DoesTouchSouthPole << "\n"
+              << "  iProcXp : " << iProcXp << "\n"
+              << "  iProcYp : " << iProcYp << "\n"
+              << "  iProcXm : " << iProcXm << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
+              << "  iRoot   : " << iRoot << "\n"
+              << "  iRootXp : " << iRootXp << "\n"
+              << "  iRootYp : " << iRootYp << "\n"
+              << "  iRootXm : " << iRootXm << "\n"
+              << "  iRootYm : " << iRootYm << "\n";
+
+  int64_t iProcSelf = quadtree.find_point(middle_norm);
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// This function takes the normalized coordinates and makes latitude
+// and longitude arrays from them.  It can do this for the corners or
+// edges, depending on the offset.
+// ----------------------------------------------------------------------
+
+void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
+                                        arma_vec dr,
+                                        arma_vec du,
+                                        arma_vec ll,
+                                        int64_t nGCs,
+                                        precision_t left_off,
+                                        precision_t down_off,
+                                        arma_mat &lat2d,
+                                        arma_mat &lon2d) {
+
+  int64_t nX = lat2d.n_rows;
+  int64_t nY = lat2d.n_cols;
+
+  double xn, yn, zn, rn;
+  double xp, yp, zp, rp, latp, lonp;
+
+  double a = sqrt(3);
+
+  arma_vec xyz, xyzn, xyz_wrapped;
+
+  // Loop through each point and derive the coordinate
+  for (int iDU = 0; iDU < nY; iDU++) {
+    for (int iLR = 0; iLR < nX; iLR++) {
+
+      // the offsets are so we can find cell centers, edges, and corners
+      double iD = iDU - nGCs + down_off;
+      double iL = iLR - nGCs + left_off;
+
+      // This is the normalized coordinate:
+      xyz = ll + dr * iL + du * iD;
+      // Ghost cells could be off the edge, so wrap to other face:
+      xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      // Normalize the coordinate to a unit vector:
+      xyzn = normalise(xyz_wrapped);
+      xp = xyzn(0);
+      yp = xyzn(1);
+      zp = xyzn(2);
+
+      // Derive lat and lon from unit vector:
+      latp = asin(zp);
+      // offset for lon is to put the left edge of face 0 at 0 longitude:
+      lonp = atan2(yp, xp) + 3 * cPI / 4;
+
+      if (lonp > cTWOPI)
+        lonp = lonp - cTWOPI;
+
+      if (lonp < 0.0)
+        lonp = lonp + cTWOPI;
+
+      lat2d(iLR, iDU) = latp;
+      lon2d(iLR, iDU) = lonp;
+    }
+  }
+
+  return;
+}
 
 // ----------------------------------------------------------------------
 // Create a geographic grid
@@ -11,25 +145,197 @@
 //    - if not restarting, initialize the grid
 // ----------------------------------------------------------------------
 
-void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
+void Grid::create_cubesphere_grid(Quadtree quadtree,
+                                  Inputs input,
+                                  Report &report) {
 
-  std::string function = "Grid::create_simple_lat_lon_alt_grid";
+  std::string function = "Grid::create_cubesphere_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  arma_vec dr(3), du(3), ll(3);
+  double xn, yn, zn, rn;
+  double xp, yp, zp, rp, latp, lonp;
+
+  double a = sqrt(3);
+
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  dr = size_right_norm / (nLons - 2 * nGCs);
+  du = size_up_norm / (nLats - 2 * nGCs);
+  ll = lower_left_norm;
+
+  int64_t iAlt, iLon, iLat;
+
+  // ---------------------------------------------
+  // Cell Centers
+  // ---------------------------------------------
+  arma_mat lat2d(nLons, nLats);
+  arma_mat lon2d(nLons, nLats);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.5,
+                                     lat2d, lon2d);
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_scgc.slice(iAlt) = lon2d;
+    geoLat_scgc.slice(iAlt) = lat2d;
+  }
+
+  // ---------------------------------------------
+  // Left Sides - edges on left side (no offset left)
+  // ---------------------------------------------
+  arma_mat lat2d_left(nLons + 1, nLats);
+  arma_mat lon2d_left(nLons + 1, nLats);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.5,
+                                     lat2d_left, lon2d_left);
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Left.slice(iAlt) = lon2d_left;
+    geoLat_Left.slice(iAlt) = lat2d_left;
+  }
+
+  // ---------------------------------------------
+  // Down Sides - edges on down side (no offset down)
+  // ---------------------------------------------
+  arma_mat lat2d_down(nLons, nLats + 1);
+  arma_mat lon2d_down(nLons, nLats + 1);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.0,
+                                     lat2d_down, lon2d_down);
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Down.slice(iAlt) = lon2d_down;
+    geoLat_Down.slice(iAlt) = lat2d_down;
+  }
+
+  // ---------------------------------------------
+  // Corners (lower left) - no offsets
+  // ---------------------------------------------
+  arma_mat lat2d_corner(nLons + 1, nLats + 1);
+  arma_mat lon2d_corner(nLons + 1, nLats + 1);
+  fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.0,
+                                     lat2d_corner, lon2d_corner);
+
+  for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+    geoLon_Corner.slice(iAlt) = lon2d_corner;
+    geoLat_Corner.slice(iAlt) = lat2d_corner;
+  }
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Create connectivity between the nodes for message passing for sphere
+// ----------------------------------------------------------------------
+
+void Grid::create_sphere_connection(Quadtree quadtree,
+                                    Inputs input,
+                                    Report &report) {
+
+  std::string function = "Grid::create_sphere_connection";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   IsLatLonGrid = true;
 
-  // This is just an example:
+  // Get some coordinates and sizes in normalized coordinates:
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec middle_norm = quadtree.get_vect("MID");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  // Move to the next block in 4 directions:
+  arma_vec down_norm = middle_norm - size_up_norm;
+  arma_vec up_norm = middle_norm + size_up_norm;
+  arma_vec left_norm = middle_norm - size_right_norm;
+  arma_vec right_norm = middle_norm + size_right_norm;
+
+  // The first component could wrap around:
+  right_norm(0) = fmod(right_norm(0), quadtree.limit_high(0));
+  left_norm(0) = fmod((left_norm(0) + quadtree.limit_high(0)),
+                      quadtree.limit_high(0));
+
+  // These should be the exact edge of the face.
+  // The from and to processors should get these in the same place,
+  // so they can be used to match which processor to send / receive info
+  edge_Xp = middle_norm + size_right_norm / 2.0;
+  // wrap in longitude:
+  edge_Xp(0) = fmod(edge_Xp(0), quadtree.limit_high(0));
+  edge_Xm = middle_norm - size_right_norm / 2.0;
+  edge_Yp = middle_norm + size_up_norm / 2.0;
+  edge_Ym = middle_norm - size_up_norm / 2.0;
+
+  iProcYm = quadtree.find_point(down_norm);
+  iProcYp = quadtree.find_point(up_norm);
+  iProcXm = quadtree.find_point(left_norm);
+  iProcXp = quadtree.find_point(right_norm);
+
+  iRoot = quadtree.find_root(middle_norm);
+  iRootYm = quadtree.find_root(down_norm);
+  iRootYp = quadtree.find_root(up_norm);
+  iRootXm = quadtree.find_root(left_norm);
+  iRootXp = quadtree.find_root(right_norm);
+
+  // Check if touching South Pole:
+  if (lower_left_norm(1) == quadtree.limit_low(1)) {
+    DoesTouchSouthPole = true;
+
+    // edges need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Ym(0) < 1.0)
+      edge_Ym(0) += 0.5;
+    else
+      edge_Ym(0) -= 0.5;
+  }
+
+  // Check if touching North Pole:
+  if (lower_left_norm(1) + size_up_norm(1) == quadtree.limit_high(1)) {
+    DoesTouchNorthPole = true;
+
+    // edge need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Yp(0) < 1.0)
+      edge_Yp(0) += 0.5;
+    else
+      edge_Yp(0) -= 0.5;
+  }
+
+  if (report.test_verbose(2))
+    std::cout << "connectivity : "
+              << "  iProc : " << iProc << "\n"
+              << "  isnorth : " << DoesTouchNorthPole << "\n"
+              << "  issouth : " << DoesTouchSouthPole << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
+              << "  iProcYp : " << iProcYp << "\n"
+              << "  iProcXm : " << iProcXm << "\n"
+              << "  iProcXp : " << iProcXp << "\n";
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Create a spherical grid with lon/lat/alt coordinates
+// ----------------------------------------------------------------------
+
+void Grid::create_sphere_grid(Quadtree quadtree,
+                              Inputs input,
+                              Report &report) {
+
+  std::string function = "Grid::create_simple_lat_lon_alt_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   int64_t iLon, iLat, iAlt;
 
-  // Figure out dlon and lon0:
-  int64_t nLonsTotal = (nLons - 2 * nGCs) * input.get_nBlocksLonGeo();
-  int64_t iBlockLon = iGrid % input.get_nBlocksLonGeo();
-  precision_t dlon = (grid_input.lon_max - grid_input.lon_min) / nLonsTotal;
-  precision_t lon0 = grid_input.lon_min + iBlockLon * (nLons - 2 * nGCs) * dlon;
+  // Get some coordinates and sizes in normalized coordinates:
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  precision_t dlon = size_right_norm(0) * cPI / (nLons - 2 * nGCs);
+  precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
 
   // Longitudes:
@@ -43,11 +349,8 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
       geoLon_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
   }
 
-  // Figure out dlat and lat0:
-  int64_t nLatsTotal = (nLats - 2 * nGCs) * input.get_nBlocksLatGeo();
-  int64_t iBlockLat = iGrid / input.get_nBlocksLonGeo();
-  precision_t dlat = (grid_input.lat_max - grid_input.lat_min) / nLatsTotal;
-  precision_t lat0 = grid_input.lat_min + iBlockLat * (nLats - 2 * nGCs) * dlat;
+  precision_t dlat = size_up_norm(1) * cPI / (nLats - 2 * nGCs);
+  precision_t lat0 = lower_left_norm(1) * cPI;
   arma_vec lat1d(nLats);
 
   // Latitudes:
@@ -56,132 +359,108 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
   for (iLat = 0; iLat < nLats; iLat++)
     lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
 
-  if (report.test_verbose(2)) {
-    std::cout << "Grid Initialization :\n";
-    std::cout << "  lon0 : " << lon0 * cRtoD
-              << "; lat0 : " << lat0 * cRtoD << "\n";
-  }
-
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
   }
 
+  // ---------------------------------------------
+  // Left Sides - edges on left side (no offset left)
+  // ---------------------------------------------
+  arma_mat lat2d_left(nLons + 1, nLats);
+  arma_mat lon2d_left(nLons + 1, nLats);
+
+  for (iLat = 0; iLat < nLats; iLat++) {
+    for (iLon = 0; iLon < nLons + 1; iLon++) {
+      lat2d_left(iLon, iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
+      lon2d_left(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
+    }
+  }
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Left.slice(iAlt) = lon2d_left;
+    geoLat_Left.slice(iAlt) = lat2d_left;
+  }
+
+  // ---------------------------------------------
+  // Down Sides - edges on down side (no offset lat)
+  // ---------------------------------------------
+  arma_mat lat2d_down(nLons, nLats + 1);
+  arma_mat lon2d_down(nLons, nLats + 1);
+
+  for (iLat = 0; iLat < nLats + 1; iLat++) {
+    for (iLon = 0; iLon < nLons; iLon++) {
+      lat2d_down(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
+      lon2d_down(iLon, iLat) = lon0 + (iLon - nGCs + 0.5) * dlon;
+    }
+  }
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    geoLon_Down.slice(iAlt) = lon2d_down;
+    geoLat_Down.slice(iAlt) = lat2d_down;
+  }
+
+  // ---------------------------------------------
+  // Corner Sides - corner (no offset lat or lon)
+  // ---------------------------------------------
+  arma_mat lat2d_corner(nLons + 1, nLats + 1);
+  arma_mat lon2d_corner(nLons + 1, nLats + 1);
+
+  for (iLat = 0; iLat < nLats + 1; iLat++) {
+    for (iLon = 0; iLon < nLons + 1; iLon++) {
+      lat2d_corner(iLon, iLat) = lat0 + (iLat - nGCs) * dlat;
+      lon2d_corner(iLon, iLat) = lon0 + (iLon - nGCs) * dlon;
+    }
+  }
+
+  for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+    geoLon_Corner.slice(iAlt) = lon2d_corner;
+    geoLat_Corner.slice(iAlt) = lat2d_corner;
+  }
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Create a spherical grid with lon/lat/alt coordinates
+// ----------------------------------------------------------------------
+
+void Grid::create_altitudes(Inputs input, Report &report) {
+
+  std::string function = "Grid::create_altitudes";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iLon, iLat, iAlt;
+
   arma_vec alt1d(nAlts);
+
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
-  }
+  } // Need to do a non-uniform grid spacing here.
+
+  // This takes cell centers and calculates the edges:
+  arma_vec alt1d_below = calc_bin_edges(alt1d);
 
   for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++)
+    for (iLat = 0; iLat < nLats; iLat++) {
       geoAlt_scgc.tube(iLon, iLat) = alt1d;
-  }
-
-  // --------------------------------------------------------------
-  // Figure out message passing connectivity information
-
-  int nCols = input.get_nBlocksLonGeo();
-  int iRow = iProc / nCols;
-  int iLeftMost = iRow * nCols;
-  int iRightMost = iLeftMost + nCols - 1;
-  int iCol = iProc % nCols;
-
-  // Determine y-minus (connectivity to south):
-
-  // Figure out if the grid is touching the south pole:
-  if (compare(lat0, -cPI / 2)) {
-    DoesTouchSouthPole = true;
-    // Touching the south pole -> just shift by 180 degrees:
-    iProcYm = iLeftMost + (iCol + nCols / 2) % nCols;
-  } else {
-    DoesTouchSouthPole = false;
-
-    if (iBlockLat == 0)
-      // Not touching the south pole, but no blocks to the south:
-      iProcYm = -1;
-    else
-      // Not touching the south pole, and there is a block to the south:
-      iProcYm = iProc - input.get_nBlocksLonGeo();
-  }
-
-  // Determine y-plus (connectivity to north):
-
-  // Figure out if the grid is touching the north pole:
-  precision_t latmax = lat0 + (nLats - 2 * nGCs) * dlat;
-
-  if (compare(latmax, cPI / 2)) {
-    DoesTouchNorthPole = true;
-    // Touching the north pole -> just shift by 180 degrees:
-    iProcYp = iLeftMost + (iCol + nCols / 2) % nCols;
-  } else {
-    DoesTouchNorthPole = false;
-
-    if (iBlockLat == input.get_nBlocksLatGeo() - 1)
-      // Not touching the north pole, but no blocks to the north:
-      iProcYp = -1;
-    else
-      // Not touching the north pole, and there is a block to the north:
-      iProcYp = iProc + input.get_nBlocksLonGeo();
-  }
-
-  // Determine x-minus (connectivity to west):
-
-  if (iCol > 0)
-    iProcXm = iProc - 1;
-
-  else {
-    // Figure out whether grid is touching East/West:
-    if (compare(grid_input.lon_min, 0) &&
-        compare(grid_input.lon_max, cTWOPI)) {
-      // wrapped completely around the Earth
-      if (iCol == 0)
-        // wrap around to the right-most point:
-        iProcXm = iRightMost;
-    } else {
-      // doesn't wrap around the earth, so need fixed boundaries
-      if (iBlockLon == 0)
-        // Fixed BCs to the west:
-        iProcXm = -1;
+      geoAlt_Below.tube(iLon, iLat) = alt1d_below;
     }
   }
 
-  // Determine x-plus (connectivity to east):
-
-  if (iCol < nCols - 1)
-    iProcXp = iProc + 1;
-
-  else {
-    // Figure out whether grid is touching East/West:
-    if (compare(grid_input.lon_min, 0) &&
-        compare(grid_input.lon_max, cTWOPI)) {
-      // wrapped completely around the Earth
-      if (iBlockLon == nCols - 1)
-        // wrap around to the left-most point:
-        iProcXp = iLeftMost;
-    } else {
-      // doesn't wrap around the earth, so need fixed boundaries
-      if (iBlockLon == nCols - 1)
-        // Fixed BCs to the east:
-        iProcXp = -1;
-    }
+  for (iLon = 0; iLon < nLons + 1; iLon++) {
+    for (iLat = 0; iLat < nLats + 1; iLat++)
+      geoAlt_Corner.tube(iLon, iLat) = alt1d_below;
   }
-
-  if (report.test_verbose(2))
-    std::cout << "connectivity : "
-              << "  iProc : " << iProc
-              << "  isnorth : " << DoesTouchNorthPole
-              << "  issouth : " << DoesTouchSouthPole
-              << "  iProcYm : " << iProcYm
-              << "  iProcYp : " << iProcYp
-              << "  iProcXm : " << iProcXm
-              << "  iProcXp : " << iProcXp
-              << "\n";
 
   report.exit(function);
+  return;
 }
-
 
 // ----------------------------------------------------------------------
 // Initialize the geographic grid.  At the moment, this is a simple
@@ -189,7 +468,10 @@ void Grid::create_simple_lat_lon_alt_grid(Inputs input, Report &report) {
 // of the lon, lat, and alt can be a function of the other variables.
 // ----------------------------------------------------------------------
 
-bool Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
+bool Grid::init_geo_grid(Quadtree quadtree,
+                         Planets planet,
+                         Inputs input,
+                         Report &report) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -198,19 +480,22 @@ bool Grid::init_geo_grid(Planets planet, Inputs input, Report &report) {
 
   IsGeoGrid = 1;
 
+  if (input.get_is_cubesphere())
+    create_cubesphere_connection(quadtree, input, report);
+  else
+    create_sphere_connection(quadtree, input, report);
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
-    create_simple_lat_lon_alt_grid(input, report);
-    DidWork = write_restart(input.get_restartout_dir());
-  }
+    if (input.get_is_cubesphere())
+      create_cubesphere_grid(quadtree, input, report);
+    else
+      create_sphere_grid(quadtree, input, report);
+    create_altitudes(input, report);
 
-  if (report.test_verbose(3)) {
-    std::cout << "init_geo_grid testing\n";
-    std::cout << "   DidWork (reading/writing restart files): "
-              << DidWork << "\n";
-    report_grid_boundaries();
+    DidWork = write_restart(input.get_restartout_dir());
   }
 
   // Calculate the radius, etc:

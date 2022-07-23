@@ -29,8 +29,12 @@ int main() {
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
+    Quadtree quadtree(input, report);
+    if (!quadtree.is_ok())
+      throw std::string("quadtree initialization failed!");
+    
     // Initialize MPI and parallel aspects of the code:
-    DidWork = init_parallel(input, report);
+    DidWork = init_parallel(input, quadtree, report);
     if (!DidWork)
       throw std::string("init_parallel failed!");
   
@@ -57,16 +61,15 @@ int main() {
 
     // Perturb the inputs if user has asked for this
     indices.perturb(input, report);
-
+    
     // Initialize Geographic grid:
     Grid gGrid(input.get_nLonsGeo(),
 	       input.get_nLatsGeo(),
 	       input.get_nAltsGeo(),
 	       nGeoGhosts);
-    DidWork = gGrid.init_geo_grid(planet, input, report);
+    DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
-
     gGrid.fill_grid(planet, report);
 
     // Initialize Magnetic grid:

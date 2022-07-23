@@ -36,7 +36,7 @@ extern MPI_Comm aether_comm;
   \param input info about how user has configured things
   \param report allow reporting to occur
 **/
-bool init_parallel(Inputs &input, Report &report);
+bool init_parallel(Inputs &input, Quadtree &quadtree, Report &report);
 
 /**********************************************************************
   \brief Pack variables for message passing
@@ -77,6 +77,8 @@ bool unpack_border(arma_cube &value,
 		   int64_t *iCounter,
 		   int64_t nG,
 		   int iDir,
-		   bool IsPole);
+		   bool DoReverseX,
+		   bool DoReverseY,
+		   bool XbecomesY);
 
 #endif  // INCLUDE_PARALLEL_H_

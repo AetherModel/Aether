@@ -6,7 +6,8 @@ project(Aether LANGUAGES CXX
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
-#set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
+set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
+set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
 add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
@@ -14,6 +15,9 @@ add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
 if(USE_DOUBLE_PRECISION)
   add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
 endif()
+
+# Tests executable
+# add_executable(tests ${TESTS_DIR}/electrodynamics_unit_tests.cpp)
 
 # Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
@@ -54,8 +58,9 @@ endif()
 
 find_package(MPI)
 if (MPI_FOUND)
-  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES})
+  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_PATH})
+  target_compile_options(aether PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+  target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 endif()
 
 #if(USE_NETCDF)

@@ -65,26 +65,46 @@ int output(const Neutrals &neutrals,
 
       AllOutputContainers[iOutput].set_time(time.get_current());
 
+      std::string type_output = args.get_type_output(iOutput);
+
       // ------------------------------------------------------------
       // Put Lon, Lat, Alt into all output containers:
 
-      AllOutputContainers[iOutput].
-      store_variable("lon",
-                     "Longitude",
-                     "degrees_east",
-                     grid.geoLon_scgc * cRtoD);
-      AllOutputContainers[iOutput].
-      store_variable("lat",
-                     "Latitude",
-                     "degrees_north",
-                     grid.geoLat_scgc * cRtoD);
-      AllOutputContainers[iOutput].
-      store_variable("alt",
-                     "height above mean sea level",
-                     "m",
-                     grid.geoAlt_scgc);
-
-      std::string type_output = args.get_type_output(iOutput);
+      if (type_output == "corners") {
+        // Cell Corners:
+        AllOutputContainers[iOutput].
+        store_variable("lon",
+                       "longitude",
+                       "degrees_east",
+                       grid.geoLon_Corner * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("lat",
+                       "latitude",
+                       "degrees_north",
+                       grid.geoLat_Corner * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("alt",
+                       "height above mean sea level",
+                       "m",
+                       grid.geoAlt_Corner);
+      } else {
+        // Cell Centers:
+        AllOutputContainers[iOutput].
+        store_variable("lon",
+                       "longitude",
+                       "degrees_east",
+                       grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("lat",
+                       "latitude",
+                       "degrees_north",
+                       grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("alt",
+                       "height above mean sea level",
+                       "m",
+                       grid.geoAlt_scgc);
+      }
 
       // ------------------------------------------------------------
       // Put certain variables into each file type
@@ -196,6 +216,9 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
+
+      if (type_output == "corners")
+        filename = "3DCOR_";
 
       filename = filename + time.get_YMD_HMS();
 
@@ -756,7 +779,7 @@ int OutputContainer::write_container_netcdf() {
 
     ncdf_file.close();
   } catch (...) {
-    std::cout << "Error writing header file : "
+    std::cout << "Error writing netcdf container file : "
               << whole_filename << "\n";
     iErr = 1;
   }

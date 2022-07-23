@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <netcdf>
 #include "../include/aether.h"
 #include "../include/electrodynamics.h"
 #include "../include/report.h"

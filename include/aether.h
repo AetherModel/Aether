@@ -75,6 +75,11 @@ using json = nlohmann::json;
 #include "planets.h"
 
 // not done
+#include "cubesphere.h"
+#include "sphere.h"
+#include "quadtree.h"
+
+// not done
 #include "grid.h"
 
 // Contains the neutral states and derived quantities

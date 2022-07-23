@@ -24,6 +24,7 @@ std::string cGrid;
 MPI_Comm aether_comm;
 
 bool init_parallel(Inputs &input,
+                   Quadtree &quadtree,
                    Report &report) {
 
   bool DidWork = true;
@@ -44,12 +45,22 @@ bool init_parallel(Inputs &input,
     report.set_verbose(-1);
 
   nMembers = input.get_nMembers();
+  nGrids = nProcs / nMembers;
+
+  int64_t nProcsPerNode = nGrids / quadtree.nRootNodes;
+
+  if (report.test_verbose(2))
+    std::cout << "Number of PEs per root node available: " << nProcsPerNode << "\n";
+
+  quadtree.max_depth = round(log(nProcsPerNode) / log(4));
+
+  if (report.test_verbose(2))
+    std::cout << "Quadtree max depth : " << quadtree.max_depth << "\n";
 
   // Check to see if we have enough processors to do this stuff:
-
-  int nBlocksLonGeo = input.get_nBlocksLonGeo();
-  int nBlocksLatGeo = input.get_nBlocksLatGeo();
-  nGrids = nBlocksLonGeo * nBlocksLatGeo;
+  int nBlocksLonGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLonGeo();
+  int nBlocksLatGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLatGeo();
+  nGrids = nBlocksLonGeo * nBlocksLatGeo * quadtree.nRootNodes;
   int nProcsNeeded = nMembers * nGrids;
 
   if (nProcsNeeded == nProcs) {
@@ -86,6 +97,8 @@ bool init_parallel(Inputs &input,
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
+    quadtree.build(input, report);
+
   } else {
     if (iProc == 0) {
       std::cout << "Number of processors needed is not set correctly!\n";
@@ -96,6 +109,7 @@ bool init_parallel(Inputs &input,
       std::cout << "      total needed : " << nProcsNeeded << "\n";
       std::cout << "      which is not equal to nProcs : " << nProcs << "\n";
     }
+
     DidWork = false;
   }
 
