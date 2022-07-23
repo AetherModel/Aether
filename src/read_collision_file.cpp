@@ -57,7 +57,7 @@ void read_collision_file(Neutrals &neutrals,
           parse_nu_in_table(csv, neutrals, ions, report);
 
         else
-          std::cout << "NU_in table is empty!!! Yikes!!!\n";
+          std::cout << "Nu_in table is empty!!! Yikes!!!\n";
       }
 
       // ---------------------------
@@ -72,6 +72,20 @@ void read_collision_file(Neutrals &neutrals,
 
         else
           std::cout << "Resonant_nu_in table is empty!!! Yikes!!!\n";
+      }
+
+      // ---------------------------
+      // #Bst for ion-ion interactions
+      // ---------------------------
+
+      if (hash == "#bst") {
+        std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
+
+        if (csv.size() > 1)
+          parse_bst_in_table(csv, neutrals, ions, report);
+
+        else
+          std::cout << "Bst table is empty!!! Yikes!!!\n";
       }
 
     }
@@ -313,3 +327,102 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
   return;
 }
 
+
+// -----------------------------------------------------------------------------
+// parse Bst table - Coulomb collision frequency coefficients
+//                 - Ionospheres Book, Table 4.3
+// -----------------------------------------------------------------------------
+
+void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
+                        Neutrals &neutrals,
+                        Ions &ions,
+                        Report &report) {
+
+  std::string function = "parse_bst_in_table";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int nLines = csv.size();  // set number of lines in table
+  int nCol = csv[0].size();  // set number of columns in table
+  int iIonS, iIonT, iIonP, iIonD;
+  int iIon, iCol, iLine;
+
+  std::vector<int> iIonSIds_;
+
+  // Look for a coefficient in the last line:
+  float coef = stof(csv[nLines - 1][0]);
+
+  // Read ion specie names across first row of table, cell[0][0] is empty
+  for (iCol = 1; iCol < nCol; iCol++)
+    iIonSIds_.push_back(ions.get_species_id(csv[0][iCol], report));
+
+  // Set the array size and fill with zeros
+  for (iIon = 0; iIon < nIons; iIon++) {
+    for (iIonS = 0; iIonS < nIons; iIonS++)
+      ions.species[iIon].nu_ion_ion.push_back(0.0);
+  }
+
+  //  Read ion specie names down first column of table
+  for (iLine = 1; iLine < nLines - 1; iLine++) {
+    iIonT = ions.get_species_id(csv[iLine][0], report);
+
+    // Found a used specie, time to extract Bst table data
+    if (iIonT > -1) {
+
+      // Cycle through all of the species
+      for (iCol = 1; iCol < nCol; iCol++) {
+
+        // If a matching specie exists extract Bst from table
+        if (iIonSIds_[iCol - 1] > -1) {
+          ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] = stof(
+                                                                  csv[iLine][iCol]) * coef;
+
+          if (report.test_verbose(4)) {
+            std::cout << "Species s vs t : "
+                      << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+            std::cout << "nu_ion_ion     : "
+                      << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] << "\n";
+	  }
+	}  // End iIonSIds_
+      }  // End iCol
+    }  // End iIonT
+  }  // End iLine
+
+  // Copy Bst from O+ to O+2P and O+2D since the sub-flavors of O+ don't exist in table
+  iIonT = ions.get_species_id("O+", report);
+  iIonD = ions.get_species_id("O+2D", report);
+  iIonP = ions.get_species_id("O+2P", report);
+
+  if (iIonT > -1 && iIonD > -1) {
+    for (iIon = 0; iIon < nIons; iIon++) {
+      // Fill for each specie the O+2D Bst value with the O+ Bst value
+      ions.species[iIon].nu_ion_ion[iIonD] = ions.species[iIon].nu_ion_ion[iIonT];
+
+      // Fill O+2D Bst table values with O+ Bst table values for each specie
+      ions.species[iIonD].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
+    }
+  }
+
+  if (iIonT > -1 && iIonP > -1) {
+    for (iIon = 0; iIon < nIons; iIon++) {
+      // Fill for each specie the O+2P Bst value with the O+ Bst value
+      ions.species[iIon].nu_ion_ion[iIonP] = ions.species[iIon].nu_ion_ion[iIonT];
+
+      // Fill O+2P Bst table values with O+ Bst table values for each specie
+      ions.species[iIonP].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
+    }
+  }
+
+  if (report.test_verbose(4)) {
+    for (iIon = 0; iIon < nIons; iIon++) {
+      for (iIonS = 0; iIonS < nIons; iIonS++) {
+        std::cout << "Bst for : " << ions.species[iIon].cName << " and "
+                  << ions.species[iIonS].cName << " is "
+                  << ions.species[iIon].nu_ion_ion[iIonS] << "\n";
+      }
+    }
+  }
+
+  report.exit(function);
+  return;
+}

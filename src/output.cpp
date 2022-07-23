@@ -83,7 +83,7 @@ int output(const Neutrals &neutrals,
                        "degrees_north",
                        grid.geoLat_Corner * cRtoD);
         AllOutputContainers[iOutput].
-        store_variable("z",
+        store_variable("alt",
                        "height above mean sea level",
                        "m",
                        grid.geoAlt_Corner);
@@ -100,7 +100,7 @@ int output(const Neutrals &neutrals,
                        "degrees_north",
                        grid.geoLat_scgc * cRtoD);
         AllOutputContainers[iOutput].
-        store_variable("z",
+        store_variable("alt",
                        "height above mean sea level",
                        "m",
                        grid.geoAlt_scgc);
@@ -144,10 +144,27 @@ int output(const Neutrals &neutrals,
                          ions.density_unit,
                          ions.species[iSpecies].density_scgc);
 
+      // Ion Temperatures:
+      if (type_output == "ions" ||
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+          AllOutputContainers[iOutput].
+          store_variable(ions.species[iSpecies].cName + " " + ions.temperature_name,
+                         ions.temperature_unit,
+                         ions.species[iSpecies].temperature_scgc);
+
+      // Bulk Ion Temperature:
+      if (type_output == "ions" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].store_variable("Bulk Ion " +
+                                                    ions.temperature_name,
+                                                    ions.temperature_unit,
+                                                    ions.temperature_scgc);
+
       // Bulk Ion Drifts:
       if (type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
-          AllOutputContainers[iOutput].store_variable("Bulk" +
+          AllOutputContainers[iOutput].store_variable("Bulk " +
                                                       ions.velocity_name[iDir],
                                                       ions.velocity_unit,
                                                       ions.velocity_vcgc[iDir]);
@@ -726,8 +743,8 @@ int OutputContainer::write_container_netcdf() {
   try {
     NcFile ncdf_file(whole_filename, NcFile::replace);
     // Add dimensions:
-    NcDim xDim = ncdf_file.addDim("lon", elements[0].value.n_rows);
-    NcDim yDim = ncdf_file.addDim("lat", elements[0].value.n_cols);
+    NcDim xDim = ncdf_file.addDim("x", elements[0].value.n_rows);
+    NcDim yDim = ncdf_file.addDim("y", elements[0].value.n_cols);
     NcDim zDim = ncdf_file.addDim("z", elements[0].value.n_slices);
     NcDim tDim = ncdf_file.addDim("time", 1);
 

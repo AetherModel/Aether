@@ -52,7 +52,7 @@ int advance(Planets &planet,
                                 time,
                                 ions,
                                 report);
-
+  calc_ion_neutral_coll_freq(neutrals, ions, report);
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
 
   calc_aurora(gGrid, neutrals, ions, input, report);
@@ -60,7 +60,8 @@ int advance(Planets &planet,
   neutrals.calc_conduction(gGrid, time, report);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
   neutrals.add_sources(time, report);
-  ions.calc_ion_temperature(neutrals, gGrid, report);
+  ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
+  ions.calc_electron_temperature(neutrals, gGrid, report);
 
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
