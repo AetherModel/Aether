@@ -237,3 +237,46 @@ precision_t standard_deviation(std::vector<precision_t> values) {
   return s;
 }
 
+// -----------------------------------------------------------------------------
+// calculate angular distance between two points on a sphere
+// -----------------------------------------------------------------------------
+
+precision_t calc_angular_dist(precision_t lon1,
+                              precision_t lat1,
+                              precision_t lon2,
+                              precision_t lat2) {
+  precision_t dist = acos(cos(lat1) * cos(lat2) * cos(lon1-lon2) +
+                          sin(lat1) * sin(lat2));
+  return dist;
+}
+
+arma_cube calc_angular_dist(arma_cube lon1,
+                            arma_cube lat1,
+                            arma_cube lon2,
+                            arma_cube lat2) {
+  arma_cube dist = acos(cos(lat1) % cos(lat2) % cos(lon1-lon2) +
+                        sin(lat1) % sin(lat2));
+  return dist;
+}
+
+// -----------------------------------------------------------------------------
+// TEST for : calculate angular distance between two points on a sphere
+// -----------------------------------------------------------------------------
+bool test_angular_dist_calcular() {
+  arma_vec lon1 = {0.0, 0.0, 0.0, cPI};
+  arma_vec lat1 = {0.0, 0.0, 0.0, cPI/4};
+  arma_vec lon2 = {0.0, 0.0, cPI/4, cPI};
+  arma_vec lat2 = {0.0, cPI/4, 0.0, 0.0};
+  arma_vec ans = {0.0, cPI/4, cPI/4, cPI/4};
+  precision_t d;
+  for (int64_t i = 0; i < lon1.n_elem; i++) {
+    d = calc_angular_dist(lon1(i), lat1(i), lon2(i), lat2(i));
+    if (compare(d, ans(i))) {
+      std::cout << "test " << i << " for calc_angular_dist worked!\n";
+    } else {
+      std::cout << "test " << i << " for calc_angular_dist failed!\n";
+      return false;
+    }
+  }
+  return true;
+}

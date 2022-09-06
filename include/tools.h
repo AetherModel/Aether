@@ -5,7 +5,7 @@
 #define INCLUDE_TOOLS_H_
 
 // ----------------------------------------------------------------------------
-// 
+//
 // ----------------------------------------------------------------------------
 
 void display_vector(arma_vec vec);
@@ -65,5 +65,24 @@ precision_t mean(std::vector<precision_t> values);
 
 precision_t standard_deviation(std::vector<precision_t> values);
 
+// -----------------------------------------------------------------------------
+// calculate angular distance between two points on a sphere
+// -----------------------------------------------------------------------------
+
+precision_t calc_angular_dist(precision_t lon1,
+                              precision_t lat1,
+                              precision_t lon2,
+                              precision_t lat2);
+
+arma_cube calc_angular_dist(arma_cube lon1,
+                            arma_cube lat1,
+                            arma_cube lon2,
+                            arma_cube lat2);
+
+// -----------------------------------------------------------------------------
+// TEST for : calculate angular distance between two points on a sphere
+// -----------------------------------------------------------------------------
+
+bool test_angular_dist_calcular();
 
 #endif  // INCLUDE_TOOLS_H_
