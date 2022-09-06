@@ -31,7 +31,7 @@ void Neutrals::calc_mass_density(Report &report) {
     density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
 
-  mean_major_mass_scgc = rho_scgc / density_scgc;
+  mean_major_mass_scgc = rho_scgc / (density_scgc + cSmall);
   pressure_scgc = cKB * density_scgc % temperature_scgc;
 
   report.exit(function);
