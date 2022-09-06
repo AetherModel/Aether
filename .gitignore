@@ -11,6 +11,9 @@
 run/
 build/
 
+# image files
+*.png
+
 # Doxygen generated files
 doc/generated
 
