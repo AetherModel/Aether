@@ -8,7 +8,7 @@
  * \class Neutrals
  *
  * \brief Defines the neutral states
- * 
+ *
  * The Neutrals class defines the neutrals states as well as a bunch
  * of derived states and source/loss terms.  The initial temperature
  * structure as well as the lower boundary densities can be set
@@ -16,7 +16,7 @@
  *
  * \author Aaron Ridley
  *
- * \date 2021/03/28 
+ * \date 2021/03/28
  *
  **************************************************************/
 
@@ -89,7 +89,7 @@ class Neutrals {
 
     /// Chemistry source rate (/m3/s)
     arma_cube sources_scgc;
-    
+
     /// Chemistry loss rate (/m3/s)
     arma_cube losses_scgc;
 
@@ -131,7 +131,7 @@ class Neutrals {
 
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
-  
+
   /// Maximum Chapman integral (will give nearly infinite tau in EUV)
   precision_t max_chapman = 1.0e26;
 
@@ -182,7 +182,7 @@ class Neutrals {
   /**********************************************************************
      \brief Read in the planet-specific file
 
-     This file specifies the species to model, their masses, 
+     This file specifies the species to model, their masses,
      diffusion coefficients and all of the other things needed
      for specifying the neutrals.
 
@@ -252,6 +252,16 @@ class Neutrals {
   void set_bcs(Report &report);
 
   /**********************************************************************
+     \brief Set boundary conditions for the neutrals
+     \param iDir direction of the BC to set
+     \param grid The grid to define the neutrals on
+     \param report allow reporting to occur
+   **/
+
+  void set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
+
+
+  /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
      \param report allow reporting to occur
@@ -263,7 +273,7 @@ class Neutrals {
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, bool DoRead);  
+  bool restart_file(std::string dir, bool DoRead);
 
   /**********************************************************************
      \brief Exchange messages between processors
@@ -305,8 +315,7 @@ class Neutrals {
 		       bool DoReverseY,
 		       bool XbecomesY);
 
-  
+
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
-
