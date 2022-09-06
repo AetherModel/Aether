@@ -91,6 +91,25 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_south_gse.push_back(tmp_col);
   mag_pole_south_gse.push_back(tmp_col);
 
+  // These are for generalized stuff needed for the advective solver:
+
+  x_Center.set_size(nX, nY, nZ);
+  y_Center.set_size(nX, nY, nZ);
+  x_Left.set_size(nX+1, nY, nZ);
+  y_Down.set_size(nX, nY+1, nZ);
+
+  dx_Center.set_size(nX, nY, nZ);
+  dy_Center.set_size(nX, nY, nZ);
+  dx_Down.set_size(nX, nY+1, nZ);
+  dy_Left.set_size(nX+1, nY, nZ);
+  cell_area.set_size(nX, nY, nZ);
+
+  // These are needed to convert vectors to lat / lon vectors:
+  i_lat.set_size(nX, nY, nZ);
+  i_lon.set_size(nX, nY, nZ);
+  j_lat.set_size(nX, nY, nZ);
+  j_lon.set_size(nX, nY, nZ);
+
   HasBField = 0;
 }
 

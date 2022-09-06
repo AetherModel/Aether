@@ -51,6 +51,11 @@ public:
 
   std::vector<arma_cube> GSE_XYZ_vcgc;
 
+  /// Magnetic field vector information:
+  std::vector<arma_cube> bfield_vcgc;
+  arma_cube bfield_mag_scgc;
+  std::vector<arma_cube> bfield_unit_vcgc;
+
   std::string altitude_name = "Altitude";
   std::string altitude_unit = "meters";
 
@@ -61,15 +66,10 @@ public:
   std::string latitude_unit = "radians";
 
   // These are derived variables from the grid:
-
-  // Switch to armadillo variables (precision_t cubes):
   arma_cube radius_scgc;
   arma_cube radius2_scgc;
   arma_cube radius2i_scgc;
   arma_cube gravity_scgc;
-
-  arma_cube sza_scgc;
-  arma_cube cos_sza_scgc;
 
   arma_cube dalt_center_scgc;
   arma_cube dalt_lower_scgc;
@@ -82,9 +82,31 @@ public:
   arma_cube dlat_center_scgc;
   arma_cube dlat_center_dist_scgc;
 
-  std::vector<arma_cube> bfield_vcgc;
-  arma_cube bfield_mag_scgc;
-  std::vector<arma_cube> bfield_unit_vcgc;
+  /// These are switching to the LR and DU directions for generalized coords
+  /// They are also in radians
+
+  arma_cube x_Center, y_Center;
+  arma_cube x_Left, y_Down;
+
+  /// these are center-to-center distances in the LR (X) and DU (Y) directions:
+  arma_cube dx_Center, dy_Center;
+  /// need dx on the lower / upper edges, don't need them on the left/right
+  arma_cube dx_Down;
+  /// need dy on the left / right edges:
+  arma_cube dy_Left;
+  /// cell area (in radians^2)
+  arma_cube cell_area;
+
+  /// Should be able to use these to convert vectors from grid coordinates
+  /// to zonal (lon) and meridional (lat). i and j are the unit vectors in
+  /// the X (LR) and Y (DU) directions, expressed with lat and lon coords.
+  /// V_lat = Vy * j_lat + Vx * i_lat
+  /// V_lon = Vy * j_lon + Vx * i_lon
+  arma_cube i_lat, i_lon, j_lat, j_lon;
+
+  /// Solar Zenith Angle information:
+  arma_cube sza_scgc;
+  arma_cube cos_sza_scgc;
 
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
