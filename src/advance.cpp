@@ -62,6 +62,8 @@ int advance(Planets &planet,
   neutrals.add_sources(time, report);
   ions.calc_ion_temperature(neutrals, gGrid, report);
 
+  advect(gGrid, time, neutrals, input, report);
+
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
