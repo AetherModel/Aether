@@ -9,6 +9,17 @@
 #include <armadillo>
 using namespace arma;
 
+struct projection_struct {
+
+  arma_mat gradLR;
+  arma_mat gradDU;
+  arma_mat R;
+  arma_mat L;
+  arma_mat U;
+  arma_mat D;
+};
+
+
 arma_vec solver_conduction(arma_vec value,
 			   arma_vec lambda,
 			   arma_vec front,
@@ -25,7 +36,7 @@ arma_cube solver_chemistry(arma_cube density,
 /// or an interpolated value should be used.
 const int iPrevious_ = 1;
 const int iNext_ = 2;
-const int iClosest_ = 3; 
+const int iClosest_ = 3;
 const int iInterp_ = 4;
 
 double interpolate_1d_get_index_doubles(double intime,
@@ -52,5 +63,20 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid);
 arma_cube calc_gradient_lat(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt(arma_cube value, Grid grid);
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
-  
+
+arma_vec limiter_mc(arma_vec &left, arma_vec &right, int64_t nPts, int64_t nGCs);
+arma_vec calc_grad_1d(arma_vec &values,
+		      						arma_vec &x,
+		      						int64_t nPts,
+		      						int64_t nGCs);
+arma_mat calc_grad(arma_mat values, arma_mat x, int64_t nGCs, bool DoX);
+
+void advect(Grid &grid,
+            Times &time,
+            Neutrals &neutrals,
+            Inputs &input,
+            Report &report);
+
+
+
 #endif  // INCLUDE_SOLVERS_H_
