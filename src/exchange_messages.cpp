@@ -477,6 +477,8 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
     IsPole = grid.DoesTouchNorthPole;
     XbecomesY = false;
 
+    std::cout << "dir 1: " << iProc << " " << IsPole << "\n";
+
     // This is for the CubeSphere Grid:
     if (grid.iRoot == 0 && grid.iRootYp == 5) {
       ReverseX = true;
@@ -558,6 +560,7 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
       ReverseX = true;
       ReverseY = true;
     }
+    std::cout << "dir 3: " << iProc << " " << IsPole << "\n";
 
     grid.interchanges.push_back(grid.make_new_interconnection(3,
                                                               nVarsToPass,
@@ -592,8 +595,10 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
     DidWork = grid.receive_one_face(iDir);
 
   // Wait for messages to get there:
-  for (int iDir = 0; iDir < 4; iDir++)
-    MPI_Wait(&grid.interchanges[iDir].requests, MPI_STATUS_IGNORE);
+  for (int iDir = 0; iDir < 4; iDir++) {
+    if (grid.interchanges[iDir].iProc_to > -1)
+      MPI_Wait(&grid.interchanges[iDir].requests, MPI_STATUS_IGNORE);
+  }
 
   // Unpack all faces:
   for (int iDir = 0; iDir < 4; iDir++) {
@@ -605,6 +610,13 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
                               grid.interchanges[iDir].XbecomesY);
   }
 
+  // I am not sure if this is a great place for this, but here we go:
+  for (int iDir = 0; iDir < 4; iDir++) {
+    if (grid.interchanges[iDir].iProc_to < 0) {
+      set_horizontal_bcs(iDir, grid, report);
+    }
+  }
+
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
 
@@ -612,4 +624,3 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
 
   return DidWork;
 }
-
