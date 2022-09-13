@@ -246,10 +246,10 @@ void Grid::create_sphere_connection(Quadtree quadtree,
   arma_vec size_up_norm = quadtree.get_vect("SU");
 
   // Move to the next block in 4 directions:
-  arma_vec down_norm = middle_norm - size_up_norm;
-  arma_vec up_norm = middle_norm + size_up_norm;
-  arma_vec left_norm = middle_norm - size_right_norm;
-  arma_vec right_norm = middle_norm + size_right_norm;
+  arma_vec down_norm = middle_norm - 0.51 * size_up_norm;
+  arma_vec up_norm = middle_norm + 0.51 * size_up_norm;
+  arma_vec left_norm = middle_norm - 0.51 * size_right_norm;
+  arma_vec right_norm = middle_norm + 0.51 * size_right_norm;
 
   // The first component could wrap around:
   right_norm(0) = fmod(right_norm(0), quadtree.limit_high(0));

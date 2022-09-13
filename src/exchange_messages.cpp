@@ -326,7 +326,7 @@ bool Neutrals::unpack_one_face(int iSender,
 bool Grid::send_one_face(int64_t iFace) {
 
   bool DidWork = true;
-
+  
   MPI_Isend(interchanges[iFace].buffer,
             interchanges[iFace].iSizeTotal,
             MPI_BYTE,
@@ -584,25 +584,35 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
   }
 
   // Send all faces asynchronously:
-  for (int iDir = 0; iDir < 4; iDir++)
-    DidWork = grid.send_one_face(iDir);
+  for (int iDir = 0; iDir < 4; iDir++) {
+    if (grid.interchanges[iDir].iProc_to >= 0)
+      DidWork = grid.send_one_face(iDir);
+  }
 
   // Receive all faces asynchronously:
-  for (int iDir = 0; iDir < 4; iDir++)
-    DidWork = grid.receive_one_face(iDir);
+  for (int iDir = 0; iDir < 4; iDir++) {
+    if (grid.interchanges[iDir].iProc_to >= 0)
+      DidWork = grid.receive_one_face(iDir);
+  }
 
   // Wait for messages to get there:
-  for (int iDir = 0; iDir < 4; iDir++)
-    MPI_Wait(&grid.interchanges[iDir].requests, MPI_STATUS_IGNORE);
+  for (int iDir = 0; iDir < 4; iDir++) {
+    if (grid.interchanges[iDir].iProc_to >= 0)
+      MPI_Wait(&grid.interchanges[iDir].requests, MPI_STATUS_IGNORE);
+  }
 
   // Unpack all faces:
   for (int iDir = 0; iDir < 4; iDir++) {
-    DidWork = unpack_one_face(grid.interchanges[iDir].iProc_to,
-                              grid.interchanges[iDir].rbuffer,
-                              nG, iDir,
-                              grid.interchanges[iDir].DoReverseX,
-                              grid.interchanges[iDir].DoReverseY,
-                              grid.interchanges[iDir].XbecomesY);
+    if (grid.interchanges[iDir].iProc_to >= 0) {
+      DidWork = unpack_one_face(grid.interchanges[iDir].iProc_to,
+				grid.interchanges[iDir].rbuffer,
+				nG, iDir,
+				grid.interchanges[iDir].DoReverseX,
+				grid.interchanges[iDir].DoReverseY,
+				grid.interchanges[iDir].XbecomesY);
+    } else {
+      set_horizontal_bcs(iDir, grid, report);
+    }
   }
 
   // Wait for all processors to be done.

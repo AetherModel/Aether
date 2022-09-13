@@ -352,6 +352,109 @@ void Neutrals::set_bcs(Report &report) {
 }
 
 //----------------------------------------------------------------------
+// set_horizontal_bcs
+//   iDir tells which direction to set:
+//      iDir = 0 -> +x
+//      iDir = 1 -> +y
+//      iDir = 2 -> -x
+//      iDir = 3 -> -y
+//----------------------------------------------------------------------
+
+void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
+
+  std::string function = "Neutrals::set_horizontal_bcs";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t nX = grid.get_nX(), iX;
+  int64_t nY = grid.get_nY(), iY;
+  int64_t nAlts = grid.get_nAlts(), iAlt;
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iV;
+
+  // iDir = 0 is right BC:
+  if (iDir == 0) {
+    for (iX = nX - nGCs; iX < nX; iX++) {
+      for (iY = 0; iY < nY; iY++) {
+        // Constant Gradient for Temperature:
+        temperature_scgc.tube(iX, iY) =
+          2 * temperature_scgc.tube(iX - 1, iY) -
+          temperature_scgc.tube(iX - 2, iY);
+        // Constant Value for Velocity:
+        for (iV = 0; iV < 3; iV++)
+          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX - 1, iY);
+        // Constant Gradient for densities:
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+          species[iSpecies].density_scgc.tube(iX, iY) =
+            2 * species[iSpecies].density_scgc.tube(iX-1, iY) -
+            species[iSpecies].density_scgc.tube(iX-2, iY);
+      }
+    }
+  }
+
+  // iDir = 2 is left BC:
+  if (iDir == 2) {
+    for (iX = nGCs - 1; iX >= 0; iX--) {
+      for (iY = 0; iY < nY; iY++) {
+        // Constant Gradient for Temperature:
+        temperature_scgc.tube(iX, iY) =
+          2 * temperature_scgc.tube(iX + 1, iY) -
+          temperature_scgc.tube(iX + 2, iY);
+        // Constant Value for Velocity:
+        for (iV = 0; iV < 3; iV++)
+          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX + 1, iY);
+        // Constant Gradient for densities:
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+          species[iSpecies].density_scgc.tube(iX, iY) =
+            2 * species[iSpecies].density_scgc.tube(iX + 1, iY) -
+            species[iSpecies].density_scgc.tube(iX + 2, iY);
+      }
+    }
+  }
+
+  // iDir = 1 is upper BC:
+  if (iDir == 1) {
+    for (iX = 0; iX < nX; iX++) {
+      for (iY = nX - nGCs; iY < nY; iY++) {
+        // Constant Gradient for Temperature:
+        temperature_scgc.tube(iX, iY) =
+          2 * temperature_scgc.tube(iX, iY - 1) -
+          temperature_scgc.tube(iX, iY - 2);
+        // Constant Value for Velocity:
+        for (iV = 0; iV < 3; iV++)
+          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY - 1);
+        // Constant Gradient for densities:
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+          species[iSpecies].density_scgc.tube(iX, iY) =
+            2 * species[iSpecies].density_scgc.tube(iX, iY - 1) -
+            species[iSpecies].density_scgc.tube(iX, iY - 2);
+      }
+    }
+  }
+
+  // iDir = 2 is left BC:
+  if (iDir == 3) {
+    for (iX = 0; iX < nX; iX++) {
+      for (iY = nGCs - 1; iY >= 0; iY--) {
+        // Constant Gradient for Temperature:
+        temperature_scgc.tube(iX, iY) =
+          2 * temperature_scgc.tube(iX, iY + 1) -
+          temperature_scgc.tube(iX, iY + 2);
+        // Constant Value for Velocity:
+        for (iV = 0; iV < 3; iV++)
+          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY + 1);
+        // Constant Gradient for densities:
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+          species[iSpecies].density_scgc.tube(iX, iY) =
+            2 * species[iSpecies].density_scgc.tube(iX, iY + 1) -
+            species[iSpecies].density_scgc.tube(iX, iY + 2);
+      }
+    }
+  }
+  report.exit(function);
+}
+
+//----------------------------------------------------------------------
 // return the index of the requested species
 // This will return -1 if the species is not found or name is empty
 //----------------------------------------------------------------------
