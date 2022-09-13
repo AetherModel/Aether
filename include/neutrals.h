@@ -252,6 +252,14 @@ class Neutrals {
   void set_bcs(Report &report);
 
   /**********************************************************************
+     \brief Set boundary conditions for the neutrals
+     \param iDir direction of the BC to set
+     \param grid The grid to define the neutrals on
+     \param report allow reporting to occur
+  **/
+  void set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
+  
+  /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
      \param report allow reporting to occur
