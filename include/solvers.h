@@ -17,6 +17,8 @@ struct projection_struct {
   arma_mat L;
   arma_mat U;
   arma_mat D;
+  arma_mat grad_edge_LR;
+  arma_mat grad_edge_DU;
 };
 
 

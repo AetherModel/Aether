@@ -1,11 +1,11 @@
 #!/bin/sh
 
-## 1d solutions:
-#g++ -I/usr/local/include -I/Users/ridley/Software/Json/json/include -o advect advect.cpp
-#./advect
-#./plot.py
-#open test.png
+# Usage:
+#     ./run.sh {example}
+# Example:
+#     ./run.sh sphere_2d
 
-# 2d solutions:
-
-g++ -I/usr/local/include -I/Users/ridley/Software/Json/json/include -o sphere2d sphere2d.cpp
+mpic++ -I /usr/local/include \
+       -I ../../../share/include \
+       -I ../../../include \
+       -o "$1" "$1".cpp

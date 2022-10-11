@@ -7,7 +7,7 @@
 
 */
 
-#include "../../../include/aether.h"
+#include "aether.h"
 #include <fstream>
 
 // ---------------------------------------------------------
@@ -794,7 +794,7 @@ int main() {
     wsLR = wsR;
     for (int64_t i = 0; i < nX+1; i++) {
       for (int64_t j = 0; j < nY; j++) {
-	if (wsL(i, j) > wsLR(i, j)) wsLR(i, j) = wsL(i, j);
+        if (wsL(i, j) > wsLR(i, j)) wsLR(i, j) = wsL(i, j);
       }
     }
 
