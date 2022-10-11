@@ -37,13 +37,16 @@ struct projection_struct {
 
 arma_mat init_x(int64_t nX, int64_t nY, int64_t nGCs) {
 
-  precision_t dx = cTWOPI / nX;
+  precision_t dlon = cTWOPI / nX;
   arma_mat x(nX + nGCs * 2, nY + nGCs * 2);
 
   // uniform grid:
   for (int64_t i = -nGCs; i < nX + nGCs; i++) 
-    for (int64_t j = -nGCs; j < nY + nGCs; j++)
+    for (int64_t j = -nGCs; j < nY + nGCs; j++) {
+      precision_t phi = (j/nY + 0.5/nY)*cPI;
+      precision_t dx = dlon * sin(phi);  // TODO: radial part
       x(i + nGCs, j + nGCs) = i * dx + dx/2.0;
+    }
 
   return x;
 }
@@ -56,7 +59,7 @@ arma_mat init_y(int64_t nX, int64_t nY, int64_t nGCs) {
   // uniform grid:
   for (int64_t i = -nGCs; i < nX + nGCs; i++) 
     for (int64_t j = -nGCs; j < nY + nGCs; j++)
-      y(i + nGCs, j + nGCs) = -cPI/2 + j * dy + dy/2.0;
+      y(i + nGCs, j + nGCs) = -cPI/2 + j * dy + dy/2.0;  // TODO: radial part
 
   return y;
 }
@@ -116,12 +119,8 @@ arma_mat calc_bin_edges(arma_mat centers, bool DoX) {
 
 arma_vec calc_bin_widths(arma_vec edges) {
 
-  int64_t nPts = edges.n_elem - 1;
-  arma_vec widths(nPts);
+  arma_vec widths = diff(edges);
 
-  for (int64_t i = 0; i < nPts; i++)
-    widths(i) = edges(i + 1) - edges(i);
-  
   return widths;
 }
 

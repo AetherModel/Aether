@@ -68,8 +68,8 @@ else:
 if (nSkip > 10):
     nSkip = 10
 
-mini = np.min(values)
-maxi = np.max(abs(values))
+mini = np.nanmin(values)
+maxi = np.nanmax(abs(values))
 
 if (mini < 0):
     mini = -maxi
