@@ -37,14 +37,15 @@ struct projection_struct {
 
 arma_mat init_x(int64_t nX, int64_t nY, int64_t nGCs) {
 
+  precision_t r = 1.0;  // TODO: radial part
   precision_t dlon = cTWOPI / nX;
   arma_mat x(nX + nGCs * 2, nY + nGCs * 2);
 
   // uniform grid:
   for (int64_t i = -nGCs; i < nX + nGCs; i++) 
     for (int64_t j = -nGCs; j < nY + nGCs; j++) {
-      precision_t phi = (j/nY + 0.5/nY)*cPI;
-      precision_t dx = dlon * sin(phi);  // TODO: radial part
+      precision_t phi = (j + 0.5)/nY*cPI;
+      precision_t dx = dlon * sin(phi) * r;
       x(i + nGCs, j + nGCs) = i * dx + dx/2.0;
     }
 
@@ -53,13 +54,14 @@ arma_mat init_x(int64_t nX, int64_t nY, int64_t nGCs) {
 
 arma_mat init_y(int64_t nX, int64_t nY, int64_t nGCs) {
 
-  precision_t dy = cPI / nY;
+  precision_t r = 1.0;  // TODO: radial part
+  precision_t dlat = r * cPI / nY;
   arma_mat y(nX + nGCs * 2, nY + nGCs * 2);
 
   // uniform grid:
   for (int64_t i = -nGCs; i < nX + nGCs; i++) 
     for (int64_t j = -nGCs; j < nY + nGCs; j++)
-      y(i + nGCs, j + nGCs) = -cPI/2 + j * dy + dy/2.0;  // TODO: radial part
+      y(i + nGCs, j + nGCs) = -cPI/2 + j * dlat + dlat/2.0;
 
   return y;
 }
