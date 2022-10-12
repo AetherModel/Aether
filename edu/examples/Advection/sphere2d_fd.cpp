@@ -886,10 +886,10 @@ int main() {
     if (verbose > 3) std::cout << "Outputing\n";
     
     output(rho, "rho.txt", true);
-    output(xVel, "xvel.txt", true);
-    output(yVel, "yvel.txt", true);
+    output(xVel, "xVel.txt", true);
+    output(yVel, "yVel.txt", true);
     output(temp, "temp.txt", true);
-    output(totalE, "totale_a.txt", true);
+    output(totalE, "totale.txt", true);
     //output(rhoL, "rhor.txt", false);
     //output(rhoR, "rhol.txt", false); 
   }   
