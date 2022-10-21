@@ -46,7 +46,7 @@ arma_mat init_x(int64_t nX, int64_t nY, int64_t nGCs) {
     for (int64_t j = -nGCs; j < nY + nGCs; j++) {
       precision_t phi = (j + 0.5)/nY*cPI;
       precision_t dx = dlon * sin(phi) * r;
-      x(i + nGCs, j + nGCs) = i * dx + dx/2.0;
+      x(i + nGCs, j + nGCs) = i * sqrt(dx*dx) + dx/2.0;  //Ensure positive
     }
 
   return x;
@@ -616,6 +616,7 @@ int main() {
 
   int64_t nSteps = 0;
   int64_t iStep;
+  int64_t total_step = 1000;
   
   int64_t nX = 100;
   int64_t nY = 50;
@@ -699,7 +700,7 @@ int main() {
   projection_struct tempP;
 
   iStep = 0;
-  while (current_time < total_time) {
+  while (current_time < total_time && iStep < total_step) {
 
     if (verbose > 0)
       std::cout << "step : " << iStep << "; time : " << current_time << "\n";

@@ -42,13 +42,15 @@ def read_file(file):
 
     return values
 
-def plot_data(values, fileout, mini, maxi):
+def plot_data(values, fileout, mini, maxi, cmap):
 
     fig = plt.figure(figsize = (10,10))
     ax = fig.add_subplot(111)
-    ax.pcolor(v, vmin = mini, vmax = maxi)
+    pc = ax.pcolor(v, cmap=cmap, vmin = mini, vmax = maxi)
+    plt.colorbar(pc)
 
     fig.savefig(fileout)
+    fig.clf()
     plt.close()
         
 
@@ -73,6 +75,9 @@ maxi = np.nanmax(abs(values))
 
 if (mini < 0):
     mini = -maxi
+    cmap = 'bwr'
+else:
+    cmap = 'plasma'
 
 print(mini,maxi)
 
@@ -80,7 +85,7 @@ for i in range(0, n, nSkip):
     print("Plotting time : ", i, " of ", n)
     v = values[i].transpose()
     fileout = filein+'.%04d.png' % i
-    plot_data(v, fileout, mini, maxi)
+    plot_data(v, fileout, mini, maxi, cmap=cmap)
     
 
 
