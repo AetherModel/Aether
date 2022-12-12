@@ -326,7 +326,7 @@ bool Neutrals::unpack_one_face(int iSender,
 bool Grid::send_one_face(int64_t iFace) {
 
   bool DidWork = true;
-
+  
   MPI_Isend(interchanges[iFace].buffer,
             interchanges[iFace].iSizeTotal,
             MPI_BYTE,
