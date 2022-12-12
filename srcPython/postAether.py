@@ -110,6 +110,8 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
     iLon = find_var_index(data['vars'], 'lon')
     iLat = find_var_index(data['vars'], 'lat')
     iAlt = find_var_index(data['vars'], 'z')
+    if (iAlt == -1):
+        iAlt = find_var_index(data['vars'], 'alt')
     iVar = find_var_index(data['vars'], varToPlot)
 
     if (mini < 0):
@@ -202,6 +204,9 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
         if (i < 100):
             plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i)
         i = i+1
+    ax.set_title(varToPlot)
+    ax.set_xlabel('Longitude (deg)')
+    ax.set_ylabel('Latitude (deg)')
     print('  Outputting file : ', plotFile)
     fig.savefig(plotFile)
     plt.close(fig)
