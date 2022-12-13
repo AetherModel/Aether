@@ -102,7 +102,7 @@ int Times::check_time_gate(precision_t dt_check) {
 // -----------------------------------------------------------------------------
 
 void Times::calc_dt() {
-  dt = 0.5;
+  dt = 1.0;
   return;
 }
 
