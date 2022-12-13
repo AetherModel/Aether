@@ -822,24 +822,24 @@ int main() {
 
     if (verbose > 3) std::cout << "Averaging fluxes at edges\n";
     
-    diff = rhoP.L - rhoP.R;
+    diff = rhoP.R - rhoP.L;
     eq1FluxLR = (eq1FluxL + eq1FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = rhoP.D - rhoP.U;
+    diff = rhoP.U - rhoP.D;
     eq1FluxDU = (eq1FluxD + eq1FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = xMomentumL - xMomentumR;
+    diff = xMomentumR - xMomentumL;
     eq2FluxLR = (eq2FluxL + eq2FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = xMomentumD - xMomentumU;
+    diff = xMomentumU - xMomentumD;
     eq2FluxDU = (eq2FluxD + eq2FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = yMomentumL - yMomentumR;
+    diff = yMomentumR - yMomentumL;
     eq3FluxLR = (eq3FluxL + eq3FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = yMomentumD - yMomentumU;
+    diff = yMomentumU - yMomentumD;
     eq3FluxDU = (eq3FluxD + eq3FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = totaleL - totaleR;
+    diff = totaleR - totaleL;
     eq4FluxLR = (eq4FluxL + eq4FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = totaleD - totaleU;
+    diff = totaleU - totaleD;
     eq4FluxDU = (eq4FluxD + eq4FluxU) / 2 + 0.5 * wsDU % diff;
 
     // ------------------------------------------------
@@ -856,19 +856,19 @@ int main() {
 	precision_t xDownR = (x(i+1,j) + x(i+1,j-1))/2.0;
 	precision_t dxDown = xDownR - xDownL;
 	
-	rho(i,j) = rho(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq1FluxLR(i+1,j) -
+	rho(i,j) = rho(i,j) - dt / area(i,j) * (yWidth(i+1,j) * eq1FluxLR(i+1,j) -
 						yWidth(i,j) * eq1FluxLR(i,j) +
 						dxUp * eq1FluxDU(i,j+1) -
 					        dxDown * eq1FluxDU(i,j));
 	    
-	xMomentum(i,j) = xMomentum(i,j) + dt  * ((yWidth(i+1,j) * eq2FluxLR(i+1,j) -
+	xMomentum(i,j) = xMomentum(i,j) - dt  * ((yWidth(i+1,j) * eq2FluxLR(i+1,j) -
 						  yWidth(i,j) * eq2FluxLR(i,j) +
 						  dxUp * eq2FluxDU(i,j+1) -
 						  dxDown * eq2FluxDU(i,j)) / area(i,j) -
 						 sin(y(i,j))/cos(y(i,j)) *
 						 eq2Flux(i,j));
 
-	yMomentum(i,j) = yMomentum(i,j) + dt * ((yWidth(i+1,j) * eq3FluxLR(i+1,j) -
+	yMomentum(i,j) = yMomentum(i,j) - dt * ((yWidth(i+1,j) * eq3FluxLR(i+1,j) -
 						 yWidth(i,j) * eq3FluxLR(i,j) +
 						 dxUp * eq3FluxDU(i,j+1) -
 						 dxDown * eq3FluxDU(i,j)) / area(i,j) +
@@ -883,7 +883,7 @@ int main() {
 
 
 	
-	totalE(i,j) = totalE(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq4FluxLR(i+1,j) -
+	totalE(i,j) = totalE(i,j) - dt / area(i,j) * (yWidth(i+1,j) * eq4FluxLR(i+1,j) -
 						      yWidth(i,j) * eq4FluxLR(i,j) +
 						      dxUp * eq4FluxDU(i,j+1) -
 						      dxDown * eq4FluxDU(i,j));
