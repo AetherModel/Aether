@@ -365,7 +365,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
   }
 
   arma_cube cos_lat = cos(geoLat_scgc);
-  cos_lat.elem( find(cos_lat < 0.1) ).fill(0.1);
+  cos_lat.elem( find(cos_lat < 0.00001) ).fill(0.00001);
 
   y_Center = geoLat_scgc;
   x_Center = geoLon_scgc % cos_lat;
@@ -391,7 +391,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
   }
 
   arma_cube cos_lat_L = cos(geoLat_Left);
-  cos_lat_L.elem( find(cos_lat_L < 0.1) ).fill(0.1);
+  cos_lat_L.elem( find(cos_lat_L < 0.00001) ).fill(0.00001);
 
   x_Left = geoLon_Left % cos_lat_L;
   dy_Left.fill(dlat);
@@ -415,7 +415,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
   }
 
   arma_cube cos_lat_D = cos(geoLat_Down);
-  cos_lat_D.elem( find(cos_lat_D < 0.1) ).fill(0.1);
+  cos_lat_D.elem( find(cos_lat_D < 0.00001) ).fill(0.00001);
 
   y_Down = geoLat_Down;
   dx_Down = dlon * cos_lat_D;
