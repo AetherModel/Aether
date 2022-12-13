@@ -206,9 +206,9 @@ arma_mat project_from_right(arma_mat values,
 // ---------------------------------------------------------
 
 projection_struct project_to_edges(arma_mat &values,
-				                           arma_mat &x_centers, arma_mat &x_edges,
-				                           arma_mat &y_centers, arma_mat &y_edges,
-				                           int64_t nGCs) {
+				   arma_mat &x_centers, arma_mat &x_edges,
+				   arma_mat &y_centers, arma_mat &y_edges,
+				   int64_t nGCs) {
 
   int64_t nX = values.n_rows;
   int64_t nY = values.n_cols;
@@ -238,10 +238,10 @@ projection_struct project_to_edges(arma_mat &values,
 // ---------------------------------------------------------
 
 precision_t calc_dt(arma_mat &xWidth,
-		                arma_mat &yWidth,
-		                arma_mat &wsLR,
-		                arma_mat &wsDU,
-		                int64_t nGCs) {
+		    arma_mat &yWidth,
+		    arma_mat &wsLR,
+		    arma_mat &wsDU,
+		    int64_t nGCs) {
 
   int64_t nX = xWidth.n_rows;
   int64_t nY = yWidth.n_cols;
@@ -277,7 +277,6 @@ void advect(Grid &grid,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-
   projection_struct rhoP;
   projection_struct xVelP;
   projection_struct yVelP;
@@ -305,10 +304,10 @@ void advect(Grid &grid,
   arma_mat eq1FluxL, eq1FluxR, eq1FluxD, eq1FluxU;
 
   arma_mat eq2FluxLR, eq2FluxDU;
-  arma_mat eq2FluxL, eq2FluxR, eq2FluxD, eq2FluxU;
+  arma_mat eq2FluxL, eq2FluxR, eq2FluxD, eq2FluxU, eq2Flux;
 
   arma_mat eq3FluxLR, eq3FluxDU;
-  arma_mat eq3FluxL, eq3FluxR, eq3FluxD, eq3FluxU;
+  arma_mat eq3FluxL, eq3FluxR, eq3FluxD, eq3FluxU, eq3Flux;
 
   arma_mat eq4FluxLR, eq4FluxDU;
   arma_mat eq4FluxL, eq4FluxR, eq4FluxD, eq4FluxU;
@@ -319,7 +318,7 @@ void advect(Grid &grid,
   arma_mat grad_totalE, totaleL, totaleR, totaleD, totaleU;
   arma_mat diff;
 
-  arma_mat area, xWidth, yWidth;
+  arma_mat area, xWidth, yWidth, geometry;
 
   neutrals.calc_mass_density(report);
 
@@ -399,14 +398,13 @@ void advect(Grid &grid,
     eq2FluxR = rhoP.R % (xVelP.R % xVelP.R + (gamma-1) * tempP.R);
     eq2FluxD = rhoP.D % xVelP.D % yVelP.D;
     eq2FluxU = rhoP.U % xVelP.U % yVelP.U;
+    eq2Flux = rho % xVel % yVel;
 
     eq3FluxR = rhoP.R % xVelP.R % yVelP.R;
     eq3FluxL = rhoP.L % xVelP.L % yVelP.L;
     eq3FluxD = rhoP.D % (yVelP.D % yVelP.D + (gamma-1) * tempP.D);
     eq3FluxU = rhoP.U % (yVelP.U % yVelP.U + (gamma-1) * tempP.U);
-
-		//if (iProc == 0 && iAlt == 20) std::cout << eq3FluxD;
-
+    eq3Flux = rho % (yVel % yVel + (gamma-1) * temp);
 
     eq4FluxL = rhoP.L % xVelP.L % (0.5 * velL2 + gamma * tempP.L);
     eq4FluxR = rhoP.R % xVelP.R % (0.5 * velR2 + gamma * tempP.R);
@@ -442,24 +440,24 @@ void advect(Grid &grid,
 
     report.print(3, "Advection: Averaging fluxes at edges");
 
-    diff = rhoP.L - rhoP.R;
+    diff = rhoP.R - rhoP.L;
     eq1FluxLR = (eq1FluxL + eq1FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = rhoP.D - rhoP.U;
+    diff = rhoP.U - rhoP.D;
     eq1FluxDU = (eq1FluxD + eq1FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = xMomentumL - xMomentumR;
+    diff = xMomentumR - xMomentumL;
     eq2FluxLR = (eq2FluxL + eq2FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = xMomentumD - xMomentumU;
+    diff = xMomentumU - xMomentumD;
     eq2FluxDU = (eq2FluxD + eq2FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = yMomentumL - yMomentumR;
+    diff = yMomentumR - yMomentumL;
     eq3FluxLR = (eq3FluxL + eq3FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = yMomentumD - yMomentumU;
+    diff = yMomentumU - yMomentumD;
     eq3FluxDU = (eq3FluxD + eq3FluxU) / 2 + 0.5 * wsDU % diff;
 
-    diff = totaleL - totaleR;
+    diff = totaleR - totaleL;
     eq4FluxLR = (eq4FluxL + eq4FluxR) / 2 + 0.5 * wsLR % diff;
-    diff = totaleD - totaleU;
+    diff = totaleU - totaleD;
     eq4FluxDU = (eq4FluxD + eq4FluxU) / 2 + 0.5 * wsDU % diff;
 
     // ------------------------------------------------
@@ -470,28 +468,36 @@ void advect(Grid &grid,
     yWidth = grid.dy_Left.slice(iAlt) * grid.radius_scgc(1,1,iAlt);
     xWidth = grid.dx_Down.slice(iAlt) * grid.radius_scgc(1,1,iAlt);
 
+    geometry = 
+      sin(grid.geoLat_scgc.slice(iAlt)) /
+      cos(grid.geoLat_scgc.slice(iAlt)) /
+      grid.radius_scgc(1,1,iAlt);
+    
     for (int64_t j = nGCs; j < nY - nGCs; j++) {
       for (int64_t i = nGCs; i < nX - nGCs; i++) {
-	       rho(i,j) = rho(i,j) - dt / area(i,j) *
-             (yWidth(i+1,j) * eq1FluxLR(i+1,j) -
-						  yWidth(i,j) * eq1FluxLR(i,j) +
-						  xWidth(i,j+1) * eq1FluxDU(i,j+1) -
-						  xWidth(i,j) * eq1FluxDU(i,j));
-	       xMomentum(i,j) = xMomentum(i,j) - dt / area(i,j) *
-             (yWidth(i+1,j) * eq2FluxLR(i+1,j) -
-							yWidth(i,j) * eq2FluxLR(i,j) +
-							xWidth(i,j+1) * eq2FluxDU(i,j+1) -
-							xWidth(i,j) * eq2FluxDU(i,j));
-	       yMomentum(i,j) = yMomentum(i,j) - dt / area(i,j) *
-             (yWidth(i+1,j) * eq3FluxLR(i+1,j) -
-							yWidth(i,j) * eq3FluxLR(i,j) +
-							xWidth(i,j+1) * eq3FluxDU(i,j+1) -
-							xWidth(i,j) * eq3FluxDU(i,j));
-	       totalE(i,j) = totalE(i,j) - dt / area(i,j) *
-             (yWidth(i+1,j) * eq4FluxLR(i+1,j) -
-						  yWidth(i,j) * eq4FluxLR(i,j) +
-						  xWidth(i,j+1) * eq4FluxDU(i,j+1) -
-						  xWidth(i,j) * eq4FluxDU(i,j));
+	//if (i == nGCs) cout << "j = " << j << " " << xWidth(i,j) << "\n";
+	rho(i,j) = rho(i,j) - dt *
+	  (yWidth(i+1,j) * eq1FluxLR(i+1,j) -
+	   yWidth(i,j) * eq1FluxLR(i,j) +
+	   xWidth(i,j+1) * eq1FluxDU(i,j+1) -
+	   xWidth(i,j) * eq1FluxDU(i,j)) / area(i,j);
+	xMomentum(i,j) = xMomentum(i,j) - dt *
+	  ((yWidth(i+1,j) * eq2FluxLR(i+1,j) -
+	    yWidth(i,j) * eq2FluxLR(i,j) +
+	    xWidth(i,j+1) * eq2FluxDU(i,j+1) -
+	    xWidth(i,j) * eq2FluxDU(i,j)) / area(i,j) -
+	   geometry(i,j) * eq2Flux(i,j));
+	yMomentum(i,j) = yMomentum(i,j) - dt *
+	  ((yWidth(i+1,j) * eq3FluxLR(i+1,j) -
+	    yWidth(i,j) * eq3FluxLR(i,j) +
+	    xWidth(i,j+1) * eq3FluxDU(i,j+1) -
+	    xWidth(i,j) * eq3FluxDU(i,j)) / area(i,j) +
+	   geometry(i,j) * eq3Flux(i,j));
+	totalE(i,j) = totalE(i,j) - dt *
+	  (yWidth(i+1,j) * eq4FluxLR(i+1,j) -
+	   yWidth(i,j) * eq4FluxLR(i,j) +
+	   xWidth(i,j+1) * eq4FluxDU(i,j+1) -
+	   xWidth(i,j) * eq4FluxDU(i,j)) / area(i,j);
       }
     }
 
@@ -503,7 +509,7 @@ void advect(Grid &grid,
     temp = totalE / rho - 0.5 * (xVel % xVel + yVel % yVel);
 
     neutrals.temperature_scgc.slice(iAlt) = temp / t_to_e;
-    if (iProc == 0 && iAlt == 20) {
+    if (iProc == 0 && iAlt == 8) {
       std::cout << "end t : " << neutrals.temperature_scgc.slice(iAlt).min() << " " << neutrals.temperature_scgc.slice(iAlt).max() << "\n";
       std::cout << "end temp : " << temp.min() << " " << temp.max() << "\n";
       std::cout << "end xVel : " << xVel.min() << " " << xVel.max() << "\n";
