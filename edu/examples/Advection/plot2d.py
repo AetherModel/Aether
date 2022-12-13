@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import matplotlib.cm as cm
 
 # ----------------------------------------------------------------------
 # Function to parse input arguments
@@ -42,15 +43,14 @@ def read_file(file):
 
     return values
 
-def plot_data(values, fileout, mini, maxi, cmap):
+def plot_data(values, fileout, mini, maxi):
 
     fig = plt.figure(figsize = (10,10))
     ax = fig.add_subplot(111)
-    pc = ax.pcolor(v, cmap=cmap, vmin = mini, vmax = maxi)
-    plt.colorbar(pc)
+    cmap = cm.plasma if mini >= 0 else cm.bwr
+    ax.pcolor(v, vmin = mini, vmax = maxi, cmap = cmap)
 
     fig.savefig(fileout)
-    fig.clf()
     plt.close()
         
 
@@ -63,21 +63,18 @@ values = read_file(filein)
 
 n = len(values)
 if (n > 20):
-    nSkip = int(n / 10)
+    nSkip = int(n / 5)
 else:
     nSkip = 1
 
 if (nSkip > 10):
-    nSkip = 10
+    nSkip = 5
 
-mini = np.nanmin(values)
-maxi = np.nanmax(abs(values))
+mini = np.min(values)
+maxi = np.max(abs(values))
 
 if (mini < 0):
     mini = -maxi
-    cmap = 'bwr'
-else:
-    cmap = 'plasma'
 
 print(mini,maxi)
 
@@ -85,7 +82,7 @@ for i in range(0, n, nSkip):
     print("Plotting time : ", i, " of ", n)
     v = values[i].transpose()
     fileout = filein+'.%04d.png' % i
-    plot_data(v, fileout, mini, maxi, cmap=cmap)
+    plot_data(v, fileout, mini, maxi)
     
 
 
