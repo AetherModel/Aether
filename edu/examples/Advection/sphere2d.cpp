@@ -46,6 +46,27 @@ arma_mat init_x(int64_t nX, int64_t nY, int64_t nGCs) {
   return x;
 }
 
+arma_mat init_x_new(int64_t nX, int64_t nY, int64_t nGCs, arma_mat y) {
+
+  precision_t dx = cTWOPI / nX, dx_stretch, x_off, fac;
+  arma_mat x(nX + nGCs * 2, nY + nGCs * 2);
+
+  // stretch grid in longitude:
+  for (int64_t j = -nGCs; j < nY + nGCs; j++) {
+    for (int64_t i = -nGCs; i < nX + nGCs; i++) {
+      fac = abs(cos(y(i + nGCs, j + nGCs)));
+      dx_stretch = dx * fac;
+      if (i == 0) cout << "dx : " << dx_stretch << " " << x_off << "\n";
+      //x(i + nGCs, j + nGCs) = x_off + i * dx_stretch + dx_stretch/2.0;
+      x(i + nGCs, j + nGCs) = (i - nX/2) * dx_stretch + dx_stretch/2.0;
+      if (j < 0 || j >= nY)
+	x(i + nGCs, j + nGCs) = - x(i + nGCs, j + nGCs);
+    }
+  }
+
+  return x;
+}
+
 arma_mat init_y(int64_t nX, int64_t nY, int64_t nGCs) {
 
   precision_t dy = cPI / nY;
@@ -118,7 +139,7 @@ arma_vec calc_bin_widths(arma_vec edges) {
   arma_vec widths(nPts);
 
   for (int64_t i = 0; i < nPts; i++)
-    widths(i) = edges(i + 1) - edges(i);
+    widths(i) = abs(edges(i + 1) - edges(i));
   
   return widths;
 }
@@ -168,7 +189,7 @@ arma_mat init_rho(arma_mat &x,
   arma_mat rho(nX, nY);
   arma_mat r;
 
-  r = sqrt( (x - cPI) % (x - cPI) + (y - 0.0) % (y - 0.0));
+  r = sqrt( (x - 0.0) % (x - 0.0) + (y - 0.0) % (y - 0.0));
   rho.fill(2.0);
   rho.elem( find( r < 0.25)).fill(2.2);
   //rho.elem( find( r < 0.25)) = 2.25 - r.elem( find( r < 0.25));
@@ -229,7 +250,7 @@ void exchange(arma_mat &values, int64_t nGCs, bool reverse) {
   int64_t ii;
   precision_t s = 1.0;
   if (reverse) s = -1.0;
-  
+
   arma_mat copy = values;
   for (int64_t j = 0; j < nGCs; j++) {
     for (int64_t i = 0; i < nX; i++) {
@@ -588,20 +609,21 @@ int main() {
 
   precision_t dt = 0.0005/4;
   precision_t current_time = 0.0;
-  precision_t total_time = 0.3;
-  precision_t cfl = 0.4;
+  precision_t total_time = 0.6;
+  precision_t cfl = 0.5;
   precision_t gamma = 5.0/3.0;
 
   int64_t nSteps = 0;
   int64_t iStep;
   
-  int64_t nX = 100;
-  int64_t nY = 50;
+  int64_t nX = 180;
+  int64_t nY = 90;
   int64_t nGCs = 2;
 
   if (verbose > 0) std::cout << "---> initializing grid\n";
-  arma_mat x = init_x(nX, nY, nGCs);
   arma_mat y = init_y(nX, nY, nGCs);
+  // arma_mat x = init_x(nX, nY, nGCs);
+  arma_mat x = init_x_new(nX, nY, nGCs, y);
   
   if (verbose > 0) std::cout << " --> calculating edges\n";
   arma_mat xEdges = calc_bin_edges(x, true);
@@ -614,7 +636,7 @@ int main() {
   arma_mat xDt, yDt;
   
   arma_mat area = xWidth % yWidth;
-  
+
   // state variables:
   if (verbose > 0) std::cout << "---> initializing rho\n";
   arma_mat rho = init_rho(x, y);
@@ -633,10 +655,10 @@ int main() {
   arma_mat eq1FluxL, eq1FluxR, eq1FluxD, eq1FluxU;
 
   arma_mat eq2FluxLR, eq2FluxDU;
-  arma_mat eq2FluxL, eq2FluxR, eq2FluxD, eq2FluxU;
+  arma_mat eq2FluxL, eq2FluxR, eq2FluxD, eq2FluxU, eq2Flux;
 
   arma_mat eq3FluxLR, eq3FluxDU;
-  arma_mat eq3FluxL, eq3FluxR, eq3FluxD, eq3FluxU;
+  arma_mat eq3FluxL, eq3FluxR, eq3FluxD, eq3FluxU, eq3Flux;
 
   arma_mat eq4FluxLR, eq4FluxDU;
   arma_mat eq4FluxL, eq4FluxR, eq4FluxD, eq4FluxU;
@@ -749,11 +771,13 @@ int main() {
     eq2FluxR = rhoP.R % (xVelP.R % xVelP.R + (gamma-1) * tempP.R);
     eq2FluxD = rhoP.D % xVelP.D % yVelP.D;
     eq2FluxU = rhoP.U % xVelP.U % yVelP.U;
+    eq2Flux = rho % xVel % yVel;
 
     eq3FluxR = rhoP.R % xVelP.R % yVelP.R;
     eq3FluxL = rhoP.L % xVelP.L % yVelP.L;
     eq3FluxD = rhoP.D % (yVelP.D % yVelP.D + (gamma-1) * tempP.D);
     eq3FluxU = rhoP.U % (yVelP.U % yVelP.U + (gamma-1) * tempP.U);
+    eq3Flux = rho % (yVel % yVel + (gamma-1) * temp);
 
     eq4FluxL = rhoP.L % xVelP.L % (0.5 * velL2 + gamma * tempP.L);
     eq4FluxR = rhoP.R % xVelP.R % (0.5 * velR2 + gamma * tempP.R);
@@ -824,22 +848,58 @@ int main() {
 
     for (int64_t j = nGCs; j < nY + nGCs; j++) {
       for (int64_t i = nGCs; i < nX + nGCs; i++) {
+
+	precision_t xUpL = (x(i,j+1) + x(i,j))/2.0;
+	precision_t xUpR = (x(i+1,j+1) + x(i+1,j))/2.0;
+	precision_t dxUp = xUpR - xUpL;
+	precision_t xDownL = (x(i,j) + x(i,j-1))/2.0;
+	precision_t xDownR = (x(i+1,j) + x(i+1,j-1))/2.0;
+	precision_t dxDown = xDownR - xDownL;
+	
 	rho(i,j) = rho(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq1FluxLR(i+1,j) -
 						yWidth(i,j) * eq1FluxLR(i,j) +
-						xWidth(i,j+1) * eq1FluxDU(i,j+1) -
-						xWidth(i,j) * eq1FluxDU(i,j));
-	xMomentum(i,j) = xMomentum(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq2FluxLR(i+1,j) -
-							    yWidth(i,j) * eq2FluxLR(i,j) +
-							    xWidth(i,j+1) * eq2FluxDU(i,j+1) -
-							    xWidth(i,j) * eq2FluxDU(i,j));
-	yMomentum(i,j) = yMomentum(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq3FluxLR(i+1,j) -
-							    yWidth(i,j) * eq3FluxLR(i,j) +
-							    xWidth(i,j+1) * eq3FluxDU(i,j+1) -
-							    xWidth(i,j) * eq3FluxDU(i,j));
+						dxUp * eq1FluxDU(i,j+1) -
+					        dxDown * eq1FluxDU(i,j));
+	    
+	xMomentum(i,j) = xMomentum(i,j) + dt  * ((yWidth(i+1,j) * eq2FluxLR(i+1,j) -
+						  yWidth(i,j) * eq2FluxLR(i,j) +
+						  dxUp * eq2FluxDU(i,j+1) -
+						  dxDown * eq2FluxDU(i,j)) / area(i,j) -
+						 sin(y(i,j))/cos(y(i,j)) *
+						 eq2Flux(i,j));
+
+	yMomentum(i,j) = yMomentum(i,j) + dt * ((yWidth(i+1,j) * eq3FluxLR(i+1,j) -
+						 yWidth(i,j) * eq3FluxLR(i,j) +
+						 dxUp * eq3FluxDU(i,j+1) -
+						 dxDown * eq3FluxDU(i,j)) / area(i,j) +
+						sin(y(i,j))/cos(y(i,j)) *
+						eq3Flux(i,j));
+										
+
+	//yMomentum(i,j) = yMomentum(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq3FluxLR(i+1,j) -
+	//						    yWidth(i,j) * eq3FluxLR(i,j) +
+	//						    xWidth(i,j+1) * eq3FluxDU(i,j+1) -
+	//						    xWidth(i,j) * eq3FluxDU(i,j));
+
+
+	
 	totalE(i,j) = totalE(i,j) + dt / area(i,j) * (yWidth(i+1,j) * eq4FluxLR(i+1,j) -
 						      yWidth(i,j) * eq4FluxLR(i,j) +
-						      xWidth(i,j+1) * eq4FluxDU(i,j+1) -
-						      xWidth(i,j) * eq4FluxDU(i,j));
+						      dxUp * eq4FluxDU(i,j+1) -
+						      dxDown * eq4FluxDU(i,j));
+	/*
+	if (i == nX/2)
+	  cout << "i/j : " << i << " " << j << " " << rho(i,j) <<
+	    " " <<  yVel(i,j-1) <<
+	    " " <<  yVel(i,j) <<
+	    " " <<  yVel(i,j+1) <<
+	    " " << xWidth(i,j+1) << " " << eq3FluxDU(i,j+1) <<
+	    " " << xWidth(i,j) << " " << eq3FluxDU(i,j) <<
+	    " " << (yMomentumD(i,j+1) - yMomentumU(i,j+1))/2 * wsDU(i,j+1) <<
+	    " " <<  sin(y(i,j))/cos(y(i,j)) <<
+	    "\n";
+	*/
+
       }
     }
 
@@ -861,15 +921,16 @@ int main() {
     exchange(yVel, nGCs, true);
     exchange(temp, nGCs, false);
 
-    if (verbose > 3) std::cout << "Outputing\n";
-    
-    output(rho, "rho.txt", true);
-    output(xVel, "xvel.txt", true);
-    output(yVel, "yvel.txt", true);
-    output(temp, "temp.txt", true);
-    output(totalE, "totale_a.txt", true);
-    //output(rhoL, "rhor.txt", false);
-    //output(rhoR, "rhol.txt", false); 
+    if (iStep % 50 == 0) {
+      if (verbose > 3) std::cout << "Outputing\n";
+      output(rho, "rho.txt", true);
+      output(xVel, "xvel.txt", true);
+      output(yVel, "yvel.txt", true);
+      output(temp, "temp.txt", true);
+      output(totalE, "totale_a.txt", true);
+      //output(rhoL, "rhor.txt", false);
+      //output(rhoR, "rhol.txt", false);
+    }
   }   
   return 0;
 }
