@@ -1,11 +1,15 @@
 # Aether
 This is the home of the Aether model of the thermosphere and ionosphere
 
-The Aether model has been developed using gnu c++ (version 9.3.0). If
+The Aether model has been developed using gnu c++ (version 10). If
 you are using this, hopefully it will just work out of the box. We have 
 been doing development of Aether on Mac OSX, and in Ubuntu Linux.  We have 
 also used the Windows Subsystem for Linux, Ubuntu distribution, which 
 works similarly to the native Linux distribution.
+
+If you are a student and don't know how to work with a large code base
+(i.e., multiple source codes in multiple directories), you may consider
+starting with the doc/student.md file.
 
 ## Dependencies:
 
@@ -35,7 +39,7 @@ On Mac, if you want the clang compiled version of netcdf, then:
 sudo port install netcdf-cxx4
 ```
 
-If you want the gcc version of netcdf, then:
+If you want the gcc version of netcdf (recommended), then:
 ```bash
 sudo port install netcdf-cxx4 +gcc10
 ```
