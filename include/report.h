@@ -90,6 +90,18 @@ public:
   int get_verbose();
 
   /**************************************************************
+   \brief sends a message to a student about the function name
+   \param isStudent
+   \param cStudentName
+   \param iFunctionNumber
+   \param cFunctionName
+   **/
+  void student_checker_function_name(bool isStudent,
+				     std::string cStudentName,
+				     int iFunctionNumber,
+				     std::string cFunctionName);
+
+  /**************************************************************
    \brief Starts timer and reports when entering a function, if applicable
 
    This is typically placed at the start of a function. This function
