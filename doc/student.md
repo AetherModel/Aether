@@ -48,17 +48,13 @@ your "version" of Aether, and all development will be done here.  I am going to 
 
 ```bash
 git clone https://github.com/YourRepo/Aether
-```
-
-```bash
 cd Aether
-```
-
-```bash
 git checkout develop
 ```
 
-To compile Aether:
+To compile Aether, you need to make sure you have all of the dependencies
+installed (see the main README.md in the Aether directory), and then run
+these commands:
 ```bash
 mkdir build
 cd build
@@ -66,9 +62,8 @@ cmake ..
 make
 ```
 
-Once you have compiled you can install Aether with an example run directory
-structure like this:
-
+Once you have compiled you can run Aether with the standard run directory
+like this:
 ```bash
 cd ..
 cp -R share/run ./run.test
@@ -77,7 +72,6 @@ cd run.test
 ```
 
 You should see something like:
-
 ```bash
 run.test% ./aether
 > Need to NOT adjust F10.7, but that isn't included yet!!!
@@ -98,7 +92,6 @@ etc.
 
 Now, edit the aether.json file and add the following after the "Debug"
 section, where "Your Name" should be your name:
-
 ```bash
     "Student" : {
 	"name" : "Your Name",
@@ -106,7 +99,6 @@ section, where "Your Name" should be your name:
 ```
 
 Then, run aether again.  Your output should now look something like this:
-
 ```bash
 run.test% ./aether
 > Hello Aaron - welcome to Aether!
