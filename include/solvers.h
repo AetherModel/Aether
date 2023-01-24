@@ -28,6 +28,10 @@ const int iNext_ = 2;
 const int iClosest_ = 3; 
 const int iInterp_ = 4;
 
+double interpolate_1d(double outX,
+		      std::vector<double> inXs,
+		      std::vector<double> inValues);
+
 double interpolate_1d_get_index_doubles(double intime,
 					std::vector<double> times);
 
