@@ -153,6 +153,7 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
   int64_t iLon, iLat, iAlt, iDim;
   precision_t lon, lat, alt;
   bfield_info_type bfield_info;
+  bool DoDebug = false;
 
   bfield_mag_scgc.zeros();
 
@@ -167,7 +168,8 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
           lat = geoLat_scgc(iLon, iLat, iAlt);
           alt = geoAlt_scgc(iLon, iLat, iAlt);
 
-          bfield_info = get_bfield(lon, lat, alt, planet, input, report);
+          bfield_info = get_bfield(lon, lat, alt, DoDebug,
+                                   planet, input, report);
 
           magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
           magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
