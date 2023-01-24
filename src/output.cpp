@@ -83,7 +83,7 @@ int output(const Neutrals &neutrals,
                        "degrees_north",
                        grid.geoLat_Corner * cRtoD);
         AllOutputContainers[iOutput].
-        store_variable("alt",
+        store_variable("z",
                        "height above mean sea level",
                        "m",
                        grid.geoAlt_Corner);
@@ -100,7 +100,7 @@ int output(const Neutrals &neutrals,
                        "degrees_north",
                        grid.geoLat_scgc * cRtoD);
         AllOutputContainers[iOutput].
-        store_variable("alt",
+        store_variable("z",
                        "height above mean sea level",
                        "m",
                        grid.geoAlt_scgc);
