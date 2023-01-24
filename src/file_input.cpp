@@ -340,3 +340,64 @@ std::vector<int> read_itime(std::ifstream &file_ptr, std::string hash) {
 
   return itime;
 }
+
+
+// -----------------------------------------------------------------------------
+// Move CSV to json format (with name as first column)
+// -----------------------------------------------------------------------------
+
+json put_csv_in_json_w_name(std::vector<std::vector<std::string>>
+                            csvLines) {
+
+  bool DidWork = true;
+  json output;
+
+  // This assumes the first column is "name" and is a string
+  json name;
+  int64_t nRows = csvLines.size();
+
+  for (int iRow = 1; iRow < nRows; iRow++)
+    name.push_back(csvLines[iRow][0]);
+
+  output["name"] =  name;
+
+  // The rest of the lines can be in any order, really
+  int64_t nCols = csvLines[0].size();
+
+  for (int iCol = 1; iCol < nCols; iCol++) {
+    json var;
+
+    for (int iRow = 1; iRow < nRows; iRow++)
+      var.push_back(stof(csvLines[iRow][iCol]));
+
+    output[csvLines[0][iCol]] = var;
+  }
+
+  return output;
+}
+
+// -----------------------------------------------------------------------------
+// Move CSV to json format (no name as first column)
+// -----------------------------------------------------------------------------
+
+json put_csv_in_json_wo_name(std::vector<std::vector<std::string>>
+                             csvLines) {
+
+  json output;
+
+  // The rest of the lines can be in any order, really
+  int64_t nRows = csvLines.size();
+  int64_t nCols = csvLines[0].size();
+
+  for (int iCol = 0; iCol < nCols; iCol++) {
+    json var;
+
+    for (int iRow = 1; iRow < nRows; iRow++)
+      var.push_back(stof(csvLines[iRow][iCol]));
+
+    output[csvLines[0][iCol]] = var;
+  }
+
+  return output;
+}
+

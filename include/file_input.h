@@ -25,6 +25,17 @@ std::string find_next_hash(std::ifstream &file_ptr);
  **/
 std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr);
 
+
+/**************************************************************
+ \brief converts a matrix of strings into a json type
+ \param csvLines a matrix of strings
+ **/
+json put_csv_in_json_w_name(std::vector<std::vector<std::string>>
+			    csvLines);
+json put_csv_in_json_wo_name(std::vector<std::vector<std::string>>
+			     csvLines);
+
+
 /**************************************************************
  \brief Reads a series of line that can be in a SSV format, returns 2D array
  \param file_ptr file pointer to the open file
