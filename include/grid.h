@@ -121,7 +121,7 @@ public:
                                     Inputs input,
                                     Report &report);
   void create_cubesphere_grid(Quadtree quadtree, Inputs input, Report &report);
-  void create_altitudes(Inputs input, Report &report);
+  void create_altitudes(Planets planet, Inputs input, Report &report);
   void fill_grid_bfield(Planets planet, Inputs input, Report &report);
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);

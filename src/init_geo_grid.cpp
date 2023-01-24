@@ -33,10 +33,10 @@ void Grid::create_cubesphere_connection(Quadtree quadtree,
 
   // Find those points in the quadtree to figure out which processor
   // they are on
-  iProcYm = quadtree.find_point(down_norm);
-  iProcYp = quadtree.find_point(up_norm);
-  iProcXm = quadtree.find_point(left_norm);
-  iProcXp = quadtree.find_point(right_norm);
+  iProcYm = quadtree.find_point(down_norm) + iMember * nGrids;
+  iProcYp = quadtree.find_point(up_norm) + iMember * nGrids;
+  iProcXm = quadtree.find_point(left_norm) + iMember * nGrids;
+  iProcXp = quadtree.find_point(right_norm) + iMember * nGrids;
 
   // Need to know which side the current block is on and which side each
   // of the blocks in the different directions is on.  Need this so we can
@@ -266,10 +266,10 @@ void Grid::create_sphere_connection(Quadtree quadtree,
   edge_Yp = middle_norm + size_up_norm / 2.0;
   edge_Ym = middle_norm - size_up_norm / 2.0;
 
-  iProcYm = quadtree.find_point(down_norm);
-  iProcYp = quadtree.find_point(up_norm);
-  iProcXm = quadtree.find_point(left_norm);
-  iProcXp = quadtree.find_point(right_norm);
+  iProcYm = quadtree.find_point(down_norm) + iMember * nGrids;
+  iProcYp = quadtree.find_point(up_norm) + iMember * nGrids;
+  iProcXm = quadtree.find_point(left_norm) + iMember * nGrids;
+  iProcXp = quadtree.find_point(right_norm) + iMember * nGrids;
 
   iRoot = quadtree.find_root(middle_norm);
   iRootYm = quadtree.find_root(down_norm);
@@ -426,7 +426,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
 // Create a spherical grid with lon/lat/alt coordinates
 // ----------------------------------------------------------------------
 
-void Grid::create_altitudes(Inputs input, Report &report) {
+void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 
   std::string function = "Grid::create_altitudes";
   static int iFunction = -1;
@@ -441,7 +441,108 @@ void Grid::create_altitudes(Inputs input, Report &report) {
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
-  } // Need to do a non-uniform grid spacing here.
+  } else {
+
+    json neutrals = planet.get_neutrals();
+    json temperatures = planet.get_temperatures();
+    std::vector<double> input_alt;
+    std::vector<double> input_temp;
+
+    for (int i = 0; i < temperatures["alt"].size(); i++) {
+      input_alt.push_back(double(temperatures["alt"][i]) * 1000.0);
+      input_temp.push_back(temperatures["temp"][i]);
+    }
+
+    precision_t scale_height, temperature, gravity, radius, mass, density;
+    int64_t nSp = neutrals["name"].size();
+    arma_vec densities(nSp);
+    arma_vec masses(nSp);
+    arma_vec h(nSp);
+
+    int64_t iSp;
+
+    report.print(1, "Making non-uniform altitude grid!");
+
+    if (grid_input.dalt > 0.5) {
+      if (report.test_verbose(0)) {
+        std::cout << "-----------------------------------------------------\n";
+        std::cout << "WARNING: dAlt is set to > 0.5, with non-uniform grid!\n";
+        std::cout << "   dAlt = " << grid_input.dalt << "\n";
+        std::cout << "-----------------------------------------------------\n";
+      }
+    }
+
+    double alt = grid_input.alt_min;
+    radius = planet.get_radius(0.0) + alt;
+    precision_t mu = planet.get_mu();
+    gravity = mu / (radius * radius);
+
+    temperature = interpolate_1d(alt, input_alt, input_temp);
+
+    mass = 0.0;
+    density = 0.0;
+
+    for (iSp = 0; iSp < nSp; iSp++) {
+      masses(iSp) = double(neutrals["mass"][iSp]) * cAMU;
+      densities[iSp] = neutrals["BC"][iSp];
+      h(iSp) = cKB * temperature / (masses(iSp) * gravity);
+      mass = mass + masses(iSp) * densities[iSp];
+      density = density + densities[iSp];
+    }
+
+    // convert mass density into mass:
+    mass = mass / density;
+    scale_height = cKB * temperature / (mass * gravity);
+
+    precision_t dalt = scale_height * grid_input.dalt;
+    precision_t dAltLimiter = dalt * 10.0;
+
+    // Fills bottom ghost cells with constant dAlt
+    // Fills bottom cell with actual desired bottom altitude
+    for (iAlt = 0; iAlt <= nGeoGhosts; iAlt++) {
+      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * dalt;
+
+      if (report.test_verbose(1))
+        std::cout << "iAlt : " << iAlt
+                  << " Altitude : " << alt1d(iAlt) / 1000.0
+                  << " (km)\n";
+    }
+
+    for (iAlt = nGeoGhosts + 1; iAlt < nAlts; iAlt++) {
+
+      alt = alt1d(iAlt - 1);
+      temperature = interpolate_1d(alt, input_alt, input_temp);
+      radius = planet.get_radius(0.0) + alt;
+      gravity = mu / (radius * radius);
+
+      mass = 0.0;
+      density = 0.0;
+
+      for (iSp = 0; iSp < nSp; iSp++) {
+        mass = mass + masses(iSp) * densities[iSp];
+        density = density + densities[iSp];
+      }
+
+      // convert mass density into mass:
+      mass = mass / density;
+      scale_height = cKB * temperature / (mass * gravity);
+
+      dalt = scale_height * grid_input.dalt;
+
+      if (dalt > dAltLimiter)
+        dalt = dAltLimiter;
+
+      alt1d(iAlt) = alt + dalt;
+
+      h = cKB * temperature / (masses * gravity);
+      densities = densities % exp(-dalt / h);
+
+      if (report.test_verbose(1))
+        std::cout << "iAlt : " << iAlt
+                  << " Altitude : " << alt1d(iAlt) / 1000.0
+                  << " (km)\n";
+    }
+  }
 
   // This takes cell centers and calculates the edges:
   arma_vec alt1d_below = calc_bin_edges(alt1d);
@@ -493,7 +594,9 @@ bool Grid::init_geo_grid(Quadtree quadtree,
       create_cubesphere_grid(quadtree, input, report);
     else
       create_sphere_grid(quadtree, input, report);
-    create_altitudes(input, report);
+
+    MPI_Barrier(aether_comm);
+    create_altitudes(planet, input, report);
 
     DidWork = write_restart(input.get_restartout_dir());
   }
