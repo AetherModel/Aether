@@ -19,13 +19,14 @@ void read_aurora(Neutrals &neutrals,
 		 Report &report);
 
 arma_vec calculate_fang(float eflux,  // in ergs/cm2/s
-                    float avee,   // in keV
-                    float Ebin,   // eV
-                    arma_vec rhoH,
-                    std::vector<float> Ci,
-                    float dE,     // eV
-                    arma_vec H,
-                    Report &report);
+			float avee,   // in keV
+			float Ebin,   // eV
+			arma_vec rhoH,
+			std::vector<float> Ci,
+			float dE,     // eV
+			arma_vec H,
+			bool DoDebug,
+			Report &report);
 
 /**********************************************************************
   * brief Read in a file containing information about splitting ionization
