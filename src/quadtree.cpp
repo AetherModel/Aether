@@ -81,14 +81,8 @@ void Quadtree::build(Inputs input, Report report) {
   qtnode tmp;
 
   for (uint64_t iNode = 0; iNode < nRootNodes; iNode++) {
-    if (report.test_verbose(2))
-      std::cout << "Making quadtree node : " << iNode << "\n";
-
     uint64_t iP = iNode * pow(4, max_depth);
     uint64_t iDepth = 0;
-
-    if (report.test_verbose(2))
-      std::cout << "  iProcessor Start : " << iP << "\n";
 
     for (int i = 0; i < 3; i++) {
       o(i) = origins(iNode, i);
@@ -162,7 +156,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
   }  else {
     tmp.iProcNode = iProc_in_out;
 
-    if (iProc == iProc_in_out)
+    if (iGrid == iProc_in_out)
       iSide = iSide_in;
 
     iProc_in_out++;
@@ -187,7 +181,7 @@ arma_vec Quadtree::get_vect(Quadtree::qtnode node, std::string which) {
         break;
     }
   } else {
-    if (node.iProcNode == iProc) {
+    if (node.iProcNode == iGrid) {
       if (which == "LL")
         vect = node.lower_left_norm;
 
@@ -472,10 +466,8 @@ int64_t Quadtree::find_point(arma_vec point) {
     wrap_point = wrap_point_cubesphere(point);
 
   int64_t iNode = -1;
-
   for (int64_t iRoot = 0; iRoot < nRootNodes; iRoot++) {
     iNode = find_point(wrap_point, root_nodes[iRoot]);
-
     if (iNode > -1)
       break;
   }
