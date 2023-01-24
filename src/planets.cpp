@@ -13,11 +13,14 @@
 // Constructor (initiaze the class):
 // -----------------------------------------------------------------------------
 
-Planets::Planets(Inputs args, Report report) {
-  IsOk = read_file(args, report);
+Planets::Planets(Inputs input, Report report) {
+  IsOk = read_file(input, report);
 
   if (IsOk)
-    IsOk = set_planet(args, report);
+    IsOk = set_planet(input, report);
+
+  if (IsOk)
+    IsOk = read_planet_specific_file(input, report);
 
   IsOk = sync_across_all_procs(IsOk);
 }
@@ -274,7 +277,7 @@ int Planets::update(Times time) {
 // move the appropriate data over to the planet structure
 // -----------------------------------------------------------------------------
 
-bool Planets::set_planet(Inputs args, Report report) {
+bool Planets::set_planet(Inputs input, Report report) {
 
   bool DidWork = true;
   int IsFound = 0;
@@ -282,7 +285,7 @@ bool Planets::set_planet(Inputs args, Report report) {
   int iSize = planets.size();
 
   for (int i = 0; i < iSize; i++) {
-    if (planets[i].name == args.get_planet()) {
+    if (planets[i].name == input.get_planet()) {
       IsFound = 1;
       planet.name = planets[i].name;
 
@@ -354,7 +357,7 @@ bool Planets::set_planet(Inputs args, Report report) {
   }
 
   if (!IsFound) {
-    std::cout << "Can't file planet " << args.get_planet()
+    std::cout << "Can't file planet " << input.get_planet()
               << " in planet file information!\n";
     DidWork = false;
   }
@@ -367,21 +370,21 @@ bool Planets::set_planet(Inputs args, Report report) {
 // information for all of the different planets.
 // -----------------------------------------------------------------------------
 
-bool Planets::read_file(Inputs args, Report report) {
+bool Planets::read_file(Inputs input, Report report) {
 
   planet_chars tmp;
   std::string line, col;
   std::ifstream myFile;
   bool DidWork = true;
 
-  report.print(1, "Reading planetary file : " + args.get_planetary_file());
+  report.print(1, "Reading planetary file : " + input.get_planetary_file());
 
-  myFile.open(args.get_planetary_file());
+  myFile.open(input.get_planetary_file());
 
   if (!myFile.is_open()) {
     if (iProc == 0)
       std::cout << "Could not open planetary file : "
-                << args.get_planetary_file() << "\n";
+                << input.get_planetary_file() << "\n";
 
     DidWork = false;
   } else {
@@ -450,3 +453,99 @@ bool Planets::read_file(Inputs args, Report report) {
 bool Planets::is_ok() {
   return IsOk;
 }
+
+// --------------------------------------------------------------------------
+// returns neutrals json for neutral density BCs
+// --------------------------------------------------------------------------
+
+json Planets::get_neutrals() {
+  return neutrals;
+}
+
+// --------------------------------------------------------------------------
+// returns neutral temperature json for neutral temperature BCs
+// --------------------------------------------------------------------------
+
+json Planets::get_temperatures() {
+  return temperatures;
+}
+
+// --------------------------------------------------------------------------
+// returns ions json for ion density initial conditions
+// --------------------------------------------------------------------------
+
+json Planets::get_ions() {
+  return ions;
+}
+
+// -----------------------------------------------------------------------------
+// Read in the planet specific file that describes the species
+// -----------------------------------------------------------------------------
+
+bool Planets::read_planet_specific_file(Inputs input, Report report) {
+
+  bool DidWork = true;
+  std::string hash;
+  std::ifstream infile_ptr;
+
+  std::string function = "Planets::read_planet_specific_file";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDebug = 4;
+
+  infile_ptr.open(input.get_planet_species_file());
+
+  if (!infile_ptr.is_open()) {
+    std::cout << "Could not open input file: "
+              << input.get_planet_species_file() << "!!!\n";
+    DidWork = false;
+  } else {
+
+    int IsDone = 0;
+
+    while (!IsDone) {
+
+      hash = find_next_hash(infile_ptr);
+
+      if (report.test_verbose(iDebug))
+        std::cout << "hash : -->" << hash << "<--\n";
+
+      if (hash == "#neutrals") {
+        report.print(iDebug, "Found #neutrals!");
+        std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
+        neutrals = put_csv_in_json_w_name(lines);
+
+        if (report.test_verbose(iDebug))
+          std::cout << neutrals << "\n";
+      } // #neutrals
+
+      if (hash == "#temperature") {
+        report.print(iDebug, "Found #temperatures!");
+        std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
+        temperatures = put_csv_in_json_wo_name(lines);
+
+        if (report.test_verbose(iDebug))
+          std::cout << temperatures << "\n";
+      }  // #temperature
+
+      if (hash == "#ions") {
+        report.print(iDebug, "Found #ions!");
+        std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
+        ions = put_csv_in_json_w_name(lines);
+
+        if (report.test_verbose(iDebug))
+          std::cout << ions << "\n";
+      }  // #ions
+
+      if (infile_ptr.eof())
+        IsDone = 1;
+    }   // while !IsDone
+
+    infile_ptr.close();
+  }  // else (isopen)
+
+  report.exit(function);
+  return DidWork;
+}
+
