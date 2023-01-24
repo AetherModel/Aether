@@ -110,6 +110,8 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
     iLon = find_var_index(data['vars'], 'lon')
     iLat = find_var_index(data['vars'], 'lat')
     iAlt = find_var_index(data['vars'], 'z')
+    if (iAlt < 0):
+        iAlt = find_var_index(data['vars'], 'alt')
     iVar = find_var_index(data['vars'], varToPlot)
 
     if (mini < 0):
