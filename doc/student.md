@@ -7,11 +7,11 @@
 
 1. [A good tutorial on cmake](https://www.internalpointers.com/post/modern-cmake-beginner-introduction)
 
-2. [information on the apt package manager](https://ubuntu.com/server/docs/package-management)
+2. [Information on the apt package manager](https://ubuntu.com/server/docs/package-management)
 
-3. [information on the port package manager](https://brianreiter.org/2020/06/25/why-and-how-to-set-up-macports-package-manager-for-macos/), [here is a youtube video on this topic](https://www.youtube.com/watch?v=fYY7mArCryI)
+3. [Information on the port package manager](https://brianreiter.org/2020/06/25/why-and-how-to-set-up-macports-package-manager-for-macos/), [and a youtube video on this topic](https://www.youtube.com/watch?v=fYY7mArCryI)
 
-4. [tutorial for git and github](https://www.freecodecamp.org/news/git-and-github-for-beginners/)
+4. [Tutorial for git and GitHub](https://www.freecodecamp.org/news/git-and-github-for-beginners/)
 
 
 ## Some Editors
