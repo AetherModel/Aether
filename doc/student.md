@@ -26,8 +26,9 @@ emacs can be installed using a package manager such as apt or port
 
 21st Century Editors:
 
-1. Hmmm.... Atom is no longer supported.  cLion costs money.  I have
-no idea what the kids use today.
+1. There are always popular Integrated Development Environments (IDEs) that can be used to 
+    edit, develop, and test code.  If you use one and develop on Aether, please feel free to update
+    this section.
 
 
 ## Install Aether for Development
