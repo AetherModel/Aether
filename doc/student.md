@@ -43,7 +43,7 @@ Make sure you have all of the dependencies installed (see README.md).
 
 1c. Click "Create fork"
 
-1d. github will take you to this repository automatically.  It is now
+1d. GitHub will take you to this repository automatically.  It is now
 your "version" of Aether, and all development will be done here.  I am going to use the username "YourRepo" instead of your actual repository below.
 
 
