@@ -233,7 +233,7 @@ void calc_aurora(Grid grid,
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
 
-        for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
           rhoH1d = rhoH1d + rho_tube;
@@ -276,7 +276,7 @@ void calc_aurora(Grid grid,
         // weights (coef or Aurora_Coef) and the neutral density
         weighted_sum.zeros();
 
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           if (neutrals.species[iSpecies].nAuroraIonSpecies > 0) {
             neutral_density_tube =
               neutrals.species[iSpecies].density_scgc.tube(iLon, iLat);
@@ -286,7 +286,7 @@ void calc_aurora(Grid grid,
         }
 
         // Cycle through each species of neutrals that gets aurora,
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
           if (neutrals.species[iSpecies].nAuroraIonSpecies > 0) {
 
