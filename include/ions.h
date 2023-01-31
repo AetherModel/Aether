@@ -14,6 +14,8 @@ class Ions {
   // This struct contains all of the information needed for a single
   // species of ion.  We will then have a vector of these species.
 
+  int64_t nSpecies = 8;
+  
   struct species_chars {
     std::string cName;
     precision_t mass;
