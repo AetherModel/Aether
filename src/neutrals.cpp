@@ -52,7 +52,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 //  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
+Neutrals::Neutrals(Grid grid, Planets planet, Inputs input, Report report) {
 
   int iErr;
   species_chars tmp;
@@ -62,6 +62,8 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
   int64_t nAlts = grid.get_nAlts();
 
   report.print(2, "Initializing Neutrals");
+
+  json planet_neutrals = planet.get_neutrals();
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
