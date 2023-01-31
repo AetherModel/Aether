@@ -112,7 +112,7 @@ int output(const Neutrals &neutrals,
       // Neutral Densities:
       if (type_output == "neutrals" ||
           type_output == "states")
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
           store_variable(neutrals.species[iSpecies].cName,
                          neutrals.density_unit,
@@ -138,7 +138,7 @@ int output(const Neutrals &neutrals,
       // Ion Densities:
       if (type_output == "ions" ||
           type_output == "states")
-        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+        for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
           store_variable(ions.species[iSpecies].cName,
                          ions.density_unit,
@@ -147,7 +147,7 @@ int output(const Neutrals &neutrals,
       // Ion Temperatures:
       if (type_output == "ions" ||
           type_output == "states")
-        for (int iSpecies = 0; iSpecies < nIons + 1; iSpecies++)
+        for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
           store_variable(ions.species[iSpecies].cName + " " + ions.temperature_name,
                          ions.temperature_unit,
