@@ -79,7 +79,7 @@ int main() {
     Neutrals neutrals(gGrid, planet, input, report);
 
     // Initialize Ions on geographic grid:
-    Ions ions(gGrid, input, report);
+    Ions ions(gGrid, planet, input, report);
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions, report);

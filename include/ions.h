@@ -86,9 +86,9 @@ class Ions {
   // ------------------------------
   // Functions:
 
-  Ions(Grid grid, Inputs input, Report report);
+  Ions(Grid grid, Planets planet, Inputs input, Report report);
   species_chars create_species(Grid grid);
-  int read_planet_file(Inputs input, Report report);
+  int read_planet_file(Planets planet, Inputs input, Report report);
   void init_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
   void fill_electrons(Report &report);
   int get_species_id(std::string name, Report &report);

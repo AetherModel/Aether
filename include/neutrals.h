@@ -149,8 +149,9 @@ class Neutrals {
   precision_t heating_efficiency;
 
   /// Initial temperature profile, read in through the planet.in file:
-  float *initial_temperatures, *initial_altitudes;
-  int nInitial_temps = 0;
+  std::vector<double> initial_altitudes;
+  std::vector<double> initial_temperatures;
+  int64_t nInitial_temps = 0;
 
   /// names and units
   std::string density_name = "Neutral Bulk Density";
@@ -189,10 +190,11 @@ class Neutrals {
      diffusion coefficients and all of the other things needed
      for specifying the neutrals.
 
+     \param planet contains information about the species to simulate
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  int read_planet_file(Inputs input, Report report);
+  int read_planet_file(Planets planet, Inputs input, Report report);
 
   /**********************************************************************
      \brief Sets the initial conditions of the neutrals
