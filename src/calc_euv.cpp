@@ -64,10 +64,10 @@ void calc_ionization_heating(Euv euv,
 
   neutrals.heating_euv_scgc.zeros();
 
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     neutrals.species[iSpecies].ionization_scgc.zeros();
 
-  for (iSpecies = 0; iSpecies < nIons; iSpecies++)
+  for (iSpecies = 0; iSpecies < ions.nSpecies; iSpecies++)
     ions.species[iSpecies].ionization_scgc.zeros();
 
   int64_t nAlts = neutrals.heating_euv_scgc.n_slices;
@@ -81,7 +81,7 @@ void calc_ionization_heating(Euv euv,
 
       tau2d.zeros();
 
-      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
         if (neutrals.species[iSpecies].iEuvAbsId_ > -1) {
           i_ = neutrals.species[iSpecies].iEuvAbsId_;
           tau2d = tau2d +
@@ -92,7 +92,7 @@ void calc_ionization_heating(Euv euv,
 
       intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
 
-      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
         // index of photo abs cross section
         i_ = neutrals.species[iSpecies].iEuvAbsId_;
