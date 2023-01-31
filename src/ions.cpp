@@ -36,7 +36,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
-  tmp.nu_ion_neutral_vcgc = make_cube_vector(nLons, nLats, nAlts, nSpecies);
+  //tmp.nu_ion_neutral_vcgc = make_cube_vector(nLons, nLats, nAlts, nSpecies);
 
   return tmp;
 }
@@ -55,7 +55,7 @@ Ions::Ions(Grid grid, Inputs input, Report report) {
 
   report.print(2, "Initializing Ions");
 
-  for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
     species.push_back(tmp);
   }
@@ -156,9 +156,9 @@ int Ions::read_planet_file(Inputs input, Report report) {
 
         std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
 
-        if (lines.size() - 1 != nIons) {
-          std::cout << "num of ion species (nIons) defined in planet.h file : "
-                    << nIons << "\n";
+        if (lines.size() - 1 != nSpecies) {
+          std::cout << "num of ion species (nSpecies) defined in ions.h: "
+                    << nSpecies << "\n";
           std::cout << "number of ions defined in planet.in file : "
                     << lines.size() << "\n";
           std::cout << "These don't match!\n";
@@ -166,7 +166,7 @@ int Ions::read_planet_file(Inputs input, Report report) {
         } else {
           // assume order of rows right now:
           // name, mass, charge, advect
-          for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
+          for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
             report.print(5, "setting ion species " + lines[iSpecies + 1][0]);
             species[iSpecies].cName = lines[iSpecies + 1][0];
             species[iSpecies].mass = stof(lines[iSpecies + 1][1]) * cAMU;
@@ -174,10 +174,10 @@ int Ions::read_planet_file(Inputs input, Report report) {
             species[iSpecies].DoAdvect = stoi(lines[iSpecies + 1][3]);
           }
 
-          species[nIons].cName = "e-";
-          species[nIons].mass = cME;
-          species[nIons].charge = -1;
-          species[nIons].DoAdvect = 0;
+          species[nSpecies].cName = "e-";
+          species[nSpecies].mass = cME;
+          species[nSpecies].charge = -1;
+          species[nSpecies].DoAdvect = 0;
         }
       }
 
@@ -204,13 +204,13 @@ void Ions::fill_electrons(Report &report) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  species[nIons].density_scgc.zeros();
+  species[nSpecies].density_scgc.zeros();
 
-  for (iSpecies = 0; iSpecies < nIons; iSpecies++)
-    species[nIons].density_scgc =
-      species[nIons].density_scgc + species[iSpecies].density_scgc;
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[nSpecies].density_scgc =
+      species[nSpecies].density_scgc + species[iSpecies].density_scgc;
 
-  density_scgc = species[nIons].density_scgc;
+  density_scgc = species[nSpecies].density_scgc;
 
   report.exit(function);
   return;
@@ -219,7 +219,7 @@ void Ions::fill_electrons(Report &report) {
 //----------------------------------------------------------------------
 // return the index of the requested species
 // This will return -1 if the species is not found or name is empty
-// Will return nIons for electrons
+// Will return nSpecies for electrons
 //----------------------------------------------------------------------
 
 int Ions::get_species_id(std::string name, Report &report) {
@@ -232,7 +232,7 @@ int Ions::get_species_id(std::string name, Report &report) {
   int id_ = -1;
 
   if (name.length() > 0) {
-    for (iSpecies = 0; iSpecies <= nIons; iSpecies++)
+    for (iSpecies = 0; iSpecies <= nSpecies; iSpecies++)
       if (name == species[iSpecies].cName) {
         id_ = iSpecies;
         break;
@@ -268,7 +268,7 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
     std::string cName;
 
-    for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       // ----------------------------
       // Density and Temperature (per ion)
       // ----------------------------
