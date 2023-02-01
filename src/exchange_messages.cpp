@@ -605,14 +605,13 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchanges[iDir].iProc_to >= 0) {
       DidWork = unpack_one_face(grid.interchanges[iDir].iProc_to,
-				grid.interchanges[iDir].rbuffer,
-				nG, iDir,
-				grid.interchanges[iDir].DoReverseX,
-				grid.interchanges[iDir].DoReverseY,
-				grid.interchanges[iDir].XbecomesY);
-    } else {
+                                grid.interchanges[iDir].rbuffer,
+                                nG, iDir,
+                                grid.interchanges[iDir].DoReverseX,
+                                grid.interchanges[iDir].DoReverseY,
+                                grid.interchanges[iDir].XbecomesY);
+    } else
       set_horizontal_bcs(iDir, grid, report);
-    }
   }
 
   // Wait for all processors to be done.

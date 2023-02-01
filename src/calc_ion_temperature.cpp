@@ -56,7 +56,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Loop over all species or assume only bulk calculation
   if (input.get_do_calc_bulk_ion_temp())
     // First ion species only, currently is O+
-    nSpecs = 1; 
+    nSpecs = 1;
   else
     nSpecs = nIons;
 
@@ -72,14 +72,14 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       for (iLat = 0; iLat < nLats; iLat++) {
 
         // ---------------------------------------------------------------------
-        // Calculate heat flux (conduction) in 1D; loop over all lat,lon 
+        // Calculate heat flux (conduction) in 1D; loop over all lat,lon
         // ---------------------------------------------------------------------
-        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);   
-	lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
-                   / species[iIon].nu_ion_ion[iIon] / 8.0; 
-        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat) 
-		   / cKB / 3.0; 
-        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat); 
+        temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);
+        lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
+                   / species[iIon].nu_ion_ion[iIon] / 8.0;
+        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
+                   / cKB / 3.0;
+        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
 
         conduction1d.zeros();    // reset temp variable to zero
 
@@ -109,9 +109,9 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
     for (iIon = 0; iIon < nIons; iIon++) {
       tempT = tempT +
-	species[iIon].temperature_scgc % species[iIon].density_scgc;
+              species[iIon].temperature_scgc % species[iIon].density_scgc;
       tempD = tempD +
-	species[iIon].density_scgc;
+              species[iIon].density_scgc;
     }
 
     temperature_scgc = tempT / tempD;

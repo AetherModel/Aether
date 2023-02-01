@@ -208,7 +208,7 @@ bool Grid::read_restart(std::string dir) {
     RestartContainer.set_filename("grid_below_" + cGrid);
     RestartContainer.read_container_netcdf();
     geoAlt_Below = RestartContainer.get_element_value(altitude_name +
-                                                       " Below");
+                                                      " Below");
     // Cell Corners:
     RestartContainer.set_filename("grid_corners_" + cGrid);
     RestartContainer.read_container_netcdf();
@@ -222,16 +222,16 @@ bool Grid::read_restart(std::string dir) {
     RestartContainer.set_filename("grid_left_" + cGrid);
     RestartContainer.read_container_netcdf();
     geoLon_Left = RestartContainer.get_element_value(longitude_name +
-                                                       " Left");
+                                                     " Left");
     geoLat_Left = RestartContainer.get_element_value(latitude_name +
-                                                       " Left");
+                                                     " Left");
     // Down Edges:
     RestartContainer.set_filename("grid_down_" + cGrid);
     RestartContainer.read_container_netcdf();
     geoLon_Down = RestartContainer.get_element_value(longitude_name +
-                                                       " Down");
+                                                     " Down");
     geoLat_Down = RestartContainer.get_element_value(latitude_name +
-                                                       " Down");
+                                                     " Down");
 
   } catch (...) {
     std::cout << "Error reading grid restart file!\n";

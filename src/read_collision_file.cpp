@@ -382,8 +382,8 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
                       << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
             std::cout << "nu_ion_ion     : "
                       << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] << "\n";
-	  }
-	}  // End iIonSIds_
+          }
+        }  // End iIonSIds_
       }  // End iCol
     }  // End iIonT
   }  // End iLine
