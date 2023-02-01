@@ -4,12 +4,10 @@
 int64_t iProcQuery = -1;
 
 Quadtree::Quadtree(Inputs input, Report report) {
-
   if (input.get_is_cubesphere())
     nRootNodes = 6;
   else
     nRootNodes = 1;
-
 }
 
 // --------------------------------------------------------------------------
@@ -164,7 +162,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
   }  else {
     tmp.iProcNode = iProc_in_out;
 
-    if (iProc == iProc_in_out)
+    if (iGrid == iProc_in_out)
       iSide = iSide_in;
 
     iProc_in_out++;
@@ -477,7 +475,6 @@ int64_t Quadtree::find_point(arma_vec point) {
 
   for (int64_t iRoot = 0; iRoot < nRootNodes; iRoot++) {
     iNode = find_point(wrap_point, root_nodes[iRoot]);
-
     if (iNode > -1)
       break;
   }
@@ -500,7 +497,7 @@ int64_t Quadtree::find_root(arma_vec point) {
     wrap_point = wrap_point_cubesphere(point);
 
   int64_t iNode = -1, iRoot;
-
+  
   for (iRoot = 0; iRoot < nRootNodes; iRoot++) {
     if (iProc == iProcQuery)
       std::cout << "Root node : " << iRoot << " of " << nRootNodes << "\n";
