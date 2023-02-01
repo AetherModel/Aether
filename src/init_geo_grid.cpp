@@ -26,10 +26,10 @@ void Grid::create_cubesphere_connection(Quadtree quadtree,
   arma_vec size_up_norm = quadtree.get_vect("SU");
 
   // These points go off the edge to the next block in each direction:
-  arma_vec down_norm = middle_norm - size_up_norm;
-  arma_vec up_norm = middle_norm + size_up_norm;
-  arma_vec left_norm = middle_norm - size_right_norm;
-  arma_vec right_norm = middle_norm + size_right_norm;
+  arma_vec down_norm = middle_norm - 0.51 * size_up_norm;
+  arma_vec up_norm = middle_norm + 0.51 * size_up_norm;
+  arma_vec left_norm = middle_norm - 0.51 * size_right_norm;
+  arma_vec right_norm = middle_norm + 0.51 * size_right_norm;
 
   // Find those points in the quadtree to figure out which processor
   // they are on
