@@ -50,17 +50,20 @@ int main() {
     
     // Initialize the planet:
     Planets planet(input, report);
+    MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
     // Initialize the indices, read the files, and perturb:
     Indices indices(input);
     DidWork = read_and_store_indices(indices, input, report);
+    MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
 
     // Perturb the inputs if user has asked for this
     indices.perturb(input, report);
+    MPI_Barrier(aether_comm);
     
     // Initialize Geographic grid:
     Grid gGrid(input.get_nLonsGeo(),
@@ -68,6 +71,7 @@ int main() {
 	       input.get_nAltsGeo(),
 	       nGeoGhosts);
     DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
+    MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
     gGrid.fill_grid(planet, report);
