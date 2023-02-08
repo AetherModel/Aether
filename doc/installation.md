@@ -36,13 +36,13 @@ MacPorts, Homebrew (Mac OS X), apt-get (Ubuntu), or Chocolatey (Windows).
 | nlohmann-json-dev  |                |
 | openMPI            | same as gcc    |
 
-# Get Aether
+## Get Aether
 
 Clone Aether from GitHub into a local directory of your choosing.  We currently
 recommend checking out the `develop` branch, as the model is still awaiting its
 first release.
 
-# Build Aether
+## Build Aether
 
 Start by creating a build directory for the necessary files.  In this example,
 we show how to do so from the Aether project directory and assume you start
@@ -63,7 +63,7 @@ This is also the point where compilation options can be chosen. These take
 the structure:
 
 ```bash
-cmake .. -DFLAG=VALUE
+cmake -DFLAG=VALUE ..
 ```
 
 where `FLAG` is a flag name and `VALUE` is the desired value.  A table of model
@@ -76,15 +76,23 @@ system.  These will show up as cmake warnings.
 | USE_NETDCDF          | Y     | Allow NetCDF input/output files   |
 | USE_DOUBLE_PRECISION | Y     | Run Aether with higher precission |
 
+If your default compiler isn't a GCC compiler, you will likely need to specify
+the desired GCC compiler at this step using:
+
+```bash
+cmake -DCMAKE_CXX_COMPILER=<gcc executable with full path>
+```
+
 Finally, run the make command in the build directory:
 
 ```bash
 make -j
 ```
 
-The `-j` flag DOES THIS.
+The `-j` flag shows a condensed version of the progress.  If the make command
+fails, try using the `-v` flag instead.
 
-# Test the executable
+## Test the executable
 
 To test the model executable, exit the build diretory and run the test script:
 
