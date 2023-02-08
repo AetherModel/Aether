@@ -53,6 +53,7 @@ endif()
 
 find_package(OpenMP)
 if(OPENMP_FOUND)
+  target_include_directories(aether PUBLIC ${MPI_CXX_INCLUDE_DIRS})
   target_link_libraries(aether PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
