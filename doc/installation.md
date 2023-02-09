@@ -86,11 +86,15 @@ cmake -DCMAKE_CXX_COMPILER=<gcc executable with full path>
 Finally, run the make command in the build directory:
 
 ```bash
-make -j
+make -jN
 ```
 
-The `-j` flag shows a condensed version of the progress.  If the make command
-fails, try using the `-v` flag instead.
+The `-j` flag tells the computer the number of processers to use when running
+the code (where N is that number).  To use a single processor, just do not use
+the flag.
+
+If the make command fails, try using the `-v` flag instead.  This will include
+additional output that may make it easier to debug the process.
 
 ## Test the executable
 
