@@ -74,7 +74,6 @@ system.  These will show up as cmake warnings.
 
 | Aether Flag          | Value | Description                       |
 |----------------------|-------|-----------------------------------|
-| USE_NETDCDF          | Y     | Allow NetCDF input/output files   |
 | USE_DOUBLE_PRECISION | Y     | Run Aether with higher precission |
 
 If your default compiler isn't a GCC compiler, you will likely need to specify
