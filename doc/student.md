@@ -66,11 +66,16 @@ cmake ..
 make
 ```
 
-Once you have compiled you can run Aether with the standard run directory
-like this:
+Once you have compiled you can run Aether. To remember which runs you're doing,
+we recommend creating a specific directory for each run.  This can be done by
+copying the default run directory to have a special name, like this:
 ```bash
 cd ..
 cp -R share/run ./run.test
+```
+
+Now, run the executable from the directory you created.
+```bash
 cd run.test
 ./aether
 ```
@@ -92,6 +97,19 @@ run.test% ./aether
 > Wall Time : 7s (left : 5m); Current Time : 2011 3 20 0 1 20 0 
 > Wall Time : 7s (left : 4m); Current Time : 2011 3 20 0 1 30 0 
 etc.
+```
+
+The successful end of this will show a timing summary, similar to:
+```bash
+>main>advance>Chemistry::calc_chemistry
+    nTimes called : 720
+    timing_total (s) : 1.52599
+>main>advance>Ions::calc_ion_temperature
+    nTimes called : 720
+    timing_total (s) : 19.0279
+>main>advance>Neutrals::exchange
+    nTimes called : 720
+    timing_total (s) : 2.94398
 ```
 
 Now, edit the aether.json file and add the following after the "Debug"
@@ -125,10 +143,18 @@ run.test% ./aether
 > Wall Time : 5s (left : 14m); Current Time : 2011 3 20 0 0 20 0 
 ```
 
-There are 5 messages in this output (4 "what is this function"
-messages and a "welcome" message). Now that you have this working, you
-can try to do some development on the code.  The first step in doing
-development is making a new branch.  To do that, you need to run a
+If something happened that made the input file unreadable, you'll instead see
+something like this:
+```bash
+Error in reading input file!
+input initialization failed!
+---- Must Exit! ----
+```
+
+In a successful run, there are 5 messages in this output (4
+"what is this function" messages and a "welcome" message). Now that you have
+this working, you can try to do some development on the code.  The first step
+in doing development is making a new branch.  To do that, you need to run a
 command like this:
 
 ```bash
@@ -139,8 +165,12 @@ where my_new_branch should be named something that makes sense.
 
 Once you have done that, you can start editing files. The goal of this
 part is to get you familiar with editing files and finding things in
-the code. Find all of the messages and add some sort of response to
-all five places in the code where these messages occur.  For example:
+the code.  Remember that you will need to rebuild the code after altering the
+files, and update the executable in your `run.test` directory.
+
+Once you find all of the messages in the source code, alter the code to add
+some sort of response in all the places in the code where these messages occur.
+For example:
 
 ```bash
 run.test% ./aether
