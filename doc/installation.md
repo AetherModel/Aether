@@ -13,11 +13,12 @@ MacPorts, Homebrew (Mac OS X), apt-get (Ubuntu), or Chocolatey (Windows).
 | armadillo     | 11.4           |
 | boost         | 1.76           |
 | cmake         | 2.24           |
-| gcc           | 10, 11, 12     |
-| netcdf-cxx4   | 4.9            |
+| gcc           | 10, 11         |
+| netcdf        | 4.9            |
+| netcdf-cxx4   | 4.3            |
 | nlohmann-json | 3.11           |
 | OpenBLAS      | 0.3            |
-| openMPI       | same as gcc    |
+| mpich         | 4.1            |
 
 
 
@@ -80,7 +81,7 @@ If your default compiler isn't a GCC compiler, you will likely need to specify
 the desired GCC compiler at this step using:
 
 ```bash
-cmake -DCMAKE_CXX_COMPILER=<gcc executable with full path>
+cmake -DCMAKE_CXX_COMPILER=<gcc or mpi executable with full path>
 ```
 
 Finally, run the make command in the build directory:
@@ -93,7 +94,7 @@ The `-j` flag tells the computer the number of processers to use when running
 the code (where N is that number).  To use a single processor, just do not use
 the flag.
 
-If the make command fails, try using the `-v` flag instead.  This will include
+If the make command fails, try using the `VERBOSE=1` flag.  This will include
 additional output that may make it easier to debug the process.
 
 ## Test the executable
