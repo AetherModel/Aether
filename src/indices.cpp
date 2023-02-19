@@ -127,7 +127,7 @@ bool Indices::perturb(Inputs args, Report &report) {
   bool DidWork = true;
   bool DoReport = false;
   int64_t iDebug = 2;
-  
+
   json perturb_values = args.get_perturb_values();
 
   if (!perturb_values.empty()) {
@@ -137,9 +137,9 @@ bool Indices::perturb(Inputs args, Report &report) {
 
       if (report.test_verbose(iDebug)) {
         std::cout << "Perturbing Index : " << name << "\n";
-	DoReport = true;
+        DoReport = true;
       }
-      
+
       int iIndex = lookup_index_id(name);
 
       if (iIndex > -1) {
@@ -161,8 +161,8 @@ bool Indices::perturb(Inputs args, Report &report) {
 // Perturb a specific index in the way the user requested
 // ----------------------------------------------------------------------
 
-  void Indices::perturb_index(int iIndex, int seed,
-			      json style, bool DoReport) {
+void Indices::perturb_index(int iIndex, int seed,
+                            json style, bool DoReport) {
 
   int64_t nValues = all_indices_arrays[iIndex].nValues;
   int64_t nV = nValues;
@@ -201,12 +201,14 @@ bool Indices::perturb(Inputs args, Report &report) {
       iV = iValue;
 
     if (add) {
-      if (DoReport && iValue == 0) 
-	std::cout << "  ==> Adding " << perturbations[iV] << "\n";
+      if (DoReport && iValue == 0)
+        std::cout << "  ==> Adding " << perturbations[iV] << "\n";
+
       all_indices_arrays[iIndex].values[iValue] += perturbations[iV];
     } else {
-      if (DoReport && iValue == 0) 
-	std::cout << "  ==> Multiplied by " << perturbations[iV] << "\n";
+      if (DoReport && iValue == 0)
+        std::cout << "  ==> Multiplied by " << perturbations[iV] << "\n";
+
       all_indices_arrays[iIndex].values[iValue] *= perturbations[iV];
     }
   }
@@ -448,20 +450,21 @@ int Indices::lookup_index_id(std::string name) {
   std::string name_strip = strip_spaces(name_lower);
   int ind = -1;
 
-  if (indices_lookup.contains(name_strip)) {
+  if (indices_lookup.contains(name_strip))
     ind = indices_lookup[name_strip];
-  } else {
+
+  else {
     if (iProc == 0) {
       std::cout << "----------------------------------------------------\n";
       std::cout << "  -> Error !!!\n";
       std::cout << "  -> Attempting to set index " << name
-		<< " but can't locate it.  Skipping.\n";
+                << " but can't locate it.  Skipping.\n";
       std::cout << "  -> Modify the file indices_lookup.json file";
       std::cout << " in the UA/inputs directory\n";
       std::cout << "----------------------------------------------------\n";
     }
   }
-  
+
   return ind;
 }
 

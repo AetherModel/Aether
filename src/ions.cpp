@@ -148,7 +148,7 @@ int Ions::read_planet_file(Planets planet, Inputs input, Report report) {
   species[nSpecies].mass = cME;
   species[nSpecies].charge = -1;
   species[nSpecies].DoAdvect = 0;
-  
+
   return iErr;
 }
 
