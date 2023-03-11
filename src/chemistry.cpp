@@ -71,18 +71,42 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           // Some final rows can have comments in them, so we want to
           // skip anything where the length of the string in column 2
           // is == 0:
-          if (csv[iLine][1].length() > 0) {
+          if (csv[iLine][7].length() > 0) {
             report.print(3, "interpreting chemistry line : " + csv[iLine][0]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], report);
 
-            if (reaction.nLosses > 0 && reaction.nSources > 0) {
-              if (report.test_verbose(3))
-                display_reaction(reaction);
 
-              reactions.push_back(reaction);
-              nReactions++;
-            }
+          }
+
+          // check if it is part of a piecewise function,
+          //   if so use sources/losses for last reaction
+          if (reaction.nLosses == 0 && reaction.nSources == 0) {
+            reaction.sources_names = reactions.back().sources_names;
+            reaction.losses_names = reactions.back().losses_names;
+
+            reaction.sources_ids = reactions.back().sources_ids;
+            reaction.losses_ids = reactions.back().losses_ids;
+
+            reaction.sources_IsNeutral = reactions.back().sources_IsNeutral;
+            reaction.losses_IsNeutral = reactions.back().losses_IsNeutral;
+
+            reaction.nLosses = reactions.back().nLosses;
+            reaction.nSources = reactions.back().nSources;
+
+            reaction.branching_ratio = reactions.back().branching_ratio;
+
+            reaction.energy = reactions.back().energy;
+
+            reaction.piecewiseVar = reactions.back().piecewiseVar;
+          }
+
+          if (reaction.nLosses > 0 && reaction.nSources > 0) {
+            if (report.test_verbose(3))
+              display_reaction(reaction);
+
+            reactions.push_back(reaction);
+            nReactions++;
           }
         }
       }
@@ -144,13 +168,56 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction.rate = stof(line[7]);
 
   // for base, this is 8, for richards, this is 10:
-  int iBranch_ = 8;
+  int iBranch_ = 10;
 
   // Branching Ratio:
-  reaction.branching_ratio = stof(line[iBranch_]);
+  if (line[iBranch_].length() > 0)
+    reaction.branching_ratio = stof(line[iBranch_]);
+
+  else
+    reaction.branching_ratio = 1;
+
 
   // energy released as exo-thermic reaction:
-  reaction.energy = stof(line[iBranch_ + 1]);
+  if (line[iBranch_ + 1].length() > 0)
+    reaction.energy = stof(line[iBranch_ + 1]);
+
+  else
+    reaction.energy = 0;
+
+  // default to zero (no piecewise, no exponent)
+  reaction.min = 0;
+  reaction.max = 0;
+  reaction.type = 0;
+
+  // if richards, check for temperature dependence
+  if (iBranch_ = 10) {
+    int iNumerator = 17; // first column of temperature dependence variables
+
+    //std::cout << line[17] << ", " << line[18] << ", " << line[19] << "\n";
+    if (line[iNumerator].length() > 0) {
+      reaction.numerator =  stof(line[iNumerator]);
+      reaction.denominator =     line[iNumerator + 1];
+
+      if (line[iNumerator + 2].length() > 0)
+        reaction.exponent = stof(line[iNumerator + 2]);
+    } else {
+      // default to 0 (calc_chemical_sources will use constant rate)
+      reaction.type = 0;
+    }
+
+    reaction.piecewiseVar =      line[iNumerator + 3];
+
+    //std::cout << line[10] << ", " << line[17] << ", " << line[17+4] << "\n";
+    if (line[iNumerator + 4].length() > 0)
+      reaction.min =        stoi(line[iNumerator + 4]);
+
+    if (line[iNumerator + 5].length() > 0)
+      reaction.max =        stoi(line[iNumerator + 5]);
+
+    if (line[iNumerator + 6].length() > 0)
+      reaction.type =       stoi(line[iNumerator + 6]);
+  }
 
   report.exit(function);
   return reaction;
@@ -219,4 +286,27 @@ void Chemistry::display_reaction(Chemistry::reaction_type reaction) {
               << ")" << " + ";
 
   std::cout << " ( RR : " << reaction.rate << ")\n";
+
+  if (reaction.type > 0) {
+    std::cout << "Temperature Dependence: ("
+              << reaction.numerator
+              << "/"
+              << reaction.denominator
+              << ")^"
+              << reaction.exponent << "\n";
+
+
+  }
+
+  if (reaction.min < reaction.max) {
+    std::cout << "Range: "
+              << reaction.min
+              << " < "
+              << reaction.piecewiseVar;
+
+    if (reaction.max)
+      std::cout << " < " << reaction.max;
+
+    std::cout << "\n";
+  }
 }
