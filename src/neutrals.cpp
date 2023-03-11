@@ -380,14 +380,16 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
         temperature_scgc.tube(iX, iY) =
           2 * temperature_scgc.tube(iX - 1, iY) -
           temperature_scgc.tube(iX - 2, iY);
+
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
           velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX - 1, iY);
+
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
-            2 * species[iSpecies].density_scgc.tube(iX-1, iY) -
-            species[iSpecies].density_scgc.tube(iX-2, iY);
+            2 * species[iSpecies].density_scgc.tube(iX - 1, iY) -
+            species[iSpecies].density_scgc.tube(iX - 2, iY);
       }
     }
   }
@@ -400,9 +402,11 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
         temperature_scgc.tube(iX, iY) =
           2 * temperature_scgc.tube(iX + 1, iY) -
           temperature_scgc.tube(iX + 2, iY);
+
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
           velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX + 1, iY);
+
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
@@ -420,9 +424,11 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
         temperature_scgc.tube(iX, iY) =
           2 * temperature_scgc.tube(iX, iY - 1) -
           temperature_scgc.tube(iX, iY - 2);
+
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
           velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY - 1);
+
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
@@ -440,9 +446,11 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
         temperature_scgc.tube(iX, iY) =
           2 * temperature_scgc.tube(iX, iY + 1) -
           temperature_scgc.tube(iX, iY + 2);
+
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
           velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY + 1);
+
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
@@ -451,6 +459,7 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
       }
     }
   }
+
   report.exit(function);
 }
 

@@ -349,9 +349,10 @@ arma_mat Electrodynamics::get_interpolation_indices(arma_mat vals,
 
       // Check to see if the time is below or above the vector:
 
-      if (in < search(iLow) || in > search(iHigh)) {
+      if (in < search(iLow) || in > search(iHigh))
         interpolation_index = 0.0;
-      } else {
+
+      else {
 
         // At this point, we know that it is somewhere between the highest
         // and lowest values:
@@ -384,6 +385,7 @@ arma_mat Electrodynamics::get_interpolation_indices(arma_mat vals,
 
         interpolation_index = iMid + x;
       }
+
       res(i, j) = interpolation_index;
     }
   }
