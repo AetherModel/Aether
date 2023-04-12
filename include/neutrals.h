@@ -313,7 +313,8 @@ class Neutrals {
 		       bool DoReverseY,
 		       bool XbecomesY);
 
-  
+  std::vector<double> temp_data(arma_cube temp);
+
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

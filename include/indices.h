@@ -166,6 +166,24 @@ class Indices {
    **/
   void perturb_index(int iIndex, int seed, json style);
 
+  //given the indices number, return the indices name from index_time_pair structure
+  std::string get_name(int iIndex);
+
+  //given the indices number, return the number of values that are stored
+  int64_t get_nValues(int iIndex); 
+
+  /**************************************************************
+   \brief The general function that returns the index value at the time
+   \param time the time in seconds that the index is requested at
+   \param the index to return (i.e., one of the constants defined above)
+   **/
+  precision_t get_index(double time, int index);
+
+  //returns the size of all_indices_array
+  int all_indices_array_size();
+
+  //returns how many indices there are in total (nIndices in the class)
+  int64_t get_nIndices();
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
@@ -210,13 +228,6 @@ private:
 
   /// this will let us go back and forth between names and ids:
   json indices_lookup;
-  
-  /**************************************************************
-   \brief The general function that returns the index value at the time
-   \param time the time in seconds that the index is requested at
-   \param the index to return (i.e., one of the constants defined above)
-   **/
-  precision_t get_index(double time, int index);
 
 };
 

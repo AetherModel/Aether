@@ -104,6 +104,8 @@ class Ions {
   void calc_electron_temperature(Neutrals neutrals, Grid grid, Report &report);
   
   bool restart_file(std::string dir, bool DoRead);
+  std::vector<double> temp_data(arma_cube temp);
+
 
 };
 #endif  // INCLUDE_IONS_H_

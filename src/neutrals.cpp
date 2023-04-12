@@ -483,6 +483,13 @@ int Neutrals::get_species_id(std::string name, Report &report) {
 //----------------------------------------------------------------------
 // Read/Write restart files for the neutrals
 //----------------------------------------------------------------------
+ vector<double> Neutrals::temp_data(arma_cube temp){
+    std::vector<double> temps;
+    temps.push_back(temp.min());
+    temps.push_back(temp.max());
+    temps.push_back(mean(temp, 2).min());
+    return temps;
+  }
 
 bool Neutrals::restart_file(std::string dir, bool DoRead) {
 

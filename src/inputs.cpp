@@ -96,6 +96,25 @@ std::string Inputs::get_settings_str(std::string key1) {
   return value;
 }
 
+std::string Inputs::get_logfile() {
+  
+  return settings["Logfile"]["name"];
+}
+
+int Inputs::get_n_species(){
+  return settings["Outputs"]["species"].size();
+}
+
+std::vector<std::string> Inputs::get_species_vector(){
+  std::vector<std::string> species;
+  std::string value;
+  for (int iOutput = 0; iOutput < get_n_species(); iOutput++){
+    value = settings.at("Outputs").at("species").at(iOutput);
+    species.push_back(value);
+  }
+  return species;
+}
+
 std::string Inputs::get_settings_str(std::string key1,
                                      std::string key2) {
   std::string value = "unknown";

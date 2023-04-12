@@ -488,3 +488,23 @@ int Indices::get_au_index_id() {
 int Indices::get_al_index_id() {
   return iAL_;
 }
+
+std::string Indices::get_name(int iIndex){
+  return all_indices_arrays[iIndex].name;
+}
+
+int64_t Indices::get_nValues(int iIndex){
+  return all_indices_arrays[iIndex].nValues;
+}
+
+int Indices::all_indices_array_size(){
+  return all_indices_arrays.size();
+}
+
+int64_t Indices::get_nIndices(){
+  int64_t n = 0;
+  for (size_t i = 0; i<all_indices_array_size(); i++){
+    n = n + get_nValues(i);
+  }
+  return n;
+}

@@ -114,6 +114,10 @@ using json = nlohmann::json;
 // not done
 #include "output.h"
 // not done
+
+//not done
+#include "logfile.h"
+
 #include "advance.h"
 
 // not done
