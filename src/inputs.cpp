@@ -97,11 +97,10 @@ std::string Inputs::get_settings_str(std::string key1) {
 }
 
 std::string Inputs::get_logfile() {
-  
   return settings["Logfile"]["name"];
 }
 
-int Inputs::get_n_species(){
+int64_t Inputs::get_n_species(){
   return settings["Outputs"]["species"].size();
 }
 
