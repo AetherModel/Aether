@@ -24,9 +24,14 @@ class Logfile {
 
 public:
 
-  Logfile(Inputs input, Report &report);
+  Logfile(Indices indices, Inputs inputs, Report &report);
 
-  void write_logfile(Times time, Neutrals neutrals, Ions ions, Inputs inputs, Indices indices, Report report);
+  void write_logfile(Times time,
+		     Neutrals neutrals,
+		     Ions ions,
+		     Inputs inputs,
+		     Indices indices,
+		     Report report);
 
   void close_logfile();
 
