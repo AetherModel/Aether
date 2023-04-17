@@ -80,7 +80,7 @@ public:
   int iTimingDepth;
 
   std::string get_logfile();
-  precision_t get_n_species();
+  int64_t get_n_species();
   std::vector<std::string> get_species_vector();
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
