@@ -1,0 +1,36 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [300] },
+    
+    "CubeSphere" : {
+	"false" : true},
+
+    "GeoGrid" : {
+	"MinLat" :  30.0,
+	"MaxLat" :  60.0,
+	"MinLon" :  90.0,
+	"MaxLon" : 270.0,
+	"MinAlt" : 100.0,
+	"dAlt"   : 5.0,
+        "AltFile" : "",
+	"IsUniformAlt" : true},
+    
+    "GeoBlockSize" : {
+	"nLons" : 30,
+	"nLats" : 15,
+	"nAlts" : 50},
+
+    "StartTime" : [2011, 3, 20, 0, 0, 0],
+    "EndTime" : [2011, 3, 20, 1, 0, 0],
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin"
+
+}

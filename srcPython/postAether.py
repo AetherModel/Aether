@@ -211,28 +211,9 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
 
     yp[0, nLats] = 2 * yp[0, nLats-1] - lats[0, nLats-1]
     yp[nLons, 0] = yp[nLons-1, 0]
-
     
-    #print(yp)
-
-    #ax.pcolor(xp, yp, v, vmin = mini, vmax = maxi, cmap = cmap)
-
-    #n = np.asarray((v - mini) / (maxi - mini) * 255.0, dtype = np.int)
     plot = ax.scatter(lons, lats, c = v, cmap=cmap, vmin = mini, vmax = maxi)
-
-    #lons = data[iLon][2:-2, 0, 0]
-    #lats = data[iLat][0, 2:-2, 0]
-    #
-    #x_pos = lons
-    #y_pos = lats
-    #v = data[iVar][2:-2, 2:-2, altToPlot].transpose()
-    #dx = (x_pos[1] - x_pos[0]) / 2.0
-    #xp = np.append(x_pos - dx, x_pos[-1:] + dx)
-    #dy = (y_pos[1] - y_pos[0]) / 2.0
-    #yp = np.append(y_pos - dy, y_pos[-1] + dy)
-    #
-    #ax.pcolormesh(xp, yp, v, vmin = mini, vmax = maxi, cmap = cmap)
-
+    
     return plot
     
 #----------------------------------------------------------------------------
@@ -251,6 +232,9 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
         i = i+1
     cbar = fig.colorbar(plot, ax = ax)
     cbar.set_label(varToPlot)
+    ax.set_title(varToPlot)
+    ax.set_xlabel('Longitude (deg)')
+    ax.set_ylabel('Latitude (deg)')
     print('  Outputting file : ', plotFile)
     fig.savefig(plotFile)
     plt.close(fig)
