@@ -204,6 +204,9 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
         if (i < 100):
             plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i)
         i = i+1
+    ax.set_title(varToPlot)
+    ax.set_xlabel('Longitude (deg)')
+    ax.set_ylabel('Latitude (deg)')
     print('  Outputting file : ', plotFile)
     fig.savefig(plotFile)
     plt.close(fig)
