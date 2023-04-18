@@ -107,6 +107,21 @@ public:
   precision_t get_dipole_strength();
   
   /**********************************************************************
+     \brief returns neutrals json for neutral density BCs
+   **/
+  json get_neutrals();
+  
+  /**********************************************************************
+     \brief returns neutral temperature json for temperature ICs
+   **/
+  json get_temperatures();
+  
+  /**********************************************************************
+     \brief returns ions json for ion density characteristics
+   **/
+  json get_ions();
+  
+  /**********************************************************************
      \brief Check to see if internal state of class is ok
    **/
   
@@ -217,6 +232,15 @@ public:
   /// The chose planet is stored here
   planet_chars planet;
 
+  /// Information about the neutrals of the planet
+  json neutrals;
+
+  /// Information about the initial temperature of the planet
+  json temperatures;
+  
+  /// Information about the ions of the planet
+  json ions;
+
   /// An internal variable to hold the state of the class
   bool IsOk;
 
@@ -246,10 +270,18 @@ public:
 
   /**********************************************************************
      \brief Reads in the planetary characteristics and stores them
-     \param args info about how user has configured things
+     \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  bool read_file(Inputs args, Report report);
+  bool read_file(Inputs input, Report report);
+
+  /**********************************************************************
+     \brief Reads in the planets neutral, ion, temperature characteristics
+     \param input info about how user has configured things
+     \param report allow reporting to occur
+   **/
+  bool read_planet_specific_file(Inputs input, Report report);
+
 };
 
 #endif  // INCLUDE_PLANETS_H_

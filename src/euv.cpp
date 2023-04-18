@@ -196,7 +196,7 @@ bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
   if (report.test_verbose(3))
     std::cout << "Euv::pair_euv \n";
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+  for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
     if (report.test_verbose(5))
       std::cout << neutrals.species[iSpecies].cName << "\n";
@@ -227,7 +227,7 @@ bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
         if (waveinfo[iEuv].type == "ion") {
 
           // Loop through the ions to see if names match:
-          for (int iIon = 0; iIon < nIons; iIon++) {
+          for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
             if (ions.species[iIon].cName == waveinfo[iEuv].to) {
               if (report.test_verbose(5))
                 std::cout << "  Found ionization!! --> "

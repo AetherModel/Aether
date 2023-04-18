@@ -17,9 +17,9 @@ void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions,
   report.enter(function, iFunction);
   arma_cube t, one_minus_log;
 
-  for (int iIon = 0; iIon < nIons; iIon++) {
+  for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
     if (ions.species[iIon].nu_ion_neutral_coef.size() > 0) {
-      for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
+      for (int iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
         ions.species[iIon].nu_ion_neutral_vcgc[iNeutral].zeros();
 
         if (ions.species[iIon].nu_is_resonant[iNeutral]) {

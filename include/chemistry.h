@@ -80,20 +80,6 @@ class Chemistry {
 
  private:
 
-  struct sources_and_losses_type {
-
-    precision_t neutral_sources[nSpecies];
-    precision_t neutral_losses[nSpecies];
-    precision_t ion_sources[nIons];
-    precision_t ion_losses[nIons];
-
-    precision_t heat_neutrals;
-    precision_t heat_ions;
-    precision_t heat_electrons;
-  };
-
-  sources_and_losses_type sources_and_losses;
-
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions,
                           Inputs args,

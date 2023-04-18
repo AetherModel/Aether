@@ -111,13 +111,13 @@ void check_collision_frequncies(Ions ions,
   if (report.test_verbose(2)) {
     std::cout << "nu_in table:\n";
 
-    for (int iIon = 0; iIon < nIons; iIon++) {
+    for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
       std::cout << "====> Looking at Ion : "
                 << ions.species[iIon].cName
-                << " " << iIon << " of " << nIons << "\n";
+                << " " << iIon << " of " << ions.nSpecies << "\n";
 
       if (ions.species[iIon].nu_ion_neutral_coef.size() > 0) {
-        for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
+        for (int iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
           std::cout << ions.species[iIon].cName << " -> ";
           std::cout << neutrals.species[iNeutral].cName << " = ";
 
@@ -217,7 +217,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
     if (iIon > -1) {
       // Make the array the right size, filling with zeros,
       // and setting resonant to false:
-      for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
+      for (int iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
         ions.species[iIon].nu_ion_neutral_coef.push_back(0.0);
         ions.species[iIon].nu_is_resonant.push_back(false);
       }
@@ -294,11 +294,11 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
 
       // Make the array the right size, filling with zeros,
       // and setting resonant to false:
-      if (ions.species[iIon].nu_in_res_temp_min.size() < nSpecies) {
+      if (ions.species[iIon].nu_in_res_temp_min.size() < neutrals.nSpecies) {
         if (report.test_verbose(4))
           std::cout << "Creating resonant arrays\n";
 
-        for (int iNeutral = 0; iNeutral < nSpecies; iNeutral++) {
+        for (int iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
           ions.species[iIon].nu_in_res_temp_min.push_back(0.0);
           ions.species[iIon].nu_in_res_coef1.push_back(0.0);
           ions.species[iIon].nu_in_res_coef2.push_back(0.0);
@@ -357,8 +357,8 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
     iIonSIds_.push_back(ions.get_species_id(csv[0][iCol], report));
 
   // Set the array size and fill with zeros
-  for (iIon = 0; iIon < nIons; iIon++) {
-    for (iIonS = 0; iIonS < nIons; iIonS++)
+  for (iIon = 0; iIon < ions.nSpecies; iIon++) {
+    for (iIonS = 0; iIonS < ions.nSpecies; iIonS++)
       ions.species[iIon].nu_ion_ion.push_back(0.0);
   }
 
@@ -394,7 +394,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   iIonP = ions.get_species_id("O+2P", report);
 
   if (iIonT > -1 && iIonD > -1) {
-    for (iIon = 0; iIon < nIons; iIon++) {
+    for (iIon = 0; iIon < ions.nSpecies; iIon++) {
       // Fill for each specie the O+2D Bst value with the O+ Bst value
       ions.species[iIon].nu_ion_ion[iIonD] = ions.species[iIon].nu_ion_ion[iIonT];
 
@@ -404,7 +404,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   }
 
   if (iIonT > -1 && iIonP > -1) {
-    for (iIon = 0; iIon < nIons; iIon++) {
+    for (iIon = 0; iIon < ions.nSpecies; iIon++) {
       // Fill for each specie the O+2P Bst value with the O+ Bst value
       ions.species[iIon].nu_ion_ion[iIonP] = ions.species[iIon].nu_ion_ion[iIonT];
 
@@ -414,8 +414,8 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   }
 
   if (report.test_verbose(4)) {
-    for (iIon = 0; iIon < nIons; iIon++) {
-      for (iIonS = 0; iIonS < nIons; iIonS++) {
+    for (iIon = 0; iIon < ions.nSpecies; iIon++) {
+      for (iIonS = 0; iIonS < ions.nSpecies; iIonS++) {
         std::cout << "Bst for : " << ions.species[iIon].cName << " and "
                   << ions.species[iIonS].cName << " is "
                   << ions.species[iIon].nu_ion_ion[iIonS] << "\n";
