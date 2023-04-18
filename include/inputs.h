@@ -49,6 +49,8 @@ public:
 
   bool get_is_cubesphere();
 
+  std::string get_student_name();
+  bool get_is_student();
   
   // ------------------------------
   // Grid inputs:

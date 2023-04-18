@@ -7,6 +7,10 @@
 	"iTimingDepth" : 5,
 	"iProc" : 0},
 
+    "Student" : {
+	"name" : "",
+	"is" : false },
+
     "Planet" : "earth",
 
     "BField" : "dipole",

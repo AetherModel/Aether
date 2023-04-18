@@ -29,6 +29,10 @@ int main() {
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
+    if (input.get_is_student())
+      report.print(-1, "Hello " +
+		   input.get_student_name() + " - welcome to Aether!");
+    
     Quadtree quadtree(input, report);
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");

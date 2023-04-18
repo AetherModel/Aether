@@ -6,9 +6,10 @@
 	"dt" : 10.0},
 
     "GeoBlockSize" : {
-	"nBlocksLon" : 2,
-	"nBlocksLat" : 2},
-    
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 50},
+
     "Mysetting" : {
 	"setting1" : "this_is_an_example",
 	"setting2" : 42,
