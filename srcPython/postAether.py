@@ -36,24 +36,38 @@ def parse_args():
 
 def get_core_file(filename):
     coreFile = ''
+    isEnsemble = False
+    ensembleFile = ''
+    ensembleNumber = -1
     m = re.match('.*([0123]D.*)(_g\d*)(\..*)',filename)
     if m:
-        coreFile = m.group(1)            
-    return coreFile
+        coreFile = m.group(1)
+        # check if file is a member of an ensemble:
+        check = re.match('.*([0123]D.*)(_m)(\d*)',coreFile)
+        if (check):
+            ensembleFile = check.group(1)
+            isEnsemble = True
+            ensembleNumber = int(check.group(3)) + 1
+
+    fileInfo = {'coreFile': coreFile,
+                'isEnsemble': isEnsemble,
+                'ensembleFile': ensembleFile,
+                'ensembleNumber': ensembleNumber,
+                'ensembleMembers': -1}
+    return fileInfo
 
 #----------------------------------------------------------------------------
 # Add to the list of strings if there isn't already an identical string
 #----------------------------------------------------------------------------
 
-def append_if_unique(list, newItem):
-    newList = list
+def if_unique(list, newItem):
     IsFound = False
-    for item in list:
+    index = -1
+    for i, item in enumerate(list):
         if (item == newItem):
             IsFound = True
-    if (not IsFound):
-        newList.append(newItem)
-    return newList
+            index = i
+    return IsFound, index
 
 #----------------------------------------------------------------------------
 # This looks at all of the netcdf files, figures out the core name, and
@@ -63,11 +77,40 @@ def append_if_unique(list, newItem):
 def get_base_files():
     filelist = sorted(glob('?????*.nc'))
     files = []
+    filesInfo = []
     for file in filelist:
-        coreFile = get_core_file(file)
+        fileInfo = get_core_file(file)
+        coreFile = fileInfo['coreFile']
         if (len(coreFile) > 0):
-            files = append_if_unique(files, coreFile)
-    return files
+            IsFound, i = if_unique(files, coreFile)
+            if (not IsFound):
+                files.append(coreFile)
+                filesInfo.append(fileInfo)
+
+    # Figure out ensembles:
+    # (1) get list of unique ensemble filess
+    # (2) count how many files have this unique ensemble name
+    
+    ensembleFiles = []
+    ensembleCounter = []
+    for fileInfo in filesInfo:
+        if (len(fileInfo['ensembleFile']) > 0):
+            IsFound, i = if_unique(ensembleFiles, fileInfo['ensembleFile'])
+            if (IsFound):
+                ensembleCounter[-1] += 1
+            else:
+                ensembleFiles.append(fileInfo['ensembleFile'])
+                ensembleCounter.append(1)
+    
+    # (3) store the number of ensemble members:            
+    for i, fileInfo in enumerate(filesInfo):
+        if (len(fileInfo['ensembleFile']) > 0):
+            IsFound, item = if_unique(ensembleFiles, fileInfo['ensembleFile'])
+            if (IsFound):
+                filesInfo[i]['ensembleMembers'] = ensembleCounter[item]
+    
+    return filesInfo
+
 
 #----------------------------------------------------------------------------
 # Simply return the index of the matching string from a list
@@ -168,28 +211,11 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
 
     yp[0, nLats] = 2 * yp[0, nLats-1] - lats[0, nLats-1]
     yp[nLons, 0] = yp[nLons-1, 0]
-
     
-    #print(yp)
-
-    #ax.pcolor(xp, yp, v, vmin = mini, vmax = maxi, cmap = cmap)
-
-    #n = np.asarray((v - mini) / (maxi - mini) * 255.0, dtype = np.int)
-    ax.scatter(lons, lats, c = v, cmap=cmap, vmin = mini, vmax = maxi)
-
-    #lons = data[iLon][2:-2, 0, 0]
-    #lats = data[iLat][0, 2:-2, 0]
-    #
-    #x_pos = lons
-    #y_pos = lats
-    #v = data[iVar][2:-2, 2:-2, altToPlot].transpose()
-    #dx = (x_pos[1] - x_pos[0]) / 2.0
-    #xp = np.append(x_pos - dx, x_pos[-1:] + dx)
-    #dy = (y_pos[1] - y_pos[0]) / 2.0
-    #yp = np.append(y_pos - dy, y_pos[-1] + dy)
-    #
-    #ax.pcolormesh(xp, yp, v, vmin = mini, vmax = maxi, cmap = cmap)
-
+    plot = ax.scatter(lons, lats, c = v, cmap=cmap, vmin = mini, vmax = maxi)
+    
+    return plot
+    
 #----------------------------------------------------------------------------
 # make a figure with all of the block plotted for the specified variable
 # and altitude
@@ -202,8 +228,10 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
     i = 0
     for data in allBlockData:
         if (i < 100):
-            plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i)
+            plot = plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i)
         i = i+1
+    cbar = fig.colorbar(plot, ax = ax)
+    cbar.set_label(varToPlot)
     ax.set_title(varToPlot)
     ax.set_xlabel('Longitude (deg)')
     ax.set_ylabel('Latitude (deg)')
@@ -280,25 +308,177 @@ def write_netcdf(allBlockData, fileName):
     ncfile.close()
 
 #----------------------------------------------------------------------------
+# copy block data in one file
+#----------------------------------------------------------------------------
+
+def copy_or_add_block_data(allBlockData,
+                           oldBlockData = [],
+                           factor = 1.0):
+
+    if (len(oldBlockData) > 0):
+        doAdd = True
+    else:
+        doAdd = False
+
+    newBlockData = []
+
+    for ib, oneBlock in enumerate(allBlockData):
+        obCopy = {}
+        for key in oneBlock.keys():
+            if (type(key) == int):
+                if (doAdd):
+                    obCopy[key] = oldBlockData[ib][key] + \
+                        oneBlock[key] * factor
+                else:
+                    obCopy[key] = oneBlock[key] * factor
+            else:
+                obCopy[key] = oneBlock[key]
+        newBlockData.append(obCopy)
+        
+    return newBlockData
+
+#----------------------------------------------------------------------------
+# copy block data in one file
+#----------------------------------------------------------------------------
+
+iCopy_ = 0
+iAdd_ = 1
+iSub_ = 2
+iMult_ = 3
+iPower_ = 4
+
+def do_math_on_block_data(blockData1,
+                          blockData2 = [],
+                          math = iCopy_,
+                          factor = 1.0,
+                          iLowestVar = 3):
+
+    newBlockData = []
+
+    for ib, oneBlock in enumerate(blockData1):
+        obCopy = {}
+        for key in oneBlock.keys():
+            if (type(key) == int):
+                if (key >= iLowestVar):
+                    if (math == iCopy_):
+                        obCopy[key] = oneBlock[key] * 1.0
+                    if (math == iAdd_):
+                        obCopy[key] = oneBlock[key] + blockData2[ib][key]
+                    if (math == iSub_):
+                        obCopy[key] = oneBlock[key] - blockData2[ib][key]
+                    if (math == iMult_):
+                        obCopy[key] = oneBlock[key] * factor
+                    if (math == iPower_):
+                        obCopy[key] = oneBlock[key] ** factor
+                else:
+                    obCopy[key] = oneBlock[key]
+            else:
+                obCopy[key] = oneBlock[key]                    
+        newBlockData.append(obCopy)
+    return newBlockData
+
+#----------------------------------------------------------------------------
+# Calc Standard Deviation of Ensemble Run
+#----------------------------------------------------------------------------
+
+def calc_std_of_ensembles(filesInfo,
+                          ensembleIndexList,
+                          ensembleMean):
+    
+    for i, iF in enumerate(ensembleIndexList):
+        cF = filesInfo[iF]['coreFile']
+        print('---> Going back through corefiles: ', cF)
+        allBlockData, filelist = read_block_files(cF)
+
+        # subtract
+        diff = do_math_on_block_data(allBlockData,
+                                     blockData2 = ensembleMean,
+                                     math = iSub_)
+        # square
+        diffs = do_math_on_block_data(diff,
+                                      factor = 2,
+                                      math = iPower_)
+                
+        if (i == 0):
+            sums = do_math_on_block_data(diffs,
+                                         math = iCopy_)
+        else:
+            sums = do_math_on_block_data(sums,
+                                         blockData2 = diffs,
+                                         math = iAdd_)
+    factor = 1.0 / fileInfo['ensembleMembers']
+    sumsD = do_math_on_block_data(sums,
+                                  factor = factor,
+                                  math = iMult_)
+    stdData = do_math_on_block_data(sumsD,
+                                    factor = 0.5,
+                                    math = iPower_)
+
+    return stdData
+
+
+#----------------------------------------------------------------------------
+# write and plot data
+#----------------------------------------------------------------------------
+
+def write_and_plot_data(dataToWrite,
+                        fileStart,
+                        fileAddon,
+                        iVar,
+                        iAlt):
+
+    netcdfFile = fileStart + fileAddon + '.nc'
+    write_netcdf(dataToWrite, netcdfFile)
+
+    plotFile = fileStart + fileAddon + '.png'
+    var = dataToWrite[0]['vars'][iVar]
+    plot_all_blocks(dataToWrite, var, iAlt, plotFile)
+
+    return
+
+
+#----------------------------------------------------------------------------
 # main code
 #----------------------------------------------------------------------------
 
 args = parse_args()
 
-files = get_base_files()
+filesInfo = get_base_files()
 
-for coreFile in files:
+iVar = 3
+iAlt = 10
+
+for iFile, fileInfo in enumerate(filesInfo):
+    coreFile = fileInfo['coreFile']
+    print(coreFile)
     allBlockData, filelist = read_block_files(coreFile)
-    netcdfName = coreFile + '.nc'
-    write_netcdf(allBlockData, netcdfName)
+    write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt)
+
+    if (fileInfo['isEnsemble']):
+        factor = 1.0 / float(fileInfo['ensembleMembers'])
+        if (fileInfo['ensembleNumber'] == 1):
+            ensembleData = copy_or_add_block_data(allBlockData,
+                                                  factor = factor)
+            ensembleIndexList = [iFile]
+        else:
+            ensembleData = copy_or_add_block_data(allBlockData,
+                                                  oldBlockData = ensembleData,
+                                                  factor = factor)
+            ensembleIndexList.append(iFile)
+        if (fileInfo['ensembleNumber'] == fileInfo['ensembleMembers']):
+
+            write_and_plot_data(ensembleData, fileInfo['ensembleFile'],
+                                '_mean', iVar, iAlt)
+            
+            stdData = calc_std_of_ensembles(filesInfo,
+                                            ensembleIndexList,
+                                            ensembleData)
+            write_and_plot_data(stdData, fileInfo['ensembleFile'],
+                                '_std', iVar, iAlt)
+                        
     if (args.rm):
         print('  ---> Removing files...')
         for file in filelist:
             command = 'rm -f '+file
             os.system(command)
-    
-    plotFile = coreFile + '.png'
-    #print(allBlockData[0]['vars'])
-    var = allBlockData[0]['vars'][-1]
-    plot_all_blocks(allBlockData, var, 10, plotFile)
     

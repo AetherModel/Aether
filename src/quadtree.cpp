@@ -475,10 +475,11 @@ int64_t Quadtree::find_point(arma_vec point) {
 
   for (int64_t iRoot = 0; iRoot < nRootNodes; iRoot++) {
     iNode = find_point(wrap_point, root_nodes[iRoot]);
+
     if (iNode > -1)
       break;
   }
-  
+
   return iNode;
 }
 
@@ -497,7 +498,7 @@ int64_t Quadtree::find_root(arma_vec point) {
     wrap_point = wrap_point_cubesphere(point);
 
   int64_t iNode = -1, iRoot;
-  
+
   for (iRoot = 0; iRoot < nRootNodes; iRoot++) {
     if (iProc == iProcQuery)
       std::cout << "Root node : " << iRoot << " of " << nRootNodes << "\n";

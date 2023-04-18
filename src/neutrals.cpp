@@ -132,8 +132,9 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
   report.print(3, "In read_planet_file for Neutrals");
 
   json neutrals = planet.get_neutrals();
-  
+
   nSpecies = neutrals["name"].size();
+
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].cName = neutrals["name"][iSpecies];
     double mass = neutrals["mass"][iSpecies];
@@ -147,6 +148,7 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
 
   json temperatures = planet.get_temperatures();
   nInitial_temps = temperatures["alt"].size();
+
   for (int i = 0; i < nInitial_temps; i++) {
     initial_altitudes.push_back(double(temperatures["alt"][i]) * 1000.0);
     initial_temperatures.push_back(temperatures["temp"][i]);

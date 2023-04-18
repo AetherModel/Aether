@@ -21,11 +21,11 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 
     // This is the first place where we have the ions, neutrals, and grid:
     species[iIon].nu_ion_neutral_vcgc = make_cube_vector(grid.get_nLons(),
-							 grid.get_nLats(),
-							 grid.get_nAlts(),
-							 neutrals.nSpecies);
+                                                         grid.get_nLats(),
+                                                         grid.get_nAlts(),
+                                                         neutrals.nSpecies);
   }
- 
+
   temperature_scgc = neutrals.temperature_scgc;
 
   return;
