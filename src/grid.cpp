@@ -106,7 +106,6 @@ bool Grid::write_restart(std::string dir) {
   if (iMember == 0) {
     try {
       OutputContainer RestartContainer;
-      RestartContainer.set_netcdf();
       RestartContainer.set_directory(dir);
       RestartContainer.set_version(0.1);
       RestartContainer.set_time(0.0);
@@ -195,7 +194,6 @@ bool Grid::read_restart(std::string dir) {
 
   try {
     OutputContainer RestartContainer;
-    RestartContainer.set_netcdf();
     RestartContainer.set_directory(dir);
     RestartContainer.set_version(0.1);
     // Cell Centers:
