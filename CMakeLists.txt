@@ -64,13 +64,17 @@ if (MPI_FOUND)
   target_link_libraries(aether PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 endif()
 
-#if(USE_NETCDF)
-set(NETCDF_CXX "YES")
-find_package(NetCDF REQUIRED)
-target_include_directories(aether PUBLIC ${NETCDF_INCLUDES})
-target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_CXX})
-target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
-#endif()
+# Add netCDF output:
+# cmake -DUSE_NETCDF=ON ..
+option(USE_NETCDF "Use netCDF files for output - default is off" OFF)
+if (USE_NETCDF)
+  add_definitions(-DNETCDF)
+  set(NETCDF_CXX "YES")
+  find_package(NetCDF REQUIRED)
+  target_include_directories(aether PUBLIC ${NETCDF_INCLUDES})
+  target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_CXX})
+  target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
+endif()
 
 # Set up links for executable
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/aether
