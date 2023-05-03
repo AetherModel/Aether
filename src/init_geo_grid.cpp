@@ -573,6 +573,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
                          Planets planet,
                          Inputs input,
                          Report &report) {
+    
+    
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -607,10 +609,15 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet, input, report);
 
-  // Throw a little message for students:
+  //Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
 				       input.get_student_name(),
-				       4, "");
+				       4, "init_geo_grid in init_geo_grid.cpp");
+    //if (input.get_is_student())
+     // report.print(-1, "(4) What function is this " +
+      //     input.get_student_name() + "? Found it: calc_euv in calc_euv.cpp");
+    
+    //std::cout << "Found it: init_geo_grid in init_geo_grid.cpp\n";
   
   report.exit(function);
   return DidWork;

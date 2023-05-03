@@ -203,6 +203,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
     velocity_vcgc[iComp] = velocity_vcgc[iComp] / sum_rho;
 
   report.exit(function);
+    //cout << "Found it: calc_ion_drift in calc_ion_drift.cpp\n";
   return;
 }
 

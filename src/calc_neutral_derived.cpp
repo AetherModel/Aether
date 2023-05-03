@@ -81,6 +81,7 @@ void Neutrals::calc_specific_heat(Report &report) {
                     mean_major_mass_scgc);
 
   report.exit(function);
+  //cout << "Found it: calc_specific_heat in calc_neutral_derived.cpp\n";
   return;
 }
 
@@ -246,6 +247,8 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
       }  // iLat
     }  // iLon
   }  // iSpecies
+    
+  //cout << "Found it calc_chapman in calc_neutral_derived.cpp\n";
 
   report.exit(function);
   return;
@@ -303,6 +306,8 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
       conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
     }  // lat
   }  // lon
+    
+    //cout << "Found it: calc_conduction in calc_neutral_derived.cpp\n";
 
   report.exit(function);
 }

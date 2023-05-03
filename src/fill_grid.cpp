@@ -30,6 +30,7 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   sza_scgc = acos(cos_sza_scgc);
 
   report.exit(function);
+  //cout << "Found it: calc_sza in fill_grid.cpp\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +199,7 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
   }
 
   report.exit(function);
+  //std::cout << "Found it: fill_grid_bfield in fill_grid.cpp\n";
   return;
 }
 

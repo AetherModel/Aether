@@ -44,5 +44,6 @@ void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions,
   }
 
   report.exit(function);
+  //cout << "Found it: calc_ion_neutral_coll_freq in collions.cpp\n";
   return;
 }

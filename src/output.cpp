@@ -54,7 +54,11 @@ int output(const Neutrals &neutrals,
 
   report.student_checker_function_name(args.get_is_student(),
 				       args.get_student_name(),
-				       3, "");
+				       3, "Found it: output in output.cpp");
+    
+  //if (input.get_is_student())
+      //report.print(-1, "(3) What function is this " +
+           //input.get_student_name() + "? Found it: calc_euv in calc_euv.cpp");
   
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 

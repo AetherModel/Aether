@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 project(Aether LANGUAGES CXX
                VERSION   2021.0)
 
+set(CMAKE_CXX_STANDARD 11)
+
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)

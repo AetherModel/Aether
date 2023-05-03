@@ -81,5 +81,6 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   ions.fill_electrons(report);
 
   report.exit(function);
+   // cout << "Found it: calc_chemistry in calc_chemistry.cpp\n";
   return;
 }
