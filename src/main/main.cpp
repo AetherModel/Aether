@@ -31,7 +31,7 @@ int main() {
 
     if (input.get_is_student())
       report.print(-1, "Hello " +
-		   input.get_student_name() + " - welcome to Aether!");
+		   input.get_student_name() + " - welcome to Aether!" + "  Thanks!");
     
     Quadtree quadtree(input, report);
     if (!quadtree.is_ok())
