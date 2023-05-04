@@ -37,44 +37,6 @@ Logfile::Logfile(Indices indices,
 }
 
 //-------------------------------------------------------------
-// Get min, mean, and max of an arma_cube
-//-------------------------------------------------------------
-
-vector<precision_t> get_min_mean_max(arma_cube value) {
-  vector<precision_t> mmm(3);
-  mmm[0] = value.min();
-  mmm[1] = accu(value)/value.n_elem;
-  mmm[2] = value.max();
-  return mmm;
-}
-
-//-------------------------------------------------------------
-// Get min, mean, and max of either a neutral or ion species
-//-------------------------------------------------------------
-
-vector<precision_t> get_min_mean_max_density(std::string name,
-					     Neutrals neutrals,
-					     Ions ions,
-					     Report report) {
-  vector<precision_t> mmm(3);
-  
-  int id = neutrals.get_species_id(name, report);
-  if (id > -1){
-    mmm = get_min_mean_max(neutrals.species[id].density_scgc);
-  } else {
-    id = ions.get_species_id(name, report);
-    if (id > -1) {
-      mmm = get_min_mean_max(ions.species[id].density_scgc);
-    } else {
-      mmm[0] = 0.0;
-      mmm[1] = 0.0;
-      mmm[2] = 0.0;
-    }
-  }
-  return mmm;
-}
-
-//-------------------------------------------------------------
 // Add a new line to the log file
 //-------------------------------------------------------------
 

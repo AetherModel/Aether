@@ -35,10 +35,6 @@ public:
 
   void close_logfile();
 
-  string * get_species();
-
-  vector<double> Neutral_Ion_Data(string name, Neutrals neutrals, Ions ions, Report report);
-
 private:
   
   ofstream logfilestream;  
