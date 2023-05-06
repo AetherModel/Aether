@@ -1,5 +1,7 @@
 # Aether
 This is the home of the Aether model of the thermosphere and ionosphere
+Hey this is Aarushi
+
 
 The Aether model has been developed using gnu c++ (version 10). If
 you are using this, hopefully it will just work out of the box. We have 
