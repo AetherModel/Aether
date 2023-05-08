@@ -34,7 +34,7 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-		 input.get_student_name() + "?");
+		 input.get_student_name() + "This is advance cpp");
   
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
