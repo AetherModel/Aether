@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <map>
 
 #include "aether.h"
 
@@ -52,11 +53,18 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.timing_total = 0.0;
     tmp.iStringPosBefore = iOldStrLen;
     tmp.iLastEntry = iCurrentFunction;
+    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end()) {
+      tmp.iFunctionVerbose = get_FunctionVerbose(input);
+    } else {
+      tmp.iFunctionVerbose = iVerbose;
+    }
     entries.push_back(tmp);
     nEntries++;
     iEntry = nEntries - 1;
     iFunction = iEntry;
   }
+
+  iVerbose = entries[iEntry].iFunctionVerbose;
 
   // This was taken from
   // https://stackoverflow.com/questions/19555121/how-to-get-current-timestamp-in-milliseconds-since-1970-just-the-way-java-gets
@@ -108,6 +116,12 @@ void Report::exit(std::string input) {
     current_entry = current_entry.substr(0, entries[iEntry].iStringPosBefore);
     iCurrentFunction = entries[iEntry].iLastEntry;
     iLevel--;
+    if (iLevel > 0){
+      iVerbose = entries[iCurrentFunction].iFunctionVerbose;
+    }
+    else {
+      iVerbose = iDefaultVerbose;
+    }
   }
 }
 
@@ -176,6 +190,22 @@ void Report::set_verbose(int input) {
 }
 
 // -----------------------------------------------------------------------
+// Set the default "iVerbose" value that is passed in Aether.json
+// -----------------------------------------------------------------------
+
+void Report::set_DefaultVerbose(int input) {
+  iDefaultVerbose = input;
+}
+
+// -----------------------------------------------------------------------
+// Set the verbose level for the specified function
+// -----------------------------------------------------------------------
+
+void Report::set_FunctionVerbose(std::string input, int iFunctionVerbose) {
+  map_iFunctionVerbose[input] = iFunctionVerbose;
+}
+
+// -----------------------------------------------------------------------
 // Set the depth to report for timing at the end of the run
 // -----------------------------------------------------------------------
 
@@ -197,6 +227,22 @@ void Report::set_timing_percent(float input) {
 
 int Report::get_verbose() {
   return iVerbose;
+}
+
+// -----------------------------------------------------------------------
+// Get the default "iVerbose" that is passed in Aether.json
+// -----------------------------------------------------------------------
+
+int Report::get_DefaultVerbose() {
+  return iDefaultVerbose;
+}
+
+// -----------------------------------------------------------------------
+// Get the verbose level for the specified function in the code.
+// -----------------------------------------------------------------------
+
+int Report::get_FunctionVerbose(std::string input) {
+  return map_iFunctionVerbose[input];
 }
 
 // -----------------------------------------------------------------------
