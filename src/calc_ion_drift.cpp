@@ -126,7 +126,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
       // (negative is due to gravity being positive for some reason):
-      gravity_vcgc[2] = -grid.gravity_scgc % rho;
+      gravity_vcgc[2] = -grid.gravity_vcgc[2] % rho;
 
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");

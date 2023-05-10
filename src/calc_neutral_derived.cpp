@@ -147,7 +147,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * grid.gravity_scgc);
+      (species[iSpecies].mass * -grid.gravity_vcgc[2]);
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);

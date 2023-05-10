@@ -213,7 +213,7 @@ void calc_aurora(Grid grid,
   weighted_sum.set_size(nAlts);
 
   scale_height = cKB * neutrals.temperature_scgc /
-                 (neutrals.mean_major_mass_scgc % abs(grid.gravity_scgc));
+                 (neutrals.mean_major_mass_scgc % abs(-grid.gravity_vcgc[2]));
 
   precision_t eflux;
   precision_t avee;

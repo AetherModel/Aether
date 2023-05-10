@@ -227,8 +227,10 @@ void Grid::fill_grid_radius(Planets planet, Report &report) {
 
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;
-
-  gravity_scgc = mu * radius2i_scgc;
+  gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  //CHANGED:
+  gravity_vcgc[2] = mu *radius2i_scgc;
+  //gravity_scgc = mu * radius2i_scgc;
 
   report.print(3, "ending fill_grid_radius");
 }
