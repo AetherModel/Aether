@@ -53,11 +53,13 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.timing_total = 0.0;
     tmp.iStringPosBefore = iOldStrLen;
     tmp.iLastEntry = iCurrentFunction;
-    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end()) {
+
+    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end())
       tmp.iFunctionVerbose = get_FunctionVerbose(input);
-    } else {
+
+    else
       tmp.iFunctionVerbose = iVerbose;
-    }
+
     entries.push_back(tmp);
     nEntries++;
     iEntry = nEntries - 1;
@@ -116,12 +118,11 @@ void Report::exit(std::string input) {
     current_entry = current_entry.substr(0, entries[iEntry].iStringPosBefore);
     iCurrentFunction = entries[iEntry].iLastEntry;
     iLevel--;
-    if (iLevel > 0){
+
+    if (iLevel > 0)
       iVerbose = entries[iCurrentFunction].iFunctionVerbose;
-    }
-    else {
+    else
       iVerbose = iDefaultVerbose;
-    }
   }
 }
 
@@ -250,15 +251,16 @@ int Report::get_FunctionVerbose(std::string input) {
 // -----------------------------------------------------------------------
 
 void Report::student_checker_function_name(bool isStudent,
-					   std::string cStudentName,
-					   int iFunctionNumber,
-					   std::string cFunctionName) {
+                                           std::string cStudentName,
+                                           int iFunctionNumber,
+                                           std::string cFunctionName) {
   if (isStudent) {
     if (cFunctionName.length() > 1)
       print(-1, cStudentName + " found function " + cFunctionName);
     else
       std::cout << "> (" << iFunctionNumber << ")"
-		<< " What function is this " << cStudentName << "?\n";
+                << " What function is this " << cStudentName << "?\n";
   }
+
   return;
 }

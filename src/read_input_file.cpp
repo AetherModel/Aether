@@ -63,9 +63,8 @@ bool Inputs::read_inputs_json(Times &time, Report &report) {
     report.set_timing_depth(settings["Debug"]["iTimingDepth"]);
     report.set_timing_percent(settings["Debug"]["TimingPercent"]);
 
-    for (auto &item : settings["Debug"]["iFunctionVerbose"].items()) {
+    for (auto &item : settings["Debug"]["iFunctionVerbose"].items())
       report.set_FunctionVerbose(item.key(), item.value());
-    }
 
     // Capture time information:
     std::vector<int> istart = get_settings_timearr("StartTime");
