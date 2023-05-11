@@ -61,6 +61,12 @@ public:
   void set_verbose(int input);
 
   /**************************************************************
+   \brief Set which processor does the reporting
+   \param input the processor to do the reporting
+   **/
+  void set_iProc(int input);
+
+  /**************************************************************
    \brief This sets the default "iVerbose" that is passed in Aether.json
    \param input the default "iVerbose" value
    **/
@@ -162,6 +168,8 @@ private:
 
   /// global verbose level of the code
   int iVerbose;
+  /// processor to do the reporting
+  int iProcReport;
   /// default "iVerbose" that is passed in Aether.json
   int iDefaultVerbose;
   /// map to store the verbose levels of the specified functions

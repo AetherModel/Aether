@@ -16,6 +16,7 @@ Report::Report() {
   current_entry = "";
   nEntries = 0;
   iVerbose = -2;
+  iProcReport = 0;
   divider = ">";
   divider_length = divider.length();
   // Set iLevel to -1, so that the call in main takes it to 0:
@@ -54,7 +55,8 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.iStringPosBefore = iOldStrLen;
     tmp.iLastEntry = iCurrentFunction;
 
-    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end())
+    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end() &&
+	iProc == iProcReport)
       tmp.iFunctionVerbose = get_FunctionVerbose(input);
 
     else
@@ -188,6 +190,14 @@ int Report::test_verbose(int iLevel) {
 
 void Report::set_verbose(int input) {
   iVerbose = input;
+}
+
+// -----------------------------------------------------------------------
+// Set which processor will do the reporting
+// -----------------------------------------------------------------------
+
+void Report::set_iProc(int input) {
+  iProcReport = input;
 }
 
 // -----------------------------------------------------------------------

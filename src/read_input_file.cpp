@@ -62,6 +62,7 @@ bool Inputs::read_inputs_json(Times &time, Report &report) {
     report.set_DefaultVerbose(settings["Debug"]["iVerbose"]);
     report.set_timing_depth(settings["Debug"]["iTimingDepth"]);
     report.set_timing_percent(settings["Debug"]["TimingPercent"]);
+    report.set_iProc(settings["Debug"]["iProc"]);
 
     for (auto &item : settings["Debug"]["iFunctionVerbose"].items())
       report.set_FunctionVerbose(item.key(), item.value());
