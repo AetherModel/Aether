@@ -56,11 +56,13 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.iLastEntry = iCurrentFunction;
 
     if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end() &&
-	iProc == iProcReport)
+        iProc == iProcReport)
       tmp.iFunctionVerbose = get_FunctionVerbose(input);
 
-    else
+    else if (doInheritVerbose)
       tmp.iFunctionVerbose = iVerbose;
+    else
+      tmp.iFunctionVerbose = iDefaultVerbose;
 
     entries.push_back(tmp);
     nEntries++;
@@ -209,6 +211,14 @@ void Report::set_DefaultVerbose(int input) {
 }
 
 // -----------------------------------------------------------------------
+// Set the flag to have sub-functions inherit verbose levels
+// -----------------------------------------------------------------------
+
+void Report::set_doInheritVerbose(bool input) {
+  doInheritVerbose = input;
+}
+
+// -----------------------------------------------------------------------
 // Set the verbose level for the specified function
 // -----------------------------------------------------------------------
 
@@ -246,6 +256,14 @@ int Report::get_verbose() {
 
 int Report::get_DefaultVerbose() {
   return iDefaultVerbose;
+}
+
+// -----------------------------------------------------------------------
+// Get the flag to have sub-functions inherit verbose levels
+// -----------------------------------------------------------------------
+
+bool Report::get_doInheritVerbose() {
+  return doInheritVerbose;
 }
 
 // -----------------------------------------------------------------------

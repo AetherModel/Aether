@@ -73,6 +73,12 @@ public:
   void set_DefaultVerbose(int input);
 
   /**************************************************************
+   \brief This sets the flag to have sub-functions inherit verbose levels
+   \param input the flag to have sub-functions inherit verbose levels
+   **/
+  void set_doInheritVerbose(bool input);
+
+  /**************************************************************
    \brief This sets the verbose level for the specified function
    \param input the function name
    \param iFunctionVerbose verbose level for the specified function
@@ -113,6 +119,11 @@ public:
    \brief Returns the default "iVerbose" passed in Aether.json
    **/
   int get_DefaultVerbose();
+
+  /**************************************************************
+   \brief Returns the flag to have sub-functions inherit verbose levels
+   **/
+  bool get_doInheritVerbose();
 
   /**************************************************************
    \brief Returns the verbose level for the specified function
@@ -172,6 +183,8 @@ private:
   int iProcReport;
   /// default "iVerbose" that is passed in Aether.json
   int iDefaultVerbose;
+  /// flag to have sub-functions inherit verbose levels of functions
+  bool doInheritVerbose;
   /// map to store the verbose levels of the specified functions
   std::map<std::string, int> map_iFunctionVerbose;
   /// the depth of the reporting for the timing at the end of the simulation
