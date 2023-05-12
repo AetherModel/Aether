@@ -60,7 +60,7 @@ sudo apt install libnetcdf-c++4-dev
 On Ubuntu:
 
 ```bash
-sudo apt-get install -y nlohmann-json-dev
+sudo apt-get install -y nlohmann-json3-dev
 ```
 
 On Mac:
