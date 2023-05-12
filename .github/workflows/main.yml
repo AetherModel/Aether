@@ -10,9 +10,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-	cc: ["gcc"]
-	cxx: ["g++"]
-	cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
+        cc: ["gcc"]
+        cxx: ["g++"]
+        cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
 
     name: ${{ matrix.cxx }} and ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
@@ -21,21 +21,21 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt install cmake
-	sudo apt-get install libnetcdf-dev
-	sudo apt install libnetcdf-c++4-dev
+        sudo apt-get install libnetcdf-dev
+        sudo apt install libnetcdf-c++4-dev
         sudo apt-get install -y nlohmann-json-dev
         sudo apt-get install liblapack-dev libblas-dev libboost-dev libarmadillo-dev
 
     - name: CMake Configure
     - run: |
         mkdir build
-	cd build
-	cmake ${{ matrix.cflag }} ..
-	make -j
+        cd build
+        cmake ${{ matrix.cflag }} ..
+        make -j
 
     - name: Test run
     - run: |
         cd ..
-	cp -R share/run ./run_test
-	cd run_test
-	./aether
+        cp -R share/run ./run_test
+        cd run_test
+        ./aether
