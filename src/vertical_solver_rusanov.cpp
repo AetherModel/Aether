@@ -14,7 +14,7 @@ void advance_vertical_1stage(const arma_vec &log_rho, const arma_mat &log_NS, co
     //TODO: THESE VALUES ARE FROM OTHER FILES. DELETE LATER
     int iEast, iNorth, iUp;
     arma_vec InvRadialDistance_C;
-    arma_vec mass; //TODO: Figure out where the mass vector comes from
+    arma_vec mass; 
     arma_vec dalt_f;
     precision_t Dt; //from MODGitm
     int nIonsAdvect; //in modPlanet (where is modPlanet)
@@ -251,12 +251,6 @@ void advance_vertical_1stage(const arma_vec &log_rho, const arma_mat &log_NS, co
         new_log_rho(ialt) = log(new_sum_rho);
     }
 
-
-
-
-    
-    
-
 /*
  use ModGITM, only: &
         Dt, iEast_, iNorth_, iUp_, ThermalDiffCoefS
@@ -277,76 +271,84 @@ void advance_vertical_1stage(const arma_vec &log_rho, const arma_mat &log_NS, co
 } //advance_vertical_1stage
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-                               
-
-
-
 //modifies grad_var and diff_var
 void calc_rusanov_alts_rusanov(const arma_vec &var, arma_vec &grad_var,const arma_vec &diff_var) {
 
-    assert(var.size() == nAlts + 4); //TODO get nAlts in this function. nAlts member variable maybe?
-    assert(diffVar.size() == nAlts);
-    assert(gradVar.size() == nAlts);
+    assert(arma::size(var) == nAlts + 2);
+    assert(arma::size(diff_var) == nAlts);
+    assert(arma::size(grad_var) == nAlts);
     
-    arma_vec varLeft(nAlts+1, 0);
-    arma_vec varRight(nAlts+1, 0);
-    arma_vec diffFlux(nAlts+1, 0);
+    arma_vec var_left(nAlts+1, 0);
+    arma_vec var_right(nAlts+1, 0);
+    arma_vec diff_flux(nAlts+1, 0);
     
-    calc_facevalues_alts_rusanov(var, varLeft, varRight); //filling out varLeft and varRight
+    calc_facevalues_alts_rusanov(var, var_left, var_right); //filling out varLeft and varRight
     
     //gradient based on averaged Left/Right values
-    for (size_t i = 0; i < nAlts; i++) {
-        gradVar[i] = (0.5 * varLeft[i+1] + varRight[i+1] - varLeft[i] - varRight[i])/dAlt_C[i]; //TODO get dAlt_C from modVertical
-    } //for
+    for (uword i = 0; i < nAlts; i++) {
+        grad_var(i) = 0.5 * (var_left(i + 1) + var_right(i + 1) -
+        var_left(i) - var_right(i)) / dAlt_C(i);
+    }
     
-    assert(cMax.size() > diffFlux.size()); //see comment in loop for explanation
+    assert(size(cMax) > size(diff_flux)); //see comment in loop for explanation
     
     //Rusanov/Lax-Friedrichs diffusive term
-    for (size_t i = 0; i < nAlts + 1; i++) {
-        diffFlux[i] = 0.5 * std::max(cMax[i], cMax[i+1]) * (varRight[i] - varLeft[i]);
-        //TODO get cMax array into this function. Also if cMax's size is the same or less than diffFlux the line above will cause segfault
+    for (uword i = 0; i < nAlts + 1; i++) {
+        diff_flux(i) = 0.5 * std::max(cMax(i), cMax(i+1)) * (var_right(i) - var_left(i));
+        //TODO: The line of code above uses ghost cells. What is cMax's size? Will need to change line above based on answer.
+        //If cMax's size is the same or less than diffFlux the line above will cause segfault
     }
     
-    for (size_t i = 0; i < nAlts; i++) {
-        diffVar[i] = (diffFlux[i+1] - diffFlux[i]) / dAlt_C[i];
+    for (uword i = 0; i < nAlts; i++) {
+        diff_var(i) = (diff_flux(i+1) - diff_flux(i)) / dAlt_C(i);
     }
+
+
     
     
 } //calc_rusanov_alts_rusanov
 
-void calc_facevalues_alts_rusanov(const arma_vec &var, arma_vec &varLeft, arma_vec &varRight) {
+void calc_facevalues_alts_rusanov(const arma_vec &var, arma_vec &var_left, arma_vec &var_right) {
 
-    assert(var.size() == nAlts + 4);
-    assert(diffVar.size() == nAlts+1);
-    assert(gradVar.size() == nAlts+1);
+    assert(var.size() == nAlts + 2);
+    assert(var_left.size() == nAlts + 1);
+    assert(var_right.size() == nAlts + 1);
     
-    precision_t dVarUp, dVarDown;
-    arma_vec dVarLimited(nAlts + 2, 0);
+    precision_t dvar_up, dvar_down;
+    arma_vec dvar_limited(nAlts + 2, 0);
     
     const precision_t factor1 = 0.6250000;
     const precision_t factor2 = 0.0416667;
     
     precision_t h;
-    int i;
     
     //invDAlt_F is a arma_vec of size nAlts+3
-    for (size_t i = 0; i < nAlts; i++) {
+    for (uword i = 0; i < nAlts; i++) {
     
-        h = invDAlt_F[i+1]*2;
-        dVarUp = h * (factor1*(var[i-1]-var[i]) - factor2*(var[i+2]-Var[i-1]))
-        
+        h = invDAlt_F(i+1)*2;
+        dvar_up = h * (factor1*(var(i+1)-var(i)) - factor2*(var(i+2)-var(i-1))); //TODO: Uses ghost cells
+
+        h = invDAlt_F(i)*2;
+        dvar_down =  h * (factor1*(var(i)-var(i-1)) - factor2*(var(i+1)-var(i-2))); //TODO: Uses ghost cells
+
+        dvar_limited = Limiter_mc(dvar_up, dvar_down); //TODO: Where is Limiter_mc function from?
     }
+
+    uword i = 0;
+    dvar_up = (var(i+1) - var(i)) * invDAlt_F(i+1);
+    dvar_down = (var(i) - var(i-1)) * invDAlt_F(i);
+    dvar_limited = Limiter_mc(dvar_up, dvar_down);
+
+    i = nAlts + 1;
+    dvar_up = (var(i+1) - var(i)) * invDAlt_F(i+1);
+    dvar_down = (var(i) - var(i-1)) * invDAlt_F(i);
+    dvar_limited = Limiter_mc(dvar_up, dvar_down);
+
+    for (i =0; i < nAlts + 1; i++) {
+        var_left(i) = var(i-1) + 0.5 * dvar_limited(i-1) * dAlt_F(i);
+        var_right(i) = var(i) - 0.5 * dvar_limited(i) * dAlt_F(i);
+    }
+
+
     
 } //calc_facevalues_alts_resanov
