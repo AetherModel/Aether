@@ -183,6 +183,26 @@ public:
   bool send_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
 
+  // interpolation
+  static const arma::SizeCube unit_cube_size;
+  // Estimate the value of the point at (lon_in, lat_in, alt_in)
+  precision_t interpolate(const arma_cube &data,
+                          const precision_t lon,
+                          const precision_t lat,
+                          const precision_t alt);
+  // the position of point is given by a 3*1 column vector
+  precision_t interpolate(const arma_cube &data,
+                          const arma_vec &point);
+  // the position of a vector of points is specified by
+  // three vectors of lon, lat and alt
+  std::vector<precision_t> interpolate(const arma_cube &data,
+                                       const std::vector<precision_t> &Lons,
+                                       const std::vector<precision_t> &Lats,
+                                       const std::vector<precision_t> &Alts);
+  // process a vector of points
+  std::vector<precision_t> interpolate(const arma_cube &data,
+                                       const std::vector<arma_vec> &points);
+
  private:
 
   int IsGeoGrid;
@@ -194,6 +214,23 @@ public:
 
   int nGCs; // number of ghostcells
 
+  struct interp_range {
+    precision_t lon_min;
+    precision_t lon_max;
+    precision_t dLon;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t dLat;
+    precision_t alt_min;
+    precision_t alt_max;
+  };
+
+  void get_grid_range(struct interp_range &ir);
+  precision_t interpolate_helper(const arma_cube &data,
+                                 const interp_range &ir,
+                                 const precision_t lon_in,
+                                 const precision_t lat_in,
+                                 const precision_t alt_in);
 };
 
 #endif  // INCLUDE_GRID_H_
