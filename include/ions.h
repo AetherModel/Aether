@@ -27,6 +27,9 @@ class Ions {
     std::vector<bool> nu_is_resonant;
     std::vector<precision_t> nu_ion_ion;
     std::vector<precision_t> nu_ion_electron;
+      
+    std::vector<precision_t> diff0;
+    std::vector<precision_t> diff_exp;
 
     std::vector<precision_t> nu_in_res_temp_min;
     std::vector<precision_t> nu_in_res_coef1;
