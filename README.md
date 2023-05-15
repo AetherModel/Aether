@@ -83,6 +83,7 @@ sudo apt-get install liblapack-dev
 sudo apt-get install libblas-dev
 sudo apt-get install libboost-dev
 sudo apt-get install libarmadillo-dev
+sudo apt-get install openmpi-bin libopenmpi-dev
 ```
 
 On Mac:
@@ -92,6 +93,7 @@ sudo port install lapack
 sudo port install OpenBLAS
 sudo port install boost
 sudo port install armadillo
+sudo port install openmpi-bin libopenmpi-dev
  ```
 
 ## Quick Start:
