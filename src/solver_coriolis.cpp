@@ -12,7 +12,7 @@
 std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity, precision_t rotationrate) {
     std::vector<arma_cube> coriolis_vec(3);
     for (int64_t iComp = 0; iComp < 3; iComp++) {
-        coriolis_vec[iComp] = -2 * rotationrate * velocity[iComp]
+        coriolis_vec[iComp] = -2 * rotationrate * velocity[iComp];
     }
-    return coriolis_vec
+    return coriolis_vec;
 }
