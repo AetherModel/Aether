@@ -118,7 +118,7 @@ To compile Aether:
 mkdir build
 cd build
 cmake ..
-make -j
+make
 ```
 
 To compile Aether with NetCDF:
