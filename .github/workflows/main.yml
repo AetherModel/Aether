@@ -24,7 +24,7 @@ jobs:
         sudo apt-get install libnetcdf-dev
         sudo apt install libnetcdf-c++4-dev
         sudo apt-get install -y nlohmann-json3-dev
-        sudo apt-get install liblapack-dev libblas-dev libboost-dev libarmadillo-dev
+        sudo apt-get install liblapack-dev libblas-dev libboost-dev libarmadillo-dev openMPI
 
     - name: CMake Configure
       run: |
