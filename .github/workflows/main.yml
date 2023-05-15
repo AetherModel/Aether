@@ -11,10 +11,10 @@ jobs:
       matrix:
         cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
         include:
-          - os: ubuntu-latest
-            cc: "gcc"
-          - os: macos-latest
+          - os: "macos-latest"
             cc: "/usr/local/bin/gcc-13"
+          - os: "ubuntu-latest"
+            cc: "gcc"
 
     name: ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
