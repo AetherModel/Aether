@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        cc: ["/usr/bin/gcc"]
+        cc: ["gcc-default"]
         cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
         include:
           - os: "macos-latest"
@@ -40,7 +40,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
+        cmake ${{ matrix.cflag }} ..
         make VERBOSE=1
 
     - name: Mac cmake configure
