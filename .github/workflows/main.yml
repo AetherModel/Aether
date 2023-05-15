@@ -21,11 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt install cmake
-        sudo apt-get install libnetcdf-dev
-        sudo apt install libnetcdf-c++4-dev
-        sudo apt-get install -y nlohmann-json3-dev
-        sudo apt-get install liblapack-dev libblas-dev libboost-dev libarmadillo-dev openmpi-bin libopenmpi-dev
+        cat requirements.linux | xargs sudo apt-get install
 
     - name: CMake Configure
       run: |
