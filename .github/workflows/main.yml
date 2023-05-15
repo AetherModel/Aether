@@ -31,7 +31,7 @@ jobs:
         mkdir build
         cd build
         cmake ${{ matrix.cflag }} ..
-        make -j
+        make VERBOSE=1
 
     - name: Test run
       run: |
