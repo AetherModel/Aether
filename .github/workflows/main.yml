@@ -31,7 +31,7 @@ jobs:
         brew update
         brew upgrade
         cat requirements.mac | xargs brew install
-	brew reinstall gcc
+        brew reinstall gcc
 
     - name: Ubuntu cmake configure
       if: startsWith(matrix.os, 'ubuntu')
