@@ -42,11 +42,14 @@ jobs:
         cd build
         cmake ${{ matrix.cflag }} ..
         make VERBOSE=1
-	which ${{ matrix.cc }}
+        which ${{ matrix.cc }}
 
     - name: Mac cmake configure
       if: startsWith(matrix.os, 'mac')
       run: |
+        echo "HI", $NETCDF_INCLUDES
+        echo "SI", $NETCDF_LIBRARIES_CXX
+        echo "FI", $NETCDF_LIBRARIES_C
         mkdir build
         cd build
         cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
