@@ -9,12 +9,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: ["ubuntu-latest"]
+        cc: ["/usr/bin/gcc"]
         cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
         include:
           - os: "macos-latest"
             cc: "/usr/local/bin/gcc-13"
-          - os: "ubuntu-latest"
-            cc: "gcc"
 
     name: ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
