@@ -36,7 +36,6 @@ jobs:
 
     - name: Test run
       run: |
-        cd ..
         cp -R share/run ./run_test
         cd run_test
         ./aether
