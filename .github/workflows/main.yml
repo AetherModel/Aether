@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         cc: ["gcc"]
         cxx: ["g++"]
         cflag: ["-DUSE_NETCDF=Y", "", "-DUSE_DOUBLE_PRECISION=Y"]
@@ -18,10 +18,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
-    - name: Install dependencies
+
+    - name: Install Ubuntu dependencies
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
         cat requirements.linux | xargs sudo apt-get install
+
+    - name: Install OSX dependencies
+      if: startsWith(matrix.os, 'mac')
+      run: |
+        sudo port selfupdate
+        cat requirements.mac | xargs sudo port install
 
     - name: CMake Configure
       run: |
