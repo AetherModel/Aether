@@ -28,8 +28,8 @@ jobs:
     - name: Install OSX dependencies
       if: startsWith(matrix.os, 'mac')
       run: |
-        sudo port selfupdate
-        cat requirements.mac | xargs sudo port install
+        sudo brew update
+        cat requirements.mac | xargs sudo brew install
 
     - name: CMake Configure
       run: |
