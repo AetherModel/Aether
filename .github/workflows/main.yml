@@ -46,7 +46,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=/usr/local/bin/gcc-12 ..
+        cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=/usr/local/bin/gcc ..
         make VERBOSE=1
 
     - name: Test run
