@@ -40,16 +40,13 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ${{ matrix.cflag }} ..
+        cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
         make VERBOSE=1
-        which ${{ matrix.cc }}
 
     - name: Mac cmake configure
       if: startsWith(matrix.os, 'mac')
       run: |
-        echo "HI", $NETCDF_INCLUDES
-        echo "SI", $NETCDF_LIBRARIES_CXX
-        echo "FI", $NETCDF_LIBRARIES_C
+        ls /usr/local/Cellar/lib/*netcdf*
         mkdir build
         cd build
         cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
