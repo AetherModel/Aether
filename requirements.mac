@@ -2,7 +2,7 @@ armadillo
 boost
 cmake
 netcdf
-netcdf-cxx4
+netcdf-cxx
 nlohmann-json
 OpenBLAS
 mpich
