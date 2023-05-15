@@ -15,6 +15,7 @@ jobs:
         include:
           - os: "macos-latest"
             cc: "/usr/local/bin/gcc-13"
+            cflag: "-DNETCDF_LIBRARIES_CXX=/usr/local/lib/ -DNETCDF_LIBRARIES_C=/usr/local/lib/"
 
     name: ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
@@ -46,7 +47,6 @@ jobs:
     - name: Mac cmake configure
       if: startsWith(matrix.os, 'mac')
       run: |
-        find /* -name "libnetcdf*"
         mkdir build
         cd build
         cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
