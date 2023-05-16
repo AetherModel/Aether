@@ -73,6 +73,8 @@ precision_t Planets::get_radius(precision_t latitude) {
   return planet.radius;
 }
 
+
+
 // -----------------------------------------------------------------------------
 // Get the rotation of the dipole (in radians, rotation in longitude)
 // -----------------------------------------------------------------------------
