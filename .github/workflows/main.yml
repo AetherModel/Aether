@@ -15,7 +15,7 @@ jobs:
         include:
           - os: "macos-latest"
             cc: "/usr/local/bin/gcc-13"
-            cflag: "-DNETCDF_LIBRARIES_CXX=/usr/local/lib/ -DNETCDF_LIBRARIES_C=/usr/local/lib/"
+            cflag: "-DCMAKE_CXX_COMPILER=${{ matrix.cc }}"
 
     name: ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
@@ -36,20 +36,11 @@ jobs:
         cat requirements.mac | xargs brew install
         brew reinstall gcc
 
-    - name: Ubuntu cmake configure
-      if: startsWith(matrix.os, 'ubuntu')
+    - name: CMake configure
       run: |
         mkdir build
         cd build
         cmake ${{ matrix.cflag }} ..
-        make VERBOSE=1
-
-    - name: Mac cmake configure
-      if: startsWith(matrix.os, 'mac')
-      run: |
-        mkdir build
-        cd build
-        cmake ${{ matrix.cflag }} -DCMAKE_CXX_COMPILER=${{ matrix.cc }} ..
         make VERBOSE=1
 
     - name: Test run
