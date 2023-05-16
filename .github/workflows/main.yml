@@ -15,7 +15,7 @@ jobs:
         include:
           - os: "macos-latest"
             cc: "/usr/local/bin/gcc-13"
-            cflag: "-DCMAKE_CXX_COMPILER=${{ matrix.cc }}"
+            cflag: "-DCMAKE_CXX_COMPILER=/usr/local/bin/gcc-13"
 
     name: ${{ matrix.cc }} on ${{ matrix.os }} with flag ${{ matrix.cflag }}
     runs-on: ${{ matrix.os }}
