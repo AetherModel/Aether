@@ -64,6 +64,8 @@ public:
    **/
   precision_t get_radius(precision_t latitude);
 
+  
+
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time
 
@@ -105,7 +107,12 @@ public:
      \brief Returns the strength of the dipole at the surface (in nT)
    **/
   precision_t get_dipole_strength();
-  
+
+  /**********************************************************************
+     \brief Returns omega of the planet
+   **/
+  precision_t get_omega();
+
   /**********************************************************************
      \brief returns neutrals json for neutral density BCs
    **/
@@ -126,6 +133,7 @@ public:
    **/
   
   bool is_ok();
+  
   
 // -----------------------------------------------------------------------
 // Private functions and variables

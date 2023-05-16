@@ -154,6 +154,14 @@ precision_t Planets::get_declination(Times time) {
 
   return planet.declination;;
 }
+// -----------------------------------------------------------------------------
+// Get the omega value of the planet (radians)
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_omega() {
+  // Should modify this to allow an oblate spheriod, but not now.
+  return planet.omega;
+}
 
 // -----------------------------------------------------------------------------
 // Update lots of information about the planet, such as the location
