@@ -183,25 +183,20 @@ public:
   bool send_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
 
-  // interpolation
+  // interpolation functions
+  // The size of a 2*2*2 arma cube
   static const arma::SizeCube unit_cube_size;
   // Estimate the value of the point at (lon_in, lat_in, alt_in)
-  precision_t interpolate(const arma_cube &data,
-                          const precision_t lon,
-                          const precision_t lat,
-                          const precision_t alt);
-  // the position of point is given by a 3*1 column vector
-  precision_t interpolate(const arma_cube &data,
-                          const arma_vec &point);
+  precision_t interp_linear(const arma_cube &data,
+                            const precision_t lon,
+                            const precision_t lat,
+                            const precision_t alt);
   // the position of a vector of points is specified by
   // three vectors of lon, lat and alt
-  std::vector<precision_t> interpolate(const arma_cube &data,
-                                       const std::vector<precision_t> &Lons,
-                                       const std::vector<precision_t> &Lats,
-                                       const std::vector<precision_t> &Alts);
-  // process a vector of points
-  std::vector<precision_t> interpolate(const arma_cube &data,
-                                       const std::vector<arma_vec> &points);
+  std::vector<precision_t> interp_linear(const arma_cube &data,
+                                         const std::vector<precision_t> &Lons,
+                                         const std::vector<precision_t> &Lats,
+                                         const std::vector<precision_t> &Alts);
 
  private:
 
@@ -214,7 +209,9 @@ public:
 
   int nGCs; // number of ghostcells
 
-  struct interp_range {
+  // interpolation members
+  // The struct representing the range of a spherical grid
+  struct sphere_range {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -224,13 +221,65 @@ public:
     precision_t alt_min;
     precision_t alt_max;
   };
-
-  void get_grid_range(struct interp_range &ir);
-  precision_t interpolate_helper(const arma_cube &data,
-                                 const interp_range &ir,
-                                 const precision_t lon_in,
-                                 const precision_t lat_in,
-                                 const precision_t alt_in);
+  // The struct representing the range of a cubesphere grid
+  struct cubesphere_range {
+    // The minimum value and delta change of row and col
+    // We don't use row_max and col_max because they are not promised to be
+    // greater than min, for example the right norm of suface 2 expands along
+    // the -x axis. drow and dcol can be negative, and boundary checking will
+    // compare the theoretical index with 0 and nLon or nLat
+    precision_t row_min;
+    precision_t drow;
+    precision_t col_min;
+    precision_t dcol;
+    // Range of altitude
+    precision_t alt_min;
+    precision_t alt_max;
+    // The surface number of the grid
+    int64_t surface_number;
+    // The axis that row and col expands along
+    // 0 means x-axis, 1 means y-axix, and 2 means z-axis
+    int64_t row_direction;
+    int64_t col_direction;
+    // Used to promise that one and only one processor
+    // returns the interpolation value and all others return cNinf
+    bool row_min_exclusive;
+    bool row_max_exclusive;
+    bool col_min_exclusive;
+    bool col_max_exclusive;
+  };
+  // Return the first index of two vectors on which they have different values
+  int64_t first_diff_index(const arma_vec &a, const arma_vec &b);
+  // Return the index of the last element that has altitude smaller than or euqal to the input
+  uint64_t search_altitude(const precision_t alt_in);
+  // Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
+  void sphere_to_cube(const precision_t lon_in,
+                      const precision_t lat_in,
+                      precision_t &x_out,
+                      precision_t &y_out,
+                      precision_t &z_out);
+  arma_vec sphere_to_cube(const precision_t lon_in, const precision_t lat_in);
+  // Assign any point on the surface of a cube a nubmer in {0, 1, 2, 3, 4, 5}
+  int64_t get_cube_surface_number(const precision_t x_in,
+                                  const precision_t y_in,
+                                  const precision_t z_in);
+  int64_t get_cube_surface_number(const arma_vec &point_in);
+  // Calculate the range of a spherical grid
+  void get_sphere_grid_range(struct sphere_range &sr);
+  // Calculate the range of a cubesphere grid
+  void get_cubesphere_grid_range(struct cubesphere_range &cr);
+  // Helper function for interpolation, so that grid range is only
+  // calculated once no matter how many points
+  precision_t interp_sphere_linear_helper(const arma_cube &data,
+                                          const sphere_range &sr,
+                                          const precision_t lon_in,
+                                          const precision_t lat_in,
+                                          const precision_t alt_in);
+  precision_t interp_cubesphere_linear_helper(const arma_cube &data,
+                                              const cubesphere_range &cr,
+                                              const precision_t lon_in,
+                                              const precision_t lat_in,
+                                              const precision_t alt_in);
 };
 
 #endif  // INCLUDE_GRID_H_

@@ -275,8 +275,8 @@ inline precision_t linear_interpolation(const precision_t y0,
 }
 
 // ----------------------------------------------------------------------
-// Estimate the value of a point inside the cube
-// Requirements: xRatio, yRatio, zRatio within [0, 1)
+// Estimate the value of a point inside the cube using linear interpolation
+// Requirements: xRatio, yRatio, zRatio within [0, 1]
 // In the documentation of arma, 3d cube is ordered slice by slice, then column by column
 // i.e data[1] is the value of (0, 1, 0), data[3] is the value of (1, 1, 0)
 // ----------------------------------------------------------------------
