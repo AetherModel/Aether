@@ -19,14 +19,14 @@ std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity, precision_t rot
 
     // Cross Product of rotational velocity and velocity:
     // Latitude
-    cross.push_back(velocity[1] * rotational_velocity[2] - velocity[2] * rotational_velocity[1])
+    cross.push_back(velocity[1] * rotational_velocity[2] - velocity[2] * rotational_velocity[1]);
     // Longitude
-    cross.push_back(velocity[0] * rotational_velocity[2] - velocity[2] * rotational_velocity[0])
+    cross.push_back(velocity[0] * rotational_velocity[2] - velocity[2] * rotational_velocity[0]);
     // Altitude
-    cross.push_back(velocity[0] * rotational_velocity[1] - velocity[1] * rotational_velocity[0])
+    cross.push_back(velocity[0] * rotational_velocity[1] - velocity[1] * rotational_velocity[0]);
 
     for (int64_t iComp; iComp < 3; iComp++) {
-        coriolis_vec[iComp] = 2 * cross[iComp]
+        coriolis_vec[iComp] = 2 * cross[iComp];
     }
 
     return coriolis_vec;
