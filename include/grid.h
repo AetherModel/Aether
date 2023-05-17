@@ -67,7 +67,8 @@ public:
   arma_cube radius2_scgc;
   arma_cube radius2i_scgc;
   arma_cube gravity_scgc;
-  std::vector<arma_cube> cent_acc_scgc;
+  std::vector<arma_cube> cent_acc_vcgc;
+
 
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
