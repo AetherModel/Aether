@@ -695,7 +695,6 @@ std::vector<precision_t> Grid::interp_linear(const arma_cube &data,
     }
 
     // Check whether the grid is sphere or cubesphere
-    std::cout << "IsCubeSphereGrid = " << IsCubeSphereGrid << std::endl;
     std::vector<precision_t> ans;
     if (IsCubeSphereGrid) {
         struct cubesphere_range cr;
