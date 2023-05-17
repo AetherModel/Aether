@@ -184,8 +184,6 @@ public:
   bool receive_one_face(int64_t iFace);
 
   // interpolation functions
-  // The size of a 2*2*2 arma cube
-  static const arma::SizeCube unit_cube_size;
   // Estimate the value of the point at (lon_in, lat_in, alt_in)
   precision_t interp_linear(const arma_cube &data,
                             const precision_t lon,
@@ -248,21 +246,15 @@ public:
     bool col_min_exclusive;
     bool col_max_exclusive;
   };
-  // Return the first index of two vectors on which they have different values
-  int64_t first_diff_index(const arma_vec &a, const arma_vec &b);
+
   // Return the index of the last element that has altitude smaller than or euqal to the input
   uint64_t search_altitude(const precision_t alt_in);
-  // Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
-  arma_vec sphere_to_cube(const precision_t lon_in, const precision_t lat_in);
-  // Assign any point on the surface of a cube a nubmer in {0, 1, 2, 3, 4, 5}
-  int64_t get_cube_surface_number(const precision_t x_in,
-                                  const precision_t y_in,
-                                  const precision_t z_in);
-  int64_t get_cube_surface_number(const arma_vec &point_in);
+
   // Calculate the range of a spherical grid
   void get_sphere_grid_range(struct sphere_range &sr);
   // Calculate the range of a cubesphere grid
   void get_cubesphere_grid_range(struct cubesphere_range &cr);
+  
   // Helper function for interpolation, so that grid range is only
   // calculated once no matter how many points
   precision_t interp_sphere_linear_helper(const arma_cube &data,
