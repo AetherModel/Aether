@@ -333,7 +333,7 @@ const arma::SizeCube Grid::unit_cube_size = arma::size(2, 2, 2);
 int64_t Grid::first_diff_index(const arma_vec &a, const arma_vec &b) {
     int64_t i;
     for (i = 0; i < std::min(a.n_rows, b.n_rows); ++i) {
-        if (a[i] != b[i]) {
+        if (std::abs(a[i] - b[i]) > cSmall) {
             return i;
         }
     }
@@ -349,7 +349,7 @@ uint64_t Grid::search_altitude(const precision_t alt_in) {
     // mainly because geoAlt_scgc(0, 0, *) can't be formed as an iterator
     uint64_t first, last, len;
     first = nGCs;
-    last = nLons - nGCs;
+    last = nAlts - nGCs;
     len = last - first;
     while (len > 0) {
         uint64_t half = len >> 1;
@@ -368,41 +368,32 @@ uint64_t Grid::search_altitude(const precision_t alt_in) {
 // Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
 // --------------------------------------------------------------------------
 
-void Grid::sphere_to_cube(precision_t lon_in,
-                          precision_t lat_in,
-                          precision_t &x_out,
-                          precision_t &y_out,
-                          precision_t &z_out) {
+arma_vec Grid::sphere_to_cube(precision_t lon_in, precision_t lat_in) {
     // See init_geo_grid.cpp:126. The offset for lon is subtracted
     lon_in = lon_in - 3 * cPI / 4;
 
     // Transfer polar coordinate to cartesian coordinate
     precision_t xy_temp;
-    z_out = sin(lat_in);
-    xy_temp = cos(lat_in);
-    y_out = xy_temp * sin(lon_in);
-    x_out = xy_temp * cos(lon_in);
-    
-    // Project this point onto the surface of cube
-    precision_t coef = 1.0 / std::max({abs(x_out), abs(y_out), abs(z_out)});
-    x_out *= coef;
-    y_out *= coef;
-    z_out *= coef;
-}
-
-arma_vec Grid::sphere_to_cube(precision_t lon_in, precision_t lat_in) {
-    // See how it works in the overloaded function above
-    lon_in = lon_in - 3 * cPI / 4;
-
-    precision_t xy_temp, coef;
     arma_vec ans(3);
-    ans(2) = sin(lat_in);
+    ans[2] = sin(lat_in);
     xy_temp = cos(lat_in);
-    ans(1) = xy_temp * sin(lon_in);
-    ans(0) = xy_temp * cos(lon_in);
+    ans[1] = xy_temp * sin(lon_in);
+    ans[0] = xy_temp * cos(lon_in);
 
-    coef = 1.0 / std::max({abs(ans(0)), abs(ans(1)), abs(ans(2))});
+    // Project this point onto the surface of cube
+    precision_t coef = 1.0 / std::max({std::abs(ans[0]), std::abs(ans[1]), std::abs(ans[2])});
     ans *= coef;
+
+    // Round the number if it is close to 1 or -1, otherwise the == and != operator
+    // won't behave as expected because of the accuracy problem of floating point numbers
+    for (int64_t i = 0; i < 3; ++i) {
+        if (std::abs(ans[i] + 1) < cSmall) {
+            ans[i] = -1;
+        } else if (std::abs(ans[i] - 1) < cSmall) {
+            ans[i] = 1;
+        }
+    }
+
     return ans;
 }
 
@@ -440,9 +431,9 @@ int64_t Grid::get_cube_surface_number(const arma_vec &point_in) {
         // The input doesn't represent a point
         return -1;
     } else {
-        return get_cube_surface_number(point_in(0),
-                                       point_in(1),
-                                       point_in(2));
+        return get_cube_surface_number(point_in[0],
+                                       point_in[1],
+                                       point_in[2]);
     }
 }
 
@@ -477,25 +468,29 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) {
                                        geoLat_Corner(nGCs + 1, nGCs, nGCs));
     arma_vec step_col = sphere_to_cube(geoLon_Corner(nGCs, nGCs + 1, nGCs),
                                        geoLat_Corner(nGCs, nGCs + 1, nGCs));
-    // Get the surface number
-    cr.surface_number = get_cube_surface_number(corner);
 
     // Determine which axis the row expands along
     cr.row_direction = first_diff_index(corner, step_row);
     // Get the row_min and delta row;
-    cr.row_min = corner(cr.row_direction);
-    cr.drow = step_row(cr.row_direction) - cr.row_min;
+    cr.row_min = corner[cr.row_direction];
+    cr.drow = step_row[cr.row_direction] - cr.row_min;
     // Do the same for column
     cr.col_direction = first_diff_index(corner, step_col);
-    cr.col_min = corner(cr.col_direction);
-    cr.dcol = step_col(cr.col_direction) - cr.col_min;
+    cr.col_min = corner[cr.col_direction];
+    cr.dcol = step_col[cr.col_direction] - cr.col_min;
+
+    // Get the surface number
+    arma_vec away_from_edge = corner;
+    away_from_edge[cr.row_direction] += cr.drow;
+    away_from_edge[cr.col_direction] += cr.dcol;
+    cr.surface_number = get_cube_surface_number(away_from_edge);
 
     // Get the range of altitude, use geoAlt_scgc because the coefficient 0.5
     // is not added. See init_geo_grid.cpp:443 for detail
     cr.alt_min = geoAlt_scgc(nGCs, nGCs, nGCs);
     cr.alt_max = geoAlt_scgc(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
 
-    // Horrible inclusion/exclusion part begins
+    // Inclusion/exclusion part begins
     // The default settings are left-hand inclusive and right-hand exclusive
     // The surface number 0,1,2,3 always follow this rule
     cr.row_min_exclusive = false;
@@ -528,10 +523,10 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) {
 // --------------------------------------------------------------------------
 
 precision_t Grid::interp_sphere_linear_helper(const arma_cube &data,
-                                       const struct sphere_range &sr,
-                                       const precision_t lon_in,
-                                       const precision_t lat_in,
-                                       const precision_t alt_in) {
+                                              const sphere_range &sr,
+                                              const precision_t lon_in,
+                                              const precision_t lat_in,
+                                              const precision_t alt_in) {
     // WARNING: IF WE ARE DEALING WITH LESS THAN THE WHOLE EARTH, THEN ALL THE POINTS WITH
     // LONGITUDE = geo_grid_input.lon_max = settings["GeoGrid"]["MaxLon"]
     // OR LATITUDE = geo_grid_input.lat_max = settings["GeoGrid"]["MaxLat"]
@@ -568,24 +563,8 @@ precision_t Grid::interp_sphere_linear_helper(const arma_cube &data,
 
     // The altitude may not be linearly spaced, so use binary search to find
     // the first element smaller than or equal to the altitude of the give point
-    // Copy from std::upper_bound
-    {
-        uint64_t first, last, len;
-        first = nGCs;
-        last = nLons - nGCs;
-        len = last - first;
-        while (len > 0) {
-            uint64_t half = len >> 1;
-            uint64_t mid = first + half;
-            if (geoAlt_scgc(0, 0, mid) > alt_in) {
-                len = half;
-            } else {
-                first = mid + 1;
-                len = len - half - 1;
-            }
-        }
-        iAlt = first - 1;
-    }
+    // Implemented in search_altitude
+    iAlt = search_altitude(alt_in);
     rAlt = (alt_in - geoAlt_scgc(0, 0, iAlt))
             / (geoAlt_scgc(0, 0, iAlt + 1) - geoAlt_scgc(0, 0, iAlt));
 
@@ -604,7 +583,7 @@ precision_t Grid::interp_sphere_linear_helper(const arma_cube &data,
 // --------------------------------------------------------------------------
 
 precision_t Grid::interp_cubesphere_linear_helper(const arma_cube &data,
-                                                  const struct cubesphere_range &cr,
+                                                  const cubesphere_range &cr,
                                                   const precision_t lon_in,
                                                   const precision_t lat_in,
                                                   const precision_t alt_in) {
@@ -639,28 +618,34 @@ precision_t Grid::interp_cubesphere_linear_helper(const arma_cube &data,
         return cNinf;
     }
 
-    // Get the real integer index. Add 0.5 because the data we have is at the
-    // center of the cell rather than corner of the cell
+    // Get the real integer index and the interpolation coefficient
     uint64_t row_index, col_index, alt_index;
-    row_index = static_cast<uint64_t>(row_frac_index + 0.5) + nGCs - 1;
-    col_index = static_cast<uint64_t>(col_frac_index + 0.5) + nGCs - 1;
+    precision_t rRow, rCol, rAlt;
+    // Add 0.5 because the data we have is at the center of the cell rather than corner of the cell
+    row_frac_index += 0.5;
+    // Take the integer part
+    row_index = static_cast<uint64_t>(row_frac_index);
+    // Calculate the fractional part, which is the coefficient
+    rRow = row_frac_index - row_index;
+    // The actual index considering the ghost cells
+    row_index += nGCs - 1;
+    // Do the same for the column
+    col_frac_index += 0.5;
+    col_index = static_cast<uint64_t>(col_frac_index);
+    rCol = col_frac_index - col_index;
+    col_index += nGCs - 1;
+    // Use binary search to find the index for altitude
     alt_index = search_altitude(alt_in);
+    rAlt = (alt_in - geoAlt_scgc(0, 0, alt_index))
+            / (geoAlt_scgc(0, 0, alt_index + 1) - geoAlt_scgc(0, 0, alt_index));
 
-    // Calculate the ratio along longitude, latitude and altitude respectively
-    precision_t rLon, rLat, rAlt, r0;
-    r0 = geoLon_scgc(row_index, col_index, alt_index);
-    rLon = (lon_in - r0) / (geoLon_scgc(row_index + 1, col_index, alt_index) - r0);
-    r0 = geoLat_scgc(row_index, col_index, alt_index);
-    rLat = (lat_in - r0) / (geoLat_scgc(row_index, col_index + 1, alt_index) - r0);
-    r0 = geoAlt_scgc(row_index, col_index, alt_index);
-    rAlt = (alt_in - r0) / (geoAlt_scgc(row_index, col_index, alt_index + 1) - r0);
-
-    // TODO: cout
+    std::cout << "iProc = " << iProc << " interpolates point ("
+              << lon_in << ", " << lat_in << ", " << alt_in << ") successfully\n";
 
     // Return the estimated value
     return interpolate_unit_cube(data.subcube(row_index, col_index, alt_index, unit_cube_size),
-                                 rLon,
-                                 rLat,
+                                 rRow,
+                                 rCol,
                                  rAlt);
 }
 
@@ -677,10 +662,17 @@ precision_t Grid::interp_linear(const arma_cube &data,
         return cNinf;
     }
 
-    // return the estimated value
-    struct sphere_range sr;
-    get_sphere_grid_range(sr);
-    return interp_sphere_linear_helper(data, sr, lon_in, lat_in, alt_in);
+    // Check whether the grid is sphere or cubesphere
+    if (IsCubeSphereGrid) {
+        struct cubesphere_range cr;
+        get_cubesphere_grid_range(cr);
+        std::vector<precision_t> ans;
+        return interp_cubesphere_linear_helper(data, cr, lon_in, lat_in, alt_in);
+    } else {
+        struct sphere_range sr;
+        get_sphere_grid_range(sr);
+        return interp_sphere_linear_helper(data, sr, lon_in, lat_in, alt_in);
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -688,9 +680,9 @@ precision_t Grid::interp_linear(const arma_cube &data,
 // --------------------------------------------------------------------------
 
 std::vector<precision_t> Grid::interp_linear(const arma_cube &data,
-                                           const std::vector<precision_t> &Lons,
-                                           const std::vector<precision_t> &Lats,
-                                           const std::vector<precision_t> &Alts) {
+                                             const std::vector<precision_t> &Lons,
+                                             const std::vector<precision_t> &Lats,
+                                             const std::vector<precision_t> &Alts) {
     // If the size of Lons, Lats and Alts are not the same, return a vector
     // with only one element {cNinf}
     if (Lons.size() != Lats.size() || Lats.size() != Alts.size()) {
@@ -701,11 +693,23 @@ std::vector<precision_t> Grid::interp_linear(const arma_cube &data,
     if (data.n_rows != nLons || data.n_cols != nLats || data.n_slices != nAlts) {
         return std::vector<precision_t>(Alts.size(), cNinf);
     }
-    struct sphere_range sr;
-    get_sphere_grid_range(sr);
+
+    // Check whether the grid is sphere or cubesphere
+    std::cout << "IsCubeSphereGrid = " << IsCubeSphereGrid << std::endl;
     std::vector<precision_t> ans;
-    for (int64_t i = 0; i < Lons.size(); ++i) {
-        ans.push_back(interp_sphere_linear_helper(data, sr, Lons[i], Lats[i], Alts[i]));
+    if (IsCubeSphereGrid) {
+        struct cubesphere_range cr;
+        get_cubesphere_grid_range(cr);
+        for (int64_t i = 0; i < Lons.size(); ++i) {
+            ans.push_back(interp_cubesphere_linear_helper(data, cr, Lons[i], Lats[i], Alts[i]));
+        }
+    } else {
+        struct sphere_range sr;
+        get_sphere_grid_range(sr);
+        for (int64_t i = 0; i < Lons.size(); ++i) {
+            ans.push_back(interp_sphere_linear_helper(data, sr, Lons[i], Lats[i], Alts[i]));
+        }
     }
+
     return ans;
 }

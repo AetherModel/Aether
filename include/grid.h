@@ -253,11 +253,6 @@ public:
   // Return the index of the last element that has altitude smaller than or euqal to the input
   uint64_t search_altitude(const precision_t alt_in);
   // Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
-  void sphere_to_cube(const precision_t lon_in,
-                      const precision_t lat_in,
-                      precision_t &x_out,
-                      precision_t &y_out,
-                      precision_t &z_out);
   arma_vec sphere_to_cube(const precision_t lon_in, const precision_t lat_in);
   // Assign any point on the surface of a cube a nubmer in {0, 1, 2, 3, 4, 5}
   int64_t get_cube_surface_number(const precision_t x_in,
