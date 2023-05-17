@@ -34,9 +34,8 @@ public:
 		     Report report);
 
   void close_logfile();
-
 private:
-  
+  vector<precision_t> lla {5,4,40};
   ofstream logfilestream;  
   bool header = false;
 
