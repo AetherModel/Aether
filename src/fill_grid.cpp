@@ -332,17 +332,20 @@ void Grid::calc_cent_acc(Planets planet){
   arma_cube cent_acc_lat; cent_acc_lat.zeros();
   arma_cube cent_acc_rad; cent_acc_rad.zeros();
 
-
+  cout << planet.get_omega() << "& RIGHT HERE LOOK RIGHT HERE " << radius_scgc << endl;
+  
   int64_t iLon, iLat, iAlt;
+  cent_acc_scgc.push_back(cent_acc_long);
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iLat = 0; iLat < nLats; iLat++) {
-    for (iAlt = 0; iAlt < nAlts; iAlt++) {
+      for (iAlt = 0; iAlt < nAlts; iAlt++) {
          cent_acc_rad(iLon, iLat, iAlt) = radius_scgc(iLon, iLat, iAlt) * planet.get_omega() * planet.get_omega() * cos(geoLat_scgc(iLon, iLat, iAlt)) * cos(geoLat_scgc(iLon, iLat, iAlt));
          cent_acc_lat(iLon, iLat, iAlt) = -1 * radius_scgc(iLon, iLat, iAlt) * planet.get_omega() * planet.get_omega() * cos(geoLat_scgc(iLon, iLat, iAlt)) * sin(geoLat_scgc(iLon, iLat, iAlt));
          cent_acc_scgc.push_back(cent_acc_lat);
          cent_acc_scgc.push_back(cent_acc_rad);
-       }
-     }
- }
- cent_acc_scgc.push_back(cent_acc_long);
+      }
+    }
+  }
+ 
+ 
 }

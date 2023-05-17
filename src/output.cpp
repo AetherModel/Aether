@@ -200,6 +200,17 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
+      if (type_output == "cent_acc") {
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "Magnetic Latitude",
+                                                    "degrees",
+                                                    grid.radius_scgc);
+        AllOutputContainers[iOutput].store_variable("geoLat",
+                                                    "Magnetic Longitude",
+                                                    "degrees",
+                                                    grid.geoLat_scgc);
+      }
+
       // ------------------------------------------------------------
       // Set output file names
 
@@ -216,6 +227,9 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
+        
+      if (type_output == "cent_acc")
+        filename = "3DFBI_";
 
       if (type_output == "corners")
         filename = "3DCOR_";
