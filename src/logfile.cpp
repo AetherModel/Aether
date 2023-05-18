@@ -15,9 +15,7 @@ Logfile::Logfile(Indices indices,
   logfilestream.open(inputs.get_logfile(), ofstream::trunc);
   cout << inputs.get_logfile();
   logfilestream << "year month day hour minute second milli ";
-  logfilestream << "nearest_grid_point";
-  logfilestream << "\n";
-  /*if (!header){
+  if (!header){
     vector<string> species_array = inputs.get_species_vector();
     for (int i = 0; i < indices.all_indices_array_size(); i++){
       if (indices.get_nValues(i)>0){
@@ -30,11 +28,12 @@ Logfile::Logfile(Indices indices,
       name = species_array.at(i);
       logfilestream << name << "_min " << name << "_max " << name << "_mean ";
     }
-    logfilestream << "nearest_grid_point";
+    logfilestream << "specific_temp";
     logfilestream << "\n";
+
     header = true;
   }  
-  */
+
 }
 
 //-------------------------------------------------------------
@@ -52,9 +51,9 @@ void Logfile::write_logfile(Times time,
   vector<int> itime = time.get_iCurrent();
   vector<string> species_array = inputs.get_species_vector();
   for (int i = 0; i <= 6; ++i){
-    logfilestream << std::setw(2) << itime.at(i) << " ";
+    logfilestream << itime.at(i) << " ";
   }
-  /*
+  
   // output indices next:
   logfilestream.precision(4);
   for (int i = 0; i < indices.all_indices_array_size(); i++){
@@ -74,8 +73,7 @@ void Logfile::write_logfile(Times time,
     for (int i = 0; i < 3; i++)
       logfilestream << density_stats[i] << " ";
   }
-  // Output closest grid point given lat, lon, alt
-  */
+  // Output closest temp given lat, lon, alt
   logfilestream << neutrals.temperature_scgc(lla.at(0), lla.at(1), lla.at(2));
   logfilestream << "\n";
 }
