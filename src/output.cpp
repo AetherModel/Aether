@@ -177,6 +177,10 @@ int output(const Neutrals &neutrals,
                                                     ions.potential_scgc);
 
       if (type_output == "bfield") {
+        //AllOutputContainers[iOutput].store_variable("glong", "gravity longitude","m/s^2", grid.gravity_vcgc[0]);
+        //AllOutputContainers[iOutput].store_variable("glat", "gravity latitude","m/s^2" ,grid.gravity_vcgc[1]);
+        //AllOutputContainers[iOutput].store_variable("galt", "gravity altitude", "m/s^2", grid.gravity_vcgc[2]);      
+        
         AllOutputContainers[iOutput].store_variable("mlat",
                                                     "Magnetic Latitude",
                                                     "degrees",
@@ -217,11 +221,14 @@ int output(const Neutrals &neutrals,
       if (type_output == "bfield")
         filename = "3DBFI_";
 
+      if (type_output == "gravity")
+        filename = "3DGRA_";
+
       if (type_output == "corners")
         filename = "3DCOR_";
 
       filename = filename + time.get_YMD_HMS();
-
+      //PROBLEM
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
@@ -387,7 +394,7 @@ void OutputContainer::store_variable(std::string name,
   single.cLongName = long_name;
   single.cUnit = unit;
   single.value = value;
-  elements.push_back(single);
+  elments.push_back(single);
 }
 
 // -----------------------------------------------------------------------------

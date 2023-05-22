@@ -1,0 +1,41 @@
+{
+    "nAlts": 54,
+    "nLats": 22,
+    "nLons": 22,
+    "nVars": 9,
+    "nX": 22,
+    "nY": 22,
+    "nZ": 54,
+    "time": [
+        2011,
+        3,
+        20,
+        0,
+        0,
+        5,
+        0
+    ],
+    "units": [
+        "degrees_east",
+        "degrees_north",
+        "m",
+        "degrees",
+        "degrees",
+        "hours",
+        "nT",
+        "nT",
+        "nT"
+    ],
+    "variables": [
+        "lon",
+        "lat",
+        "z",
+        "mlat",
+        "mlon",
+        "mlt",
+        "Beast",
+        "Bnorth",
+        "Bvertical"
+    ],
+    "version": 0.10000000149011612
+}

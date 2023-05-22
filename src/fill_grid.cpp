@@ -205,46 +205,99 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
 //  Fill in radius, radius^2, and 1/radius^2
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid_radius(Planets planet, Report &report) {
-
-  int64_t iLon, iLat, iAlt;
-
-  precision_t mu = planet.get_mu();
-
+void Grid::fill_grid_radius(Planets planet, Report &report, Inputs &input) {
   report.print(3, "starting fill_grid_radius");
+  int64_t iLon, iLat, iAlt;
 
   // Just in case we have a latitude-dependent planetary radius
   arma_vec radius0_1d(nLats);
 
   for (iLat = 0; iLat < nLats; iLat++)
-    radius0_1d(iLat) = planet.get_radius(geoLat_scgc(0, iLat, 0));
+    radius0_1d(iLat) = planet.get_radius(geoLat_scgc(0, iLat, 0), input);
 
   for (iLon = 0; iLon < nLons; iLon++)
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       radius_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = radius0_1d;
 
   radius_scgc = radius_scgc + geoAlt_scgc;
+  report.print(3, "ending fill_grid_radius");
+}
+
+// -----------------------------------------------------------------------------
+//  Calculates radial unit vector and gravity
+// -----------------------------------------------------------------------------
+
+void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
+  report.print(3, "starting calc_gravity");  
+
+  precision_t mu = planet.get_mu();
+  std::vector<arma_cube> gradient_vcgc = calc_gradient_vector(radius_scgc, *this);
+  //gradient_vcgc[2].fill(1);
+  arma_cube mag_radius_gradient = sqrt( pow(gradient_vcgc[0], 2) + pow(gradient_vcgc[1],2) + pow(gradient_vcgc[2],2) );
+  arma_cube mag_radius_gradienti =  1.0 / mag_radius_gradient;
+
+  std::vector<arma_cube> rad_unit_vcgc;
+  rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  for (int iV = 0; iV < 3; iV++)
+    rad_unit_vcgc[iV].zeros();
+
+  rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti)  % geoLon_scgc;
+  //rad_unit_vcgc[0].print();
+  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti)  % geoLat_scgc;
+  //rad_unit_vcgc[1].print();
+  rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti)  % geoAlt_scgc;
+  //rad_unit_vcgc[2].print();
 
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;
   gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-  //CHANGED:
-  gravity_vcgc[2] = mu *radius2i_scgc;
-  //gravity_scgc = mu * radius2i_scgc;
 
-  report.print(3, "ending fill_grid_radius");
+  for (int iV = 0; iV < 3; iV++){
+    gravity_vcgc[iV] = -mu * ( 1.0 / ((radius_scgc  % rad_unit_vcgc[iV]) % (radius_scgc  % rad_unit_vcgc[iV])));
+  }
+
+  //gravity_vcgc[0].print();
+  //gravity_vcgc[1].print();
+  //gravity_vcgc[2].print();
+  
+  report.print(3, "ending calc_gravity");
 }
 
 // -----------------------------------------------------------------------------
 //  Fill in XYZ in geo and mag coordinates
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid(Planets planet, Report &report) {
+void Grid::calc_grid_spacing(Planets planet, Report &report) {
 
   int64_t iLon, iLat, iAlt;
 
-  report.print(3, "starting fill_grid");
+  report.print(3, "starting calc_grid_spacing");
 
+  calc_alt_grid_spacing();
+  calc_lat_grid_spacing();
+  calc_long_grid_spacing();
+
+  std::vector<arma_cube> lon_lat_radius;
+  lon_lat_radius.push_back(geoLon_scgc);
+  lon_lat_radius.push_back(geoLat_scgc);
+  lon_lat_radius.push_back(radius_scgc);
+  std::vector<arma_cube> xyz;
+
+  xyz = transform_llr_to_xyz_3d(lon_lat_radius);
+  geoX_scgc = xyz[0];
+  geoY_scgc = xyz[0];
+  geoZ_scgc = xyz[0];
+
+  report.print(3, "ending calc_grid_spacing");
+}
+
+// ---------------------------------------
+// Grid spacing for altitude:
+// ---------------------------------------
+
+void Grid::calc_alt_grid_spacing(){
+
+  int64_t iAlt;
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
     dalt_center_scgc.slice(iAlt) =
       (geoAlt_scgc.slice(iAlt + 1) - geoAlt_scgc.slice(iAlt - 1)) / 2.0;
@@ -273,11 +326,15 @@ void Grid::fill_grid(Planets planet, Report &report) {
 
   // Need the square of the ratio:
   dalt_ratio_sq_scgc = dalt_ratio_scgc % dalt_ratio_scgc;
+}
 
-  // ---------------------------------------
-  // Grid spacing for latitude:
-  // ---------------------------------------
+// ---------------------------------------
+// Grid spacing for latitude:
+// ---------------------------------------
 
+void Grid::calc_lat_grid_spacing(){
+
+  int64_t iLat;
   for (iLat = 1; iLat < nLats - 1; iLat++) {
     dlat_center_scgc.col(iLat) =
       (geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat - 1)) / 2.0;
@@ -294,11 +351,15 @@ void Grid::fill_grid(Planets planet, Report &report) {
 
   // Make this into a distance:
   dlat_center_dist_scgc = dlat_center_scgc % radius_scgc;
+}
 
-  // ---------------------------------------
-  // Grid spacing for longitude:
-  // ---------------------------------------
+// ---------------------------------------
+// Grid spacing for longitude:
+// ---------------------------------------
 
+void Grid::calc_long_grid_spacing(){
+
+  int64_t iLon;
   for (iLon = 1; iLon < nLons - 1; iLon++)
     dlon_center_scgc.row(iLon) =
       (geoLon_scgc.row(iLon + 1) - geoLon_scgc.row(iLon - 1)) / 2.0;
@@ -315,15 +376,4 @@ void Grid::fill_grid(Planets planet, Report &report) {
   // Make this into a distance:
   dlon_center_dist_scgc =
     dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
-
-  std::vector<arma_cube> lon_lat_radius;
-  lon_lat_radius.push_back(geoLon_scgc);
-  lon_lat_radius.push_back(geoLat_scgc);
-  lon_lat_radius.push_back(radius_scgc);
-  std::vector<arma_cube> xyz;
-
-  xyz = transform_llr_to_xyz_3d(lon_lat_radius);
-  geoX_scgc = xyz[0];
-  geoY_scgc = xyz[0];
-  geoZ_scgc = xyz[0];
 }

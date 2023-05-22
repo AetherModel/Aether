@@ -494,6 +494,13 @@ json Inputs::get_perturb_values() {
   return values;
 }
 
+// -----------------------------------------------------------------------
+// Flag to have a latitude dependent radius, and by extension gravity
+// -----------------------------------------------------------------------
+bool Inputs::get_do_lat_dependent_radius() {
+  return settings["DoLatDependentRadius"];
+}
+
 // --------------------------------------------------------------------------
 // check to see if class is ok
 // --------------------------------------------------------------------------

@@ -493,10 +493,13 @@ def get_base_files():
         filelist = sorted(glob('?????*.nc'))
         isNetCDF = True
 
+    print(filelist)
+
     files = []
     filesInfo = []
     for file in filelist:
         fileInfo = get_core_file(file)
+        print(file, '->> ', fileInfo)
         fileInfo["isNetCDF"] = isNetCDF
         coreFile = fileInfo['coreFile']
         if (len(coreFile) > 0):
@@ -876,6 +879,8 @@ if __name__ == '__main__':  # main code block
     args = parse_args()
 
     filesInfo = get_base_files()
+
+    print(filesInfo)
 
     iVar = 3
     iAlt = 10

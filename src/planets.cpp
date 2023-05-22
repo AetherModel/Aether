@@ -68,8 +68,12 @@ precision_t Planets::get_cos_dec(Times time) {
 // Get the radius of the planet as a function of latitude (meters)
 // -----------------------------------------------------------------------------
 
-precision_t Planets::get_radius(precision_t latitude) {
+precision_t Planets::get_radius(precision_t latitude, Inputs &input) {
   // Should modify this to allow an oblate spheriod, but not now.
+  // return planet.polar_radius + (2 * delta_rad * cos(latitude);
+  if(input.get_do_lat_dependent_radius()){
+    return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
+  }
   return planet.radius;
 }
 
@@ -334,6 +338,7 @@ bool Planets::set_planet(Inputs input, Report report) {
       planet.mu = planets[i].mass * cG;
       planet.equator_radius = planets[i].equator_radius * 1000.0;  // km -> m
       planet.polar_radius = planets[i].polar_radius * 1000.0;  // km -> m
+      planet.delta_radius = planet.equator_radius - planet.polar_radius;
       // Looking at Earth and Saturn, it seems like the Volumetric
       // mean radius is at roughly 47 deg (cos(47)=0.68) Obviously an
       // approximation...

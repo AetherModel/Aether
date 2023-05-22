@@ -19,5 +19,6 @@
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
 
-    "DoCalcBulkIonTemp" : false
+    "DoCalcBulkIonTemp" : false,
+    "DoLatDependentRadius": true
 }
