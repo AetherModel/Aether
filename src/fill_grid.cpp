@@ -328,30 +328,14 @@ void Grid::fill_grid(Planets planet, Report &report) {
 }
 
 void Grid::calc_cent_acc(Planets planet){
-  //arma_cube cent_acc_long; cent_acc_long.zeros();
-  //arma_cube cent_acc_lat; cent_acc_lat.zeros();
-  //arma_cube cent_acc_rad; cent_acc_rad.zeros();
+  // 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3); 
   cent_acc_vcgc[0] = 0;
-  //cout << planet.get_omega() << "& LOOK RIGHT HERE " << radius_scgc(5, 5, 5) << endl;
+
   float omega = planet.get_omega();
   float omega2 = omega * omega;
 
-  //int64_t iLon, iLat, iAlt;
-  //cent_acc_vcgc.push_back(cent_acc_long);
-  //cout << cent_acc_long << endl;
-  //for (iLon = 0; iLon < nLons; iLon++) {
-    //for (iLat = 0; iLat < nLats; iLat++) {
-     // for (iAlt = 0; iAlt < nAlts; iAlt++) {
-         //cent_acc_lat(iLon, iLat, iAlt) = -1 * radius_scgc(iLon, iLat, iAlt) * planet.get_omega() * planet.get_omega() * cos(geoLat_scgc(iLon, iLat, iAlt)) * sin(geoLat_scgc(iLon, iLat, iAlt));
+  int64_t iLon, iLat, iAlt;
   cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(geoLat_scgc);
-         //cent_acc_rad(iLon, iLat, iAlt) = radius_scgc(iLon, iLat, iAlt) * planet.get_omega() * planet.get_omega() * cos(geoLat_scgc(iLon, iLat, iAlt)) * cos(geoLat_scgc(iLon, iLat, iAlt));
   cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
-         //cent_acc_vcgc.push_back(cent_acc_lat);
-         //cent_acc_vcgc.push_back(cent_acc_rad);
-      //}
-    //}
-  //}
-  cout << "Lon: " << cent_acc_vcgc[0](0,0,0) << " Lat: " << cent_acc_vcgc[1](0,0,0) << " Rad: " << cent_acc_vcgc[2](0,0,0) << endl;
- 
 }
