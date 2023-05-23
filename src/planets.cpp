@@ -156,7 +156,7 @@ precision_t Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-// Get the omega value of the planet (radians)
+// Get the omega value of the planet 
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_omega() {

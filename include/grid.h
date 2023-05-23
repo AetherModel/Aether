@@ -131,7 +131,6 @@ public:
   void calc_cent_acc(Planets planet);
 
 
-
   // Need to move these to private at some point:
 
   bool IsLatLonGrid;

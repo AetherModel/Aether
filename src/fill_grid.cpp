@@ -327,15 +327,23 @@ void Grid::fill_grid(Planets planet, Report &report) {
   geoZ_scgc = xyz[0];
 }
 
+// -----------------------------------------------------------------------------
+//  Calaculate centripetal acceleration
+// -----------------------------------------------------------------------------
+
 void Grid::calc_cent_acc(Planets planet){
-  // 
+  // Create a cube vector for cent acc vector
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3); 
+
+  // Longitudanal cent acc
   cent_acc_vcgc[0] = 0;
 
   float omega = planet.get_omega();
   float omega2 = omega * omega;
 
-  int64_t iLon, iLat, iAlt;
+  // Latitudanal cent acc
   cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(geoLat_scgc);
+
+  // Radial cent acc
   cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
 }
