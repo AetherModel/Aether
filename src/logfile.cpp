@@ -1,29 +1,29 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
 #include "aether.h"
-#include "logfile.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 
-using namespace std;
-
 Logfile::Logfile(Indices indices,
-		 Inputs inputs,
-		 Report &report){
+                 Inputs inputs,
+                 Report &report) {
   // should add a switch that alters this between trunc and app
   // restart should be app, while starting from scratch should be trunc
-  logfilestream.open(inputs.get_logfile(), ofstream::trunc);
-  cout << inputs.get_logfile();
+  logfilestream.open(inputs.get_logfile(), std::ofstream::trunc);
+  std::cout << inputs.get_logfile();
   logfilestream << "year month day hour minute second milli ";
   if (!header){
-    vector<string> species_array = inputs.get_species_vector();
+    std::vector<std::string> species_array = inputs.get_species_vector();
     for (int i = 0; i < indices.all_indices_array_size(); i++){
       if (indices.get_nValues(i)>0){
 	      logfilestream << indices.get_name(i) << " ";
       }
     } 
     logfilestream << "min_temp max_temp mean_temp ";
-    string name;
+    std::string name;
     for (int i = 0; i < species_array.size(); i++){
       name = species_array.at(i);
       logfilestream << name << "_min " << name << "_max " << name << "_mean ";
@@ -48,8 +48,8 @@ void Logfile::write_logfile(Times time,
 			    Report report) {
 
   // output time first:
-  vector<int> itime = time.get_iCurrent();
-  vector<string> species_array = inputs.get_species_vector();
+  std::vector<int> itime = time.get_iCurrent();
+  std::vector<std::string> species_array = inputs.get_species_vector();
   for (int i = 0; i <= 6; ++i){
     logfilestream << itime.at(i) << " ";
   }
@@ -62,13 +62,13 @@ void Logfile::write_logfile(Times time,
   }
 
   // Output Neutral Temperatures:
-  vector<precision_t> temp_stats = get_min_mean_max(neutrals.temperature_scgc);
+  std::vector<precision_t> temp_stats = get_min_mean_max(neutrals.temperature_scgc);
   for (int i = 0; i < 3; i++)
     logfilestream << temp_stats[i] << " ";
 
   // Output densities of requested species:
   for(int i = 0; i<species_array.size(); i++){
-    vector<precision_t> density_stats =
+    std::vector<precision_t> density_stats =
       get_min_mean_max_density(species_array[i], neutrals, ions, report);
     for (int i = 0; i < 3; i++)
       logfilestream << density_stats[i] << " ";

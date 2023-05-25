@@ -247,15 +247,6 @@ int Ions::get_species_id(std::string name, Report &report) {
 // Read/Write restart files for the ions
 //----------------------------------------------------------------------
 
-
-vector<double> Ions::temp_data(arma_cube temp){
-    std::vector<double> temps;
-    temps.push_back(temp.min());
-    temps.push_back(temp.max());
-    temps.push_back( mean(temp, 2).min());
-    return temps;
-}
-
 bool Ions::restart_file(std::string dir, bool DoRead) {
 
   std::string filename;

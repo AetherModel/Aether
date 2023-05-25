@@ -61,7 +61,7 @@
     "Outputs" : {
 	"type" : ["states", "bfield"],
 	"dt" : [900, 0.0],
-	"species" : ["O2", "O2+"]	
+	"species" : ["O2", "O2+"]
 	},
 
     "Restart" : {
