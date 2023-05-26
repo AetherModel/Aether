@@ -30,9 +30,9 @@ subroutine call_msis_f(iYear, iDay, second, gLonDeg, gLatDeg, altKm, &
   
   implicit none
 
-  integer(C_INT) :: iYear, iDay, i
-  real(C_FLOAT) :: second, gLonDeg, gLatDeg, altKm, f107in, f107ain, apin
-  real(C_FLOAT) :: density(10), temperature(2)
+  integer :: iYear, iDay, i
+  real :: second, gLonDeg, gLatDeg, altKm, f107in, f107ain, apin
+  real :: density(10), temperature(2)
   
   integer :: iyd, mass
   real(4) :: sec, alt, glat, glong, stl, f107a, f107, ap(7), apd
