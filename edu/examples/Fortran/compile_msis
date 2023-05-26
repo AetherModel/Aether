@@ -1,22 +1,24 @@
 #!/bin/sh
 
-# need to compile in this order for the modules to work:
-#gfortran -c msis_constants.F90
-#gfortran -c msis_gfn.F90
-#gfortran -c msis_tfn.F90
-#gfortran -c msis_dfn.F90
-#gfortran -c msis_calc.F90
-#gfortran -c msis_gtd8d.F90
-#gfortran -c msis_init.F90
-#gfortran -c msis_utils.F90
+rm -f *.o *.mod
 
-gfortran -c msis_all.f90
+# need to compile in this order for the modules to work:
+gfortran -c msis_constants.F90
+gfortran -c msis_init.F90
+gfortran -c msis_utils.F90
+gfortran -c msis_gfn.F90
+gfortran -c msis_tfn.F90
+gfortran -c msis_dfn.F90
+gfortran -c msis_calc.F90
+gfortran -c msis_gtd8d.F90
+
+#gfortran -c msis_all.f90
 gfortran -c msis2.1_test.F90
 
 #gfortran -o msis2.1 msis*.o
-gfortran -o msis2.1 msis2.1_test.o msis_all.o
+gfortran -o msis2.1 msis2.1_test.o msis_constants.o msis_gfn.o msis_tfn.o msis_dfn.o msis_calc.o msis_gtd8d.o msis_init.o msis_utils.o
 
 g++ -c run_msis.cpp
 gfortran -c call_msis.f90
 
-g++ -o msis_c -lgfortran run_msis.o msis_all.o call_msis.o
+g++ -o msis_c -lgfortran run_msis.o msis_constants.o msis_gfn.o msis_tfn.o msis_dfn.o msis_calc.o msis_gtd8d.o msis_init.o msis_utils.o call_msis.o
