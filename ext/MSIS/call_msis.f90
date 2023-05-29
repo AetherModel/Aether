@@ -51,7 +51,6 @@ subroutine call_msis_f(iYear, iDay, second, gLonDeg, gLatDeg, altKm, &
   call gtd8d(iyd,sec,alt,glat,glong,stl,f107a,f107,ap,mass,d,t)
 
   do i = 1, 10
-     write(*,*) 'in run_msis_f, d(',i,'): ', d(i)
      density(i) = d(i)
   enddo
   temperature(1) = t(1)
