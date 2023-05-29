@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Aether LANGUAGES CXX
-               VERSION   2021.0)
+               VERSION   2023.0)
+
+if (USE_FORTRAN)
+   enable_language(Fortran)
+   file(GLOB MSIS_FILES ${PROJECT_SOURCE_DIR}/ext/MSIS/*.[fF]90)
+   add_definitions(-DFORTRAN)
+else()
+   set(MSIS_FILES )
+endif()
 
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
@@ -10,7 +18,7 @@ set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
-add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
+add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main.cpp)
 
 if(USE_DOUBLE_PRECISION)
   add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
