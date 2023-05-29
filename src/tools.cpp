@@ -3,6 +3,7 @@
 
 #include "../include/aether.h"
 
+
 // ----------------------------------------------------------------------------
 //
 // ----------------------------------------------------------------------------
@@ -81,6 +82,18 @@ std::string tostr(int64_t num_to_convert, int64_t zero_padding_len) {
   std::ostringstream ss;
   ss << std::setw( zero_padding_len ) << std::setfill( '0' ) << num_to_convert;
   return ss.str();
+}
+
+// -----------------------------------------------------------------------------
+// Convert a number to a float/double
+//    - Can convert scientific notation
+// -----------------------------------------------------------------------------
+
+precision_t str_to_num(std::string input) {
+  std::stringstream ss(input);
+  precision_t output = 0;
+  ss >> output;
+  return output;
 }
 
 // -----------------------------------------------------------------------
