@@ -141,7 +141,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
   if (bcs["type"] == "Planet") {
 
-    report.print(0, "setting lower bcs to planet");
+    report.print(2, "setting lower bcs to planet");
     // Set the lower boundary condition:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].density_scgc.slice(0).
