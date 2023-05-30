@@ -304,9 +304,7 @@ class Neutrals {
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  void set_upper_bcs(Grid grid,
-		     Times time,
-		     Indices indices,
+  bool set_upper_bcs(Grid grid,
 		     Inputs input,
 		     Report &report);
 
@@ -316,7 +314,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param report allow reporting to occur
   **/
-  void set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
+  bool set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
   
   /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)

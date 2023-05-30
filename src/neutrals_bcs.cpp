@@ -79,8 +79,6 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
   bool didWork = true;
 
-
-  
   json bcs = input.get_boundary_condition_types();
 
   //-----------------------------------------------
@@ -168,12 +166,14 @@ bool Neutrals::set_lower_bcs(Grid grid,
 //      iDir = 3 -> -y
 //----------------------------------------------------------------------
 
-void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
+bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
 
   std::string function = "Neutrals::set_horizontal_bcs";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  bool didWork = true;
+  
   int64_t nX = grid.get_nX(), iX;
   int64_t nY = grid.get_nY(), iY;
   int64_t nAlts = grid.get_nAlts(), iAlt;
@@ -269,4 +269,5 @@ void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
   }
 
   report.exit(function);
+  return didWork;
 }
