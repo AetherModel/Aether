@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <map>
 
 #include "aether.h"
 
@@ -15,6 +16,7 @@ Report::Report() {
   current_entry = "";
   nEntries = 0;
   iVerbose = -2;
+  iProcReport = 0;
   divider = ">";
   divider_length = divider.length();
   // Set iLevel to -1, so that the call in main takes it to 0:
@@ -52,11 +54,23 @@ void Report::enter(std::string input, int &iFunction) {
     tmp.timing_total = 0.0;
     tmp.iStringPosBefore = iOldStrLen;
     tmp.iLastEntry = iCurrentFunction;
+
+    if (map_iFunctionVerbose.find(input) != map_iFunctionVerbose.end() &&
+        iProc == iProcReport)
+      tmp.iFunctionVerbose = get_FunctionVerbose(input);
+
+    else if (doInheritVerbose)
+      tmp.iFunctionVerbose = iVerbose;
+    else
+      tmp.iFunctionVerbose = iDefaultVerbose;
+
     entries.push_back(tmp);
     nEntries++;
     iEntry = nEntries - 1;
     iFunction = iEntry;
   }
+
+  iVerbose = entries[iEntry].iFunctionVerbose;
 
   // This was taken from
   // https://stackoverflow.com/questions/19555121/how-to-get-current-timestamp-in-milliseconds-since-1970-just-the-way-java-gets
@@ -108,6 +122,11 @@ void Report::exit(std::string input) {
     current_entry = current_entry.substr(0, entries[iEntry].iStringPosBefore);
     iCurrentFunction = entries[iEntry].iLastEntry;
     iLevel--;
+
+    if (iLevel > 0)
+      iVerbose = entries[iCurrentFunction].iFunctionVerbose;
+    else
+      iVerbose = iDefaultVerbose;
   }
 }
 
@@ -176,6 +195,38 @@ void Report::set_verbose(int input) {
 }
 
 // -----------------------------------------------------------------------
+// Set which processor will do the reporting
+// -----------------------------------------------------------------------
+
+void Report::set_iProc(int input) {
+  iProcReport = input;
+}
+
+// -----------------------------------------------------------------------
+// Set the default "iVerbose" value that is passed in Aether.json
+// -----------------------------------------------------------------------
+
+void Report::set_DefaultVerbose(int input) {
+  iDefaultVerbose = input;
+}
+
+// -----------------------------------------------------------------------
+// Set the flag to have sub-functions inherit verbose levels
+// -----------------------------------------------------------------------
+
+void Report::set_doInheritVerbose(bool input) {
+  doInheritVerbose = input;
+}
+
+// -----------------------------------------------------------------------
+// Set the verbose level for the specified function
+// -----------------------------------------------------------------------
+
+void Report::set_FunctionVerbose(std::string input, int iFunctionVerbose) {
+  map_iFunctionVerbose[input] = iFunctionVerbose;
+}
+
+// -----------------------------------------------------------------------
 // Set the depth to report for timing at the end of the run
 // -----------------------------------------------------------------------
 
@@ -200,19 +251,44 @@ int Report::get_verbose() {
 }
 
 // -----------------------------------------------------------------------
+// Get the default "iVerbose" that is passed in Aether.json
+// -----------------------------------------------------------------------
+
+int Report::get_DefaultVerbose() {
+  return iDefaultVerbose;
+}
+
+// -----------------------------------------------------------------------
+// Get the flag to have sub-functions inherit verbose levels
+// -----------------------------------------------------------------------
+
+bool Report::get_doInheritVerbose() {
+  return doInheritVerbose;
+}
+
+// -----------------------------------------------------------------------
+// Get the verbose level for the specified function in the code.
+// -----------------------------------------------------------------------
+
+int Report::get_FunctionVerbose(std::string input) {
+  return map_iFunctionVerbose[input];
+}
+
+// -----------------------------------------------------------------------
 // Report student checker
 // -----------------------------------------------------------------------
 
 void Report::student_checker_function_name(bool isStudent,
-					   std::string cStudentName,
-					   int iFunctionNumber,
-					   std::string cFunctionName) {
+                                           std::string cStudentName,
+                                           int iFunctionNumber,
+                                           std::string cFunctionName) {
   if (isStudent) {
     if (cFunctionName.length() > 1)
       print(-1, cStudentName + " found function " + cFunctionName);
     else
       std::cout << "> (" << iFunctionNumber << ")"
-		<< " What function is this " << cStudentName << "?\n";
+                << " What function is this " << cStudentName << "?\n";
   }
+
   return;
 }
