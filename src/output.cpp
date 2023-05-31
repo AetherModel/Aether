@@ -175,11 +175,33 @@ int output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable(ions.potential_name,
                                                     ions.potential_unit,
                                                     ions.potential_scgc);
+                        
+      if (type_output == "gravity"){
+        AllOutputContainers[iOutput].store_variable("glat",
+                                                    "grav Latitude",
+                                                    "degrees",
+                                                    grid.geoLon_scgc);
+        AllOutputContainers[iOutput].store_variable("mlon",
+                                                    "grav Longitude",
+                                                    "degrees",
+                                                    grid.geoLon_scgc);
+        AllOutputContainers[iOutput].store_variable("mlt",
+                                                    "Magnetic Local Time",
+                                                    "hours",
+                                                    grid.geoLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Beast",
+                                                    "nT",
+                                                    grid.gravity_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Bnorth",
+                                                    "nT",
+                                                    grid.gravity_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Bvertical",
+                                                    "nT",
+                                                    grid.gravity_vcgc[2]); 
+      }
 
       if (type_output == "bfield") {
-        //AllOutputContainers[iOutput].store_variable("glong", "gravity longitude","m/s^2", grid.gravity_vcgc[0]);
-        //AllOutputContainers[iOutput].store_variable("glat", "gravity latitude","m/s^2" ,grid.gravity_vcgc[1]);
-        //AllOutputContainers[iOutput].store_variable("galt", "gravity altitude", "m/s^2", grid.gravity_vcgc[2]);      
+  
         
         AllOutputContainers[iOutput].store_variable("mlat",
                                                     "Magnetic Latitude",
@@ -394,7 +416,7 @@ void OutputContainer::store_variable(std::string name,
   single.cLongName = long_name;
   single.cUnit = unit;
   single.value = value;
-  elments.push_back(single);
+  elements.push_back(single);
 }
 
 // -----------------------------------------------------------------------------
