@@ -56,12 +56,14 @@
     
     "OnmiwebFile" : [""],
     "ElectrodynamicsFile" : [""],
-	"Logfile" : {"name" : "UA/output/log.txt"},
+	"Logfile" : {
+	"name" : "UA/output/log.txt",
+	"species" : ["O2", "O2+"]
+	},
 
     "Outputs" : {
 	"type" : ["states", "bfield"],
-	"dt" : [900, 0.0],
-	"species" : ["O2", "O2+"]
+	"dt" : [900, 0.0]
 	},
 
     "Restart" : {

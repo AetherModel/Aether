@@ -31,13 +31,15 @@ public:
 
   void close_logfile();
 
+  void append_mode();
+
 private:
 
   std::vector<precision_t> lla {5,4,40};
 
   std::ofstream logfilestream;
 
-  bool header = false;
+  bool trunc_mode = true;
 };
 
 #endif  // INCLUDE_LOGFILE_H_

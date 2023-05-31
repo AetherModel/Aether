@@ -101,14 +101,14 @@ std::string Inputs::get_logfile() {
 }
 
 int64_t Inputs::get_n_species(){
-  return settings["Outputs"]["species"].size();
+  return settings["Logfile"]["species"].size();
 }
 
 std::vector<std::string> Inputs::get_species_vector(){
   std::vector<std::string> species;
   std::string value;
   for (int iOutput = 0; iOutput < get_n_species(); iOutput++){
-    value = settings.at("Outputs").at("species").at(iOutput);
+    value = settings.at("Logfile").at("species").at(iOutput);
     species.push_back(value);
   }
   return species;

@@ -10,30 +10,35 @@
 Logfile::Logfile(Indices indices,
                  Inputs inputs,
                  Report &report) {
-  // should add a switch that alters this between trunc and app
-  // restart should be app, while starting from scratch should be trunc
-  logfilestream.open(inputs.get_logfile(), std::ofstream::trunc);
+  //Default mode is trunc. To change to append mode, uncomment line 14
+  append_mode();
+  if (trunc_mode){
+    logfilestream.open(inputs.get_logfile(), std::ofstream::trunc);
+  }
+  else{
+    logfilestream.open(inputs.get_logfile(), std::ofstream::app);
+  }
   std::cout << inputs.get_logfile();
   logfilestream << "year month day hour minute second milli ";
-  if (!header){
-    std::vector<std::string> species_array = inputs.get_species_vector();
-    for (int i = 0; i < indices.all_indices_array_size(); i++){
-      if (indices.get_nValues(i)>0){
-	      logfilestream << indices.get_name(i) << " ";
-      }
-    } 
-    logfilestream << "min_temp max_temp mean_temp ";
-    std::string name;
-    for (int i = 0; i < species_array.size(); i++){
-      name = species_array.at(i);
-      logfilestream << name << "_min " << name << "_max " << name << "_mean ";
+  std::vector<std::string> species_array = inputs.get_species_vector();
+  for (int i = 0; i < indices.all_indices_array_size(); i++){
+    if (indices.get_nValues(i)>0){
+      logfilestream << indices.get_name(i) << " ";
     }
-    logfilestream << "specific_temp";
-    logfilestream << "\n";
+  } 
+  logfilestream << "min_temp max_temp mean_temp ";
+  std::string name;
+  for (int i = 0; i < species_array.size(); i++){
+    name = species_array.at(i);
+    logfilestream << name << "_min " << name << "_max " << name << "_mean ";
+  }
+  logfilestream << "specific_temp";
+  logfilestream << "\n";
 
-    header = true;
-  }  
+}
 
+void Logfile::append_mode(){
+  trunc_mode = false;
 }
 
 //-------------------------------------------------------------
@@ -47,14 +52,14 @@ void Logfile::write_logfile(Times time,
 			    Indices indices,
 			    Report report) {
 
-  // output time first:
+  // Output time first:
   std::vector<int> itime = time.get_iCurrent();
   std::vector<std::string> species_array = inputs.get_species_vector();
   for (int i = 0; i <= 6; ++i){
     logfilestream << itime.at(i) << " ";
   }
   
-  // output indices next:
+  // Output indices next:
   logfilestream.precision(4);
   for (int i = 0; i < indices.all_indices_array_size(); i++){
     if (indices.get_nValues(i) > 0)
