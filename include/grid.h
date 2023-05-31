@@ -183,14 +183,41 @@ public:
   bool send_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
 
-  // interpolation functions
-  // Estimate the value of the point at (lon_in, lat_in, alt_in)
+  /**
+   * \brief Set the interpolation coefficients
+   * \param Lons The longitude of points
+   * \param Lats The latitude of points
+   * \param Alts The altitude of points
+   * \pre This instance is an geo grid
+   * \pre Lons, Lats and Alts have the same size
+   * \return true if the function succeeds, false otherwise.
+   */
+  bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
+                               const std::vector<precision_t> &Lats,
+                               const std::vector<precision_t> &Alts);
+  /**
+   * \brief Create a map of geographic locations to data and do the interpolation
+   * \param data The value at the positions of geoLon, geoLat, and geoAlt
+   * \pre The size of the data should be the same as the geoLat/Lon/Alt_scgc
+   * \return A vector of estimated value at the points set by the last
+   *         set_interpolation_coefs function call if the function succeeds,
+   *         an empty vector otherwise.
+   */
+  std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
+
+  /**
+   * \deprecated !!!Use set_interpolation_coefs and get_interpolation_values instead!!!
+   * \brief Interpolate the value of the point at (lon_in, lat_in, alt_in)
+   */
   precision_t interp_linear(const arma_cube &data,
                             const precision_t lon,
                             const precision_t lat,
                             const precision_t alt);
-  // the position of a vector of points is specified by
-  // three vectors of lon, lat and alt
+  /**
+   * \deprecated !!!Use set_interpolation_coefs and get_interpolation_values instead!!!
+   * \brief Interpolation. The position of a vector of points is specified by
+   *        three vectors of lon, lat and alt
+   */
   std::vector<precision_t> interp_linear(const arma_cube &data,
                                          const std::vector<precision_t> &Lons,
                                          const std::vector<precision_t> &Lats,
@@ -247,15 +274,32 @@ public:
     bool col_max_exclusive;
   };
 
+  // The index and coefficient used for interpolation
+  // Each point is processed by the function set_interpolation_coefs and stored
+  // in the form of this structure.
+  // If the point is out of the grid, in_grid = false and all other members are undefined
+  struct interp_coef_t {
+    // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
+    uint64_t iRow;
+    uint64_t iCol;
+    uint64_t iAlt;
+    // The coefficients along row, column and altitude
+    precision_t rRow;
+    precision_t rCol;
+    precision_t rAlt;
+    // Whether the point is within this grid or not
+    bool in_grid;
+  };
+
   // Return the index of the last element that has altitude smaller than or euqal to the input
-  uint64_t search_altitude(const precision_t alt_in);
+  uint64_t search_altitude(const precision_t alt_in) const;
 
   // Calculate the range of a spherical grid
-  void get_sphere_grid_range(struct sphere_range &sr);
+  void get_sphere_grid_range(struct sphere_range &sr) const;
   // Calculate the range of a cubesphere grid
-  void get_cubesphere_grid_range(struct cubesphere_range &cr);
+  void get_cubesphere_grid_range(struct cubesphere_range &cr) const;
   
-  // Helper function for interpolation, so that grid range is only
+  // Helper function for interp_linear, so that grid range is only
   // calculated once no matter how many points
   precision_t interp_sphere_linear_helper(const arma_cube &data,
                                           const sphere_range &sr,
@@ -267,6 +311,19 @@ public:
                                               const precision_t lon_in,
                                               const precision_t lat_in,
                                               const precision_t alt_in);
+
+  // Helper function for set_interpolation_coefs
+  void set_interp_coef_sphere(const sphere_range &sr,
+                              const precision_t lon_in,
+                              const precision_t lat_in,
+                              const precision_t alt_in);
+  void set_interp_coef_cubesphere(const cubesphere_range &cr,
+                                  const precision_t lon_in,
+                                  const precision_t lat_in,
+                                  const precision_t alt_in);
+
+  // Processed interpolation coefficients
+  std::vector<struct interp_coef_t> interp_coefs;
 };
 
 #endif  // INCLUDE_GRID_H_
