@@ -12,7 +12,7 @@ subroutine init_msis() bind(C, name = 'init_msis')
   
   implicit none
 
-  call msisinit(parmpath='',parmfile='msis21.parm')
+  call msisinit(parmpath='UA/inputs/ext/msis/',parmfile='msis21.parm')
   
 end subroutine init_msis
 
