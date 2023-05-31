@@ -484,8 +484,10 @@ json Inputs::get_perturb_values() {
 
 json Inputs::get_initial_condition_types() {
   json values;
+
   if (settings.contains("InitialConditions"))
     values = settings["InitialConditions"];
+
   return values;
 }
 
@@ -495,8 +497,10 @@ json Inputs::get_initial_condition_types() {
 
 json Inputs::get_boundary_condition_types() {
   json values;
+
   if (settings.contains("BoundaryConditions"))
     values = settings["BoundaryConditions"];
+
   return values;
 }
 

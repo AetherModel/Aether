@@ -22,20 +22,20 @@
 //----------------------------------------------------------------------
 
 bool Neutrals::set_bcs(Grid grid,
-		       Times time,
-		       Indices indices,
-		       Inputs input,
-		       Report &report) {
+                       Times time,
+                       Indices indices,
+                       Inputs input,
+                       Report &report) {
 
   std::string function = "Neutrals::set_bcs";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   bool didWork;
-  
+
   didWork = set_lower_bcs(grid, time, indices, input, report);
   didWork = set_upper_bcs(grid, input, report);
-  
+
   report.exit(function);
   return didWork;
 }
@@ -45,8 +45,8 @@ bool Neutrals::set_bcs(Grid grid,
 //----------------------------------------------------------------------
 
 bool Neutrals::set_upper_bcs(Grid grid,
-			     Inputs input,
-			     Report &report) {
+                             Inputs input,
+                             Report &report) {
 
   std::string function = "Neutrals::set_upper_bcs";
   static int iFunction = -1;
@@ -68,10 +68,10 @@ bool Neutrals::set_upper_bcs(Grid grid,
 //----------------------------------------------------------------------
 
 bool Neutrals::set_lower_bcs(Grid grid,
-			     Times time,
-			     Indices indices,
-			     Inputs input,
-			     Report &report) {
+                             Times time,
+                             Indices indices,
+                             Inputs input,
+                             Report &report) {
 
   std::string function = "Neutrals::set_lower_bcs";
   static int iFunction = -1;
@@ -84,29 +84,31 @@ bool Neutrals::set_lower_bcs(Grid grid,
   //-----------------------------------------------
   // MSIS BCs - only works if FORTRAN is enabled!
   //-----------------------------------------------
-  
+
   if (bcs["type"] == "Msis") {
 
     report.print(2, "Using MSIS for Boundary Conditions");
-      
+
     Msis msis(input);
 
     if (!msis.is_ok()) {
       didWork = false;
+
       if (report.test_verbose(0)) {
-	std::cout << "MSIS Boundary Conditions asked for, ";
-	std::cout << "but MSIS is not compiled! Yikes!\n";
+        std::cout << "MSIS Boundary Conditions asked for, ";
+        std::cout << "but MSIS is not compiled! Yikes!\n";
       }
     }
-    
+
     msis.set_time(time);
     precision_t f107 = indices.get_f107(time.get_current());
     precision_t f107a = indices.get_f107a(time.get_current());
     msis.set_f107(f107, f107a);
     msis.set_ap(10.0);
     msis.set_locations(grid.geoLon_scgc.slice(0),
-		       grid.geoLat_scgc.slice(0),
-		       grid.geoAlt_scgc.slice(0));
+                       grid.geoLat_scgc.slice(0),
+                       grid.geoAlt_scgc.slice(0));
+
     // This is just to check if MSIS is actually working:
     if (msis.is_valid_species("Tn"))
       // if it is, fill will temperature:
@@ -114,25 +116,27 @@ bool Neutrals::set_lower_bcs(Grid grid,
     else
       // if it is not, then fill with a value:
       temperature_scgc.slice(0).fill(initial_temperatures[0]);
-    
+
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       if (report.test_verbose(3))
-	std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
-	
+        std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
+
       if (msis.is_valid_species(species[iSpecies].cName)) {
-	if (report.test_verbose(3))
-	  std::cout << "  Found in MSIS!\n";
-	species[iSpecies].density_scgc.slice(0) =
-	  msis.get_mat(species[iSpecies].cName);
+        if (report.test_verbose(3))
+          std::cout << "  Found in MSIS!\n";
+
+        species[iSpecies].density_scgc.slice(0) =
+          msis.get_mat(species[iSpecies].cName);
       } else {
-	if (report.test_verbose(3))
-	  std::cout << "  NOT Found in MSIS - setting constant\n";
-	species[iSpecies].density_scgc.slice(0).
-	  fill(species[iSpecies].lower_bc_density);
+        if (report.test_verbose(3))
+          std::cout << "  NOT Found in MSIS - setting constant\n";
+
+        species[iSpecies].density_scgc.slice(0).
+        fill(species[iSpecies].lower_bc_density);
       }
-      
+
     }
-      
+
   } // type == Msis
 
   //-----------------------------------------------
@@ -142,11 +146,13 @@ bool Neutrals::set_lower_bcs(Grid grid,
   if (bcs["type"] == "Planet") {
 
     report.print(2, "setting lower bcs to planet");
+
     // Set the lower boundary condition:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].density_scgc.slice(0).
-	fill(species[iSpecies].lower_bc_density);
+      fill(species[iSpecies].lower_bc_density);
     }
+
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
     // Don't need to set the temperature or winds, since they are
     // uniform fixed values that don't change...
@@ -173,7 +179,7 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
   report.enter(function, iFunction);
 
   bool didWork = true;
-  
+
   int64_t nX = grid.get_nX(), iX;
   int64_t nY = grid.get_nY(), iY;
   int64_t nAlts = grid.get_nAlts(), iAlt;

@@ -24,11 +24,11 @@ extern "C" void call_msis_f(int *iYear,
                             float[], float[]);
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 Msis::Msis(Inputs args) {
-  
+
 #ifdef FORTRAN
   // Initialize msis (reading in the data file):
   init_msis();
@@ -54,6 +54,7 @@ Msis::Msis(Inputs args) {
     value_lookup["unknown"] = 0;
     nVars = 0;
   }
+
   didChange = true;
   nX = -1;
   nY = -1;
@@ -61,7 +62,7 @@ Msis::Msis(Inputs args) {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::is_ok() {
@@ -69,7 +70,7 @@ bool Msis::is_ok() {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::is_valid_species(std::string cValue) {
@@ -80,25 +81,25 @@ bool Msis::is_valid_species(std::string cValue) {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::set_time(Times time) {
   bool didWork = true;
-  std::vector<int> iCurrent = time.get_iCurrent();  
+  std::vector<int> iCurrent = time.get_iCurrent();
   iYear = iCurrent[0];
   iDay = time.get_julian_day();
   second =
-    float(iCurrent[3])*3600.0 +
-    float(iCurrent[4])*60.0 +
+    float(iCurrent[3]) * 3600.0 +
+    float(iCurrent[4]) * 60.0 +
     float(iCurrent[5]) +
-    float(iCurrent[6])/1000.0;
+    float(iCurrent[6]) / 1000.0;
   didChange = true;
   return didWork;
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::set_f107(precision_t f107in, precision_t f107ain) {
@@ -110,7 +111,7 @@ bool Msis::set_f107(precision_t f107in, precision_t f107ain) {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::set_ap(precision_t apin) {
@@ -121,7 +122,7 @@ bool Msis::set_ap(precision_t apin) {
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::reset_interface_variable_sizes() {
@@ -129,7 +130,7 @@ bool Msis::reset_interface_variable_sizes() {
   lonDeg.set_size(nX, nY, nZ);
   latDeg.set_size(nX, nY, nZ);
   altKm.set_size(nX, nY, nZ);
-  msis_results = make_cube_vector(nX, nY, nZ, nVars);  
+  msis_results = make_cube_vector(nX, nY, nZ, nVars);
   return didWork;
 }
 
@@ -140,8 +141,8 @@ bool Msis::reset_interface_variable_sizes() {
 // -----------------------------------------------------------------------------
 
 bool Msis::set_locations(arma_vec longitude,
-			 arma_vec latitude,
-			 arma_vec altitude) {
+                         arma_vec latitude,
+                         arma_vec altitude) {
   bool didWork = true;
 
   // Set the size of the results if we need to:
@@ -151,21 +152,22 @@ bool Msis::set_locations(arma_vec longitude,
     nZ = 1;
     didWork = reset_interface_variable_sizes();
   }
-  lonDeg.tube(0,0) = longitude * cRtoD;
-  latDeg.tube(0,0) = latitude * cRtoD;
-  altKm.tube(0,0) = altitude / 1000.0;
+
+  lonDeg.tube(0, 0) = longitude * cRtoD;
+  latDeg.tube(0, 0) = latitude * cRtoD;
+  altKm.tube(0, 0) = altitude / 1000.0;
   didChange = true;
-  
+
   return didWork;
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::set_locations(arma_mat longitude,
-			 arma_mat latitude,
-			 arma_mat altitude) {
+                         arma_mat latitude,
+                         arma_mat altitude) {
   bool didWork = true;
 
   // Set the size of the results if we need to:
@@ -176,21 +178,22 @@ bool Msis::set_locations(arma_mat longitude,
     nZ = 1;
     didWork = reset_interface_variable_sizes();
   }
+
   lonDeg.slice(0) = longitude * cRtoD;
   latDeg.slice(0) = latitude * cRtoD;
   altKm.slice(0) = altitude / 1000.0;
   didChange = true;
-  
+
   return didWork;
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::set_locations(arma_cube longitude,
-			 arma_cube latitude,
-			 arma_cube altitude) {
+                         arma_cube latitude,
+                         arma_cube altitude) {
   bool didWork = true;
 
   // Set the size of the results if we need to:
@@ -202,16 +205,17 @@ bool Msis::set_locations(arma_cube longitude,
     nZ = longitude.n_slices;
     didWork = reset_interface_variable_sizes();
   }
+
   lonDeg = longitude * cRtoD;
   latDeg = latitude * cRtoD;
   altKm = altitude / 1000.0;
   didChange = true;
-  
+
   return didWork;
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 bool Msis::reset_results() {
@@ -225,87 +229,99 @@ bool Msis::reset_results() {
 
   for (int i = 0; i < 10; i++)
     density_back[i] = -1.0;
+
   temperature_back[0] = -1.0;
   temperature_back[1] = -1.0;
 
   int64_t iX, iY, iZ;
+
   for (iX = 0; iX < nX; iX++) {
     for (iY = 0; iY < nY; iY++) {
       for (iZ = 0; iZ < nZ; iZ++) {
-	gLonDeg = lonDeg(iX, iY, iZ);
-	gLatDeg = latDeg(iX, iY, iZ);
-	gAltKm = altKm(iX, iY, iZ);
-	  
+        gLonDeg = lonDeg(iX, iY, iZ);
+        gLatDeg = latDeg(iX, iY, iZ);
+        gAltKm = altKm(iX, iY, iZ);
+
 #ifdef FORTRAN
-	// Call msis in fortran:
-	call_msis_f(&iYear, &iDay, &second, &gLonDeg, &gLatDeg, &gAltKm,
-		    &f107, &f107a, &ap, density_back, temperature_back);
+        // Call msis in fortran:
+        call_msis_f(&iYear, &iDay, &second, &gLonDeg, &gLatDeg, &gAltKm,
+                    &f107, &f107a, &ap, density_back, temperature_back);
 #endif
-	// convert from /cm3 to /m3  
-	msis_results[0](iX, iY, iZ) = density_back[0]*1e6;
-	msis_results[1](iX, iY, iZ) = density_back[1]*1e6;
-	msis_results[2](iX, iY, iZ) = density_back[2]*1e6;
-	msis_results[3](iX, iY, iZ) = density_back[3]*1e6;
-	msis_results[4](iX, iY, iZ) = density_back[4]*1e6;
-	msis_results[5](iX, iY, iZ) = density_back[6]*1e6;
-	msis_results[6](iX, iY, iZ) = density_back[7]*1e6;
-	msis_results[7](iX, iY, iZ) = density_back[9]*1e6;
-	msis_results[8](iX, iY, iZ) = temperature_back[1];
+        // convert from /cm3 to /m3
+        msis_results[0](iX, iY, iZ) = density_back[0] * 1e6;
+        msis_results[1](iX, iY, iZ) = density_back[1] * 1e6;
+        msis_results[2](iX, iY, iZ) = density_back[2] * 1e6;
+        msis_results[3](iX, iY, iZ) = density_back[3] * 1e6;
+        msis_results[4](iX, iY, iZ) = density_back[4] * 1e6;
+        msis_results[5](iX, iY, iZ) = density_back[6] * 1e6;
+        msis_results[6](iX, iY, iZ) = density_back[7] * 1e6;
+        msis_results[7](iX, iY, iZ) = density_back[9] * 1e6;
+        msis_results[8](iX, iY, iZ) = temperature_back[1];
       } // iZ
     } // iY
   } // iX
+
   return didWork;
 }
 
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 arma_vec Msis::get_vec(std::string cVar) {
   bool didWork = true;
   int item_ = -1;
+
   if (didChange)
     didWork = reset_results();
+
   if (didWork)
     item_ = value_lookup[cVar];
+
   return msis_results[item_].tube(0, 0);
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 arma_mat Msis::get_mat(std::string cVar) {
   bool didWork = true;
   int item_ = -1;
+
   if (didChange)
     didWork = reset_results();
+
   if (didWork)
     item_ = value_lookup[cVar];
+
   return msis_results[item_].slice(0);
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 arma_cube Msis::get_cube(std::string cVar) {
   bool didWork = true;
   int item_ = -1;
+
   if (didChange)
     didWork = reset_results();
+
   if (didWork)
     item_ = value_lookup[cVar];
+
   return msis_results[item_];
 }
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 
 
 // -----------------------------------------------------------------------------
-// 
+//
 // -----------------------------------------------------------------------------
 

@@ -53,11 +53,11 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 // -----------------------------------------------------------------------------
 
 Neutrals::Neutrals(Grid grid,
-		   Planets planet,
-		   Times time,
-		   Indices indices,
-		   Inputs input,
-		   Report report) {
+                   Planets planet,
+                   Times time,
+                   Indices indices,
+                   Inputs input,
+                   Report report) {
 
   int iErr;
   species_chars tmp;
@@ -175,7 +175,7 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
     // Integrate with hydrostatic equilibrium up:
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
-    
+
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
@@ -192,20 +192,21 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
-				     Grid grid, Report report) {
+                                     Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
 
   species[iSpecies].scale_height_scgc =
     cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
-    
+
   // Integrate with hydrostatic equilibrium up:
   for (int iAlt = 1; iAlt < nAlts; iAlt++) {
     species[iSpecies].density_scgc.slice(iAlt) =
       species[iSpecies].density_scgc.slice(iAlt - 1) %
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
-	  species[iSpecies].scale_height_scgc.slice(iAlt));
+          species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density(report);
 }
 
