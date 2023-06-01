@@ -180,24 +180,36 @@ int output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable("glat",
                                                     "grav Latitude",
                                                     "degrees",
-                                                    grid.geoLon_scgc);
-        AllOutputContainers[iOutput].store_variable("mlon",
+                                                    grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("glon",
                                                     "grav Longitude",
                                                     "degrees",
-                                                    grid.geoLon_scgc);
-        AllOutputContainers[iOutput].store_variable("mlt",
-                                                    "Magnetic Local Time",
+                                                    grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("lt",
+                                                    "Local Time",
                                                     "hours",
                                                     grid.geoLocalTime_scgc);
-        AllOutputContainers[iOutput].store_variable("Beast",
-                                                    "nT",
+        AllOutputContainers[iOutput].store_variable("Glongitude",
+                                                    "m/s^2",
                                                     grid.gravity_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("Bnorth",
-                                                    "nT",
+        AllOutputContainers[iOutput].store_variable("Glatitude",
+                                                    "m/s^2",
                                                     grid.gravity_vcgc[1]);
-        AllOutputContainers[iOutput].store_variable("Bvertical",
-                                                    "nT",
+        AllOutputContainers[iOutput].store_variable("Galtitude",
+                                                    "m/s^2",
                                                     grid.gravity_vcgc[2]); 
+        AllOutputContainers[iOutput].store_variable("Radius",
+                                                    "m",
+                                                    grid.radius_scgc);
+        AllOutputContainers[iOutput].store_variable("unit_longitude",
+                                                    "degrees",
+                                                    grid.rad_unit_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("unit_latitude",
+                                                    "degrees",
+                                                    grid.rad_unit_vcgc[1]); 
+        AllOutputContainers[iOutput].store_variable("unit_altitude",
+                                                    "degrees",
+                                                    grid.rad_unit_vcgc[2]);   
       }
 
       if (type_output == "bfield") {
@@ -254,7 +266,7 @@ int output(const Neutrals &neutrals,
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-      if (nGrids > 1)
+
         filename = filename + "_" + cGrid;
 
       report.print(0, "Writing file : " + filename);

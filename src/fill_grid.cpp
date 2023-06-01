@@ -236,16 +236,15 @@ void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
   arma_cube mag_radius_gradient = sqrt( pow(gradient_vcgc[0], 2) + pow(gradient_vcgc[1],2) + pow(gradient_vcgc[2],2) );
   arma_cube mag_radius_gradienti =  1.0 / mag_radius_gradient;
 
-  std::vector<arma_cube> rad_unit_vcgc;
   rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   for (int iV = 0; iV < 3; iV++)
     rad_unit_vcgc[iV].zeros();
 
-  rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti)  % geoLon_scgc;
+  rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti) ;// % geoLon_scgc;
   //rad_unit_vcgc[0].print();
-  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti)  % geoLat_scgc;
+  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti); //  % geoLat_scgc;
   //rad_unit_vcgc[1].print();
-  rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti)  % geoAlt_scgc;
+  rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);//  % geoAlt_scgc;
   //rad_unit_vcgc[2].print();
 
   radius2_scgc = radius_scgc % radius_scgc;
@@ -253,7 +252,7 @@ void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
   gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   for (int iV = 0; iV < 3; iV++){
-    gravity_vcgc[iV] = -mu * ( 1.0 / ((radius_scgc  % rad_unit_vcgc[iV]) % (radius_scgc  % rad_unit_vcgc[iV])));
+    gravity_vcgc[iV] = -mu * ( 1.0 / (pow(radius_scgc, 2)) ) % rad_unit_vcgc[iV];
   }
 
   //gravity_vcgc[0].print();
