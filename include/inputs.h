@@ -81,6 +81,12 @@ public:
   int iVerboseProc;
   int iTimingDepth;
 
+  std::string get_logfile();
+  int64_t get_n_species();
+  std::vector<std::string> get_species_vector();
+  bool get_logfile_append();
+  precision_t get_logfile_dt();
+  
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
   std::vector<int> get_settings_timearr(std::string key1);
