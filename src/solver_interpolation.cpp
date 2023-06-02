@@ -268,9 +268,9 @@ fmat interpolate_3d_w_index(std::vector<fmat> values,
 // where ratio = (x - x0) / (x1 - x0)
 // ----------------------------------------------------------------------
 
-inline precision_t linear_interpolation(const precision_t y0,
-                                        const precision_t y1,
-                                        const precision_t ratio) {
+precision_t linear_interpolation(const precision_t y0,
+                                 const precision_t y1,
+                                 const precision_t ratio) {
     return (1.0 - ratio) * y0 + ratio * y1;
 }
 
