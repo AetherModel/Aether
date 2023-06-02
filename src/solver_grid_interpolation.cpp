@@ -97,11 +97,6 @@ int64_t get_cube_surface_number(const arma_vec &point_in) {
 
 // Helper variables / function ends. The following are all member functions of Grid class
 
-// Read grid.h completely before trying to understand the following.
-// Currently interp_linear(both 2 overloads), interp_sphere_linear_helper
-// and interp_cubesphere_linear_helper are deprecated (i.e. no longer recommended
-// for use due to low efficiency, but the functionality is still maintained)
-
 // --------------------------------------------------------------------------
 // Return the index of the last element that has altitude smaller than or euqal to the input
 // --------------------------------------------------------------------------
