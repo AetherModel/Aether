@@ -493,6 +493,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
       create_cubesphere_grid(quadtree, input, report);
     else
       create_sphere_grid(quadtree, input, report);
+
     create_altitudes(input, report);
 
     DidWork = write_restart(input.get_restartout_dir());

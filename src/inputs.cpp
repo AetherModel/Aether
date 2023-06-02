@@ -99,17 +99,19 @@ bool Inputs::get_logfile_append() {
   return settings["Logfile"]["append"];
 }
 
-int64_t Inputs::get_n_species(){
+int64_t Inputs::get_n_species() {
   return settings["Logfile"]["species"].size();
 }
 
-std::vector<std::string> Inputs::get_species_vector(){
+std::vector<std::string> Inputs::get_species_vector() {
   std::vector<std::string> species;
   std::string value;
-  for (int iOutput = 0; iOutput < get_n_species(); iOutput++){
+
+  for (int iOutput = 0; iOutput < get_n_species(); iOutput++) {
     value = settings.at("Logfile").at("species").at(iOutput);
     species.push_back(value);
   }
+
   return species;
 }
 
@@ -483,7 +485,7 @@ std::string Inputs::get_electrodynamics_file() {
 }
 
 // -----------------------------------------------------------------------
-// Flag to do the bulk ion temperature calculation instead 
+// Flag to do the bulk ion temperature calculation instead
 // of individual ion specie temperature calculations
 // -----------------------------------------------------------------------
 
