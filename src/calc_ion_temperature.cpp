@@ -16,8 +16,15 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 
   int64_t iIon;
 
-  for (iIon = 0; iIon < nIons; iIon++)
+  for (iIon = 0; iIon < nSpecies; iIon++) {
     species[iIon].temperature_scgc = neutrals.temperature_scgc;
+
+    // This is the first place where we have the ions, neutrals, and grid:
+    species[iIon].nu_ion_neutral_vcgc = make_cube_vector(grid.get_nLons(),
+                                                         grid.get_nLats(),
+                                                         grid.get_nAlts(),
+                                                         neutrals.nSpecies);
+  }
 
   temperature_scgc = neutrals.temperature_scgc;
 
@@ -58,7 +65,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     // First ion species only, currently is O+
     nSpecs = 1;
   else
-    nSpecs = nIons;
+    nSpecs = nSpecies;
 
   if (report.test_verbose(4)) {
     std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp()
@@ -107,7 +114,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     tempT.zeros();
     tempD.zeros();
 
-    for (iIon = 0; iIon < nIons; iIon++) {
+    for (iIon = 0; iIon < nSpecies; iIon++) {
       tempT = tempT +
               species[iIon].temperature_scgc % species[iIon].density_scgc;
       tempD = tempD +
@@ -122,7 +129,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     temperature_scgc = temperature_scgc + dt * (conduction_scgc);
 
     // Use the bulk ion temperature to fill all ion specie temperatures
-    for (iIon = 0; iIon < nIons; iIon++)
+    for (iIon = 0; iIon < nSpecies; iIon++)
       species[iIon].temperature_scgc = temperature_scgc;
   }
 

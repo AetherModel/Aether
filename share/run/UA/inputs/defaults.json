@@ -2,10 +2,15 @@
 {
     "Debug" : {
 	"iVerbose" : 0,
+	"doInheritVerbose" : false,
 	"dt" : 60.0,
 	"TimingPercent" : 1.0,
 	"iTimingDepth" : 5,
 	"iProc" : 0},
+
+    "Student" : {
+	"name" : "",
+	"is" : false },
 
     "Planet" : "earth",
 

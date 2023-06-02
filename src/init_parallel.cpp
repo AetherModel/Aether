@@ -41,8 +41,10 @@ bool init_parallel(Inputs &input,
 
   // Modify the verbosity of the code by turning of verbose on all
   // processors except specified processor:
-  if (iProc != input.get_verbose_proc())
+  if (iProc != input.get_verbose_proc()) {
     report.set_verbose(-1);
+    report.set_DefaultVerbose(-1);
+  }
 
   nMembers = input.get_nMembers();
   nGrids = nProcs / nMembers;
@@ -50,7 +52,8 @@ bool init_parallel(Inputs &input,
   int64_t nProcsPerNode = nGrids / quadtree.nRootNodes;
 
   if (report.test_verbose(2))
-    std::cout << "Number of PEs per root node available: " << nProcsPerNode << "\n";
+    std::cout << "Number of PEs per root node available: "
+              << nProcsPerNode << "\n";
 
   quadtree.max_depth = round(log(nProcsPerNode) / log(4));
 

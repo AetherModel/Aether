@@ -3,18 +3,26 @@
 
     "Debug" : {
 	"iVerbose" : 0,
+	"iProc" : 0,
 	"dt" : 10.0},
+
+    "EndTime" : [2011, 3, 20, 0, 30, 0],
+    
+    "Ensembles" : {
+        "nMembers" : 1},
+
+    "CubeSphere" : {
+	"is" : false},
 
     "GeoBlockSize" : {
 	"nLons" : 18,
 	"nLats" : 18,
-	"nAlts" : 50},
+	"nAlts" : 40},
 
-    "Mysetting" : {
-	"setting1" : "this_is_an_example",
-	"setting2" : 42,
-	"setting3" : true},
-
+    "GeoGrid" : {
+	"dAlt"   : 0.3,
+    	"IsUniformAlt" : false},
+    
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",

@@ -185,13 +185,33 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 
   // Second Change Units
   geo_grid_input.alt_min = geo_grid_input.alt_min * cKMtoM;
-  geo_grid_input.dalt = geo_grid_input.dalt * cKMtoM;
   geo_grid_input.lat_min = geo_grid_input.lat_min * cDtoR;
   geo_grid_input.lat_max = geo_grid_input.lat_max * cDtoR;
   geo_grid_input.lon_min = geo_grid_input.lon_min * cDtoR;
   geo_grid_input.lon_max = geo_grid_input.lon_max * cDtoR;
 
+  // If the grid is uniform, dalt is in km, else it is in fractions of
+  // scale height:
+  if (geo_grid_input.IsUniformAlt)
+    geo_grid_input.dalt = geo_grid_input.dalt * cKMtoM;
+
   return geo_grid_input;
+}
+
+// -----------------------------------------------------------------------
+// Return whether user is student
+// -----------------------------------------------------------------------
+
+bool Inputs::get_is_student() {
+  return settings["Student"]["is"];
+}
+
+// -----------------------------------------------------------------------
+// Return student name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_student_name() {
+  return settings["Student"]["name"];
 }
 
 // -----------------------------------------------------------------------

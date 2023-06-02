@@ -1,11 +1,15 @@
 # Aether
 This is the home of the Aether model of the thermosphere and ionosphere
 
-The Aether model has been developed using gnu c++ (version 9.3.0). If
+The Aether model has been developed using gnu c++ (version 10). If
 you are using this, hopefully it will just work out of the box. We have 
 been doing development of Aether on Mac OSX, and in Ubuntu Linux.  We have 
 also used the Windows Subsystem for Linux, Ubuntu distribution, which 
 works similarly to the native Linux distribution.
+
+If you are a student and don't know how to work with a large code base
+(i.e., multiple source codes in multiple directories), you may consider
+starting with the doc/student.md file.
 
 ## Dependencies:
 
@@ -35,7 +39,7 @@ On Mac, if you want the clang compiled version of netcdf, then:
 sudo port install netcdf-cxx4
 ```
 
-If you want the gcc version of netcdf, then:
+If you want the gcc version of netcdf (recommended), then:
 ```bash
 sudo port install netcdf-cxx4 +gcc10
 ```
@@ -60,7 +64,12 @@ On Mac:
 sudo port install nlohmann-json 
 ```
 
-4. The armadillo headers need to be installed. Simplistically, Armadillo is a system that allows matrix math to be done in C++ easily. We mostly use it for doing math with matrices (like multiplication, addition, etc.), but it is much more powerful than this.  You will notice that there are not many 3D loops in Aether, which is due to Armadillo.  To make this all fast, it is best to install the lapack abd blas libraries too.
+4. The armadillo headers need to be installed. Simplistically, Armadillo is a
+system that allows matrix math to be done in C++ easily. We mostly use it for
+doing math with matrices (like multiplication, addition, etc.), but it is much
+more powerful than this.  You will notice that there are not many 3D loops in
+Aether, which is due to Armadillo.  To make this all fast, it is best to install
+the lapack abd blas libraries too.
 
 On Ubuntu:
 
@@ -131,7 +140,8 @@ cd run.test
 ./aether
 ```
 
-There are essentially two input files that specify the settings in the code.  When you are in a run directory, they are:
+There are essentially two input files that specify the settings in the code.
+When you are in a run directory, they are:
 
 1. UA/inputs/defaults.json.  These set the default inputs for the run
 and should not be modified at all.  You can look at these and copy the

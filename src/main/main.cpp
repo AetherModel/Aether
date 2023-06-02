@@ -29,6 +29,10 @@ int main() {
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
+    if (input.get_is_student())
+      report.print(-1, "Hello " +
+		   input.get_student_name() + " - welcome to Aether!");
+    
     Quadtree quadtree(input, report);
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -50,17 +54,20 @@ int main() {
     
     // Initialize the planet:
     Planets planet(input, report);
+    MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
     // Initialize the indices, read the files, and perturb:
     Indices indices(input);
     DidWork = read_and_store_indices(indices, input, report);
+    MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
 
     // Perturb the inputs if user has asked for this
     indices.perturb(input, report);
+    MPI_Barrier(aether_comm);
     
     // Initialize Geographic grid:
     Grid gGrid(input.get_nLonsGeo(),
@@ -68,6 +75,7 @@ int main() {
 	       input.get_nAltsGeo(),
 	       nGeoGhosts);
     DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
+    MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
     gGrid.fill_grid(planet, report);
@@ -76,10 +84,10 @@ int main() {
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
     // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, input, report);
+    Neutrals neutrals(gGrid, planet, input, report);
 
     // Initialize Ions on geographic grid:
-    Ions ions(gGrid, input, report);
+    Ions ions(gGrid, planet, input, report);
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions, report);

@@ -125,6 +125,8 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
 
 bool Indices::perturb(Inputs args, Report &report) {
   bool DidWork = true;
+  bool DoReport = false;
+  int64_t iDebug = 2;
 
   json perturb_values = args.get_perturb_values();
 
@@ -133,19 +135,21 @@ bool Indices::perturb(Inputs args, Report &report) {
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (report.test_verbose(2))
+      if (report.test_verbose(iDebug)) {
         std::cout << "Perturbing Index : " << name << "\n";
+        DoReport = true;
+      }
 
       int iIndex = lookup_index_id(name);
 
       if (iIndex > -1) {
         int seed = args.get_updated_seed();
 
-        if (report.test_verbose(2))
+        if (report.test_verbose(iDebug))
           std::cout << "Index found: " << iIndex
-                    << " seed : " << seed << "\n";
+                    << "; seed : " << seed << "\n";
 
-        perturb_index(iIndex, seed, it.value());
+        perturb_index(iIndex, seed, it.value(), DoReport);
       }
     }
   }
@@ -157,7 +161,8 @@ bool Indices::perturb(Inputs args, Report &report) {
 // Perturb a specific index in the way the user requested
 // ----------------------------------------------------------------------
 
-void Indices::perturb_index(int iIndex, int seed, json style) {
+void Indices::perturb_index(int iIndex, int seed,
+                            json style, bool DoReport) {
 
   int64_t nValues = all_indices_arrays[iIndex].nValues;
   int64_t nV = nValues;
@@ -195,10 +200,17 @@ void Indices::perturb_index(int iIndex, int seed, json style) {
     if (!constant)
       iV = iValue;
 
-    if (add)
+    if (add) {
+      if (DoReport && iValue == 0)
+        std::cout << "  ==> Adding " << perturbations[iV] << "\n";
+
       all_indices_arrays[iIndex].values[iValue] += perturbations[iV];
-    else
+    } else {
+      if (DoReport && iValue == 0)
+        std::cout << "  ==> Multiplied by " << perturbations[iV] << "\n";
+
       all_indices_arrays[iIndex].values[iValue] *= perturbations[iV];
+    }
   }
 }
 
@@ -440,6 +452,18 @@ int Indices::lookup_index_id(std::string name) {
 
   if (indices_lookup.contains(name_strip))
     ind = indices_lookup[name_strip];
+
+  else {
+    if (iProc == 0) {
+      std::cout << "----------------------------------------------------\n";
+      std::cout << "  -> Error !!!\n";
+      std::cout << "  -> Attempting to set index " << name
+                << " but can't locate it.  Skipping.\n";
+      std::cout << "  -> Modify the file indices_lookup.json file";
+      std::cout << " in the UA/inputs directory\n";
+      std::cout << "----------------------------------------------------\n";
+    }
+  }
 
   return ind;
 }

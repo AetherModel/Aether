@@ -3,6 +3,11 @@
 
     "Debug" : {
 	"iVerbose" : 0,
+	"iFunctionVerbose" : {
+		"advance" : 1,
+		"calc_aurora" : 2
+	},
+	"doInheritVerbose" : true,
 	"dt" : 10.0},
 
     "GeoBlockSize" : {
@@ -19,5 +24,7 @@
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
 
-    "DoCalcBulkIonTemp" : false
+    "DoCalcBulkIonTemp" : false,
+
+	"EndTime" : [2011, 3, 20, 1, 0, 0]
 }

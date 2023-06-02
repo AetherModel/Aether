@@ -5,6 +5,16 @@
 
 #include "../include/aether.h"
 
+double interpolate_1d(double outX,
+                      std::vector<double> inXs,
+                      std::vector<double> inValues) {
+  double ind = interpolate_1d_get_index_doubles(outX, inXs);
+  double outValue = interpolate_1d_w_index(inValues, ind, iInterp_);
+  return outValue;
+}
+
+
+
 // ----------------------------------------------------------------------
 // This is the general function for getting an index within an ordered
 // vector:
@@ -30,7 +40,7 @@ double interpolate_1d_get_index_doubles(double intime,
   }
 
   // Check to see if the time is above the top time in the vector:
-  iHigh = sizeof(times) - 1;
+  iHigh = times.size() - 1;
 
   if (intime >= times[iHigh]) {
     interpolation_index = iHigh;

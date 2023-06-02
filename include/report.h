@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "aether.h"
 
@@ -60,6 +61,31 @@ public:
   void set_verbose(int input);
 
   /**************************************************************
+   \brief Set which processor does the reporting
+   \param input the processor to do the reporting
+   **/
+  void set_iProc(int input);
+
+  /**************************************************************
+   \brief This sets the default "iVerbose" that is passed in Aether.json
+   \param input the default "iVerbose" value
+   **/
+  void set_DefaultVerbose(int input);
+
+  /**************************************************************
+   \brief This sets the flag to have sub-functions inherit verbose levels
+   \param input the flag to have sub-functions inherit verbose levels
+   **/
+  void set_doInheritVerbose(bool input);
+
+  /**************************************************************
+   \brief This sets the verbose level for the specified function
+   \param input the function name
+   \param iFunctionVerbose verbose level for the specified function
+   **/
+  void set_FunctionVerbose(std::string input, int iFunctionVerbose);
+
+  /**************************************************************
    \brief How deep to go in the timing report at the end of the run
    \param input the timing depth to be set for the code
    **/
@@ -88,6 +114,34 @@ public:
    \brief Returns the global verbosity of the code
    **/
   int get_verbose();
+
+  /**************************************************************
+   \brief Returns the default "iVerbose" passed in Aether.json
+   **/
+  int get_DefaultVerbose();
+
+  /**************************************************************
+   \brief Returns the flag to have sub-functions inherit verbose levels
+   **/
+  bool get_doInheritVerbose();
+
+  /**************************************************************
+   \brief Returns the verbose level for the specified function
+   \param input the name of the function
+   **/
+  int get_FunctionVerbose(std::string input);
+
+  /**************************************************************
+   \brief sends a message to a student about the function name
+   \param isStudent
+   \param cStudentName
+   \param iFunctionNumber
+   \param cFunctionName
+   **/
+  void student_checker_function_name(bool isStudent,
+				     std::string cStudentName,
+				     int iFunctionNumber,
+				     std::string cFunctionName);
 
   /**************************************************************
    \brief Starts timer and reports when entering a function, if applicable
@@ -125,6 +179,14 @@ private:
 
   /// global verbose level of the code
   int iVerbose;
+  /// processor to do the reporting
+  int iProcReport;
+  /// default "iVerbose" that is passed in Aether.json
+  int iDefaultVerbose;
+  /// flag to have sub-functions inherit verbose levels of functions
+  bool doInheritVerbose;
+  /// map to store the verbose levels of the specified functions
+  std::map<std::string, int> map_iFunctionVerbose;
   /// the depth of the reporting for the timing at the end of the simulation
   int iTimingDepth;
   /// Only report times above the given percentage of the total run time:
@@ -149,6 +211,8 @@ private:
     /// This is the function that was called just before this one, so that
     /// if can be "popped" of the queue:
     int iLastEntry;
+    /// This is an int that holds the Verbose level of the function
+    int iFunctionVerbose;
   };
 
   /// A vector of entries to keep track of during the model run

@@ -41,9 +41,6 @@ using json = nlohmann::json;
 // This is for manipulating strings
 #include <sstream>
 
-// Aether includes
-#include "earth.h"
-
 // Contains all information about time in the code and wall time:
 #include "times.h"
 

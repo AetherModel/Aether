@@ -11,13 +11,16 @@
 bfield_info_type get_bfield(precision_t lon,
                             precision_t lat,
                             precision_t alt,
+                            bool DoDebug,
                             Planets planet,
                             Inputs input,
                             Report &report) {
 
   std::string function = "get_bfield";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+
+  if (DoDebug)
+    report.enter(function, iFunction);
 
   if (lat > cPI / 2) {
     lat = cTWOPI - lat;
@@ -44,9 +47,11 @@ bfield_info_type get_bfield(precision_t lon,
     bfield_info.lat = lat;
     bfield_info.lon = lon;
   } else if (input.get_bfield_type() == "dipole")
-    bfield_info = get_dipole(lon, lat, alt, planet, input, report);
+    bfield_info = get_dipole(lon, lat, alt, DoDebug, planet, input, report);
 
-  report.exit(function);
+  if (DoDebug)
+    report.exit(function);
+
   return bfield_info;
 }
 

@@ -52,7 +52,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 //  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
+Neutrals::Neutrals(Grid grid, Planets planet, Inputs input, Report report) {
 
   int iErr;
   species_chars tmp;
@@ -62,6 +62,8 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
   int64_t nAlts = grid.get_nAlts();
 
   report.print(2, "Initializing Neutrals");
+
+  json planet_neutrals = planet.get_neutrals();
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
@@ -104,11 +106,8 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
-  initial_temperatures = NULL;
-  initial_altitudes = NULL;
-
   // This gets a bunch of the species-dependent characteristics:
-  iErr = read_planet_file(input, report);
+  iErr = read_planet_file(planet, input, report);
 
   if (iErr > 0)
     std::cout << "Error reading planet file!" << '\n';
@@ -124,7 +123,7 @@ Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
 // Read in the planet file that describes the species - only neutrals
 // -----------------------------------------------------------------------------
 
-int Neutrals::read_planet_file(Inputs input, Report report) {
+int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
 
   int iErr = 0;
   std::string hash;
@@ -132,84 +131,28 @@ int Neutrals::read_planet_file(Inputs input, Report report) {
 
   report.print(3, "In read_planet_file for Neutrals");
 
-  infile_ptr.open(input.get_planet_species_file());
+  json neutrals = planet.get_neutrals();
 
-  if (!infile_ptr.is_open()) {
-    std::cout << "Could not open input file: "
-              << input.get_planet_species_file() << "!!!\n";
-    iErr = 1;
-  } else {
+  nSpecies = neutrals["name"].size();
 
-    int IsDone = 0;
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].cName = neutrals["name"][iSpecies];
+    double mass = neutrals["mass"][iSpecies];
+    species[iSpecies].mass = mass * cAMU;
+    species[iSpecies].vibe = neutrals["vibration"][iSpecies];
+    species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
+    species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
+    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
+  }
 
-    while (!IsDone) {
+  json temperatures = planet.get_temperatures();
+  nInitial_temps = temperatures["alt"].size();
 
-      hash = find_next_hash(infile_ptr);
-
-      if (report.test_verbose(4))
-        std::cout << "hash : -->" << hash << "<--\n";
-
-      if (hash == "#neutrals") {
-        // Read in the characteristics as CSVs:
-        report.print(4, "Found #neutrals!");
-
-        std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
-
-        // I should totally redo the initialization of the species,
-        // since we could just do it here, but that is for the future.
-
-        if (lines.size() - 1 != nSpecies) {
-          std::cout << "number of neutrals species defined in planet.h file : "
-                    << nSpecies << "\n";
-          std::cout << "number of species defined in planet.in file : "
-                    << lines.size() << "\n";
-          std::cout << "These don't match!\n";
-          iErr = 1;
-        } else {
-          // assume order of rows right now:
-          // name, mass, vibration, thermal_cond, thermal_exp, advect, lower BC
-
-          for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-            report.print(5, "setting neutral species " + lines[iSpecies + 1][0]);
-            species[iSpecies].cName = lines[iSpecies + 1][0];
-            species[iSpecies].mass = stof(lines[iSpecies + 1][1]) * cAMU;
-            species[iSpecies].vibe = stof(lines[iSpecies + 1][2]);
-            species[iSpecies].thermal_cond = stof(lines[iSpecies + 1][3]);
-            species[iSpecies].thermal_exp = stof(lines[iSpecies + 1][4]);
-            species[iSpecies].DoAdvect = stoi(lines[iSpecies + 1][5]);
-            species[iSpecies].lower_bc_density = stof(lines[iSpecies + 1][6]);
-          }  // iSpecies
-        }  // else size
-      }  // #neutrals
-
-      if (hash == "#temperature") {
-
-        report.print(4, "Found #temperatures!");
-
-        std::vector<std::vector<std::string>> temps = read_csv(infile_ptr);
-
-        int nTemps = temps.size() - 1;
-        initial_temperatures =
-          static_cast<float*>(malloc(nTemps * sizeof(float)));
-        initial_altitudes =
-          static_cast<float*>(malloc(nTemps * sizeof(float)));
-
-        for (int iTemp = 0; iTemp < nTemps; iTemp++) {
-          report.print(5, "reading initial temp alt " + temps[iTemp + 1][0]);
-          // convert altitudes from km to m
-          initial_altitudes[iTemp] = stof(temps[iTemp + 1][0]) * 1000;
-          initial_temperatures[iTemp] = stof(temps[iTemp + 1][1]);
-        }  // for iTemp
-
-        nInitial_temps = nTemps;
-      }  // #temperature
-
-      if (infile_ptr.eof())
-        IsDone = 1;
-    }   // while !IsDone
-
-    infile_ptr.close();
-  }  // else (isopen)
+  for (int i = 0; i < nInitial_temps; i++) {
+    initial_altitudes.push_back(double(temperatures["alt"][i]) * 1000.0);
+    initial_temperatures.push_back(temperatures["temp"][i]);
+  }
 
   return iErr;
 }
@@ -501,7 +444,6 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
   std::string cName;
 
   OutputContainer RestartContainer;
-  RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
   RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
 

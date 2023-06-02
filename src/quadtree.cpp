@@ -1,13 +1,13 @@
 
 #include "aether.h"
 
-Quadtree::Quadtree(Inputs input, Report report) {
+int64_t iProcQuery = -1;
 
+Quadtree::Quadtree(Inputs input, Report report) {
   if (input.get_is_cubesphere())
     nRootNodes = 6;
   else
     nRootNodes = 1;
-
 }
 
 // --------------------------------------------------------------------------
@@ -147,7 +147,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 
         tmp.children.push_back(tmp_child);
 
-        if (iProc == 100) {
+        if (iProc == iProcQuery) {
           std::cout << "      depth_in : " << depth_in << " "
                     << max_depth << " "
                     << iDU << " "
@@ -162,7 +162,7 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
   }  else {
     tmp.iProcNode = iProc_in_out;
 
-    if (iProc == iProc_in_out)
+    if (iGrid == iProc_in_out)
       iSide = iSide_in;
 
     iProc_in_out++;
@@ -187,7 +187,7 @@ arma_vec Quadtree::get_vect(Quadtree::qtnode node, std::string which) {
         break;
     }
   } else {
-    if (node.iProcNode == iProc) {
+    if (node.iProcNode == iGrid) {
       if (which == "LL")
         vect = node.lower_left_norm;
 
@@ -231,7 +231,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
 
   int64_t iNode = -1;
 
-  if (iProc == 100) {
+  if (iProc == iProcQuery) {
     std::cout << "find_point - depth : " << node.depth << " "
               << node.children.size() << "\n";
     std::cout << "point : ";
@@ -242,7 +242,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
     for (uint64_t iChild = 0; iChild < 4; iChild++) {
       iNode = find_point(point, node.children[iChild]);
 
-      if (iProc == 100)
+      if (iProc == iProcQuery)
         std::cout << "iNode : " << iNode << " " << iChild << "\n";
 
       if (iNode > -1)
@@ -260,7 +260,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
           node.size_up_norm(i) == 0) {
         iCO_ = i;
 
-        if (iProc == 100)
+        if (iProc == iProcQuery)
           std::cout << "found co : " << iCO_ << "\n";
       }
 
@@ -268,7 +268,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
           node.size_up_norm(i) == 0) {
         iLR_ = i;
 
-        if (iProc == 100)
+        if (iProc == iProcQuery)
           std::cout << "found lr : " << iLR_ << "\n";
       }
 
@@ -276,7 +276,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
           node.size_up_norm(i) != 0) {
         iDU_ = i;
 
-        if (iProc == 100)
+        if (iProc == iProcQuery)
           std::cout << "found du : " << iDU_ << "\n";
       }
     }
@@ -299,7 +299,7 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
     if (iFound == 3)
       iNode = node.iProcNode;
 
-    if (iProc == 100 && iFound == 3) {
+    if (iProc == iProcQuery && iFound == 3) {
       std::cout << "Found on iNode : " << iNode << "\n   point     : ";
       display_vector(point);
       std::cout << "   lower left : ";
@@ -335,7 +335,7 @@ arma_vec Quadtree::wrap_point_sphere(arma_vec point) {
   }
 
   if (iEdge_ > -1) {
-    if (iProc == 100) {
+    if (iProc == iProcQuery) {
       std::cout << " point out of bounds!  Wrapping : " << point << "\n";
       std::cout << " edge : " << iEdge_ << "\n";
     }
@@ -357,11 +357,11 @@ arma_vec Quadtree::wrap_point_sphere(arma_vec point) {
 
       wrap_point(0) = point(0) + (limit_high(0) - limit_low(0)) / 2.0;
 
-      if (wrap_point(0) > limit_high(0))
+      if (wrap_point(0) >= limit_high(0))
         wrap_point(0) = wrap_point(0) - limit_high(0);
     }
 
-    if (iProc == 100)
+    if (iProc == iProcQuery)
       std::cout << " wrap_point : " << wrap_point << "\n";
   }
 
@@ -437,7 +437,7 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
     // move away from the edge now:
     wrap_point(iCompTo_) = wrap_point(iCompTo_) + sn * delta;
 
-    if (iProc == 100) {
+    if (iProc == iProcQuery) {
       std::cout << " point out of bounds!  Wrapping : ";
       display_vector(point);
       std::cout << "   delta : " << delta << "\n";
@@ -500,7 +500,7 @@ int64_t Quadtree::find_root(arma_vec point) {
   int64_t iNode = -1, iRoot;
 
   for (iRoot = 0; iRoot < nRootNodes; iRoot++) {
-    if (iProc == 100)
+    if (iProc == iProcQuery)
       std::cout << "Root node : " << iRoot << " of " << nRootNodes << "\n";
 
     iNode = find_point(wrap_point, root_nodes[iRoot]);

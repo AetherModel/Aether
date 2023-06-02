@@ -70,12 +70,15 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
                            arma_vec rhoH,
                            std::vector<precision_t> Ci,
                            arma_vec scale_height,
+                           bool DoDebug,
                            Report &report) {
 
   // Set up function reporting
   std::string function = "calc_fang";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+
+  if (DoDebug)
+    report.enter(function, iFunction);
 
   // rhoH is in kg/m2, but need it in g/cm2 (/10)
   // scale_height needs to be in cm
@@ -102,7 +105,9 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
   // Eqn. 3 of Fang et al [2010] (solve for Qtot(z), ionization rate):
   arma_vec q_tot = conv_to<arma_vec>::from(fyE % fac);
 
-  report.exit(function);
+  if (DoDebug)
+    report.exit(function);
+
   return q_tot;
 }
 
@@ -214,6 +219,7 @@ void calc_aurora(Grid grid,
   precision_t avee;
   arma_vec diff_num_flux;
   arma_vec diff_energy_flux;
+  bool DoDebug = false;
 
   // loop through each altitude and calculate ionization
   for (iLon = 0; iLon < nLons ; iLon++) {
@@ -227,7 +233,7 @@ void calc_aurora(Grid grid,
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
 
-        for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
           rhoH1d = rhoH1d + rho_tube;
@@ -256,6 +262,7 @@ void calc_aurora(Grid grid,
                                    rhoH1d,
                                    Ci,
                                    H,
+                                   DoDebug,
                                    report);
           ionization1d = ionization1d + temp;
         }
@@ -269,7 +276,7 @@ void calc_aurora(Grid grid,
         // weights (coef or Aurora_Coef) and the neutral density
         weighted_sum.zeros();
 
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           if (neutrals.species[iSpecies].nAuroraIonSpecies > 0) {
             neutral_density_tube =
               neutrals.species[iSpecies].density_scgc.tube(iLon, iLat);
@@ -279,7 +286,7 @@ void calc_aurora(Grid grid,
         }
 
         // Cycle through each species of neutrals that gets aurora,
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
           if (neutrals.species[iSpecies].nAuroraIonSpecies > 0) {
 
