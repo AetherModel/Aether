@@ -122,7 +122,10 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
-    Logfile logfile(indices, input, report);
+    Logfile logfile(input.get_logfile(),
+		    input.get_logfile_dt(),
+		    input.get_logfile_append(),
+		    indices, input, report);
 
     while (time.get_current() < time.get_end()) {
 
