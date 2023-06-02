@@ -84,20 +84,19 @@ bool Inputs::write_restart() {
 }
 
 // -----------------------------------------------------------------------
-// Return value of a key in the json formatted inputs
+// Settings for logfile
 // -----------------------------------------------------------------------
-
-std::string Inputs::get_settings_str(std::string key1) {
-  std::string value = "unknown";
-
-  if (settings.contains(key1))
-    value = settings.at(key1);
-
-  return value;
-}
 
 std::string Inputs::get_logfile() {
   return settings["Logfile"]["name"];
+}
+
+precision_t Inputs::get_logfile_dt() {
+  return settings["Logfile"]["dt"];
+}
+
+bool Inputs::get_logfile_append() {
+  return settings["Logfile"]["append"];
 }
 
 int64_t Inputs::get_n_species(){
@@ -112,6 +111,19 @@ std::vector<std::string> Inputs::get_species_vector(){
     species.push_back(value);
   }
   return species;
+}
+
+// -----------------------------------------------------------------------
+// Return value of a key in the json formatted inputs
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_settings_str(std::string key1) {
+  std::string value = "unknown";
+
+  if (settings.contains(key1))
+    value = settings.at(key1);
+
+  return value;
 }
 
 std::string Inputs::get_settings_str(std::string key1,
