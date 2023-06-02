@@ -205,24 +205,6 @@ public:
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 
-  /**
-   * \deprecated !!!Use set_interpolation_coefs and get_interpolation_values instead!!!
-   * \brief Interpolate the value of the point at (lon_in, lat_in, alt_in)
-   */
-  precision_t interp_linear(const arma_cube &data,
-                            const precision_t lon,
-                            const precision_t lat,
-                            const precision_t alt);
-  /**
-   * \deprecated !!!Use set_interpolation_coefs and get_interpolation_values instead!!!
-   * \brief Interpolation. The position of a vector of points is specified by
-   *        three vectors of lon, lat and alt
-   */
-  std::vector<precision_t> interp_linear(const arma_cube &data,
-                                         const std::vector<precision_t> &Lons,
-                                         const std::vector<precision_t> &Lats,
-                                         const std::vector<precision_t> &Alts);
-
  private:
 
   int IsGeoGrid;
@@ -298,19 +280,6 @@ public:
   void get_sphere_grid_range(struct sphere_range &sr) const;
   // Calculate the range of a cubesphere grid
   void get_cubesphere_grid_range(struct cubesphere_range &cr) const;
-  
-  // Helper function for interp_linear, so that grid range is only
-  // calculated once no matter how many points
-  precision_t interp_sphere_linear_helper(const arma_cube &data,
-                                          const sphere_range &sr,
-                                          const precision_t lon_in,
-                                          const precision_t lat_in,
-                                          const precision_t alt_in);
-  precision_t interp_cubesphere_linear_helper(const arma_cube &data,
-                                              const cubesphere_range &cr,
-                                              const precision_t lon_in,
-                                              const precision_t lat_in,
-                                              const precision_t alt_in);
 
   // Helper function for set_interpolation_coefs
   void set_interp_coef_sphere(const sphere_range &sr,
