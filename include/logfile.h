@@ -20,18 +20,21 @@ class Logfile {
 
 public:
 
-  Logfile(Indices indices, Inputs inputs, Report &report);
+  Logfile(std::string logfileNameIn,
+	  precision_t dtIn,
+	  bool doAppend,
+	  Indices indices,
+	  Inputs inputs,
+	  Report &report);
 
-  void write_logfile(Times time,
+  bool write_logfile(Times time,
 		     Neutrals neutrals,
 		     Ions ions,
 		     Inputs inputs,
 		     Indices indices,
-		     Report report);
+		     Report &report);
 
   void close_logfile();
-
-  void append_mode();
 
 private:
 
@@ -39,7 +42,11 @@ private:
 
   std::ofstream logfilestream;
 
-  bool trunc_mode = true;
+  bool doAppend = false;
+  bool isOk = true;
+  std::string logfileName;
+  precision_t dt;
+  
 };
 
 #endif  // INCLUDE_LOGFILE_H_
