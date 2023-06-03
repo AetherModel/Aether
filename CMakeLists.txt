@@ -11,7 +11,11 @@ set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
 set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
-add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
+if(TEST_INTERPOLATION)
+  add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main_test_interpolation.cpp)
+else()
+  add_executable(aether ${SRC_FILES} ${MAIN_DIR}/main.cpp)
+endif()
 
 if(USE_DOUBLE_PRECISION)
   add_compile_definitions(AETHER_USE_PRECISION_DOUBLE)
