@@ -7,121 +7,140 @@
 #include <vector>
 #include <string>
 
-Logfile::Logfile(std::string logfileNameIn,
-                 precision_t dtIn,
-                 bool doAppendIn,
-                 Indices indices,
-                 Inputs inputs,
+//-------------------------------------------------------------
+// Initialize the Logfile
+//-------------------------------------------------------------
+
+Logfile::Logfile(Indices &indices,
+                 Inputs &input,
                  Report &report) {
 
-  std::string function = "Logfile::Logfile";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
+    std::string function = "Logfile::Logfile";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
 
-  isOk = true;
+    // Read the inputs
+    logfileName = input.get_logfile();
+    species = input.get_species_vector();
+    dt = input.get_logfile_dt();
+    doAppend = input.get_logfile_append();
 
-  doAppend = doAppendIn;
-  logfileName = logfileNameIn;
-  dt = dtIn;
+    // Initialize other variables
+    isOk = true;
 
-  if (doAppend)
-    logfilestream.open(logfileName, std::ofstream::app);
-  else
-    logfilestream.open(logfileName, std::ofstream::trunc);
+    // Write the header
+    // Open the file stream
+    if (doAppend) {
+        logfilestream.open(logfileName, std::ofstream::app);
+    } else {
+        logfilestream.open(logfileName, std::ofstream::trunc);
+        logfilestream.precision(4);
+    }
+    // Report error if can not open the file stream
+    if (!logfilestream.is_open()) {
+        std::cout << "Could not open log file: " << logfileName << "!!!\n";
+        isOk = false;
+    }
+    // The name of all indicies
+    logfilestream << "year month day hour minute second milli ";
+    for (int i = 0; i < indices.all_indices_array_size(); ++i) {
+        logfilestream << indices.get_name(i) << ' ';
+    }
+    // The temperature
+    logfilestream << "min_temp mean_temp max_temp ";
+    // The specified variables
+    for (auto &it : species) {
+        logfilestream << it << "_min " << it << "_mean " << it << "_max ";
+    }
+    // The temp at the chosen point
+    logfilestream << "specific_temp\n";
 
-  logfilestream << "year month day hour minute second milli ";
-  std::vector<std::string> species_array = inputs.get_species_vector();
+    // Close the file stream if append
+    if (doAppend) {
+        logfilestream.close();
+    }
 
-  for (int i = 0; i < indices.all_indices_array_size(); i++) {
-    if (indices.get_nValues(i) > 0)
-      logfilestream << indices.get_name(i) << " ";
-  }
-
-  logfilestream << "min_temp max_temp mean_temp ";
-  std::string name;
-
-  for (int i = 0; i < species_array.size(); i++) {
-    name = species_array.at(i);
-    logfilestream << name << "_min " << name << "_max " << name << "_mean ";
-  }
-
-  logfilestream << "specific_temp";
-  logfilestream << "\n";
-
-  if (doAppend)
-    logfilestream.close();
-
-  report.exit(function);
+    report.exit(function);
 }
 
+//-------------------------------------------------------------
+// Close the file stream if not append
+//-------------------------------------------------------------
+
+Logfile::~Logfile() {
+    if (!doAppend) {
+        logfilestream.close();
+    }
+}
 
 //-------------------------------------------------------------
 // Add a new line to the log file
 //-------------------------------------------------------------
 
-bool Logfile::write_logfile(Times time,
-                            Neutrals neutrals,
-                            Ions ions,
-                            Inputs inputs,
-                            Indices indices,
+bool Logfile::write_logfile(Indices &indices,
+                            Neutrals &neutrals,
+                            Ions &ions,
+                            Grid &gGrid,
+                            Times &time,
                             Report &report) {
 
-  std::string function = "Logfile::write_logfile";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
+    std::string function = "Logfile::write_logfile";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
 
-  bool didWork = true;
-
-  if (time.check_time_gate(dt)) {
-
-    // If we openned in append mode, we have to re-open each time:
-    if (doAppend)
-      logfilestream.open(logfileName, std::ofstream::app);
-
-    // Output time first:
-    std::vector<int> itime = time.get_iCurrent();
-    std::vector<std::string> species_array = inputs.get_species_vector();
-
-    for (int i = 0; i <= 6; ++i)
-      logfilestream << itime.at(i) << " ";
-
-    // Output indices next:
-    logfilestream.precision(4);
-
-    for (int i = 0; i < indices.all_indices_array_size(); i++) {
-      if (indices.get_nValues(i) > 0)
-        logfilestream << indices.get_index(time.get_current(), i) << " ";
+    if (!time.check_time_gate(dt)) {
+        // No work to be done
+        return true;
     }
 
-    // Output Neutral Temperatures:
-    std::vector<precision_t> temp_stats;
-    temp_stats = get_min_mean_max(neutrals.temperature_scgc);
-
-    for (int i = 0; i < 3; i++)
-      logfilestream << temp_stats[i] << " ";
-
-    // Output densities of requested species:
-    for (int i = 0; i < species_array.size(); i++) {
-      std::vector<precision_t> density_stats =
-        get_min_mean_max_density(species_array[i], neutrals, ions, report);
-
-      for (int i = 0; i < 3; i++)
-        logfilestream << density_stats[i] << " ";
+    // Open the file stream if append
+    if (doAppend) {
+        logfilestream.open(logfileName, std::ofstream::app);
+        logfilestream.precision(4);
+    }
+    // Report error if the file stream is not open
+    if (!logfilestream.is_open()) {
+        isOk = false;
+        return false;
     }
 
-    // Output closest temp given lat, lon, alt
-    logfilestream << neutrals.temperature_scgc(lla.at(0), lla.at(1), lla.at(2));
-    logfilestream << "\n";
+    // Get the current time
+    std::vector<int> iCurrent = time.get_iCurrent();
+    double current = time.get_current();
 
-    if (doAppend)
-      logfilestream.close();
-  } // time gate
+    // Display the year, month, day, hour, minute, second, and millisecond
+    for (auto &it : iCurrent) {
+        logfilestream << it << ' ';
+    }
 
-  report.exit(function);
-  return didWork;
+    // Display all indices
+    for (int i = 0; i < indices.all_indices_array_size(); ++i) {
+        logfilestream << indices.get_index(current, i) << ' ';
+    }
+
+    // Display temperatures
+    std::vector<precision_t> min_mean_max;
+    min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
+    for (auto &it : min_mean_max) {
+        logfilestream << it << ' ';
+    }
+
+    // Display specified variables
+    for (auto &it : species) {
+        min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
+        for (auto &it2 : min_mean_max) {
+            logfilestream << it2 << ' ';
+        }
+    }
+
+    // Display the temperature at the chosen point
+    logfilestream << neutrals.temperature_scgc(lla[0], lla[1], lla[2]) << '\n';
+
+    // Close the file stream if append
+    if (doAppend) {
+        logfilestream.close();
+    }
+
+    report.exit(function);
+    return true;
 }
-
-void Logfile::close_logfile() {
-  logfilestream.close();
-}
-

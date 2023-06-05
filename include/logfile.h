@@ -20,33 +20,47 @@ class Logfile {
 
 public:
 
-  Logfile(std::string logfileNameIn,
-	  precision_t dtIn,
-	  bool doAppend,
-	  Indices indices,
-	  Inputs inputs,
-	  Report &report);
+  /**
+   * \brief Initialize the Logfile. The logfile will output
+   *    all indicies and specified neutrals and ions every dt time
+   */
+  Logfile(Indices &indices,
+          Inputs &input,
+          Report &report);
+  
+  /**
+   * \brief Close the file stream if not append
+   */
+  ~Logfile();
 
-  bool write_logfile(Times time,
-		     Neutrals neutrals,
-		     Ions ions,
-		     Inputs inputs,
-		     Indices indices,
-		     Report &report);
-
-  void close_logfile();
+  /**
+   * \brief Check the time gate, and write the values into log file
+   *    if needed
+   */
+  bool write_logfile(Indices &indices,
+                     Neutrals &neutrals,
+                     Ions &ions,
+                     Grid &gGrid,
+                     Times &time,
+                     Report &report);
 
 private:
 
-  std::vector<precision_t> lla {5,4,40};
-
-  std::ofstream logfilestream;
-
-  bool doAppend = false;
-  bool isOk = true;
+  // The name of logfile
   std::string logfileName;
+  // The file stream to write
+  std::ofstream logfilestream;
+  // The specified variables
+  std::vector<std::string> species;
+  // The time gate
   precision_t dt;
-  
+  // Whether append or rewrite
+  bool doAppend;
+
+  bool isOk;
+
+  // A randomly chosen point for test
+  std::vector<precision_t> lla {5,4,40};
 };
 
 #endif  // INCLUDE_LOGFILE_H_

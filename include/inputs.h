@@ -82,7 +82,6 @@ public:
   int iTimingDepth;
 
   std::string get_logfile();
-  int64_t get_n_species();
   std::vector<std::string> get_species_vector();
   bool get_logfile_append();
   precision_t get_logfile_dt();

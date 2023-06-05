@@ -70,8 +70,7 @@
 
     "Outputs" : {
 	"type" : ["states", "bfield"],
-	"dt" : [900, 0.0]
-	},
+	"dt" : [900, 0.0]},
 
     "Restart" : {
 	"do" : false,

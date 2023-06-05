@@ -130,10 +130,7 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
-    Logfile logfile(input.get_logfile(),
-		    input.get_logfile_dt(),
-		    input.get_logfile_append(),
-		    indices, input, report);
+    Logfile logfile(indices, input, report);
 
     while (time.get_current() < time.get_end()) {
 
@@ -184,7 +181,6 @@ int main() {
 
     } // End of outer time loop - done with run!
 
-    logfile.close_logfile();
     report.exit(function);
     report.times();
 
