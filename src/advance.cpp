@@ -86,8 +86,7 @@ int advance(Planets &planet,
 
   report.exit(function);
 
-  if (iGrid == 0)
-    logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
+  logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
 
   return iErr;
 }

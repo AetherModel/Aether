@@ -249,6 +249,29 @@ std::vector<precision_t> get_min_mean_max(const arma_cube &value) {
   return mmm;
 }
 
+//-------------------------------------------------------------
+// Find the name of given species in neutrals and ions. Throw exception if not found
+//-------------------------------------------------------------
+
+const arma_cube& find_species_density(const std::string &name,
+                                      Neutrals &neutrals,
+                                      Ions &ions,
+                                      Report &report) {
+  // Try to find the name in neutrals
+  int id = neutrals.get_species_id(name, report);
+  if (id > -1) {
+    return neutrals.species[id].density_scgc;
+  }
+
+  // Try to find the name in ions
+  id = ions.get_species_id(name, report);
+  if (id > -1) {
+    return ions.species[id].density_scgc;
+  }
+
+  // Throw an exception if the species is not found
+  throw std::string("Can not find species named " + name);
+}
 
 //-------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
@@ -258,18 +281,5 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
                                                   Ions &ions,
                                                   Report &report) {
-  // Try to find the name in neutrals
-  int id = neutrals.get_species_id(name, report);
-  if (id > -1) {
-    return get_min_mean_max(neutrals.species[id].density_scgc);
-  }
-
-  // Try to find the name in ions
-  id = ions.get_species_id(name, report);
-  if (id > -1) {
-    return get_min_mean_max(ions.species[id].density_scgc);
-  }
-
-  // Return an empty vector if the name is still not found
-  return std::vector<precision_t>();
+  return get_min_mean_max(find_species_density(name, neutrals, ions, report));
 }

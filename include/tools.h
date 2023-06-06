@@ -72,12 +72,21 @@ precision_t standard_deviation(std::vector<precision_t> values);
 std::vector<precision_t> get_min_mean_max(const arma_cube &value);
 
 //-------------------------------------------------------------
+// Find the name of given species in neutrals and ions. Throw exception if not found
+//-------------------------------------------------------------
+
+const arma_cube& find_species_density(const std::string &name,
+                                      Neutrals &neutrals,
+                                      Ions &ions,
+                                      Report &report);
+
+//-------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
 //-------------------------------------------------------------
 
 std::vector<precision_t> get_min_mean_max_density(const std::string &name,
-					                              Neutrals &neutrals,
-					                              Ions &ions,
-					                              Report &report);
+                                                  Neutrals &neutrals,
+                                                  Ions &ions,
+                                                  Report &report);
 
 #endif  // INCLUDE_TOOLS_H_

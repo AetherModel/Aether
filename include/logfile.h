@@ -54,18 +54,27 @@ public:
   ~Satellite();
 
   /**
-   * \brief Get the position of the satellite at any given time
+   * \brief Get the position of the satellite at given time
+   * \param lons_out Vector to stroe the longitude of the location
+   * \param lats_out Vector to store the latitude of the location
+   * \param alts_out Vector to store the altitude of the location
    * \param time_in Time to determine location
-   * \return The position ordered by lon, lat, alt if the function succeeds,
-   *    Empty vector if the time_in is out of range
    */
-  std::vector<precision_t> get_position(const double time_in) const;
+  void get_position(std::vector<precision_t> &lons_out,
+                    std::vector<precision_t> &lats_out,
+                    std::vector<precision_t> &alts_out,
+                    const double time_in) const;
 
   // Get the name of the satellite
   std::string get_name() const;
 
   // Get the time gate of the satellite
   precision_t get_dt() const;
+
+  // Write the content to the satellite log
+  void write_log(const std::vector<int> &iCurrent,
+                 const std::vector<precision_t> &indices,
+                 const std::vector<precision_t> &variables);
 
   // DEBUG
   void print();
@@ -137,8 +146,6 @@ private:
   precision_t dt;
   // Whether append or rewrite
   bool doAppend;
-
-  bool isOk;
 
   // A randomly chosen point for test
   std::vector<precision_t> lla {5,4,40};

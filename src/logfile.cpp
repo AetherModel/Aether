@@ -8,6 +8,28 @@
 #include <string>
 
 // -------------------------------------------------------------------
+// Helper function to print vector
+// Only used in this file and neither declared nor visible in any other file
+// -------------------------------------------------------------------
+
+void write_logfile_line(std::ofstream &ofs,
+                        const std::vector<int> &iCurrent,
+                        const std::vector<precision_t> &indices,
+                        const std::vector<precision_t> &variables) {
+    ofs << iCurrent[0];
+    for (size_t i = 1; i < iCurrent.size(); ++i) {
+        ofs << ' ' << iCurrent[i];
+    }
+    for (auto it : indices) {
+        ofs << ' ' << it;
+    }
+    for (auto it : variables) {
+        ofs << ' ' << it;
+    }
+    ofs << '\n';
+}
+
+// -------------------------------------------------------------------
 // Construct the satellite class using file at csv_in
 // -------------------------------------------------------------------
 
@@ -18,7 +40,7 @@ Satellite::Satellite(const std::string &csv_in, const precision_t dt_in) {
     // Open the input file
     std::ifstream ifs(csv_in);
     if (!ifs.is_open()) {
-        throw std::string("Can not open csv file");
+        throw std::string("Satellite: Can not open csv file " + csv_in);
     }
 
     // Read the first line
@@ -29,21 +51,23 @@ Satellite::Satellite(const std::string &csv_in, const precision_t dt_in) {
     if (pos_find == 0) {
         name.erase(0, sub.length());
     } else {
-        throw std::string("Line 1 format error. It should be \"Satellite: <name>\"");
+        throw std::string("Satellite file " + csv_in + ": Line 1 format error. "
+                          "It should be \"Satellite: <name>\"");
     }
 
     // The next line should be exactly the same as the following
     std::string line;
-    const std::string line2 = "year, mon, day, hr, min, sec, lon (deg), lat (deg), alt (km), x (km), y (km), z (km), vx (km/s), vy (km/s), vz (km/s)";
+    const std::string line2 = "year, mon, day, hr, min, sec, lon (deg), lat (deg), alt (km), "
+                              "x (km), y (km), z (km), vx (km/s), vy (km/s), vz (km/s)";
     getline(ifs, line);
     if (line != line2) {
-        throw std::string("Line 2 format error");
+        throw std::string("Satellite file " + csv_in + ": Line 2 format error");
     }
 
     // Read time and position on each line
     std::vector<int> itime(7);
     precision_t lon_in, lat_in, alt_in;
-    // CAUTION: THE SATELLITE INPUT FILE DO NOT HAS milliseconds
+    // CAUTION: THE SATELLITE INPUT FILE DOES NOT HAVE milliseconds
     // Fix the millisecond to be 0
     itime[6] = 0;    
     while (getline(ifs, line) && line.length() > 1) {
@@ -56,9 +80,7 @@ Satellite::Satellite(const std::string &csv_in, const precision_t dt_in) {
             double timereal = time_int_to_real(itime);
             // Exit if the time is not ascending
             if (!timereals.empty() && timereal <= timereals.back()) {
-                display_itime(time_real_to_int(timereals.back()));
-                display_itime(itime);
-                throw std::string("Time is not strictly increasing");
+                throw std::string("Satellite file " + csv_in + ": Time is not strictly increasing");
             }
             timereals.push_back(timereal);
             // Convert degree to radians, kilometers to meters
@@ -66,7 +88,7 @@ Satellite::Satellite(const std::string &csv_in, const precision_t dt_in) {
             lats.push_back(lat_in * cDtoR);
             alts.push_back(alt_in * cKMtoM);
         } else {
-            throw std::string("Data line format error");
+            throw std::string("Satellite file " + csv_in + ": Data line format error");
         }
     }
 
@@ -75,8 +97,9 @@ Satellite::Satellite(const std::string &csv_in, const precision_t dt_in) {
     std::string log_name = "UA/output/SAT_" + name + '_' + cGrid + "_log.txt";
     ofs.open(log_name);
     if (!ofs.is_open()) {
-        throw std::string("Can not open the output logfile");
+        throw std::string("Satellite: Can not open the output logfile");
     }
+    ofs.precision(4);
 }
 
 // -------------------------------------------------------------------
@@ -88,14 +111,17 @@ Satellite::~Satellite() {
 }
 
 // -------------------------------------------------------------------
-// Return the position of the satellite at the given time
+// Get the position of the satellite at given time
 // -------------------------------------------------------------------
 
-std::vector<precision_t> Satellite::get_position(const double time_in) const {
+void Satellite::get_position(std::vector<precision_t> &lons_out,
+                             std::vector<precision_t> &lats_out,
+                             std::vector<precision_t> &alts_out,
+                             const double time_in) const {
     // If the input is smaller than the first element or greater than
-    // the last element, report input error
+    // the last element, return false
     if (time_in < timereals.front() || time_in > timereals.back()) {
-        return std::vector<precision_t>();
+        throw std::string("Satellite:: The time_in for get_position is out of bound");
     }
 
     // Use binary search to find the last element that is smaller than
@@ -110,31 +136,25 @@ std::vector<precision_t> Satellite::get_position(const double time_in) const {
         --index;
     }
 
-    // std::cout << "Using index = " << index << std::endl;
-
-    // Get the two locations for interpolation
-    const std::vector<precision_t> x0 = {lons[index], lats[index], alts[index]};
-    std::vector<precision_t> x1 = {lons[index + 1], lats[index + 1], alts[index + 1]};
-
     // Calculate the interpolation coefficient
     precision_t ratio = (time_in - timereals[index]) / (timereals[index + 1] - timereals[index]);
 
+    // std::cout << "Using index = " << index << std::endl;
     // std::cout << "Ratio = " << ratio << std::endl;
 
-    // Do the interpolation
-    // If it cross the prime meridian, first add 2pi to the latter item,
-    // and then wrap the result
-    if (x1[0] < x0[0]) {
-        x1[0] += cTWOPI;
+    // Do the interpolation, special treatment for longitude
+    // If it cross the prime meridian, first add 2pi to the latter item, and then wrap the result
+    if (lons[index + 1] < lons[index]) {
+        precision_t lon_out = linear_interpolation(lons[index], lons[index + 1] + cTWOPI, ratio);
+        if (lon_out >= cTWOPI) {
+            lon_out -= cTWOPI;
+        }
+        lons_out.push_back(lon_out);
+    } else {
+        lons_out.push_back(linear_interpolation(lons[index], lons[index + 1], ratio));
     }
-    for (int i = 0; i < 3; ++i) {
-        x1[i] = linear_interpolation(x0[i], x1[i], ratio);
-    }
-    if (x1[0] >= cTWOPI) {
-        x1[0] -= cTWOPI;
-    }
-
-    return x1;
+    lats_out.push_back(linear_interpolation(lats[index], lats[index + 1], ratio));
+    alts_out.push_back(linear_interpolation(alts[index], alts[index + 1], ratio));
 }
 
 // -------------------------------------------------------------------
@@ -151,6 +171,16 @@ std::string Satellite::get_name() const {
 
 precision_t Satellite::get_dt() const {
     return dt;
+}
+
+// -------------------------------------------------------------------
+// Write the content to the satellite log
+// -------------------------------------------------------------------
+
+void Satellite::write_log(const std::vector<int> &iCurrent,
+                          const std::vector<precision_t> &indices,
+                          const std::vector<precision_t> &varialbes) {
+    write_logfile_line(ofs, iCurrent, indices, varialbes);
 }
 
 // -------------------------------------------------------------------
@@ -193,9 +223,6 @@ Logfile::Logfile(Indices &indices,
     std::vector<std::string> sat_names = input.get_satellite_files();
     std::vector<precision_t> sat_dts = input.get_satellite_dt();
 
-    // Initialize other variables
-    isOk = true;
-
     // Open the general log file stream
     if (doAppend) {
         logfilestream.open(logfileName, std::ofstream::app);
@@ -207,8 +234,6 @@ Logfile::Logfile(Indices &indices,
     std::ofstream sat_combine("UA/output/SAT_COMBINE.txt");
     // Report error if can not open the file stream
     if (!logfilestream.is_open() || !sat_combine.is_open()) {
-        std::cout << "Could not open log file: " << logfileName << "!!!\n";
-        isOk = false;
         // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD NOT BE EXECUTED
         throw std::string("Could not open log file");
     }
@@ -247,8 +272,6 @@ Logfile::Logfile(Indices &indices,
 
     // Check that the size of files and dt are the same
     if (sat_names.size() != sat_dts.size()) {
-        std::cout << "The size of files and dt for satellites are not the same!!!\n";
-        isOk = false;
         // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD NOT BE EXECUTED
         throw std::string("The size of files and dt for satellites are not the same");
     }
@@ -291,8 +314,69 @@ bool Logfile::write_logfile(Indices &indices,
     static int iFunction = -1;
     report.enter(function, iFunction);
 
-    if (!time.check_time_gate(dt)) {
-        // No work to be done
+    // Store the locations and indexes of satellites whose time gate is open
+    std::vector<precision_t> lons;
+    std::vector<precision_t> lats;
+    std::vector<precision_t> alts;
+    std::vector<size_t> idx;
+    double current = time.get_current();
+    for (size_t i = 0; i < satellites.size(); ++i) {
+        if (time.check_time_gate(satellites[i].get_dt())) {
+            satellites[i].get_position(lons, lats, alts, current);
+            idx.push_back(i);
+        }
+    }
+
+    for (size_t i = 0; i < idx.size(); ++i) {
+        std::cout << lons[i] << '\t' << lats[i] << '\t' << alts[i] << '\n';
+    }
+
+    // If none of the satellites' time gate is open and (iProc != 0 or time gate
+    // for general logfile is not open), then nor work to be done
+    if (idx.empty() && (iProc != 0 || !time.check_time_gate(dt))) {
+        return true;
+    }
+
+    // Generate the output of time and all indices first
+    std::vector<precision_t> values;
+    std::vector<int> iCurrent = time.get_iCurrent();
+    for (int i = 0; i < indices.all_indices_array_size(); ++i) {
+        values.push_back(indices.get_index(current, i));
+    }
+
+    // The contents for general log and satellite make difference from here
+
+    // Store the log string for each satellite and the result of interpolation
+    std::vector<std::vector<precision_t>> values_sat(idx.size());
+    std::vector<precision_t> interp_result;
+
+    // Set the interpolation coefficients using the location of satellites first
+    if (!gGrid.set_interpolation_coefs(lons, lats, alts)) {
+        std::cout << "Logfile: Can not set interpolation coefficients!\n";
+        return false;
+    }
+
+    // Temperature
+    interp_result = gGrid.get_interpolation_values(neutrals.temperature_scgc);
+    for (size_t i = 0; i < interp_result.size(); ++i) {
+        values_sat[i].push_back(interp_result[i]);
+    }
+    // Specified variables
+    for (auto &it : species) {
+        const arma_cube &density = find_species_density(it, neutrals, ions, report);
+        interp_result = gGrid.get_interpolation_values(density);
+        for (size_t i = 0; i < interp_result.size(); ++i) {
+            values_sat[i].push_back(interp_result[i]);
+        }
+    }
+    
+    // Write both the common and special values to satellite log
+    for (size_t i = 0; i < values_sat.size(); ++i) {
+        satellites[idx[i]].write_log(iCurrent, values, values_sat[i]);
+    }
+
+    // Return here if there is only satellite work and no gerneral log
+    if (iProc != 0 || !time.check_time_gate(dt)) {
         return true;
     }
 
@@ -303,41 +387,24 @@ bool Logfile::write_logfile(Indices &indices,
     }
     // Report error if the file stream is not open
     if (!logfilestream.is_open()) {
-        isOk = false;
+        std::cout << "Logfile: Can not open output file stream!\n";
         return false;
     }
 
-    // Get the current time
-    std::vector<int> iCurrent = time.get_iCurrent();
-    double current = time.get_current();
-
-    // Display the year, month, day, hour, minute, second, and millisecond
-    for (auto &it : iCurrent) {
-        logfilestream << it << ' ';
-    }
-
-    // Display all indices
-    for (int i = 0; i < indices.all_indices_array_size(); ++i) {
-        logfilestream << indices.get_index(current, i) << ' ';
-    }
-
-    // Display temperatures
+    std::vector<precision_t> values_log;
     std::vector<precision_t> min_mean_max;
+    // Temperature
     min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
-    for (auto &it : min_mean_max) {
-        logfilestream << it << ' ';
-    }
-
-    // Display specified variables
-    for (auto &it : species) {
+    values_log.insert(values_log.end(), min_mean_max.begin(), min_mean_max.end());
+    // Specified variables
+    for (auto it : species) {
         min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
-        for (auto &it2 : min_mean_max) {
-            logfilestream << it2 << ' ';
-        }
+        values_log.insert(values_log.end(), min_mean_max.begin(), min_mean_max.end());
     }
-
-    // Display the temperature at the chosen point
-    logfilestream << neutrals.temperature_scgc(lla[0], lla[1], lla[2]) << '\n';
+    // Temperature at the chosen point
+    values_log.push_back(neutrals.temperature_scgc(lla[0], lla[1], lla[2]));
+    // Output
+    write_logfile_line(logfilestream, iCurrent, values, values_log);
 
     // Close the file stream if append
     if (doAppend) {
