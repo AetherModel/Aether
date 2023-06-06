@@ -85,6 +85,10 @@ public:
   std::vector<std::string> get_species_vector();
   bool get_logfile_append();
   precision_t get_logfile_dt();
+
+  // Satellites
+  std::vector<std::string> get_satellite_files();
+  std::vector<precision_t> get_satellite_dt();
   
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);

@@ -123,6 +123,37 @@ std::vector<std::string> Inputs::get_species_vector() {
 }
 
 // -----------------------------------------------------------------------
+// Return the name of satellite files as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_satellite_files() {
+    std::vector<std::string> names;
+    const json &json_names = settings["Satellites"]["files"];
+
+    for (size_t i = 0; i < json_names.size(); ++i) {
+        names.push_back(json_names.at(i));
+    }
+
+    return names;
+}
+
+// -----------------------------------------------------------------------
+// Return how oftern to write log file for satellites as a vector
+// -----------------------------------------------------------------------
+
+std::vector<precision_t> Inputs::get_satellite_dt() {
+    std::vector<precision_t> dts;
+    const json &json_dts = settings["Satellites"]["dt"];
+
+    for (size_t i = 0; i < json_dts.size(); ++i) {
+        dts.push_back(json_dts.at(i));
+    }
+
+    return dts;
+}
+
+
+// -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
 // -----------------------------------------------------------------------
 

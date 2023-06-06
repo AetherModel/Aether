@@ -148,9 +148,9 @@ int main() {
 		       electrodynamics,
 		       indices,
 		       input,
-		       report, 
-           logfile);
-      //added logfile to it
+		       report,
+		       logfile);
+
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
       // couple first thing and everything should be good. (Not sure if
