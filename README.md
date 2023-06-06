@@ -13,7 +13,8 @@ starting with the doc/student.md file.
 
 ## Dependencies:
 
-1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have it installed,
+1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have
+   it installed,
 
 For MacOS [homebrew](https://formulae.brew.sh/formula/cmake):
 ```bash
@@ -30,9 +31,13 @@ For Ubuntu/Debian Linux:
 sudo apt install cmake
 ```
 
-2. Aether uses the netcdf library (netcdf-cxx4). As above, netCDF can be installed using a package manager
+2. Aether uses the netcdf library (netcdf-cxx4). As above, netCDF can be
+   installed using a package manager
 
-On Mac, this is can be awkward, depending on which c++ compiler you are using. Since there is one that essentially comes with Mac OSX, called clang, the default compiler is often this.  Much of the other software is not built with this, so you need to switch compilers, which can be challenging.  
+On Mac, this is can be awkward, depending on which c++ compiler you are using.
+Since there is one that essentially comes with Mac OSX, called clang, the
+default compiler is often this.  Much of the other software is not built with
+this, so you need to switch compilers, which can be challenging.  
 
 On Mac, if you want the clang compiled version of netcdf, then:
 ```bash
@@ -55,7 +60,7 @@ sudo apt install libnetcdf-c++4-dev
 On Ubuntu:
 
 ```bash
-sudo apt-get install -y nlohmann-json-dev
+sudo apt-get install -y nlohmann-json3-dev
 ```
 
 On Mac:
@@ -78,6 +83,7 @@ sudo apt-get install liblapack-dev
 sudo apt-get install libblas-dev
 sudo apt-get install libboost-dev
 sudo apt-get install libarmadillo-dev
+sudo apt-get install openmpi-bin libopenmpi-dev
 ```
 
 On Mac:
@@ -87,6 +93,7 @@ sudo port install lapack
 sudo port install OpenBLAS
 sudo port install boost
 sudo port install armadillo
+sudo port install openmpi-bin libopenmpi-dev
  ```
 
 ## Quick Start:
@@ -111,7 +118,7 @@ To compile Aether:
 mkdir build
 cd build
 cmake ..
-make -j
+make
 ```
 
 To compile Aether with NetCDF:
