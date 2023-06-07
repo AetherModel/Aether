@@ -81,42 +81,41 @@ void read_collision_file(Neutrals &neutrals,
       if (hash == "#bst") {
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
-          if (csv.size() > 1) {
-              //TODO: Delete
-              std::cout << "parsing bst omegalul\n";
-              parse_bst_in_table(csv, neutrals, ions, report);
-              
-          }else{
-              std::cout << "Bst table is empty!!! Yikes!!!\n";
-          }
+        if (csv.size() > 1)
+          parse_bst_in_table(csv, neutrals, ions, report);
+
+
+        else
+          std::cout << "Bst table is empty!!! Yikes!!!\n";
       }
-        
+
       // ---------------------------
-      // #Diff0 ion-ion diffusion
+      // #Diff0 neutral-neutral diffusion
       // ---------------------------
-        
+
       if (hash == "#diff0") {
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
-          if (csv.size() > 1) {
-              parse_diff0_in_table(csv, neutrals, ions, report);
-          }else{
-              std::cout << "diff0 table is empty!!! Yikes!!!\n";
-          }
+
+        if (csv.size() > 1)
+          parse_diff0_in_table(csv, neutrals, ions, report);
+
+        else
+          std::cout << "diff0 table is empty!!! Yikes!!!\n";
       }
-        
+
       // ---------------------------
-      // #Diffexp ion-ion diffusion
+      // #Diffexp neutral-neutral diffusion
       // ---------------------------
-        
+
       if (hash == "#diffexp") {
-          std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
-          if (csv.size() > 1) {
-                parse_diffexp_in_table(csv, neutrals, ions, report);
-          }else{
-                std::cout << "diffexp table is empty!!! Yikes!!!\n";
-          }
+        std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
+
+        if (csv.size() > 1)
+          parse_diffexp_in_table(csv, neutrals, ions, report);
+
+        else
+          std::cout << "diffexp table is empty!!! Yikes!!!\n";
       }
-      
 
     }
 
@@ -212,6 +211,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
 
   // 1. check to see that we have a coefficient
   // in the last line:
+  cout << csv[nLines - 1][0];
   float coef = stof(csv[nLines - 1][0]);
 
   // 2. we figure out which neutrals we have (0th col):
@@ -357,7 +357,6 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
   return;
 }
 
-
 // -----------------------------------------------------------------------------
 // parse Bst table - Coulomb collision frequency coefficients
 //                 - Ionospheres Book, Table 4.3
@@ -394,7 +393,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   //  Read ion specie names down first column of table
   for (iLine = 1; iLine < nLines - 1; iLine++) {
-    
+
     iIonT = ions.get_species_id(csv[iLine][0], report);
 
     // Found a used specie, time to extract Bst table data
@@ -456,107 +455,114 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   report.exit(function);
   return;
-} //parse_bst_in_table
+} // parse_bst_in_table
 
 void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
-                       Neutrals &neutrals,
-                       Ions &ions,
-                       Report &report) {
-    std::string function = "parse_diff0_in_table";
-    static int iFunction = -1;
-    report.enter(function, iFunction);
-    
-    int nLines = csv.size(); //number of lines in the table
-    int nCol = csv[0].size(); //number of columns in the table
-    
-    std::vector<int> iIonSIds_; //lists every Ions ID
-    
-    //last line of the csv stores the coefficient:
-    float coef = stof(csv[nLines - 1][0]);
-    
-    //Read ion species across first row of the table:
-    for (int iCol = 1; iCol < nCol; iCol++) {
-        iIonSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+                          Neutrals &neutrals,
+                          Ions &ions,
+                          Report &report) {
+  std::string function = "parse_diff0_in_table";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int nLines = csv.size(); // number of lines in the table
+  int nCol = csv[0].size(); // number of columns in the table
+
+  std::vector<int> iIonSIds_; //lists every Ions ID
+
+  // last line of the csv stores the coefficient:
+  float coef = stof(csv[nLines - 1][0]);
+
+  // Read ion species across first row of the table:
+  for (int iCol = 1; iCol < nCol; iCol++)
+    iIonSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+
+  // set array size and fill with zeros
+  for (int iIon = 0; iIon < neutrals.nSpecies; iIon++)
+    neutrals.species[iIon].diff0.resize(neutrals.nSpecies, 0);
+
+  for (int iLine = 1; iLine < nLines - 1; iLine++) {
+
+    // Get species id of ion on line:
+    int ion_id = neutrals.get_species_id(csv[iLine][0], report);
+
+    if (ion_id > -1) {
+      for (int iCol = 1; iCol < nCol; iCol++) {
+        cout << csv[iLine][iCol] << " ";
+
+        if (iIonSIds_[iCol - 1] > -1) {
+          neutrals.species[ion_id].diff0[iIonSIds_[iCol - 1]] = stof(
+                                                                  csv[iLine][iCol]) * coef;
+
+          if (report.test_verbose(4)) {
+            std::cout << "Two diffusion species: "
+                      << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+            std::cout << "diff0     : "
+                      << neutrals.species[ion_id].diff0[iIonSIds_[iCol - 1]] << "\n";
+          } //verbose
+
+        } // if matching specie exist
+      } // for iCol
+    } // if ion_id > -1
+  } // for iLine
+
+  if (report.test_verbose(4)) {
+    for (int i = 0; i < neutrals.nSpecies; i++) {
+      cout << "Current specie: " << neutrals.species[i].cName << endl;
+
+      for (int j = 0; j < neutrals.species[i].diff0.size(); j++)
+        cout << neutrals.species[i].diff0[j] << ", ";
+
+      cout << endl;
     }
-    
-    //set array size and fill with zeros
-    for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
-        ions.species[iIon].diff0.resize(ions.nSpecies, 0);
-    }
-    
-    
-    for (int iLine = 1; iLine < nLines - 1; iLine++) {
-        //std::cout << "Line: " << iLine << endl;
-        //Get species id of ion on line:
-        int ion_id = neutrals.get_species_id(csv[iLine][0], report);
-        //cout << "ion_id: " << ion_id << endl;
-        
-        if (ion_id > -1) { //will ion_id ever be -1?
-            for (int iCol = 1; iCol < nCol; iCol++) {
-                std::cout << "Col: " << iCol << endl;
-                if (iIonSIds_[iCol - 1] > -1) {
-                    ions.species[ion_id].diff0[iIonSIds_[iCol - 1]] = stof(csv[iLine][iCol]) * coef;
-                    if (report.test_verbose(4)) {
-                      std::cout << "Two diffusion species: "
-                                << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
-                      std::cout << "diff0     : "
-                                << ions.species[ion_id].diff0[iIonSIds_[iCol - 1]] << "\n";
-                    } //verbose
-                } //if matching specie exist
-            } //for iCol
-        } //if ion_id > -1
-    } //for iLine
-    
-    
-} //parse_diff0_in_table
+  }
+
+  report.exit(function);
+
+} // parse_diff0_in_table
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
-                       Neutrals &neutrals,
-                       Ions &ions,
-                       Report &report) {
-    std::string function = "parse_diffexp_in_table";
-    static int iFunction = -1;
-    report.enter(function, iFunction);
-    
-    int nLines = csv.size(); //number of lines in the table
-    int nCol = csv[0].size(); //number of columns in the table
-    
-    std::vector<int> iIonSIds_; //lists every Ions ID
-    
-    //Read ion species across first row of the table:
-    for (int iCol = 1; iCol < nCol; iCol++) {
-        iIonSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
-    }
-    
-    //set array size and fill with zeros
-    for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
-        ions.species[iIon].diffexp.resize(ions.nSpecies, 0);
-    }
-    
-    
-    for (int iLine = 1; iLine < nLines - 1; iLine++) {
-        //std::cout << "Line: " << iLine << endl;
-        //Get species id of ion on line:
-        int ion_id = neutrals.get_species_id(csv[iLine][0], report);
-        //cout << "ion_id: " << ion_id << endl;
-        
-        if (ion_id > -1) { //will ion_id ever be -1?
-            for (int iCol = 1; iCol < nCol; iCol++) {
-                std::cout << "Col: " << iCol << endl;
-                if (iIonSIds_[iCol - 1] > -1) {
-                    ions.species[ion_id].diffexp[iIonSIds_[iCol - 1]] = stof(csv[iLine][iCol]);
-                    if (report.test_verbose(4)) {
-                      std::cout << "Two diffusion species: "
-                                << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
-                      std::cout << "diffexp     : "
-                                << ions.species[ion_id].diffexp[iIonSIds_[iCol - 1]] << "\n";
-                    } //verbose
-                } //if matching specie exist
-            } //for iCol
-        } //if ion_id > -1
-    } //for iLine
-    
-    
-} //parse_diffexp_in_table
+                            Neutrals &neutrals,
+                            Ions &ions,
+                            Report &report) {
+  std::string function = "parse_diffexp_in_table";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
+  int nLines = csv.size(); // number of lines in the table
+  int nCol = csv[0].size(); // number of columns in the table
 
+  std::vector<int> iIonSIds_; // lists every Ions ID
+
+  // Read ion species across first row of the table:
+  for (int iCol = 1; iCol < nCol; iCol++)
+    iIonSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+
+  // set array size and fill with zeros
+  for (int iIon = 0; iIon < neutrals.nSpecies; iIon++)
+    neutrals.species[iIon].diff_exp.resize(neutrals.nSpecies, 0);
+
+  for (int iLine = 1; iLine < nLines - 1; iLine++) {
+
+    // Get species id of ion on line:
+    int ion_id = neutrals.get_species_id(csv[iLine][0], report);
+
+    if (ion_id > -1) {
+      for (int iCol = 1; iCol < nCol; iCol++) {
+        if (iIonSIds_[iCol - 1] > -1) {
+          neutrals.species[ion_id].diff_exp[iIonSIds_[iCol - 1]] = stof(csv[iLine][iCol]);
+
+          if (report.test_verbose(4)) {
+            std::cout << "Two diffusion species: "
+                      << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+            std::cout << "diffexp     : "
+                      << neutrals.species[ion_id].diff_exp[iIonSIds_[iCol - 1]] << "\n";
+          } // verbose
+        } // if matching specie exist
+      } // for iCol
+    } // if ion_id > -1
+  } // for iLine
+
+  report.exit(function);
+
+} // parse_diffexp_in_table
