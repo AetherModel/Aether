@@ -607,6 +607,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   fill_grid_radius(planet, report, input);
   // Calculate grid spacing
   calc_grid_spacing(planet, report);
+  //calculate rad unit vector
+  calc_rad_unit(planet, report, input);
   // Calculate gravity
   calc_gravity(planet, report, input);
 

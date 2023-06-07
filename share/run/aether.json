@@ -18,7 +18,9 @@
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-
+    "Outputs" : {
+    "type" : ["states", "gravity"],
+    "dt" : [900, 0.0] },
     "DoCalcBulkIonTemp" : false,
     "DoLatDependentRadius": true
 }

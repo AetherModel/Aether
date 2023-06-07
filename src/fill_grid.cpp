@@ -224,15 +224,13 @@ void Grid::fill_grid_radius(Planets planet, Report &report, Inputs &input) {
 }
 
 // -----------------------------------------------------------------------------
-//  Calculates radial unit vector and gravity
+//  Calculates radial unit vector
 // -----------------------------------------------------------------------------
+void Grid::calc_rad_unit(Planets planet, Report &report, Inputs &input){
+  report.print(3, "starting calc_rad_unit");
 
-void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
-  report.print(3, "starting calc_gravity");  
-
-  precision_t mu = planet.get_mu();
   std::vector<arma_cube> gradient_vcgc = calc_gradient_vector(radius_scgc, *this);
-  //gradient_vcgc[2].fill(1);
+
   arma_cube mag_radius_gradient = sqrt( pow(gradient_vcgc[0], 2) + pow(gradient_vcgc[1],2) + pow(gradient_vcgc[2],2) );
   arma_cube mag_radius_gradienti =  1.0 / mag_radius_gradient;
 
@@ -240,24 +238,23 @@ void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
   for (int iV = 0; iV < 3; iV++)
     rad_unit_vcgc[iV].zeros();
 
-  rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti) ;// % geoLon_scgc;
-  //rad_unit_vcgc[0].print();
-  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti); //  % geoLat_scgc;
-  //rad_unit_vcgc[1].print();
-  rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);//  % geoAlt_scgc;
-  //rad_unit_vcgc[2].print();
+  rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti);
+  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti); 
+  rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);
+}
 
-  radius2_scgc = radius_scgc % radius_scgc;
-  radius2i_scgc = 1.0 / radius2_scgc;
-  gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+// -----------------------------------------------------------------------------
+//  Calculates gravity
+// -----------------------------------------------------------------------------
 
-  for (int iV = 0; iV < 3; iV++){
-    gravity_vcgc[iV] = -mu * ( 1.0 / (pow(radius_scgc, 2)) ) % rad_unit_vcgc[iV];
-  }
+void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
+  report.print(3, "starting calc_gravity");
 
-  //gravity_vcgc[0].print();
-  //gravity_vcgc[1].print();
-  //gravity_vcgc[2].print();
+  precision_t mu = planet.get_mu();
+  
+  arma_cube grav_potential = (mu / radius_scgc) + ((CJ2* cG) / (2 * pow(radius_scgc,3)));
+
+  gravity_vcgc = calc_gradient_vector(grav_potential, *this);
   
   report.print(3, "ending calc_gravity");
 }
