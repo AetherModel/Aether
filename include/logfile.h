@@ -41,7 +41,9 @@ public:
    * \param csv_in The path to the satellite csv file
    * \param dt_in The time gate
    */
-  Satellite(const std::string &csv_in, const precision_t dt_in);
+  Satellite(const std::string &csv_in,
+            const std::string &log_name,
+            const precision_t dt_in);
 
   // Delete copy constructor, copy assignment operator and move assignment operator
   Satellite(const Satellite&) = delete;
@@ -73,7 +75,6 @@ public:
 
   // Write the content to the satellite log
   void write_log(const std::vector<int> &iCurrent,
-                 const std::vector<precision_t> &indices,
                  const std::vector<precision_t> &variables);
 
   // DEBUG

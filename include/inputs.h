@@ -88,7 +88,8 @@ public:
 
   // Satellites
   std::vector<std::string> get_satellite_files();
-  std::vector<precision_t> get_satellite_dt();
+  std::vector<std::string> get_satellite_names();
+  std::vector<precision_t> get_satellite_dts();
   
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
