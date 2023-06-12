@@ -8,13 +8,17 @@
     "GeoBlockSize" : {
 	"nLons" : 18,
 	"nLats" : 18,
-	"nAlts" : 60},
+	"nAlts" : 40},
 
-    "Mysetting" : {
-	"setting1" : "this_is_an_example",
-	"setting2" : 42,
-	"setting3" : true},
-
+    "GeoGrid" : {
+	"MinLat" : -90.0,
+	"MaxLat" :  90.0,
+	"MinLon" :   0.0,
+	"MaxLon" : 360.0,
+	"MinAlt" : 100.0,
+	"dAlt"   : 0.33,
+	"IsUniformAlt" : false},
+    
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
