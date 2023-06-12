@@ -84,7 +84,7 @@ int main() {
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
     // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, planet, input, report);
+    Neutrals neutrals(gGrid, planet, time, indices, input, report);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet, input, report);
