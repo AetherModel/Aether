@@ -87,7 +87,7 @@ int main() {
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
     // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, planet, input, report);
+    Neutrals neutrals(gGrid, planet, time, indices, input, report);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet, input, report);
@@ -133,6 +133,11 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
+    Logfile logfile(input.get_logfile(),
+		    input.get_logfile_dt(),
+		    input.get_logfile_append(),
+		    indices, input, report);
+
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);
@@ -149,8 +154,9 @@ int main() {
 		       electrodynamics,
 		       indices,
 		       input,
-		       report);
-
+		       report, 
+           logfile);
+      //added logfile to it
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
       // couple first thing and everything should be good. (Not sure if
@@ -181,7 +187,7 @@ int main() {
 
     } // End of outer time loop - done with run!
 
-
+    logfile.close_logfile();
     report.exit(function);
     report.times();
 
