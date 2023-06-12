@@ -20,7 +20,8 @@ int advance(Planets &planet,
             Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
-            Report &report) {
+            Report &report,
+            Logfile &logfile) {
 
   int iErr = 0;
 
@@ -84,5 +85,9 @@ int advance(Planets &planet,
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
   report.exit(function);
+
+  if (iGrid == 0)
+    logfile.write_logfile(time, neutrals, ions, input, indices, report);
+
   return iErr;
 }

@@ -67,5 +67,19 @@ precision_t mean(std::vector<precision_t> values);
 
 precision_t standard_deviation(std::vector<precision_t> values);
 
+//-------------------------------------------------------------
+// Get min, mean, and max of an arma_cube
+//-------------------------------------------------------------
+
+std::vector<precision_t> get_min_mean_max(arma_cube value);
+
+//-------------------------------------------------------------
+// Get min, mean, and max of either a neutral or ion species
+//-------------------------------------------------------------
+
+std::vector<precision_t> get_min_mean_max_density(std::string name,
+					     Neutrals neutrals,
+					     Ions ions,
+					     Report report);
 
 #endif  // INCLUDE_TOOLS_H_

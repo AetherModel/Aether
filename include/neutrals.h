@@ -369,8 +369,6 @@ class Neutrals {
 		       bool DoReverseX,
 		       bool DoReverseY,
 		       bool XbecomesY);
-
-  
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
