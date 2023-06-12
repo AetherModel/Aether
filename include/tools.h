@@ -48,6 +48,8 @@ arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector);
 
 std::string tostr(int64_t num_to_convert, int64_t zero_padding_len);
 
+precision_t str_to_num(std::string input);
+
 json read_json(std::string json_file);
 bool write_json(std::string json_file, json json_output);
 
