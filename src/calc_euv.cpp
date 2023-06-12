@@ -32,7 +32,7 @@ int calc_euv(Planets planet,
 
     if (input.get_is_student())
       report.print(-1, "(2) What function is this " +
-		   input.get_student_name() + "?");
+		   input.get_student_name() + "? Found it: def");
     
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid, report);

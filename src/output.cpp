@@ -55,7 +55,7 @@ int output(const Neutrals &neutrals,
 
   report.student_checker_function_name(args.get_is_student(),
 				       args.get_student_name(),
-				       3, "");
+				       3, "ghi");
   
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
