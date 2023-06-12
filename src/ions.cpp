@@ -215,7 +215,6 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
   int64_t iVar;
 
   OutputContainer RestartContainer;
-  RestartContainer.set_netcdf();
   RestartContainer.set_directory(dir);
   RestartContainer.set_filename("ions_" + cMember + "_" + cGrid);
 

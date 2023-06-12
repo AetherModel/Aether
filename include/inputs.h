@@ -49,6 +49,9 @@ public:
 
   bool get_is_cubesphere();
 
+  std::string get_student_name();
+  bool get_is_student();
+  
   json get_initial_condition_types();
   json get_boundary_condition_types();
   

@@ -9,6 +9,7 @@
 
 # Run and build directories
 run/
+run.test/
 build/
 
 # Doxygen generated files

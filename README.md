@@ -1,12 +1,15 @@
 # Aether
 This is the home of the Aether model of the thermosphere and ionosphere
 
-The Aether model has been developed using gnu c++ (versions 9, 10,
-11). If you are using this, hopefully it will just work out of the
-box. We have been doing development of Aether on Mac OSX, and in
-Ubuntu Linux.  We have also used the Windows Subsystem for Linux,
-Ubuntu distribution, which works similarly to the native Linux
-distribution.
+The Aether model has been developed using gnu c++ (versions 9, 10, 11). If
+you are using this, hopefully it will just work out of the box. We have 
+been doing development of Aether on Mac OSX, and in Ubuntu Linux.  We have 
+also used the Windows Subsystem for Linux, Ubuntu distribution, which 
+works similarly to the native Linux distribution.
+
+If you are a student and don't know how to work with a large code base
+(i.e., multiple source codes in multiple directories), you may consider
+starting with the doc/student.md file.
 
 ## Dependencies:
 
@@ -30,13 +33,14 @@ sudo port install gcc11
 (At this moment, gcc11 is the latest version, there may be a more up-to-date version available now.)
 
 
-1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have it installed,
+1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have it installed, you need it.
 
 For MacOS, this can be installed using
 [macports](https://www.macports.org/)
 ```bash
 sudo port install cmake
 ```
+
 Or using [homebrew](https://formulae.brew.sh/formula/cmake):
 ```bash
 sudo brew install cmake
@@ -54,7 +58,7 @@ This can be done on redhat using yum also.
 On Ubuntu:
 
 ```bash
-sudo apt-get install -y nlohmann-json-dev
+sudo apt-get install -y nlohmann-json3-dev
 ```
 
 On Mac:
@@ -78,6 +82,7 @@ sudo apt-get install liblapack-dev
 sudo apt-get install libblas-dev
 sudo apt-get install libboost-dev
 sudo apt-get install libarmadillo-dev
+sudo apt-get install openmpi-bin libopenmpi-dev
 ```
 
 On Mac:
@@ -87,6 +92,7 @@ sudo port install lapack
 sudo port install OpenBLAS
 sudo port install boost
 sudo port install armadillo
+sudo port install openmpi-bin libopenmpi-dev
  ```
 
 4. We have removed the strict dependency for netcdf, but a lot of
@@ -168,7 +174,8 @@ cd run.test
 ./aether
 ```
 
-There are essentially two input files that specify the settings in the code.  When you are in a run directory, they are:
+There are essentially two input files that specify the settings in the code.
+When you are in a run directory, they are:
 
 1. UA/inputs/defaults.json.  These set the default inputs for the run
 and should not be modified at all.  You can look at these and copy the
