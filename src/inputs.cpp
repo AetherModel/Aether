@@ -160,7 +160,6 @@ bool Inputs::check_settings(std::string key1,
   //try to find the keys first
   if (settings.find(key1) != settings.end()) {
     if (settings.at(key1).find(key2) != settings.at(key1).end()) {
-      std::cout << "true blue\n";
       return true;
     }
   }
@@ -195,10 +194,8 @@ std::string Inputs::check_settings_str(std::string key) {
 precision_t Inputs::check_settings_pt(std::string key1,
                                       std::string key2) {
   if(check_settings(key1, key2)){
-    std::cout<< "here too omg \n";
     return settings.at(key1).at(key2);
   }
-  std::cout<< "whatttt \n";
   return -1;
 }
 
@@ -240,7 +237,6 @@ std::vector<int> Inputs::get_settings_timearr(std::string key1) {
 
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
   // First Get Values:
-  std::cout << "here we go!!\n";
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
   if(check_settings("GeoGrid", "IsUniformAlt"))
     geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
@@ -252,7 +248,6 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
   geo_grid_input.lat_max = check_settings_pt("GeoGrid", "MaxLat");
   geo_grid_input.lon_min = check_settings_pt("GeoGrid", "MinLon");
   geo_grid_input.lon_max = check_settings_pt("GeoGrid", "MaxLon");
-  std::cout << "past go!!\n";
 
   // Second Change Units
   geo_grid_input.alt_min = geo_grid_input.alt_min * cKMtoM;
@@ -384,7 +379,6 @@ precision_t Inputs::get_n_outputs() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_original_seed() {
-  std::cout << "Seedy issue there\n";
   if(settings.find("Seed") == settings.end()){
     IsOk = false;
     missing_settings.push_back("[Seed]");
@@ -449,7 +443,6 @@ int Inputs::get_nBlocksLatGeo() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_nMembers() {
-  std::cout << "member issue ok\n";
   return check_settings_pt("Ensembles", "nMembers");
 }
 
@@ -462,11 +455,8 @@ int Inputs::get_verbose() {
 }
 
 int Inputs::get_verbose_proc() {
-  std::cout<< "causing issues here\n";
   if(check_settings("Debug", "iProc"))
-    std::cout << "woot woot?\n";
     return settings["Debug"]["iProc"];
-  std::cout << "woot\n";
   return -1;
 }
 
@@ -612,6 +602,7 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
     return check_settings_str("DoCalcBulkIonTemp") == "true";
   IsOk = false;
   missing_settings.push_back("[DoCalcBulkIonTemp]");
+  return false;
 }
 
 // -----------------------------------------------------------------------
