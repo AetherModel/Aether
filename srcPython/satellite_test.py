@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 def sat_line(line):
     """Convert a line of satellite file into time and position."""
@@ -38,6 +39,8 @@ def main():
             # Initialize the times and percentage of error to plot
             times_plot = []
             diff_plot = []
+            sv = []
+            lv = []
             # Use the iterator counter as time
             iter_count = 0
             # Start the two-pointer approach
@@ -49,6 +52,8 @@ def main():
                 if sat_time == log_time:
                     # Add plot list, counter, and go to next for both
                     times_plot.append(iter_count)
+                    sv.append(sat_val[6:])
+                    lv.append(log_val[6:])
                     diff_plot.append(calc_diff(sat_val[6:], log_val[6:]))
                     iter_count += 1
                     sat_val = sat_line(next(sat, None))
@@ -61,10 +66,23 @@ def main():
                     iter_count += 1
                     log_val = log_line(next(log, None))
             # Plot error vs time
-            plt.plot(times_plot, diff_plot)
-            plt.xlabel("Time (15s)")
-            plt.ylabel("Difference (deg + km)")
-            plt.savefig("Satellite_log.png")
+
+            fig = plt.figure(figsize = (10,10))
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212)
+
+            sv = np.array(sv)
+            lv = np.array(lv)
+            ax1.scatter(times_plot, sv[:,0])
+            ax1.scatter(times_plot, lv[:,0])
+            ax1.set_xlabel("Time (15s)")
+            ax1.set_ylabel("Longitudes (deg)")
+            ax2.plot(times_plot, diff_plot)
+            ax1.set_xlabel("Time (15s)")
+            ax2.set_ylabel("Total Difference (deg + km)")
+            
+            fig.savefig("Satellite_log.png")
+            plt.close()
 
 
 if __name__ == "__main__":
