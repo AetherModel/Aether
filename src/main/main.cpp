@@ -23,7 +23,7 @@ int main() {
   report.enter(function, iFunction);
 
   try {
-  
+    std::cout << "Made it to try\n";
     // Create inputs (reading the input file):
     Inputs input(time, report);
     if (!input.is_ok())
@@ -32,21 +32,27 @@ int main() {
     if (input.get_is_student())
       report.print(-1, "Hello " +
 		   input.get_student_name() + " - welcome to Aether!");
+    std::cout << "Made it to Quad\n";
     
     Quadtree quadtree(input, report);
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
     
+    std::cout << "Made it to parallel\n";
     // Initialize MPI and parallel aspects of the code:
     DidWork = init_parallel(input, quadtree, report);
+    std::cout << "Made it past didwork a\n";
+
     if (!DidWork)
       throw std::string("init_parallel failed!");
-  
+    std::cout << "Made it past didwork\n";
+
     // Everything should be set for the inputs now, so write a restart file:
     DidWork = input.write_restart();
     if (!DidWork)
       throw std::string("input.write_restart failed!");
-    
+    std::cout << "Made it to didwork\n";
+
     // Initialize the EUV system:
     Euv euv(input, report);
     if (!euv.is_ok())
@@ -57,6 +63,7 @@ int main() {
     MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
+    std::cout << "Made it to planets\n";
 
     // Initialize the indices, read the files, and perturb:
     Indices indices(input);

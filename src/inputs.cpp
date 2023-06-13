@@ -120,7 +120,7 @@ int64_t Inputs::get_n_species() {
 
 std::vector<std::string> Inputs::get_species_vector() {
   std::vector<std::string> species;
-  std::string value;
+  std::string value = "unknown";
 
   for (int iOutput = 0; iOutput < get_n_species(); iOutput++) {
     value = settings.at("Logfile").at("species").at(iOutput);
@@ -137,7 +137,7 @@ std::vector<std::string> Inputs::get_species_vector() {
 std::string Inputs::get_settings_str(std::string key1) {
   std::string value = "unknown";
 
-  if (settings.contains(key1))
+  if (settings.find(key1) != settings.end())
     value = settings.at(key1);
 
   return value;
@@ -147,8 +147,8 @@ std::string Inputs::get_settings_str(std::string key1,
                                      std::string key2) {
   std::string value = "unknown";
 
-  if (settings.contains(key1))
-    if (settings.at(key1).contains(key2))
+  if (settings.find(key1) != settings.end())
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
       value = settings.at(key1).at(key2);
 
   return value;
@@ -156,47 +156,56 @@ std::string Inputs::get_settings_str(std::string key1,
 
 //check settings and throw invalid_argument error if the setting doesn't exist
 bool Inputs::check_settings(std::string key1,
-                         std::string key2) {
-  if (settings.contains(key1))
-    if (settings.at(key1).contains(key2))
+                            std::string key2) {
+  //try to find the keys first
+  if (settings.find(key1) != settings.end()) {
+    if (settings.at(key1).find(key2) != settings.at(key1).end()) {
+      std::cout << "true blue\n";
       return true;
+    }
+  }
+  //if we haven't found the keys we take action to throw error
   IsOk = false;
   missing_settings.push_back("[" + key1 + ", " + key2 + "]");
-  if(!IsOk){
+  if(!IsOk) {
     std::cout << "Error in setting settings!\n";
     std::string error = "Missing settings: " + 
         std::accumulate(missing_settings.begin(), missing_settings.end(), std::string(", "));
     throw std::invalid_argument(error);
   }
+  return false;
 }
 
 std::string Inputs::check_settings_str(std::string key1,
-                                    std::string key2) {
+                                       std::string key2) {
   if(check_settings(key1, key2))
-    return settings[key1, key2];
-  return "";
+    return settings.at(key1).at(key2);
+  return "unknown";
 }
 
 std::string Inputs::check_settings_str(std::string key) {
   if(get_settings_str(key) == "unknown"){
     IsOk = false;
     missing_settings.push_back("[" + key + "]");
-    return "";
+    return "unknown";
   }
   return settings[key];
 }
 
 precision_t Inputs::check_settings_pt(std::string key1,
-                                    std::string key2) {
-  if(check_settings(key1, key2))
-    return settings[key1, key2];
+                                      std::string key2) {
+  if(check_settings(key1, key2)){
+    std::cout<< "here too omg \n";
+    return settings.at(key1).at(key2);
+  }
+  std::cout<< "whatttt \n";
   return -1;
 }
 
 std::vector<int> Inputs::get_settings_intarr(std::string key1) {
   std::vector<int> value;
 
-  if (settings.contains(key1)) {
+  if (settings.find(key1) != settings.end()) {
     int nPts = settings.at(key1).size();
 
     for (int i = 0; i < nPts; i++)
@@ -204,7 +213,6 @@ std::vector<int> Inputs::get_settings_intarr(std::string key1) {
   } else {
     IsOk = false;
     missing_settings.push_back("[" + key1 + "]");
-    return;
   }
 
   return value;
@@ -232,14 +240,19 @@ std::vector<int> Inputs::get_settings_timearr(std::string key1) {
 
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
   // First Get Values:
+  std::cout << "here we go!!\n";
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
-  geo_grid_input.IsUniformAlt = check_settings_str("GeoGrid", "IsUniformAlt") == "true";
+  if(check_settings("GeoGrid", "IsUniformAlt"))
+    geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
+  else
+    geo_grid_input.IsUniformAlt = false;
   geo_grid_input.alt_min = check_settings_pt("GeoGrid", "MinAlt");
   geo_grid_input.dalt = check_settings_pt("GeoGrid", "dAlt");
   geo_grid_input.lat_min = check_settings_pt("GeoGrid", "MinLat");
   geo_grid_input.lat_max = check_settings_pt("GeoGrid", "MaxLat");
   geo_grid_input.lon_min = check_settings_pt("GeoGrid", "MinLon");
   geo_grid_input.lon_max = check_settings_pt("GeoGrid", "MaxLon");
+  std::cout << "past go!!\n";
 
   // Second Change Units
   geo_grid_input.alt_min = geo_grid_input.alt_min * cKMtoM;
@@ -280,7 +293,7 @@ std::string Inputs::get_student_name() {
 
 bool Inputs::get_is_cubesphere() {
   if(check_settings("CubeSphere", "is"))
-    return settings["CubeSphere"]["is"];
+    return settings.at("CubeSphere").at("is");
   return false;
 }
 
@@ -290,7 +303,7 @@ bool Inputs::get_is_cubesphere() {
 
 bool Inputs::get_do_restart() {
   if(check_settings("Restart", "do"))
-    return settings["Restart"]["do"];
+    return settings.at("Restart").at("do");
   return false;
 }
 
@@ -371,7 +384,17 @@ precision_t Inputs::get_n_outputs() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_original_seed() {
-  return stoi(check_settings_str("Seed"));
+  std::cout << "Seedy issue there\n";
+  if(settings.find("Seed") == settings.end()){
+    IsOk = false;
+    missing_settings.push_back("[Seed]");
+    std::cout << "Error in getting seed!\n";
+    std::string error = "Missing settings: " + 
+        std::accumulate(missing_settings.begin(), missing_settings.end(), std::string(", "));
+    throw std::invalid_argument(error);
+    return -1;
+  }
+  return settings.at("Seed");
 }
 
 // -----------------------------------------------------------------------
@@ -426,6 +449,7 @@ int Inputs::get_nBlocksLatGeo() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_nMembers() {
+  std::cout << "member issue ok\n";
   return check_settings_pt("Ensembles", "nMembers");
 }
 
@@ -438,7 +462,12 @@ int Inputs::get_verbose() {
 }
 
 int Inputs::get_verbose_proc() {
-  return check_settings_pt("Debug", "iProc");
+  std::cout<< "causing issues here\n";
+  if(check_settings("Debug", "iProc"))
+    std::cout << "woot woot?\n";
+    return settings["Debug"]["iProc"];
+  std::cout << "woot\n";
+  return -1;
 }
 
 // -----------------------------------------------------------------------
@@ -460,7 +489,7 @@ precision_t Inputs::get_dt_output(int iOutput) {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_type_output(int iOutput) {
-  std::string value = "";
+  std::string value = "unknown";
   int nOutputs = settings.at("Outputs").at("type").size();
 
   if (iOutput < nOutputs)
@@ -514,10 +543,11 @@ std::string Inputs::get_indices_lookup_file() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_number_of_omniweb_files() {
-  if(settings.at("OmniwebFiles"))
+  if(settings.find("OmniwebFiles") != settings.end())
     return settings.at("OmniwebFiles").size();
   IsOk = false;
   missing_settings.push_back("[OmniwebFiles]");
+  return -1;
 }
 
 // -----------------------------------------------------------------------
@@ -577,7 +607,11 @@ std::string Inputs::get_electrodynamics_file() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_calc_bulk_ion_temp() {
-  return check_settings_str("DoCalcBulkIonTemp") == "true";
+  bool value = false;
+  if(check_settings_str("DoCalcBulkIonTemp") != "unknown")
+    return check_settings_str("DoCalcBulkIonTemp") == "true";
+  IsOk = false;
+  missing_settings.push_back("[DoCalcBulkIonTemp]");
 }
 
 // -----------------------------------------------------------------------
@@ -587,8 +621,8 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 json Inputs::get_perturb_values() {
   json values;
 
-  if (settings.contains("Perturb"))
-    values = settings["Perturb"];
+  if (settings.find("Perturb") != settings.end())
+    values = settings.at("Perturb");
   else {
     IsOk = false;
     missing_settings.push_back("[Perturb]");
@@ -597,7 +631,6 @@ json Inputs::get_perturb_values() {
         std::accumulate(missing_settings.begin(), missing_settings.end(), std::string(", "));
     throw std::invalid_argument(error);
   }
-
   return values;
 }
 
