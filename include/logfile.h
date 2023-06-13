@@ -17,9 +17,6 @@
 #include <iostream>
 
 /**
- * DO NOT USE SATELLITE CLASS DIRECTLY BESIDES LOGFILE. IT USES MOVE CONSTRUCTOR AND DELTES
- * COPY CONSTRUCTOR, COPY ASSIGNMENT OPERATOR AND MOVE ASSIGNMENT OPERATOR
- * 
  * The class Satellite is used to track the satellites
  * Given any time, the user can obtain the geographic location of the satellite
  * 
@@ -34,26 +31,18 @@ public:
 
   /**
    * \brief Initialize the satellite class
-   *        The log will be written to the SAT_${name}_${cMember}_${cGrid}_log.txt
    *        The name of the satellite is not allowed to have any characters which can 
    *        terminate the read of a string including white space' ', endline'\n', and '\t'
    *        Different satellites must have different names (not only input file names)
    * \param csv_in The path to the satellite csv file
+   * \param log_name_in The path to write the satellite log file
+   * \param sat_header The first line of the log file
    * \param dt_in The time gate
    */
   Satellite(const std::string &csv_in,
-            const std::string &log_name,
+            const std::string &log_name_in,
+            const std::string &sat_header,
             const precision_t dt_in);
-
-  // Delete copy constructor, copy assignment operator and move assignment operator
-  Satellite(const Satellite&) = delete;
-  Satellite& operator=(const Satellite&) = delete;
-  Satellite& operator=(Satellite&&) = delete;
-  // Declare the move constructor
-  Satellite(Satellite && __x) = default;
-
-  // Destructor that closes the output file stream
-  ~Satellite();
 
   /**
    * \brief Get the position of the satellite at given time
@@ -86,8 +75,8 @@ private:
   std::string name;
   // The time gate
   precision_t dt;
-  // The file stream to write log
-  std::ofstream ofs;
+  // The file name to write log
+  std::string log_name;
   // The time should always be ascending
   // The type for time is double rather than precision_t
   std::vector<double> timereals;
@@ -109,9 +98,7 @@ public:
   /**
    * \brief Initialize the Logfile.
    *    The logfile will output all indicies and specified neutrals and ions
-   *    every dt time. The logfile for satellites needs to be combined by a
-   *    python script. Please see the comments of the constructor of satellite
-   *    for more info
+   *    every dt time.
    */
   Logfile(Indices &indices,
           Inputs &input,

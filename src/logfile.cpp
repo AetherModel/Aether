@@ -32,7 +32,8 @@ void write_logfile_line(std::ofstream &ofs,
 // -------------------------------------------------------------------
 
 Satellite::Satellite(const std::string &csv_in,
-                     const std::string &log_name,
+                     const std::string &log_name_in,
+                     const std::string &sat_header,
                      const precision_t dt_in) {
     // Set the time gate
     dt = dt_in;
@@ -76,17 +77,17 @@ Satellite::Satellite(const std::string &csv_in,
         // ch is used to read comma
         char ch;
         if (iss >> itime[0] >> ch
-	        >> itime[1] >> ch
-	        >> itime[2] >> ch
-	        >> itime[3] >> ch
-                >> itime[4] >> ch
-	        >> itime[5] >> ch
-	        >> lon_in >> ch >> lat_in >> ch >> alt_in) {
+            >> itime[1] >> ch
+            >> itime[2] >> ch
+            >> itime[3] >> ch
+            >> itime[4] >> ch
+            >> itime[5] >> ch
+            >> lon_in >> ch >> lat_in >> ch >> alt_in) {
             double timereal = time_int_to_real(itime);
             // Exit if the time is not ascending
             if (!timereals.empty() && timereal <= timereals.back()) {
                 throw std::string("Satellite file " + csv_in +
-				  ": Time is not strictly increasing");
+                                  ": Time is not strictly increasing");
             }
             timereals.push_back(timereal);
             // Convert degree to radians, kilometers to meters
@@ -95,24 +96,25 @@ Satellite::Satellite(const std::string &csv_in,
             alts.push_back(alt_in * cKMtoM);
         } else {
             throw std::string("Satellite file " + csv_in +
-			      ": Data line format error");
+                              ": Data line format error");
         }
     }
 
-    // Create the output file stream
-    ofs.open(log_name + '.' + cGrid);
-    if (!ofs.is_open()) {
-        throw std::string("Satellite: Can not open the output logfile");
+    // Store the log_name_in
+    log_name = log_name_in;
+    if (nMembers > 1) {
+        log_name += '_' + cMember;
     }
-    ofs.precision(5);
-}
-
-// -------------------------------------------------------------------
-// Close the output file stream
-// -------------------------------------------------------------------
-
-Satellite::~Satellite() {
-    ofs.close();
+    log_name += ".txt";
+    // Process 0 will initialize the output file
+    if (iProc == 0) {
+        std::ofstream ofs(log_name);
+        if (!ofs.is_open()) {
+            throw std::string("Satellite: Can not open the output logfile");
+        }
+        ofs << sat_header << '\n';
+        ofs.close();
+    }
 }
 
 // -------------------------------------------------------------------
@@ -151,22 +153,22 @@ void Satellite::get_position(std::vector<precision_t> &lons_out,
     // and then wrap the result
     if (lons[index + 1] < lons[index]) {
         precision_t lon_out =
-	  linear_interpolation(lons[index], lons[index + 1] + cTWOPI, ratio);
+          linear_interpolation(lons[index], lons[index + 1] + cTWOPI, ratio);
         if (lon_out >= cTWOPI) {
             lon_out -= cTWOPI;
         }
         lons_out.push_back(lon_out);
     } else {
         lons_out.push_back(linear_interpolation(lons[index],
-						lons[index + 1],
-						ratio));
+                                                lons[index + 1],
+                                                ratio));
     }
     lats_out.push_back(linear_interpolation(lats[index],
-					    lats[index + 1],
-					    ratio));
+                                            lats[index + 1],
+                                            ratio));
     alts_out.push_back(linear_interpolation(alts[index],
-					    alts[index + 1],
-					    ratio));
+                                            alts[index + 1],
+                                            ratio));
 }
 
 // -------------------------------------------------------------------
@@ -191,7 +193,10 @@ precision_t Satellite::get_dt() const {
 
 void Satellite::write_log(const std::vector<int> &iCurrent,
                           const std::vector<precision_t> &varialbes) {
+    std::ofstream ofs(log_name, std::ios_base::app);
+    ofs.precision(5);
     write_logfile_line(ofs, iCurrent, varialbes);
+    ofs.close();
 }
 
 // -------------------------------------------------------------------
@@ -204,8 +209,8 @@ void Satellite::print() {
              && lats.size() == alts.size());
     for (size_t i = 0; i < timereals.size(); ++i) {
         std::cout << "At time = "
-		  << timereals[i] - timereals.front()
-		  << "\tpos = ("
+                  << timereals[i] - timereals.front()
+                  << "\tpos = ("
                   << lons[i] << ", " << lats[i] << ", " << alts[i] << ")\n";
     }
 }
@@ -220,10 +225,7 @@ Logfile::Logfile(Indices &indices,
 
     // Read the settings for general log file and satellites
     // Write the header to the general logfile
-    // Write the header and the number of processors to the satellite
-    // combination helper
     // Initialize the satellite instances
-    // Write the name of satellites to the satellite combination helper
 
     std::string function = "Logfile::Logfile";
     static int iFunction = -1;
@@ -257,7 +259,8 @@ Logfile::Logfile(Indices &indices,
     // Satellite-specific and log-specific header
     std::string header_log, header_sat;
     // The general log takes average, while the satellite takes the
-    // value at its point The temperature
+    // value at its point
+    // The temperature
     header_log += " min_temp mean_temp max_temp specific_temp";
     header_sat += " lon(deg) lat(deg) alt(km) temp";
     // The specified variables
@@ -281,43 +284,25 @@ Logfile::Logfile(Indices &indices,
     if (!sat_files.empty()) {
         // Check that the size of files and dts are the same
         if (sat_files.size() != sat_names.size() ||
-	    sat_names.size() != sat_dts.size()) {
+            sat_names.size() != sat_dts.size()) {
             // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE
             // SHOULD NOT BE EXECUTED
             throw std::string("The size of files and dts for satellites are not the same");
         }
 
-        // Open the satellite combination helper file stream
-        std::ofstream sat_combine("SAT_COMBINE_README.txt");
-        if (!sat_combine.is_open()) {
-            // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE
-            // SHOULD NOT BE EXECUTED
-            throw std::string("Can not open satellite combine file");
-        }
-
         // Initialize the instances of satellite
         satellites.reserve(sat_files.size());
         for (size_t i = 0; i < sat_files.size(); ++i) {
-            satellites.emplace_back(sat_files[i], sat_names[i], sat_dts[i]);
+            satellites.emplace_back(sat_files[i],
+                                    sat_names[i],
+                                    header_time + header_sat,
+                                    sat_dts[i]);
         }
-
-        // Write the header and the total number of grids to sat_combine
-        sat_combine << header_time << header_sat << '\n' << nGrids << '\n';
-        // Write the name of the satellites and helper info to the
-        // sat_combine and close the file stream
-        for (auto &it : sat_names) {
-            sat_combine << it << ' ';
-        }
-        sat_combine << "\n\nHere is a guide for merging satellite log files\n"
-                       "The temporary files produced by each processor should now have been generated. "
-                       "They are suffixed with \"g\" plus the processor number.\n"
-                       "Run Aether/srcPython/satellite_combine.py in the same directory as this file, "
-                       "and the satellite log files will be merged correctly.\n"
-                       "The first three lines are input to script. They are the header, total number of "
-                       "grids, and the satellite output logfile names.\n"
-                       "If the python script runs correctly, this file will be deleted.\n";
-        sat_combine.close();
     }
+
+    // Synchronize here to make sure all satellite logfiles are initialized and
+    // prevent any process writing data into logfile before initialization
+    MPI_Barrier(aether_comm);
 
     report.exit(function);
 }
@@ -426,18 +411,18 @@ bool Logfile::write_logfile(Indices &indices,
         // Temperature
         min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
         values_log.insert(values_log.end(),
-			  min_mean_max.begin(),
-			  min_mean_max.end());
+                          min_mean_max.begin(),
+                          min_mean_max.end());
         // Temperature at the chosen point
         values_log.push_back(neutrals.temperature_scgc(lla[0],
-						       lla[1],
-						       lla[2]));
+                                                       lla[1],
+                                                       lla[2]));
         // Specified variables
         for (auto it : species) {
             min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
             values_log.insert(values_log.end(),
-			      min_mean_max.begin(),
-			      min_mean_max.end());
+                              min_mean_max.begin(),
+                              min_mean_max.end());
         }
         // Indices
         for (int i = 0; i < indices.all_indices_array_size(); ++i) {

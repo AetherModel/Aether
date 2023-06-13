@@ -27,6 +27,6 @@
     
     "Satellites" : {
         "files" : ["UA/inputs/sat_20110320.csv"],
-        "names" : ["UA/output/sat_20110320_log.txt"],
+        "names" : ["UA/output/sat_20110320_log"],
         "dts" : [15.0]}
 }
