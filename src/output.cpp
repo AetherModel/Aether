@@ -200,15 +200,32 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
-      if (type_output == "cent_acc") {
-        AllOutputContainers[iOutput].store_variable("radius",
-                                                    "Magnetic Latitude",
-                                                    "degrees",
-                                                    grid.radius_scgc);
-        AllOutputContainers[iOutput].store_variable("geoLat",
-                                                    "Magnetic Longitude",
-                                                    "degrees",
-                                                    grid.geoLat_scgc);
+      // Momentum:
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("Longitudinal",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Latitudinal",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Radial",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
+      }
+
+      // Thermal:
+      if (type_output == "therm") {
+        AllOutputContainers[iOutput].store_variable("O_cool_scgc",
+                                                    "O cooling",
+                                                    "K/s", 
+                                                    neutrals.O_cool_scgc); 
+        AllOutputContainers[iOutput].store_variable("NO_cool_scgc",
+                                                    "NO cooling",
+                                                    "K/s",
+                                                    neutrals.NO_cool_scgc);
       }
 
       // ------------------------------------------------------------
@@ -227,22 +244,23 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
-        
-      if (type_output == "cent_acc")
-        filename = "3DFBI_";
+      
+      if (type_output == "moment") 
+        filename = "3DMMT_";
 
       if (type_output == "corners")
         filename = "3DCOR_";
+      
+      if (type_output == "therm") 
+        filename = "3DTHR_"; 
 
       filename = filename + time.get_YMD_HMS();
 
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-      if (nGrids > 1)
-        filename = filename + "_" + cGrid;
+      filename = filename + "_" + cGrid;
 
-      report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
 
       // ------------------------------------------------------------

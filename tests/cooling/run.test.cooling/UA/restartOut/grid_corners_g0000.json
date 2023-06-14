@@ -1,0 +1,29 @@
+{
+    "nAlts": 45,
+    "nLats": 21,
+    "nLons": 21,
+    "nVars": 3,
+    "nX": 21,
+    "nY": 21,
+    "nZ": 45,
+    "time": [
+        1965,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+    ],
+    "units": [
+        "radians",
+        "radians",
+        "meters"
+    ],
+    "variables": [
+        "Longitude Corners",
+        "Latitude Corners",
+        "Altitude Corners"
+    ],
+    "version": 0.10000000149011612
+}

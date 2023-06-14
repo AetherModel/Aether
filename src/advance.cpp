@@ -70,6 +70,15 @@ int advance(Planets &planet,
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
+
+  if(input.get_O_cooling() == true){
+    neutrals.calc_O_cool(report);
+  } 
+
+  if(input.get_NO_cooling() == true){
+    neutrals.calc_NO_cool(report);
+  }
+
   neutrals.exchange(gGrid, report);
 
   time.increment_time();

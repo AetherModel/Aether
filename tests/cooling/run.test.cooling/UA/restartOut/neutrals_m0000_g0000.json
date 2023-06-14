@@ -1,0 +1,53 @@
+{
+    "nAlts": 44,
+    "nLats": 20,
+    "nLons": 20,
+    "nVars": 15,
+    "nX": 20,
+    "nY": 20,
+    "nZ": 44,
+    "time": [
+        1965,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+    ],
+    "units": [
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "/m3",
+        "K",
+        "m/s",
+        "m/s",
+        "m/s"
+    ],
+    "variables": [
+        "O",
+        "N_4S",
+        "O2",
+        "N2",
+        "NO",
+        "He",
+        "N_2D",
+        "N_2P",
+        "H",
+        "O_1D",
+        "CO2",
+        "Temperature",
+        "Zonal Wind",
+        "Meridional Wind",
+        "Vertical Wind"
+    ],
+    "version": 0.10000000149011612
+}

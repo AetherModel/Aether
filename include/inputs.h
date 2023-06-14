@@ -48,6 +48,9 @@ public:
   json get_perturb_values();  
 
   bool get_is_cubesphere();
+  
+  bool get_NO_cooling();
+  bool get_O_cooling();
 
   std::string get_student_name();
   bool get_is_student();

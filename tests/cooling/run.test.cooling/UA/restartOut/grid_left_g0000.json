@@ -1,0 +1,27 @@
+{
+    "nAlts": 44,
+    "nLats": 20,
+    "nLons": 21,
+    "nVars": 2,
+    "nX": 21,
+    "nY": 20,
+    "nZ": 44,
+    "time": [
+        1965,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+    ],
+    "units": [
+        "radians",
+        "radians"
+    ],
+    "variables": [
+        "Longitude Left",
+        "Latitude Left"
+    ],
+    "version": 0.10000000149011612
+}
