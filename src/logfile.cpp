@@ -106,8 +106,8 @@ Satellite::Satellite(const std::string &csv_in,
         log_name += '_' + cMember;
     }
     log_name += ".txt";
-    // Process 0 will initialize the output file
-    if (iProc == 0) {
+    // Grid 0 will initialize the output file
+    if (iGrid == 0) {
         std::ofstream ofs(log_name);
         if (!ofs.is_open()) {
             throw std::string("Satellite: Can not open the output logfile");
