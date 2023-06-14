@@ -89,12 +89,10 @@ public:
   
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
-  bool check_settings(std::string key1, std::string key2);
-  std::string check_settings_str(std::string key1, std::string key2);
-  std::string check_settings_str(std::string key1);
-  precision_t check_settings_pt(std::string key1, std::string key2);
   std::vector<int> get_settings_timearr(std::string key1);
   std::vector<int> get_settings_intarr(std::string key1);
+  bool check_settings(std::string key1, std::string key2);
+  bool check_settings(std::string key1);
   
   /**********************************************************************
      \brief Check to see if internal state of class is ok
@@ -146,8 +144,6 @@ private:
   
   /// An internal variable to hold the state of the class
   bool IsOk;
-
-  std::vector<std::string> missing_settings;
 };
 
 #endif  // INCLUDE_INPUTS_H_
