@@ -110,6 +110,10 @@ using json = nlohmann::json;
 
 // not done
 #include "output.h"
+
+//not done
+#include "logfile.h"
+
 // not done
 #include "advance.h"
 
@@ -125,5 +129,9 @@ using json = nlohmann::json;
 
 // not done
 #include "parallel.h"
+
+// not commented
+#include "external_msis.h"
+
 
 #endif  // INCLUDE_AETHER_H_

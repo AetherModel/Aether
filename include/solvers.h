@@ -56,5 +56,16 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid);
 arma_cube calc_gradient_lat(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt(arma_cube value, Grid grid);
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
-  
+
+// interpolation in 1D
+precision_t linear_interpolation(const precision_t y0,
+                                 const precision_t y1,
+                                 const precision_t ratio);
+
+// interpolation in 3D, data should be a cube of size 2-2-2
+precision_t interpolate_unit_cube(const arma_cube &data,
+                                  const precision_t xRatio,
+                                  const precision_t yRatio,
+                                  const precision_t zRatio);
+
 #endif  // INCLUDE_SOLVERS_H_

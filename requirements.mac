@@ -1,0 +1,8 @@
+armadillo
+boost
+cmake
+netcdf
+netcdf-cxx
+nlohmann-json
+OpenBLAS
+open-mpi

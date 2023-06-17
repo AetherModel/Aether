@@ -20,7 +20,8 @@ int advance(Planets &planet,
             Electrodynamics &electrodynamics,
             Indices &indices,
             Inputs &input,
-            Report &report) {
+            Report &report,
+            Logfile &logfile) {
 
   int iErr = 0;
 
@@ -67,7 +68,7 @@ int advance(Planets &planet,
   ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
   ions.calc_electron_temperature(neutrals, gGrid, report);
 
-  neutrals.set_bcs(report);
+  neutrals.set_bcs(gGrid, time, indices, input, report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
   neutrals.exchange(gGrid, report);
@@ -84,5 +85,9 @@ int advance(Planets &planet,
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
   report.exit(function);
+
+  if (iGrid == 0)
+    logfile.write_logfile(time, neutrals, ions, input, indices, report);
+
   return iErr;
 }
