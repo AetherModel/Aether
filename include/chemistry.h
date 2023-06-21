@@ -16,9 +16,8 @@
  *
  *
  *
- * \author Aaron Ridley
- *
- * \date 2022/07/05
+ * \author Aaron Ridley, Michael Rinaldi
+ * \date 2022/07/05, 2023/03/10
  *
  **************************************************************/
 
@@ -56,6 +55,22 @@ class Chemistry {
     precision_t rate;
     /// Branching ratio if needed:
     precision_t branching_ratio;
+
+    // variables for temperature-dependent rate calculation
+    /// numerator of temperature dependent rate:
+    precision_t numerator;
+    /// denominator of temperature dependent rate:
+    std::string denominator;
+    /// exponent of (num / den) ^ exp:
+    precision_t exponent;
+    /// which temperature to use w/ min/max:
+    std::string piecewiseVar;
+    /// temperature min and max within which to use the reaction:
+    int min;
+    /// temperature min and max within which to use the reaction:
+    int max;
+    /// type of formula to use for reaction rate:
+    int type;
   };
 
   /// vector to keep track of all reactions:
@@ -79,6 +94,20 @@ class Chemistry {
                              Report &report);
 
  private:
+
+//  struct sources_and_losses_type {
+//
+//    precision_t neutral_sources[neutrals.nSpecies];
+//    precision_t neutral_losses[neutrals.nSpecies];
+//    precision_t ion_sources[ions.nIons];
+//    precision_t ion_losses[ions.nIons];
+//
+//    precision_t heat_neutrals;
+//    precision_t heat_ions;
+//    precision_t heat_electrons;
+//  };
+//
+//  sources_and_losses_type sources_and_losses;
 
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions,

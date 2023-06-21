@@ -21,6 +21,7 @@ void Neutrals::add_sources(Times time, Report &report) {
   temperature_scgc =
     temperature_scgc +
     dt * (heating_euv_scgc +
+          heating_chemical_scgc +	  
           conduction_scgc);
 
   report.exit(function);
