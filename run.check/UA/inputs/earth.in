@@ -1,0 +1,58 @@
+
+name is the character string that identifies the species
+
+Vibration is the degrees of freedom for the atom/molecule
+
+thermal conduction is typically:
+Lambda = (N1 * A1 * T^c1 + N2 * A2 * T^c2 + ... ) / (N1+N2+...)
+thermal_cond is the A for the particular species
+thermal_exp is the c for the particular species
+
+mass is in amu
+
+advect is whether the species is advected or not
+
+BC is a density that is used in the lowest boundary cell if you
+  want a constant boundary condition.
+  Set to a real value to use this.
+  Set to a negative number if you want to use a different BC.
+  In this example file, the values are from 96.87 km Jan 1, 2013
+  O_1D is made up.
+
+#NEUTRALS
+name, mass, vibration, thermal_cond, thermal_exp, advect, BC
+O, 16, 5, 5.6e-4, 0.69, 1, 5.0e17
+N_4S, 14, 5, 5.6e-4, 0.69, 1, 2.5e11
+O2, 32, 7, 3.6e-4, 0.69, 1, 4.0e18
+N2, 28, 7, 3.6e-4, 0.69, 1, 1.7e19
+NO, 30, 7, 3.6e-4, 0.69, 1, 5.4e14
+He, 4, 5, 5.6e-4, 0.69, 1, 1.5e14
+N_2D, 14, 5, 5.6e-4, 0.69, 0, 2.5e9
+N_2P, 14, 5, 5.6e-4, 0.69, 0, 2.5e7
+H, 1, 5, 5.6e-4, 0.69, 0, 3.0e13
+O_1D, 16, 5, 5.6e-4, 0.69, 0, 1.0e10
+CO2, 46, 7, 3.6e-4, 0.69, 0, 4.5e15
+
+
+Here we can input a temperature profile for the initial condition:
+  - below the lowest altitude, it will use the lowest alt
+  - above the highest alt, it will use the highest alt
+  - in between, linear interpolation
+  - altitudes in km
+
+#TEMPERATURE
+alt, temp
+100.0, 200.0
+200.0, 800.0
+300.0, 800.0
+
+#IONS
+name, mass, charge, advect
+O+, 16, 1, 1
+O2+, 32, 1, 0
+N2+, 28, 1, 0
+NO+, 30, 1, 0
+N+, 14, 1, 0
+He+, 4, 1, 1
+O+2D, 16, 1, 0
+O+2P, 16, 1, 0
