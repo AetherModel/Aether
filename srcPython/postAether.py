@@ -574,7 +574,7 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
     if (iAlt < 0):
         iAlt = find_var_index(data['vars'], 'alt')
     iVar = find_var_index(data['vars'], varToPlot)
-
+    
     if (mini < 0):
         cmap = cm.bwr
     else:
@@ -720,6 +720,8 @@ def write_netcdf(allBlockData, fileName):
     # create all of the variables
     varList = []
     for iV, v in enumerate(oneBlock['vars']):
+        if (v == 'alt'):
+            v = 'z'
         varList.append(v)
         if ('long_name' in oneBlock):
             longName = oneBlock['long_name'][iV]
