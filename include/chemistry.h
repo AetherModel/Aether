@@ -71,6 +71,8 @@ class Chemistry {
     int max;
     /// type of formula to use for reaction rate:
     int type;
+    /// name of the reaction
+    std::string name;    
   };
 
   /// vector to keep track of all reactions:
@@ -95,20 +97,6 @@ class Chemistry {
 
  private:
 
-//  struct sources_and_losses_type {
-//
-//    precision_t neutral_sources[neutrals.nSpecies];
-//    precision_t neutral_losses[neutrals.nSpecies];
-//    precision_t ion_sources[ions.nIons];
-//    precision_t ion_losses[ions.nIons];
-//
-//    precision_t heat_neutrals;
-//    precision_t heat_ions;
-//    precision_t heat_electrons;
-//  };
-//
-//  sources_and_losses_type sources_and_losses;
-
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions,
                           Inputs args,
@@ -117,6 +105,7 @@ class Chemistry {
   reaction_type interpret_reaction_line(Neutrals neutrals,
                                         Ions ions,
                                         std::vector<std::string> line,
+					json headers,
                                         Report &report);
 
   void find_species_id(std::string name,
