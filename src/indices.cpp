@@ -135,21 +135,24 @@ bool Indices::perturb(Inputs args, Report &report) {
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (report.test_verbose(iDebug)) {
-        std::cout << "Perturbing Index : " << name << "\n";
-        DoReport = true;
-      }
+      if (name != "Chemistry") {
+      
+	if (report.test_verbose(iDebug)) {
+	  std::cout << "Perturbing Index : " << name << "\n";
+	  DoReport = true;
+	}
 
-      int iIndex = lookup_index_id(name);
+	int iIndex = lookup_index_id(name);
 
-      if (iIndex > -1) {
-        int seed = args.get_updated_seed();
+	if (iIndex > -1) {
+	  int seed = args.get_updated_seed();
 
-        if (report.test_verbose(iDebug))
-          std::cout << "Index found: " << iIndex
-                    << "; seed : " << seed << "\n";
+	  if (report.test_verbose(iDebug))
+	    std::cout << "Index found: " << iIndex
+		      << "; seed : " << seed << "\n";
 
-        perturb_index(iIndex, seed, it.value(), DoReport);
+	  perturb_index(iIndex, seed, it.value(), DoReport);
+	}
       }
     }
   }
