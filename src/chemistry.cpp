@@ -64,14 +64,15 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
       else {
 
-	json headers;
-	for(int x = 0; x < csv[0].size(); ++x)
-	  headers[csv[0][x]] = x;
+        json headers;
 
-	// Add checking here:
-	int iRate_ = headers["rate"];
-	int iLoss1_ = headers["loss1"];
-	
+        for (int x = 0; x < csv[0].size(); ++x)
+          headers[csv[0][x]] = x;
+
+        // Add checking here:
+        int iRate_ = headers["rate"];
+        int iLoss1_ = headers["loss1"];
+
         nReactions = 0;
 
         // Skip 2 lines of headers!
@@ -81,51 +82,55 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           // is == 0:
           if (csv[iLine][iRate_].length() > 0) {
             report.print(3, "interpreting chemistry line : " +
-			 csv[iLine][headers["name"]]);
+                         csv[iLine][headers["name"]]);
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], headers, report);
 
-	    // This section perturbs the reaction rates
-	    // (1) if the user specifies a value in the "uncertainty" column of the
-	    //     chemistry.csv file;
-	    // (2) if the user asks for it in the ["Perturb"]["Chemistry"] part
-	    //     of the aether.json file
-	    if (headers.contains("uncertainty")) {
-	      if(csv[iLine][headers["uncertainty"]].length() > 0) {
-		// uncertainty column exists!
-		json values = args.get_perturb_values();
-		if (values.contains("Chemistry")) {
-		  json chemistryList = values["Chemistry"];
-		  if (chemistryList.size() > 0) {
+            // This section perturbs the reaction rates
+            // (1) if the user specifies a value in the "uncertainty" column of the
+            //     chemistry.csv file;
+            // (2) if the user asks for it in the ["Perturb"]["Chemistry"] part
+            //     of the aether.json file
+            if (headers.contains("uncertainty")) {
+              if (csv[iLine][headers["uncertainty"]].length() > 0) {
+                // uncertainty column exists!
+                json values = args.get_perturb_values();
 
-		    // loop through requested pertubations:
-		    for (auto& react : chemistryList) {
-		      if (react == "all" || react == reaction.name) {
-			precision_t perturb_rate =
-			  str_to_num(csv[iLine][headers["uncertainty"]]);
+                if (values.contains("Chemistry")) {
+                  json chemistryList = values["Chemistry"];
 
-			int seed = args.get_updated_seed();
-			std::vector<double> perturbation;
-			precision_t mean = 1.0;
-			precision_t std = perturb_rate;
-			int nV = 1;
+                  if (chemistryList.size() > 0) {
 
-			perturbation = get_normal_random_vect(mean,
-							      std,
-							      nV,
-							      seed);
-			if (report.test_verbose(2)) 
-			  std::cout << "Perturbing reaction "
-				    << reaction.name << " by multiplier : "
-				    << perturbation[0] << "\n";
-			reaction.rate *= perturbation[0];
-			break;
-		      } // check for react
-		    } // chemistry list
-		  } // if there were any reactions listed
-		} // if user requested perturbs of chemistry
-	      } // if there was a value in the uncertainty column for the reaction
-	    } // if there is an uncertainty column in the chemisty csv file
+                    // loop through requested pertubations:
+                    for (auto& react : chemistryList) {
+                      if (react == "all" || react == reaction.name) {
+                        precision_t perturb_rate =
+                          str_to_num(csv[iLine][headers["uncertainty"]]);
+
+                        int seed = args.get_updated_seed();
+                        std::vector<double> perturbation;
+                        precision_t mean = 1.0;
+                        precision_t std = perturb_rate;
+                        int nV = 1;
+
+                        perturbation = get_normal_random_vect(mean,
+                                                              std,
+                                                              nV,
+                                                              seed);
+
+                        if (report.test_verbose(2))
+                          std::cout << "Perturbing reaction "
+                                    << reaction.name << " by multiplier : "
+                                    << perturbation[0] << "\n";
+
+                        reaction.rate *= perturbation[0];
+                        break;
+                      } // check for react
+                    } // chemistry list
+                  } // if there were any reactions listed
+                } // if user requested perturbs of chemistry
+              } // if there was a value in the uncertainty column for the reaction
+            } // if there is an uncertainty column in the chemisty csv file
           } // if there is actually a reaction rate
 
           // check if it is part of a piecewise function,
@@ -173,7 +178,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
                                                             Ions ions,
                                                             std::vector<std::string> line,
-							    json headers,
+                                                            json headers,
                                                             Report &report) {
 
   std::string function = "Chemistry::interpret_reaction_line";
@@ -219,7 +224,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
   // Reaction Name:
   reaction.name = line[headers["name"]];
-  
+
   int iBranch_ = headers["branching"];
 
   // Branching Ratio:
@@ -256,12 +261,15 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
     }
 
     reaction.piecewiseVar = line[headers["Piecewise"]];
+
     if (line[headers["Min"]].length() > 0)
       reaction.min = str_to_num(line[headers["Min"]]);
+
     if (line[headers["Max"]].length() > 0)
       reaction.max = str_to_num(line[headers["Max"]]);
+
     if (line[headers["FormulaType"]].length() > 0)
-      reaction.type = int(str_to_num(line[headers["FormulaType"]]));    
+      reaction.type = int(str_to_num(line[headers["FormulaType"]]));
   }
 
   report.exit(function);
