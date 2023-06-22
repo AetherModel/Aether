@@ -45,7 +45,11 @@ bool Chemistry::search(std::string name, json &headers, std::vector<std::string>
   return true;
 }
 
-bool Chemistry::check_chemistry_file(json &headers, int size){
+bool Chemistry::check_chemistry_file(json &headers, int size, Report &report){
+  std::string function = "Chemistry::check_chemistry_file";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
   std::vector<std::string> error;
   bool IsOk = true;
 
@@ -55,13 +59,15 @@ bool Chemistry::check_chemistry_file(json &headers, int size){
   //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
   for(int i = 1; i < 4; ++i){
     //check loss
-    std::string title = "loss" + i;
+    std::string title = "loss";
+    title += std::to_string(i);
     if(!search(title, headers, error))
       IsOk = false;
     
     //check source
-    title = "source" + i;
-    if(!search(title, headers, error))
+    std::string title2 = "source";
+    title2 += std::to_string(i);
+    if(!search(title2, headers, error))
       IsOk = false;
   }
 
@@ -73,7 +79,14 @@ bool Chemistry::check_chemistry_file(json &headers, int size){
 
   if(!search("heat", headers, error))
     IsOk = false;
-  
+
+  if(!IsOk){
+    std::cout << "Errors in chemistry header, missing: ";
+    for(std::string err : error)
+      std::cout << err << " ";
+    std::cout << endl;
+  }
+
   for(int iLine = 2; iLine < size; iLine++){
     std::string col = "loss";
       /*
@@ -95,8 +108,6 @@ bool Chemistry::check_chemistry_file(json &headers, int size){
       return false;
     }
   }
-  
-
 
   return IsOk;
 }
@@ -148,7 +159,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
-        check_chemistry_file(headers, nLines);
+        check_chemistry_file(headers, nLines, report);
        
         nReactions = 0;
 
