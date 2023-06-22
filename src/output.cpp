@@ -54,9 +54,9 @@ int output(const Neutrals &neutrals,
   }
 
   report.student_checker_function_name(args.get_is_student(),
-				       args.get_student_name(),
-				       3, "ghi");
-  
+                                       args.get_student_name(),
+                                       3, "");
+
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
@@ -226,9 +226,9 @@ int output(const Neutrals &neutrals,
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-     
+
       filename = filename + "_" + cGrid;
-      
+
 
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
@@ -423,11 +423,11 @@ void OutputContainer::clear_variables() {
 
 OutputContainer::OutputContainer() {
   // Set default output type to netCDF
-  #ifdef NETCDF
-    output_type = netcdf_type;
-  #else
-    output_type = binary_type;
-  #endif
+#ifdef NETCDF
+  output_type = netcdf_type;
+#else
+  output_type = binary_type;
+#endif
 }
 
 // -----------------------------------------------------------------------------

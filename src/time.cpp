@@ -81,13 +81,16 @@ void Times::set_times(std::vector<int> itime) {
 // time gate By this, I mean that the user sets a dt in which to do
 // something. If the simulation passes through that dt, then it will
 // return a 1, else it will return a 0.  It also returns 1 if the
-// current time is the start time.
+// current time is the start time or end time.
 // -----------------------------------------------------------------------------
 
 int Times::check_time_gate(precision_t dt_check) {
   int DidPassGate = 0;
 
   if (current == start)
+    DidPassGate = 1;
+
+  if (current == end)
     DidPassGate = 1;
 
   if ( floor((simulation - dt) / dt_check) <

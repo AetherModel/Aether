@@ -48,6 +48,8 @@ arma_vec make_fvec_from_vector(std::vector<precision_t> in_vector);
 
 std::string tostr(int64_t num_to_convert, int64_t zero_padding_len);
 
+precision_t str_to_num(std::string input);
+
 json read_json(std::string json_file);
 bool write_json(std::string json_file, json json_output);
 
@@ -69,15 +71,24 @@ precision_t standard_deviation(std::vector<precision_t> values);
 // Get min, mean, and max of an arma_cube
 //-------------------------------------------------------------
 
-std::vector<precision_t> get_min_mean_max(arma_cube value);
+std::vector<precision_t> get_min_mean_max(const arma_cube &value);
+
+//-------------------------------------------------------------
+// Find the name of given species in neutrals and ions. Throw exception if not found
+//-------------------------------------------------------------
+
+const arma_cube& find_species_density(const std::string &name,
+                                      Neutrals &neutrals,
+                                      Ions &ions,
+                                      Report &report);
 
 //-------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
 //-------------------------------------------------------------
 
-std::vector<precision_t> get_min_mean_max_density(std::string name,
-					     Neutrals neutrals,
-					     Ions ions,
-					     Report report);
+std::vector<precision_t> get_min_mean_max_density(const std::string &name,
+                                                  Neutrals &neutrals,
+                                                  Ions &ions,
+                                                  Report &report);
 
 #endif  // INCLUDE_TOOLS_H_
