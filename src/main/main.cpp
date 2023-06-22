@@ -64,7 +64,7 @@ int main() {
     MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
-
+    
     // Perturb the inputs if user has asked for this
     indices.perturb(input, report);
     MPI_Barrier(aether_comm);
@@ -183,6 +183,7 @@ int main() {
     report.times();
 
   } catch (std::string error) {
+    report.report_errors();
     if (iProc == 0) {
       std::cout << error << "\n";
       std::cout << "---- Must Exit! ----\n";

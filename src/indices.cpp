@@ -62,7 +62,6 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
   std::string function = "read_and_store_indices";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
   // ---------------------------------------------------
   // Read F10.7 file (if set):
   // ---------------------------------------------------
@@ -79,7 +78,8 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
 
     else {
       DidWork = false;
-      std::cout << "ERROR in reading f107 file!!!\n";
+      report.error("ERROR in reading f107 file!!!\n");
+      return DidWork;
     }
   }
 
@@ -110,13 +110,16 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
                                       file_contents.times,
                                       file_contents.values[iVar],
                                       file_contents.missing_values[iVar]);
+          if(!DidWork){
+            report.error("Error setting indices index!!!");
+            return DidWork;
+          }
         }  // if
       }  // for iVar
     }  // for iFile
   }  // if nFiles
 
   report.exit(function);
-  return DidWork;
 }
 
 // ----------------------------------------------------------------------

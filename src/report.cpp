@@ -168,6 +168,27 @@ void Report::print(int iLevel, std::string output_string) {
 }
 
 // -----------------------------------------------------------------------
+// Adds function and error to error_list
+// -----------------------------------------------------------------------
+
+void Report::error(std::string error_in) {
+  error_struct new_error;
+  new_error.func = current_entry;
+  new_error.error = error_in;
+  error_list.push_back(new_error);
+}
+
+// -----------------------------------------------------------------------
+// Reports list of errors
+// -----------------------------------------------------------------------
+
+void Report::report_errors() {
+  for (int i = 0; i<error_list.size(); i++){
+    std::cout << error_list[i].func << " : " << error_list[i].error << "\n";
+  }
+}
+
+// -----------------------------------------------------------------------
 // Test verbose level and print line starter if it is high enough
 // -----------------------------------------------------------------------
 
