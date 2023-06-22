@@ -90,6 +90,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           if (csv[iLine][iRate_].length() > 0) {
             report.print(3, "interpreting chemistry line : " +
                          csv[iLine][headers["name"]]);
+
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], headers, report);
 
@@ -165,7 +166,6 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           if (reaction.nLosses > 0 && reaction.nSources > 0) {
             if (report.test_verbose(3))
               display_reaction(reaction);
-
             reactions.push_back(reaction);
             nReactions++;
           }
@@ -235,6 +235,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   int iBranch_ = headers["branching"];
 
   // Branching Ratio:
+
   if (line[iBranch_].length() > 0)
     reaction.branching_ratio = str_to_num(line[iBranch_]);
 
@@ -245,7 +246,6 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   // energy released as exo-thermic reaction:
   if (line[headers["heat"]].length() > 0)
     reaction.energy = str_to_num(line[headers["heat"]]);
-
   else
     reaction.energy = 0;
 
@@ -262,6 +262,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
       if (line[headers["Exponent"]].length() > 0)
         reaction.exponent = str_to_num(line[headers["Exponent"]]);
+
     } else {
       // default to 0 (calc_chemical_sources will use constant rate)
       reaction.type = 0;
@@ -277,6 +278,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
     if (line[headers["FormulaType"]].length() > 0)
       reaction.type = int(str_to_num(line[headers["FormulaType"]]));
+
   }
 
   report.exit(function);

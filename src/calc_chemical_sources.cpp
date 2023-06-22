@@ -79,6 +79,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       } else if (reactions[iReaction].numerator &&
                  reactions[iReaction].type == 2) {
         // Form is RR = R * exp(num / Temp)
+
         change3d =
           change3d %
           temp %

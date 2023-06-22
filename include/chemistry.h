@@ -73,6 +73,7 @@ class Chemistry {
     int type;
     /// name of the reaction
     std::string name;    
+
   };
 
   /// vector to keep track of all reactions:
