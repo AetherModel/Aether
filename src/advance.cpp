@@ -36,7 +36,7 @@ int advance(Planets &planet,
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
                  input.get_student_name() + "?");
-
+  
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
   neutrals.calc_specific_heat(report);
@@ -59,20 +59,15 @@ int advance(Planets &planet,
                                 report);
   calc_ion_neutral_coll_freq(neutrals, ions, report);
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
-
   calc_aurora(gGrid, neutrals, ions, input, report);
-
   neutrals.calc_conduction(gGrid, time, report);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
   neutrals.add_sources(time, report);
   ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
   ions.calc_electron_temperature(neutrals, gGrid, report);
-
   neutrals.set_bcs(gGrid, time, indices, input, report);
   neutrals.fill_with_hydrostatic(gGrid, report);
-
   neutrals.exchange(gGrid, report);
-
   time.increment_time();
 
   if (time.check_time_gate(input.get_dt_write_restarts())) {

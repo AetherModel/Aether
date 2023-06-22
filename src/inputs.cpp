@@ -96,9 +96,9 @@ std::string Inputs::get_logfile() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_logfile_dt() {
-  precision_t setting = 0;
+  precision_t setting = -1;
   if(check_settings("Logfile", "dt")){
-      setting = settings["Logfile", "dt"];
+      setting = settings.at("Logfile").at("dt");
   }
   return setting;
 }
@@ -108,15 +108,7 @@ precision_t Inputs::get_logfile_dt() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_logfile_append() {
-  return settings["Logfile"]["append"];
-}
-
-int64_t Inputs::get_n_species() {
-  int64_t setting = 0;
-  if(check_settings("Logfile", "species")){
-      setting = settings["Logfile", "species"].size();
-  }
-  return setting;
+  return settings.at("Logfile").at("append");
 }
 
 // -----------------------------------------------------------------------
@@ -125,7 +117,7 @@ int64_t Inputs::get_n_species() {
 
 std::vector<std::string> Inputs::get_species_vector() {
   std::vector<std::string> species;
-  const json &json_species; = check_settings_str("Logfile", "species");
+  const json &json_species = settings.at("Logfile").at("species");
 
   for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++) {
     species.push_back(json_species.at(iOutput));
@@ -265,6 +257,19 @@ bool Inputs::check_settings(std::string key1,
   return false;
 }
 
+bool Inputs::check_settings(std::string key1) {
+  //try to find the keys first
+  if (settings.find(key1) != settings.end()) 
+      return true;
+
+  //if we haven't found the key print a message & set IsOk to false
+  IsOk = false;
+  if(!IsOk) {
+    std::cout << "Missing setting called! [" << key1 << "]\n";
+  }
+  return false;
+}
+
 std::string Inputs::check_settings_str(std::string key1,
                                        std::string key2) {
   if(check_settings(key1, key2))
@@ -295,10 +300,12 @@ precision_t Inputs::check_settings_pt(std::string key1,
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
   // First Get Values:
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
-  if(check_settings("GeoGrid", "IsUniformAlt"))
+  if(check_settings("GeoGrid", "IsUniformAlt")){
+    bool reality = settings.at("GeoGrid").at("IsUniformAlt");
+    std::cout << reality;
     geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
-  else
-    geo_grid_input.IsUniformAlt = false;
+  }else
+    geo_grid_input.IsUniformAlt = true;
   geo_grid_input.alt_min = check_settings_pt("GeoGrid", "MinAlt");
   geo_grid_input.dalt = check_settings_pt("GeoGrid", "dAlt");
   geo_grid_input.lat_min = check_settings_pt("GeoGrid", "MinLat");
@@ -428,7 +435,7 @@ precision_t Inputs::get_dt_report() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_n_outputs() {
-  return check_settings_str("Outputs", "type").size();
+  return settings.at("Outputs").at("type").size();
 }
 
 // -----------------------------------------------------------------------
@@ -562,7 +569,7 @@ std::string Inputs::get_aurora_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_chemistry_file() {
-  return check_settings_str("ChemistryFile");
+  return settings.at("ChemistryFile");
 }
 
 // -----------------------------------------------------------------------
@@ -650,8 +657,8 @@ std::string Inputs::get_electrodynamics_file() {
 
 bool Inputs::get_do_calc_bulk_ion_temp() {
   bool value = false;
-  if(check_settings_str("DoCalcBulkIonTemp") != dummy_string)
-    return check_settings_str("DoCalcBulkIonTemp") == "true";
+  if(check_settings("DoCalcBulkIonTemp"))
+    return settings.at("DoCalcBulkIonTemp");
   IsOk = false;
   return false;
 }
@@ -664,12 +671,8 @@ json Inputs::get_perturb_values() {
   json values;
 
   if (settings.contains("Perturb"))
-    values = settings["Perturb"];
-  else {
-    values["Perturb"] = dummy_string;
-    //IsOk = false;
-    //std::cout << "Missing setting called! [Perturb]\n";
-  }
+    values = settings.at("Perturb");
+
   return values;
 }
 
@@ -681,7 +684,7 @@ json Inputs::get_initial_condition_types() {
   json values;
 
   if (settings.contains("InitialConditions"))
-    values = settings["InitialConditions"];
+    values = settings.at("InitialConditions");
 
   return values;
 }
@@ -694,7 +697,7 @@ json Inputs::get_boundary_condition_types() {
   json values;
 
   if (settings.contains("BoundaryConditions"))
-    values = settings["BoundaryConditions"];
+    values = settings.at("BoundaryConditions");
 
   return values;
 }

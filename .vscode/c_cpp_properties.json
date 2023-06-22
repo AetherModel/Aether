@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/x86_64-linux-gnu/openmpi/include"
+                "${workspaceFolder}/share/run/aether.mpi.json as mp"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
