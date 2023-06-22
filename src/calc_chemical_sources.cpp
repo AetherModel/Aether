@@ -62,6 +62,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       // use Ti by default
       arma_cube temp = ions.temperature_scgc;
       std::string denom = reactions[iReaction].denominator;
+
       if (denom == "Te")
         temp = ions.electron_temperature_scgc;
       else if (denom == "Tn")
@@ -70,27 +71,28 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       // Calculate reaction rate:
       if (reactions[iReaction].numerator &&
           reactions[iReaction].type == 1) {
-	// Form is RR = R * (num / Temp) ^ exp
+        // Form is RR = R * (num / Temp) ^ exp
         change3d =
           change3d %
           pow(reactions[iReaction].numerator / temp,
               reactions[iReaction].exponent);
       } else if (reactions[iReaction].numerator &&
                  reactions[iReaction].type == 2) {
-	// Form is RR = R * exp(num / Temp)
+        // Form is RR = R * exp(num / Temp)
+
         change3d =
           change3d %
           temp %
           exp(reactions[iReaction].numerator / temp);
       } else if (reactions[iReaction].numerator &&
                  reactions[iReaction].type == 3) {
-	// This is a placeholder for more complicated reaction rates,
-	// such as the charge exchange for O+ + N2 at Earth. Specifically,
-	// this is what is outlined in Schunk and Nagy:
+        // This is a placeholder for more complicated reaction rates,
+        // such as the charge exchange for O+ + N2 at Earth. Specifically,
+        // this is what is outlined in Schunk and Nagy:
         temp = temp + 0.33 * (
-               pow(ions.efield_vcgc[0], 2) +
-               pow(ions.efield_vcgc[1], 2) +
-               pow(ions.efield_vcgc[2], 2)); //.33 * E'^2
+                 pow(ions.efield_vcgc[0], 2) +
+                 pow(ions.efield_vcgc[1], 2) +
+                 pow(ions.efield_vcgc[2], 2)); //.33 * E'^2
 
         precision_t coeff_a, coeff_b, coeff_c;
 
@@ -117,6 +119,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       // Figure out which temperature is the limiter.  Default to ions:
       arma_cube temp = ions.temperature_scgc;
       std::string piecewiseTemp = reactions[iReaction].piecewiseVar;
+
       if (piecewiseTemp == "Te")
         temp = ions.electron_temperature_scgc;
       else if (piecewiseTemp == "Tn")
@@ -124,6 +127,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
       // Limit the reagion to where the temperautre is in the range:
       change3d = change3d % (change3d > reactions[iReaction].min);
+
       if (reactions[iReaction].max > 0)
         change3d = change3d % (change3d <= reactions[iReaction].max);
     }

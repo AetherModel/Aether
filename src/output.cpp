@@ -226,9 +226,9 @@ int output(const Neutrals &neutrals,
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-     
+
       filename = filename + "_" + cGrid;
-      
+
 
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
@@ -423,11 +423,11 @@ void OutputContainer::clear_variables() {
 
 OutputContainer::OutputContainer() {
   // Set default output type to netCDF
-  #ifdef NETCDF
-    output_type = netcdf_type;
-  #else
-    output_type = binary_type;
-  #endif
+#ifdef NETCDF
+  output_type = netcdf_type;
+#else
+  output_type = binary_type;
+#endif
 }
 
 // -----------------------------------------------------------------------------

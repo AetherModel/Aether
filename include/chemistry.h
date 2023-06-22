@@ -71,6 +71,9 @@ class Chemistry {
     int max;
     /// type of formula to use for reaction rate:
     int type;
+    /// name of the reaction
+    std::string name;    
+
   };
 
   /// vector to keep track of all reactions:
@@ -103,6 +106,7 @@ class Chemistry {
   reaction_type interpret_reaction_line(Neutrals neutrals,
                                         Ions ions,
                                         std::vector<std::string> line,
+					json headers,
                                         Report &report);
 
   void find_species_id(std::string name,

@@ -828,8 +828,9 @@ def calc_std_of_ensembles(filesInfo,
     
     for i, iF in enumerate(ensembleIndexList):
         cF = filesInfo[iF]['coreFile']
+        nC = filesInfo[iF]['isNetCDF']
         print('---> Going back through corefiles: ', cF)
-        allBlockData, filelist = read_block_files(cF)
+        allBlockData, filelist = read_block_files(cF, nC)
 
         # subtract
         diff = do_math_on_block_data(allBlockData,
