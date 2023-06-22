@@ -1,7 +1,7 @@
 
 {
     "Debug" : {
-	"iVerbose" : 0,
+	"iVerbose" : 1,
 	"doInheritVerbose" : false,
 	"dt" : 60.0,
 	"TimingPercent" : 1.0,
