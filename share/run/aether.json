@@ -5,7 +5,7 @@
 		"nMembers" : 1},
 
 	"Debug" : {
-	"iVerbose" : 1,
+	"iVerbose" : 0,
 	"dt" : 10.0},
 
     "GeoBlockSize" : {

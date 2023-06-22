@@ -670,7 +670,7 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 json Inputs::get_perturb_values() {
   json values;
 
-  if (settings.contains("Perturb"))
+  if (check_settings("Perturb"))
     values = settings.at("Perturb");
 
   return values;
@@ -683,7 +683,7 @@ json Inputs::get_perturb_values() {
 json Inputs::get_initial_condition_types() {
   json values;
 
-  if (settings.contains("InitialConditions"))
+  if (check_settings("InitialConditions"))
     values = settings.at("InitialConditions");
 
   return values;
@@ -696,7 +696,7 @@ json Inputs::get_initial_condition_types() {
 json Inputs::get_boundary_condition_types() {
   json values;
 
-  if (settings.contains("BoundaryConditions"))
+  if (check_settings("BoundaryConditions"))
     values = settings.at("BoundaryConditions");
 
   return values;
