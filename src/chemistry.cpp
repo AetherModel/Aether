@@ -1,6 +1,13 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
+// Versions and authors:
+//
+// initial version - A. Ridley - Sometime in 2020
+// Temperature dependent reactions - M. Rinaldi - 2022
+// Headers and Perturbations - Y Jiang / A. Ridley - June 2023
+//
+
 #include <string>
 #include <fstream>
 #include <vector>
