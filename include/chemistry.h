@@ -97,6 +97,10 @@ class Chemistry {
                              Report &report);
 
  private:
+  bool search(std::string name, json &headers, 
+                     std::vector<std::string> &error);
+
+  bool check_chemistry_file(json &headers, int size);
 
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions,

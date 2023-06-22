@@ -37,6 +37,51 @@ Chemistry::Chemistry(Neutrals neutrals,
 // -----------------------------------------------------------------------------
 // Read chemistry CSV file
 // -----------------------------------------------------------------------------
+bool Chemistry::search(std::string name, json &headers, std::vector<std::string> &error){
+  if(!headers.contains(name)){
+    error.push_back(name);
+    return false;
+  }
+  return true;
+}
+
+bool Chemistry::check_chemistry_file(json &headers, int size){
+  std::vector<std::string> error;
+  bool IsOk = true;
+  
+  bool uncertainty_exists = search("uncertainty", headers, error);
+
+  
+  //check all the headers to see if they contain "uncertainty" (no errors) & update a variable to read in
+  //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
+  // > if it doesn't have these columns, fatal error, report which is missing
+  for(int iLine = 2; iLine < size; iLine++){
+    std::string col = "loss";
+      /*
+      for all, check first if it's empty THEN check
+        if in column "loss" or "source" --> if the first character is a letter
+        rate is a number
+        temp range is ["piecewise"] >/>=/< min/max
+        branching is a # from 0 to 1
+        heat is a double
+        uncertainty is a double 
+        for temp dependency: == ([numerator]/[denominator])^[exponent] if formula type == 1,
+         temp*exp(numerator/temp)
+        contains "formula type" is an int
+      */
+
+    if(!IsOk){
+      std::cout << "There is an issue with this csv file, on line " 
+                << iLine << ", and column " << col << ".\n";
+      return false;
+    }
+  }
+  
+
+
+  return IsOk;
+}
+
 
 int Chemistry::read_chemistry_file(Neutrals neutrals,
                                    Ions ions,
@@ -50,6 +95,8 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
   std::ifstream infile_ptr;
   int iErr = 0;
   reaction_type reaction;
+
+  std::vector<std::string> errors;
 
   report.print(1, "Reading Chemistry File : " + args.get_chemistry_file());
 
@@ -76,10 +123,14 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         for (int x = 0; x < csv[0].size(); ++x)
           headers[csv[0][x]] = x;
 
-        // Add checking here:
+        // Check before here, then set rate & loss1
+        if(search("rate", headers, errors) || search("loss1", headers, errors))
+          iErr = 1;
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
+        check_chemistry_file(headers, nLines);
+       
         nReactions = 0;
 
         // Skip 2 lines of headers!
