@@ -48,13 +48,32 @@ bool Chemistry::search(std::string name, json &headers, std::vector<std::string>
 bool Chemistry::check_chemistry_file(json &headers, int size){
   std::vector<std::string> error;
   bool IsOk = true;
-  
-  bool uncertainty_exists = search("uncertainty", headers, error);
 
-  
   //check all the headers to see if they contain "uncertainty" (no errors) & update a variable to read in
+  bool uncertainty_exists = search("uncertainty", headers, error);
+  
   //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
-  // > if it doesn't have these columns, fatal error, report which is missing
+  for(int i = 1; i < 4; ++i){
+    //check loss
+    std::string title = "loss" + i;
+    if(!search(title, headers, error))
+      IsOk = false;
+    
+    //check source
+    title = "source" + i;
+    if(!search(title, headers, error))
+      IsOk = false;
+  }
+
+  if(!search("rate", headers, error))
+    IsOk = false;
+  
+  if(!search("branching", headers, error))
+    IsOk = false;
+
+  if(!search("heat", headers, error))
+    IsOk = false;
+  
   for(int iLine = 2; iLine < size; iLine++){
     std::string col = "loss";
       /*
