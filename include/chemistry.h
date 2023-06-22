@@ -16,9 +16,8 @@
  *
  *
  *
- * \author Aaron Ridley
- *
- * \date 2022/07/05
+ * \author Aaron Ridley, Michael Rinaldi
+ * \date 2022/07/05, 2023/03/10
  *
  **************************************************************/
 
@@ -56,6 +55,25 @@ class Chemistry {
     precision_t rate;
     /// Branching ratio if needed:
     precision_t branching_ratio;
+
+    // variables for temperature-dependent rate calculation
+    /// numerator of temperature dependent rate:
+    precision_t numerator;
+    /// denominator of temperature dependent rate:
+    std::string denominator;
+    /// exponent of (num / den) ^ exp:
+    precision_t exponent;
+    /// which temperature to use w/ min/max:
+    std::string piecewiseVar;
+    /// temperature min and max within which to use the reaction:
+    int min;
+    /// temperature min and max within which to use the reaction:
+    int max;
+    /// type of formula to use for reaction rate:
+    int type;
+    /// name of the reaction
+    std::string name;    
+
   };
 
   /// vector to keep track of all reactions:
@@ -79,6 +97,10 @@ class Chemistry {
                              Report &report);
 
  private:
+  bool search(std::string name, json &headers, 
+                     std::vector<std::string> &error);
+
+  bool check_chemistry_file(json &headers, int size);
 
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions,
@@ -88,6 +110,7 @@ class Chemistry {
   reaction_type interpret_reaction_line(Neutrals neutrals,
                                         Ions ions,
                                         std::vector<std::string> line,
+					json headers,
                                         Report &report);
 
   void find_species_id(std::string name,

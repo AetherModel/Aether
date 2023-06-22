@@ -1,0 +1,24 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 20,
+	"nLats" : 20,
+	"nAlts" : 40},
+
+    "EndTime" : [2011, 3, 20, 0, 5, 0],
+    
+    "Logfile" : {
+	"name" : "UA/output/mylog.txt",
+	"append" : false,
+	"dt" : 10.0,
+	"species" : ["O", "NO+"]},
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+    "DoCalcBulkIonTemp" : false
+}

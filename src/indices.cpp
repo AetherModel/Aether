@@ -138,21 +138,24 @@ bool Indices::perturb(Inputs args, Report &report) {
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (report.test_verbose(iDebug)) {
-        std::cout << "Perturbing Index : " << name << "\n";
-        DoReport = true;
-      }
+      if (name != "Chemistry") {
 
-      int iIndex = lookup_index_id(name);
+        if (report.test_verbose(iDebug)) {
+          std::cout << "Perturbing Index : " << name << "\n";
+          DoReport = true;
+        }
 
-      if (iIndex > -1) {
-        int seed = args.get_updated_seed();
+        int iIndex = lookup_index_id(name);
 
-        if (report.test_verbose(iDebug))
-          std::cout << "Index found: " << iIndex
-                    << "; seed : " << seed << "\n";
+        if (iIndex > -1) {
+          int seed = args.get_updated_seed();
 
-        perturb_index(iIndex, seed, it.value(), DoReport);
+          if (report.test_verbose(iDebug))
+            std::cout << "Index found: " << iIndex
+                      << "; seed : " << seed << "\n";
+
+          perturb_index(iIndex, seed, it.value(), DoReport);
+        }
       }
     }
   }
@@ -514,4 +517,15 @@ int Indices::get_au_index_id() {
 }
 int Indices::get_al_index_id() {
   return iAL_;
+}
+
+std::string Indices::get_name(int iIndex) {
+  if (iIndex < 0 || iIndex >= all_indices_arrays.size())
+    return std::string();
+  else
+    return all_indices_arrays[iIndex].name;
+}
+
+int Indices::all_indices_array_size() {
+  return all_indices_arrays.size();
 }

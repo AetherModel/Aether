@@ -23,7 +23,6 @@ int main() {
   report.enter(function, iFunction);
 
   try {
-  
     // Create inputs (reading the input file):
     Inputs input(time, report);
     if (!input.is_ok())
@@ -39,14 +38,15 @@ int main() {
     
     // Initialize MPI and parallel aspects of the code:
     DidWork = init_parallel(input, quadtree, report);
+
     if (!DidWork)
       throw std::string("init_parallel failed!");
-  
+
     // Everything should be set for the inputs now, so write a restart file:
     DidWork = input.write_restart();
     if (!DidWork)
       throw std::string("input.write_restart failed!");
-    
+
     // Initialize the EUV system:
     Euv euv(input, report);
     if (!euv.is_ok())
@@ -84,7 +84,7 @@ int main() {
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
     // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, planet, input, report);
+    Neutrals neutrals(gGrid, planet, time, indices, input, report);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet, input, report);
@@ -130,6 +130,8 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
+    Logfile logfile(indices, input, report);
+
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);
@@ -146,7 +148,8 @@ int main() {
 		       electrodynamics,
 		       indices,
 		       input,
-		       report);
+		       report,
+		       logfile);
 
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
@@ -177,7 +180,6 @@ int main() {
       // Do some coupling here. But we have no coupling to do. Sad.
 
     } // End of outer time loop - done with run!
-
 
     report.exit(function);
     report.times();

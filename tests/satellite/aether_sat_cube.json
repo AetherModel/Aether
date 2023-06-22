@@ -1,0 +1,41 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 40},
+
+    "GeoGrid" : {
+	"MinLat" : -90.0,
+	"MaxLat" :  90.0,
+	"MinLon" :   0.0,
+	"MaxLon" : 360.0,
+	"MinAlt" : 100.0,
+	"dAlt"   : 0.33,
+	"IsUniformAlt" : false},
+    
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : false,
+
+    "CubeSphere" : {
+        "is" : true},
+    
+    "Logfile" : {
+        "name" : "UA/output/mylog.txt",
+        "append" : false,
+        "dt" : 10.0,
+        "species" : ["O", "NO+"]},
+    
+    "Satellites" : {
+        "files" : ["UA/inputs/sat_20110320.csv"],
+        "names" : ["UA/output/sat_20110320_log"],
+        "dts" : [15.0]}
+}
