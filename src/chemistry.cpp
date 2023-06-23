@@ -55,8 +55,26 @@ bool Chemistry::check_chemistry_file(json &headers, int size){
   //check all the headers to see if they contain "uncertainty" (no errors) & update a variable to read in
   //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
   // > if it doesn't have these columns, fatal error, report which is missing
-  for(int iLine = 2; iLine < size; iLine++){
-    std::string col = "loss";
+  for(int iLine = 1; iLine < size-1; iLine++){
+    std::string col;
+    for (int num = 1; num<4; num++){
+      col = "loss" + std::to_string(num);
+        if (headers[col][iLine] == "" || !std::isalpha(headers[col][iLine][0])){
+          IsOk = false;
+        }
+    }
+    for (int num = 1; num<4; num++){
+      col = "source" + std::to_string(num);
+        if (headers[col][iLine] == "" || !std::isalpha(headers[col][iLine][0])){
+          IsOk = false;
+        }
+    }  
+    if(!IsOk){
+      std::cout << "There is an issue with this csv file, on line " 
+                << iLine << ", and column " << col << ".\n";
+      return false;
+    }
+
       /*
       for all, check first if it's empty THEN check
         if in column "loss" or "source" --> if the first character is a letter
@@ -70,11 +88,6 @@ bool Chemistry::check_chemistry_file(json &headers, int size){
         contains "formula type" is an int
       */
 
-    if(!IsOk){
-      std::cout << "There is an issue with this csv file, on line " 
-                << iLine << ", and column " << col << ".\n";
-      return false;
-    }
   }
   
 
