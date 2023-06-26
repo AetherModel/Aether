@@ -264,7 +264,8 @@ bool Inputs::check_settings(std::string key1) {
 
   //if we haven't found the key print a message & set IsOk to false
   IsOk = false;
-  if(!IsOk) {
+  //perturb is non-essential, otherwise print error message
+  if(!IsOk && key1 != "Perturb") {
     std::cout << "Missing setting called! [" << key1 << "]\n";
   }
   return false;

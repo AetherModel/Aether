@@ -164,6 +164,58 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
     }
 
+    col = "tempdependent";
+    std::string value = csv[iLine][headers[col]];
+    if(value != ""){
+      std::string min = csv[iLine][headers["Temprange"]];
+      if(csv[iLine][headers["FormulaType"]] == ""){
+        temp_ok = false;
+        error.push_back("FormulaType");
+      } else if (csv[iLine][headers["FormulaType"]] == "1") {
+        std::string formula1 = "(" + csv[iLine][headers["Numerator"]] + "/" + csv[iLine][headers["Denominator"]] + ")";
+        std::string formula2 = "(" + csv[iLine][headers["Denominator"]] + "/" + csv[iLine][headers["Numerator"]] + ")";
+        
+        double exp;
+        try {
+          exp = stod(csv[iLine][headers["Exponent"]]);
+        } catch (std::invalid_argument & e){
+          temp_ok = false;
+          error.push_back("Exponent");
+        }
+
+        if(!(value.substr(0, value.find("^")) == formula1 || value.substr(0, value.find("^")) == formula2 
+             || abs(exp) == abs(stod(value.substr(value.find("^")))))){
+          temp_ok = false;
+          error.push_back(col);
+        }
+      } else if (csv[iLine][headers["FormulaType"]] == "2") {
+        std::string formula = csv[iLine][headers["Denominator"]] + "*exp(" + csv[iLine][headers["Numerator"]] + "/";
+        formula += csv[iLine][headers["Denominator"]] + ")";
+        
+        if(csv[iLine][headers[col]] != formula){
+          temp_ok = false;
+          error.push_back(col);
+        }
+      }
+    }
+
+    col = "FormulaType";
+    if(csv[iLine][headers[col]] != ""){
+      try {
+          if(!(stoi(csv[iLine][headers[col]]) == 1 || stoi(csv[iLine][headers[col]]) == 2)){
+            temp_ok = false;
+            error.push_back(col);
+          } 
+        } catch (std::invalid_argument & e){
+          temp_ok = false;
+          error.push_back(col);
+        }
+      if(csv[iLine][headers["tempdependent"]] == ""){
+        temp_ok = false;
+        error.push_back("FormulaType");
+      }
+    }
+
       /*
         for all, check first if it's empty THEN check
           DONE if in column "loss" or "source" --> if the first character is a letter
@@ -178,20 +230,11 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         */
     if(!temp_ok){
       std::cout << "There is an issue with the Chemistry csv file, on line " 
-                << iLine << ", with columns ";
+                << iLine + 1 << ", with columns:\n";
       for(std::string err : error) {
-        if(err == error.back() && err == error.front())
-          std::cout << err;
-        else if(err == error.back())
-          std::cout << "and " << err;
-        else
-          std::cout << err << ", ";
+        std::cout << err << ": ";
+        std::cout << csv[iLine][headers[err]] << "; \n";
       }
-      std::cout << ": \n";
-
-      for(std::string item : csv[iLine])
-        std::cout << item;
-      std::cout << endl;
     }
     IsOk = false;
     error.clear();
