@@ -45,7 +45,7 @@ bool Chemistry::search(std::string name, json &headers, std::vector<std::string>
   return true;
 }
 
-bool Chemistry::check_chemistry_file(json &headers, int size, Report &report){
+bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std::string>> csv, Report &report){
   std::string function = "Chemistry::check_chemistry_file";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -55,18 +55,17 @@ bool Chemistry::check_chemistry_file(json &headers, int size, Report &report){
 
   //check all the headers to see if they contain "uncertainty" (no errors) & update a variable to read in
   bool uncertainty_exists = search("uncertainty", headers, error);
-  
+  bool piecewise_exists = search("Piecewise", headers, error);
+
   //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
   for(int i = 1; i < 4; ++i){
     //check loss
-    std::string title = "loss";
-    title += std::to_string(i);
+    std::string title = "loss" + std::to_string(i);
     if(!search(title, headers, error))
       IsOk = false;
     
     //check source
-    std::string title2 = "source";
-    title2 += std::to_string(i);
+    std::string title2 = "source" + std::to_string(i);
     if(!search(title2, headers, error))
       IsOk = false;
   }
@@ -86,29 +85,117 @@ bool Chemistry::check_chemistry_file(json &headers, int size, Report &report){
       std::cout << err << " ";
     std::cout << endl;
   }
+  error.clear();
 
-  for(int iLine = 2; iLine < size; iLine++){
-    std::string col = "loss";
-      /*
-      for all, check first if it's empty THEN check
-        if in column "loss" or "source" --> if the first character is a letter
-        rate is a number
-        temp range is ["piecewise"] >/>=/< min/max
-        branching is a # from 0 to 1
-        heat is a double
-        uncertainty is a double 
-        for temp dependency: == ([numerator]/[denominator])^[exponent] if formula type == 1,
-         temp*exp(numerator/temp)
-        contains "formula type" is an int
-      */
-
-    if(!IsOk){
-      std::cout << "There is an issue with this csv file, on line " 
-                << iLine << ", and column " << col << ".\n";
-      return false;
+  for (int iLine = 2; iLine < csv.size() - 1; iLine++){
+    bool temp_ok = true;
+    std::string col;
+    for (int num = 1; num<4; num++){
+      col = "loss" + std::to_string(num);
+      if(csv[iLine][headers[col]] != "")
+        if(!std::isalpha(csv[iLine][headers[col]][0])){
+          temp_ok = false;
+          error.push_back(col);
+        }
+          
+      
+      col = "source" + std::to_string(num);
+      if(csv[iLine][headers[col]] != "")
+        if(!std::isalpha(csv[iLine][headers[col]][0])){
+          temp_ok = false;
+          error.push_back(col);
+        }
     }
-  }
 
+    col = "rate";
+    try {
+      stod(csv[iLine][headers[col]]);
+    } catch (std::invalid_argument & e){
+      temp_ok = false;
+      error.push_back(col);
+    }
+
+    std::string piece = "";
+    if(piecewise_exists) {
+      col = "Piecewise";
+      piece = csv[iLine][headers[col]];
+      if(piece != "")
+        if(!(piece == "Ti" || piece == "Tn")){
+          temp_ok = false;
+          error.push_back(col);
+        }
+    }
+
+    col = "branching";
+    if(csv[iLine][headers[col]] != ""){
+      int ratio;
+      try {
+        ratio = stod(csv[iLine][headers[col]]);
+        if(ratio > 1 || ratio < 0) {
+          temp_ok = false;
+          error.push_back(col);
+        }
+      } catch (std::invalid_argument & e){
+        temp_ok = false;
+        error.push_back(col);
+      }
+      
+    }
+
+    col = "heat";
+    if(csv[iLine][headers[col]] != ""){
+      try {
+        stod(csv[iLine][headers[col]]);
+      } catch (std::invalid_argument & e){
+        temp_ok = false;
+        error.push_back(col);
+      }
+    }
+
+    if(uncertainty_exists){
+      col = "uncertainty";
+      if(csv[iLine][headers[col]] != ""){
+        try {
+          stod(csv[iLine][headers[col]]);
+        } catch (std::invalid_argument & e){
+          temp_ok = false;
+          error.push_back(col);
+        }
+      }
+    }
+
+      /*
+        for all, check first if it's empty THEN check
+          DONE if in column "loss" or "source" --> if the first character is a letter
+          DONE rate is a number
+          STARTED temp range is ["piecewise"] >/>=/< min/max
+          DONE branching is a # from 0 to 1
+          DONE heat is a double
+          DONE uncertainty is a double 
+          for temp dependency: == ([numerator]/[denominator])^[exponent] if formula type == 1,
+          temp*exp(numerator/temp)
+          contains "formula type" is an int
+        */
+    if(!temp_ok){
+      std::cout << "There is an issue with the Chemistry csv file, on line " 
+                << iLine << ", with columns ";
+      for(std::string err : error) {
+        if(err == error.back() && err == error.front())
+          std::cout << err;
+        else if(err == error.back())
+          std::cout << "and " << err;
+        else
+          std::cout << err << ", ";
+      }
+      std::cout << ": \n";
+
+      for(std::string item : csv[iLine])
+        std::cout << item;
+      std::cout << endl;
+    }
+    IsOk = false;
+    error.clear();
+  }
   return IsOk;
 }
 
@@ -159,7 +246,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
-        check_chemistry_file(headers, nLines, report);
+        check_chemistry_file(headers, csv, report);
        
         nReactions = 0;
 

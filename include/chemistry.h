@@ -102,7 +102,7 @@ class Chemistry {
               std::vector<std::string> &error);
 
   bool check_chemistry_file(json &headers, 
-                            int size, 
+                            std::vector<std::vector<std::string>> csv, 
                             Report &report);
 
   int read_chemistry_file(Neutrals neutrals,
