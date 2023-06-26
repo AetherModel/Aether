@@ -70,15 +70,15 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       IsOk = false;
   }
 
+  //check other essential headers
   if(!search("rate", headers, error))
     IsOk = false;
-  
   if(!search("branching", headers, error))
     IsOk = false;
-
   if(!search("heat", headers, error))
     IsOk = false;
 
+  //output missing headers & clear cache of errors
   if(!IsOk){
     std::cout << "Errors in chemistry header, missing: ";
     for(std::string err : error)
@@ -87,9 +87,13 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
   }
   error.clear();
 
+  //check individual values in the csv
   for (int iLine = 2; iLine < csv.size() - 1; iLine++){
     bool temp_ok = true;
     std::string col;
+    
+    //check loss & source columns are elements or electrons
+    //(check if the first character is a letter)
     for (int num = 1; num<4; num++){
       col = "loss" + std::to_string(num);
       if(csv[iLine][headers[col]] != "")
@@ -98,7 +102,6 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
           error.push_back(col);
         }
           
-      
       col = "source" + std::to_string(num);
       if(csv[iLine][headers[col]] != "")
         if(!std::isalpha(csv[iLine][headers[col]][0])){
@@ -107,6 +110,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         }
     }
 
+    //check rate column is a double
     col = "rate";
     try {
       stod(csv[iLine][headers[col]]);
@@ -115,6 +119,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       error.push_back(col);
     }
 
+    //check piecewise values are either Ti or Tn
     std::string piece = "";
     if(piecewise_exists) {
       col = "Piecewise";
@@ -126,6 +131,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         }
     }
 
+    //check branching column is a double between 0 & 1
     col = "branching";
     if(csv[iLine][headers[col]] != ""){
       int ratio;
@@ -141,7 +147,8 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
       
     }
-
+    
+    //check heat column is a double
     col = "heat";
     if(csv[iLine][headers[col]] != ""){
       try {
@@ -152,6 +159,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
     }
 
+    //check uncertainty column is a double
     if(uncertainty_exists){
       col = "uncertainty";
       if(csv[iLine][headers[col]] != ""){
@@ -164,17 +172,23 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
     }
 
+    //check the Temp Dependent column fits the formulas provided
     col = "tempdependent";
     std::string value = csv[iLine][headers[col]];
     if(value != ""){
       std::string min = csv[iLine][headers["Temprange"]];
       if(csv[iLine][headers["FormulaType"]] == ""){
+        //check that there is a formula type provided
         temp_ok = false;
         error.push_back("FormulaType");
+
       } else if (csv[iLine][headers["FormulaType"]] == "1") {
+        //there are two formulas for type 1-- one is if there is a minimum in the temp range, the other if not
+        //either formula is allowed here
         std::string formula1 = "(" + csv[iLine][headers["Numerator"]] + "/" + csv[iLine][headers["Denominator"]] + ")";
         std::string formula2 = "(" + csv[iLine][headers["Denominator"]] + "/" + csv[iLine][headers["Numerator"]] + ")";
         
+        //check exponent is a double
         double exp;
         try {
           exp = stod(csv[iLine][headers["Exponent"]]);
@@ -183,12 +197,15 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
           error.push_back("Exponent");
         }
 
+        //check if the absolute value of the exponents match
         if(!(value.substr(0, value.find("^")) == formula1 || value.substr(0, value.find("^")) == formula2 
              || abs(exp) == abs(stod(value.substr(value.find("^")))))){
           temp_ok = false;
           error.push_back(col);
         }
+
       } else if (csv[iLine][headers["FormulaType"]] == "2") {
+        //this is for formula type 2, there weren't many examples, so it might be a restrictive formula
         std::string formula = csv[iLine][headers["Denominator"]] + "*exp(" + csv[iLine][headers["Numerator"]] + "/";
         formula += csv[iLine][headers["Denominator"]] + ")";
         
@@ -199,6 +216,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
     }
 
+    //check formula type is an integer and equals either 1 or 2
     col = "FormulaType";
     if(csv[iLine][headers[col]] != ""){
       try {
@@ -216,18 +234,20 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       }
     }
 
-      /*
-        for all, check first if it's empty THEN check
-          DONE if in column "loss" or "source" --> if the first character is a letter
-          DONE rate is a number
-          STARTED temp range is ["piecewise"] >/>=/< min/max
-          DONE branching is a # from 0 to 1
-          DONE heat is a double
-          DONE uncertainty is a double 
-          for temp dependency: == ([numerator]/[denominator])^[exponent] if formula type == 1,
-          temp*exp(numerator/temp)
-          contains "formula type" is an int
-        */
+    // check if the temp function fits the format (ex: Ti<20)
+    col = "Temprange";
+    std::string function = csv[iLine][headers[col]];
+    if(function != ""){
+      bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
+      bool has_number = function.find(csv[iLine][headers["Min"]]) != std::string::npos 
+                        || function.find(csv[iLine][headers["Max"]]) != std::string::npos;
+      if(!(function.substr(0, 2) == csv[iLine][headers["Denominator"]] || inequality || has_number)) {
+        temp_ok = false;
+        error.push_back(col);
+      }
+    }
+
+    //report errors when they are encountered, also update the function variable IsOk
     if(!temp_ok){
       std::cout << "There is an issue with the Chemistry csv file, on line " 
                 << iLine + 1 << ", with columns:\n";
