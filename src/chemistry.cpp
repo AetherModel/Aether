@@ -92,27 +92,32 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
   error.clear();
 
   //check individual values in the csv
-  for (int iLine = 2; iLine < csv.size() - 1; iLine++){
+  for (int iLine = 2; iLine < csv.size(); iLine++){
     if (csv[iLine][headers["rate"]].length() > 0) {
       bool temp_ok = true;
       std::string col;
       
       //check loss & source columns are elements or electrons
       //(check if the first character is a letter)
+      bool loss1 = csv[iLine][headers["loss1"]] == "";
+      bool source1 = csv[iLine][headers["source1"]] == "";
       for (int num = 1; num<4; num++){
         col = "loss" + std::to_string(num);
-        if(csv[iLine][headers[col]] != "")
-          if(!std::isalpha(csv[iLine][headers[col]][0])){
+        if(csv[iLine][headers[col]] != "") {
+          if(!std::isalpha(csv[iLine][headers[col]][0]) || (loss1 && num > 1)){
             temp_ok = false;
             error.push_back(col);
           }
-            
+        }
+
         col = "source" + std::to_string(num);
-        if(csv[iLine][headers[col]] != "")
-          if(!std::isalpha(csv[iLine][headers[col]][0])){
+        if(csv[iLine][headers[col]] != "") {
+          if(!std::isalpha(csv[iLine][headers[col]][0]) || (source1 && num > 1)){
+            std::cout << "here we went\n";
             temp_ok = false;
             error.push_back(col);
           }
+        }
       }
 
       //check rate column is a double
@@ -240,35 +245,35 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
           temp_ok = false;
           error.push_back("FormulaType");
         }
-
-    // check if the temp function fits the format (ex: Ti<20)
-    col = "Temprange";
-    if(find(exists.begin(), exists.end(), col) != exists.end()) {
-      std::string function = csv[iLine][headers[col]];
-      if(function != ""){
-        bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
-        bool has_number = function.find(csv[iLine][headers["Min"]]) != std::string::npos 
-                          || function.find(csv[iLine][headers["Max"]]) != std::string::npos;
-        if(!(function.substr(0, 2) == csv[iLine][headers["Denominator"]] || inequality || has_number)) {
-          temp_ok = false;
-          error.push_back(col);
+      }
+    }
+      
+      // check if the temp function fits the format (ex: Ti<20)
+      col = "Temprange";
+      if(find(exists.begin(), exists.end(), col) != exists.end()) {
+        std::string function = csv[iLine][headers[col]];
+        if(function != ""){
+          bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
+          bool has_number = function.find(csv[iLine][headers["Min"]]) != std::string::npos 
+                            || function.find(csv[iLine][headers["Max"]]) != std::string::npos;
+          if(!(function.substr(0, 2) == csv[iLine][headers["Denominator"]] || inequality || has_number)) {
+            temp_ok = false;
+            error.push_back(col);
+          }
         }
       }
-    }
 
-    //report errors when they are encountered, also update the function variable IsOk
-    if(!temp_ok){
-      std::cout << "There is an issue with the Chemistry csv file, on line " 
-                << iLine + 1 << ", with columns:\n";
-      for(std::string err : error) {
-        std::cout << err << ": ";
-        std::cout << csv[iLine][headers[err]] << "; \n";
+      //report errors when they are encountered, also update the function variable IsOk
+      if(!temp_ok){
+        std::cout << "There is an issue with the Chemistry csv file, on line " 
+                  << iLine + 1 << ", with columns:\n";
+        for(std::string err : error) {
+          std::cout << err << ": ";
+          std::cout << csv[iLine][headers[err]] << endl;
+        }
+        IsOk = false;
+        error.clear();
       }
-      IsOk = false;
-      error.clear();
-    }
-    }
-    }
     }
   }
   return IsOk;
