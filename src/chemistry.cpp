@@ -114,7 +114,6 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         col = "source" + std::to_string(num);
         if(csv[iLine][headers[col]] != "") {
           if(!std::isalpha(csv[iLine][headers[col]][0]) || (source1 && num > 1)){
-            std::cout << "here we went\n";
             temp_ok = false;
             error.push_back(col);
           }
@@ -235,28 +234,33 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         try {
             if(!(stoi(csv[iLine][headers[col]]) == 1 || stoi(csv[iLine][headers[col]]) == 2)){
               temp_ok = false;
-              error.push_back(col);
+              if(find(error.begin(), error.end(), col) == error.end())
+                error.push_back(col);
             } 
           } catch (std::invalid_argument & e){
             temp_ok = false;
-            error.push_back(col);
+            if(find(error.begin(), error.end(), col) == error.end())
+              error.push_back(col);
           }
         if(csv[iLine][headers["tempdependent"]] == ""){
           temp_ok = false;
-          error.push_back("FormulaType");
+          if(find(error.begin(), error.end(), col) == error.end())
+            error.push_back(col);
         }
       }
     }
       
-    // check if the temp function fits the format (ex: Ti<20)
-    col = "Temprange";
-    if(find(exists.begin(), exists.end(), col) != exists.end()) {
-      std::string function = csv[iLine][headers[col]];
-      if(function != ""){
-        bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
+      // check if the temp function fits the format (ex: Ti<20)
+      col = "Temprange";
+      if(find(exists.begin(), exists.end(), col) != exists.end()) {
+        std::string function = csv[iLine][headers[col]];
+        if(function != ""){
+          bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
           bool has_number = function.find(csv[iLine][headers["Min"]]) != std::string::npos 
                             || function.find(csv[iLine][headers["Max"]]) != std::string::npos;
-          if(!(function.substr(0, 2) == csv[iLine][headers["Denominator"]] || inequality || has_number)) {
+          bool has_denom = csv[iLine][headers["Piecewise"]] == "" || csv[iLine][headers["Piecewise"]] == function.substr(0, 2);
+
+          if(!has_denom || !inequality || !has_number) {
             temp_ok = false;
             error.push_back(col);
           }
