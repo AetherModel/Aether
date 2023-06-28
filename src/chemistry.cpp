@@ -54,7 +54,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
   bool IsOk = true;
 
   //check non-essential headers so that we don't call a non-existant column in checking values
-  std::vector<std::string> non_essentials = {"uncertainty", "Piecewise", "Tempdependent", "FormulaType", "Denominator", 
+  std::vector<std::string> non_essentials = {"uncertainty", "Piecewise", "tempdependent", "FormulaType", "Denominator", 
                                              "Numerator", "Exponent", "Temprange", "Min", "Max"};
   //create list of existing non-essential headers
   std::vector<std::string> exists;
@@ -93,8 +93,9 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
 
   //check individual values in the csv
   for (int iLine = 2; iLine < csv.size(); iLine++){
+    bool temp_ok = true;
+
     if (csv[iLine][headers["rate"]].length() > 0) {
-      bool temp_ok = true;
       std::string col;
       
       //check loss & source columns are elements or electrons
@@ -113,7 +114,6 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         col = "source" + std::to_string(num);
         if(csv[iLine][headers[col]] != "") {
           if(!std::isalpha(csv[iLine][headers[col]][0]) || (source1 && num > 1)){
-            std::cout << "here we went\n";
             temp_ok = false;
             error.push_back(col);
           }
@@ -199,18 +199,17 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
             std::string formula1 = "(" + csv[iLine][headers["Numerator"]] + "/" + csv[iLine][headers["Denominator"]] + ")";
             std::string formula2 = "(" + csv[iLine][headers["Denominator"]] + "/" + csv[iLine][headers["Numerator"]] + ")";
             
-            //check exponent is a double
-            double exp;
+            //check exponent & exponent of formula is a double
+            bool exp_match = false;
             try {
-              exp = stod(csv[iLine][headers["Exponent"]]);
+              exp_match = std::abs(stod(csv[iLine][headers["Exponent"]])) == std::abs(stod(value.substr(value.find("^") + 1)));
             } catch (std::invalid_argument & e){
               temp_ok = false;
               error.push_back("Exponent");
             }
-
-            //check if the absolute value of the exponents match
-            if(!(value.substr(0, value.find("^")) == formula1 || value.substr(0, value.find("^")) == formula2 
-                || abs(exp) == abs(stod(value.substr(value.find("^")))))){
+            
+            //check if the absolute value of the exponents match & the rest of the formula matches too
+            if(!(value.substr(0, value.find("^")) == formula1 || value.substr(0, value.find("^")) == formula2) || !exp_match){
               temp_ok = false;
               error.push_back(col);
             }
@@ -235,15 +234,18 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
         try {
             if(!(stoi(csv[iLine][headers[col]]) == 1 || stoi(csv[iLine][headers[col]]) == 2)){
               temp_ok = false;
-              error.push_back(col);
+              if(find(error.begin(), error.end(), col) == error.end())
+                error.push_back(col);
             } 
           } catch (std::invalid_argument & e){
             temp_ok = false;
-            error.push_back(col);
+            if(find(error.begin(), error.end(), col) == error.end())
+              error.push_back(col);
           }
         if(csv[iLine][headers["tempdependent"]] == ""){
           temp_ok = false;
-          error.push_back("FormulaType");
+          if(find(error.begin(), error.end(), col) == error.end())
+            error.push_back(col);
         }
       }
     }
@@ -256,24 +258,25 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
           bool inequality = function.find(">") != std::string::npos || function.find("<") != std::string::npos;
           bool has_number = function.find(csv[iLine][headers["Min"]]) != std::string::npos 
                             || function.find(csv[iLine][headers["Max"]]) != std::string::npos;
-          if(!(function.substr(0, 2) == csv[iLine][headers["Denominator"]] || inequality || has_number)) {
+          bool has_denom = csv[iLine][headers["Piecewise"]] == "" || csv[iLine][headers["Piecewise"]] == function.substr(0, 2);
+
+          if(!has_denom || !inequality || !has_number) {
             temp_ok = false;
             error.push_back(col);
           }
         }
       }
-
-      //report errors when they are encountered, also update the function variable IsOk
-      if(!temp_ok){
-        std::cout << "There is an issue with the Chemistry csv file, on line " 
-                  << iLine + 1 << ", with columns:\n";
-        for(std::string err : error) {
-          std::cout << err << ": ";
-          std::cout << csv[iLine][headers[err]] << endl;
-        }
-        IsOk = false;
-        error.clear();
+    }
+    //report errors when they are encountered, also update the function variable IsOk
+    if(!temp_ok){
+      std::cout << "There is an issue with the Chemistry csv file, on line " 
+                << iLine + 1 << ", with columns:\n";
+      for(std::string err : error) {
+        std::cout << err << ": ";
+        std::cout << csv[iLine][headers[err]] << endl;
       }
+      IsOk = false;
+      error.clear();
     }
   }
   return IsOk;

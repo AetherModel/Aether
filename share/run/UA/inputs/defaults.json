@@ -59,7 +59,7 @@
     "Seed" : 0,
     
     "F107File" : "UA/inputs/f107.txt",
-    "ChemistryFile" : "UA/inputs/chemistry_earth_richards_copy.csv",
+    "ChemistryFile" : "UA/inputs/chemistry_earth_richards.csv",
     "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
     "PlanetCharacteristicsFile" : "UA/inputs/orbits.csv",
     "AuroraFile" : "UA/inputs/aurora_earth.csv",
