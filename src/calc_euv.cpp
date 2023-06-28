@@ -83,6 +83,8 @@ void calc_ionization_heating(Euv euv,
   arma_mat intensity2d = neutrals.heating_euv_scgc.slice(0);
   arma_mat ionization2d = neutrals.heating_euv_scgc.slice(0);
 
+  int64_t iPei, j_;
+  
   for (iAlt = 2; iAlt < nAlts - 2; iAlt++) {
     for (iWave = 0; iWave < euv.nWavelengths; iWave++) {
 
@@ -98,7 +100,7 @@ void calc_ionization_heating(Euv euv,
       }
 
       intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
-
+      
       for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
         // index of photo abs cross section
@@ -124,6 +126,18 @@ void calc_ionization_heating(Euv euv,
             intensity2d %
             neutrals.species[iSpecies].density_scgc.slice(iAlt);
 
+	  // Test for an augmentation due to photo-electrons:
+
+	  for (iPei = 0;
+	       iPei < neutrals.species[iSpecies].nEuvPeiSpecies;
+	       iPei++) {
+	    if (neutrals.species[iSpecies].iEuvIonSpecies_[iPei] ==
+		neutrals.species[iSpecies].iEuvIonSpecies_[iIonization]) {
+	      j_ = neutrals.species[iSpecies].iEuvIonId_[iPei];	    
+	      ionization2d[iWave] *= (1 + euv.waveinfo[j_].values[iWave]);
+	    }
+	  }
+	  
           neutrals.species[iSpecies].ionization_scgc.slice(iAlt) =
             neutrals.species[iSpecies].ionization_scgc(iAlt) + ionization2d;
 
