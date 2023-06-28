@@ -74,6 +74,18 @@ public:
   /// EUVAC model linear coefficients (2):
   std::vector<float> euvac_afac;
 
+  /// NEUVAC model linear coefficients (1-3):
+  std::vector<float> neuvac_s1;
+  std::vector<float> neuvac_s2;
+  std::vector<float> neuvac_s3;
+
+  /// NEUVAC model powers (1-2):
+  std::vector<float> neuvac_p1;
+  std::vector<float> neuvac_p2;
+
+  /// NEUVAC model intercept:
+  std::vector<float> neuvac_int;
+  
   // --------------------------------------------------------------------
   // Functions:
 
@@ -91,6 +103,14 @@ public:
      \param report allow reporting to occur
    **/
   int euvac(Times time, Indices indices, Report &report);
+
+  /**********************************************************************
+     \brief Compute the EUV spectrum given F107 and F107a (new version)
+     \param time The times within the model (dt is needed)
+     \param indices Need the F107 and F107a
+     \param report allow reporting to occur
+   **/
+  int neuvac(Times time, Indices indices, Report &report);
 
   /**********************************************************************
      \brief Scale the EUV spectrum given the star - planet distance
