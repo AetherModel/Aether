@@ -90,7 +90,7 @@ int main() {
     Ions ions(gGrid, planet, input, report);
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
-    euv.pair_euv(neutrals, ions, report);
+    euv.pair_euv(neutrals, ions, input, report);
 
     // Initialize Chemical scheme (including reading file):
     Chemistry chemistry(neutrals, ions, input, report);

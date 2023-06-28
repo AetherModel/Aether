@@ -332,6 +332,14 @@ precision_t Inputs::get_euv_heating_eff_neutrals() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to include the photoelectron ionization
+// -----------------------------------------------------------------------
+
+bool Inputs::get_include_photoelectrons() {
+  return settings["Euv"]["IncludePhotoElectrons"];
+}
+
+// -----------------------------------------------------------------------
 // Return how often to calculate EUV energy deposition
 // -----------------------------------------------------------------------
 

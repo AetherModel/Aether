@@ -206,10 +206,15 @@ bool Euv::slot_euv(std::string item,
 // out which ion it is producing (the "to" column).
 // ---------------------------------------------------------------------
 
-bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
+bool Euv::pair_euv(Neutrals &neutrals,
+		   Ions ions,
+		   Inputs input,
+		   Report report) {
 
   bool DidWork = true;
 
+  bool includePhotoelectrons = input.get_include_photoelectrons();
+  
   if (report.test_verbose(3))
     std::cout << "Euv::pair_euv \n";
 
@@ -220,6 +225,7 @@ bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
 
     neutrals.species[iSpecies].iEuvAbsId_ = -1;
     neutrals.species[iSpecies].nEuvIonSpecies = 0;
+    neutrals.species[iSpecies].nEuvPeiSpecies = 0;
 
     // Check each row to see if the first column "name" matches:
     int64_t nEuvs = waveinfo.size();
@@ -256,6 +262,26 @@ bool Euv::pair_euv(Neutrals &neutrals, Ions ions, Report report) {
             }  // if to
           }  // iIon loop
         }  // if ionization
+
+        // Next see if we can find ionizations:
+        if (waveinfo[iEuv].type == "pei" &&
+	    includePhotoelectrons) {
+
+          // Loop through the ions to see if names match:
+          for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
+            if (ions.species[iIon].cName == waveinfo[iEuv].to) {
+              if (report.test_verbose(5))
+                std::cout << "  Found photo-electron augmentation!! --> "
+                          << ions.species[iIon].cName << "\n";
+
+              neutrals.species[iSpecies].iEuvPeiId_.push_back(iEuv);
+              neutrals.species[iSpecies].iEuvPeiSpecies_.push_back(iIon);
+              neutrals.species[iSpecies].nEuvPeiSpecies++;
+            }  // if to
+          }  // iIon loop
+        }  // if ionization
+
+
       }  // if species is name
     }  // for iEuv
   }  // for iSpecies
