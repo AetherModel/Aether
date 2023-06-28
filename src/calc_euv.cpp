@@ -37,7 +37,10 @@ int calc_euv(Planets planet,
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid, report);
 
-    iErr = euv.euvac(time, indices, report);
+    if (input.get_euv_model() == "euvac")
+      iErr = euv.euvac(time, indices, report);
+    if (input.get_euv_model() == "neuvac")
+      iErr = euv.neuvac(time, indices, report);
     iErr = euv.scale_from_1au(planet, time, report);
 
     calc_ionization_heating(euv, neutrals, ions, report);
