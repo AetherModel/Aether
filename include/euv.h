@@ -131,9 +131,13 @@ public:
 
      \param neutrals Needs names of the neutrals, stores lines in Neutrals
      \param ions Needs names of the ions
+     \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  bool pair_euv(Neutrals &neutrals, Ions ions, Report report);
+  bool pair_euv(Neutrals &neutrals,
+		Ions ions,
+		Inputs input,
+		Report report);
 
   /**********************************************************************
      \brief Check to see if internal state of class is ok
