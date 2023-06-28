@@ -55,19 +55,17 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     //    reaction rate * loss den 1 * loss den 2 (* loss den 3 if needed)
 
     change3d.fill(rate);
-
+    
     // check for type of temperature dependence and calculate
     if (reactions[iReaction].type > 0) {
       // Determined which temperature to use in equation:
-      // use Ti by default
-      arma_cube temp = ions.temperature_scgc;
+      // use Tn by default
+      arma_cube temp = neutrals.temperature_scgc;
       std::string denom = reactions[iReaction].denominator;
-
       if (denom == "Te")
         temp = ions.electron_temperature_scgc;
-      else if (denom == "Tn")
-        temp = neutrals.temperature_scgc;
-
+      else if (denom == "Ti")
+        temp = ions.temperature_scgc;
       // Calculate reaction rate:
       if (reactions[iReaction].numerator &&
           reactions[iReaction].type == 1) {
@@ -112,7 +110,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
       }
     }
-
+    
     // if temperature dependence is piecewise, only operate on cells
     // within temperature range:
     if (reactions[iReaction].min || reactions[iReaction].max) {
@@ -131,7 +129,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       if (reactions[iReaction].max > 0)
         change3d = change3d % (change3d <= reactions[iReaction].max);
     }
-
+    
     // Now that the reaction rate is calculated, multiply by the
     // densities on the left side of the equation (loss terms):
     for (iLoss = 0; iLoss < reactions[iReaction].nLosses; iLoss++) {
