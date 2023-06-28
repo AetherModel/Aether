@@ -46,6 +46,22 @@ Euv::Euv(Inputs args, Report report) {
       IsOk = slot_euv("F74113", "", euvac_f74113, report);
       IsOk = slot_euv("AFAC", "", euvac_afac, report);
     }
+
+    // Slot the EUVAC model coefficients:
+    if (args.get_euv_model() == "neuvac") {
+      IsOk = slot_euv("NEUV_S1", "", neuvac_s1, report);
+      if (IsOk)
+	IsOk = slot_euv("NEUV_S2", "", neuvac_s2, report);
+      if (IsOk)
+	IsOk = slot_euv("NEUV_S3", "", neuvac_s3, report);
+      if (IsOk)
+	IsOk = slot_euv("NEUV_P1", "", neuvac_p1, report);
+      if (IsOk)
+	IsOk = slot_euv("NEUV_P2", "", neuvac_p2, report);
+      if (IsOk)
+	IsOk = slot_euv("NEUV_I1", "", neuvac_int, report);
+    }
+    
   }
 
   IsOk = sync_across_all_procs(IsOk);
@@ -81,6 +97,7 @@ bool Euv::read_file(Inputs args, Report report) {
 
       while (getline(infile_ptr, line)) {
         report.print(5, line);
+	line = strip_spaces(line);
         std::stringstream ss(line);
 
         // This is just to count the number of wavelengths.
@@ -295,10 +312,55 @@ int Euv::euvac(Times time,
     wavelengths_intensity_1au[iWave] = euvac_f74113[iWave] * slope * pcm2topm2;
   }
 
-  if (report.test_verbose(7)) {
+  if (report.test_verbose(4)) {
     std::cout << "EUVAC output : "
               << f107 << " " << f107a
               << " -> " << mean_f107 << "\n";
+
+    for (int iWave = 0; iWave < nWavelengths; iWave++) {
+      std::cout << "     " << iWave << " "
+                << wavelengths_short[iWave] << " "
+                << wavelengths_long[iWave] << " "
+                << wavelengths_intensity_1au[iWave] << "\n";
+    }
+  }
+
+  report.exit(function);
+  return iErr;
+}
+
+// --------------------------------------------------------------------------
+// Calculate EUVAC
+// --------------------------------------------------------------------------
+
+int Euv::neuvac(Times time,
+		Indices indices,
+		Report &report) {
+
+  int iErr = 0;
+  precision_t slope;
+
+  std::string function = "Euv::neuvac";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  precision_t f107 = indices.get_f107(time.get_current());
+  precision_t f107a = indices.get_f107a(time.get_current());
+  precision_t f107_diff = f107a - f107;
+
+  precision_t f107p, f107ap;
+  
+  for (int iWave = 0; iWave < nWavelengths; iWave++)
+    wavelengths_intensity_1au[iWave] = (
+      neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
+      neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
+      neuvac_s2[iWave] * (f107_diff) +
+      neuvac_int[iWave]) / wavelengths_energy[iWave];
+
+  if (report.test_verbose(4)) {
+    std::cout << "NEUVAC output : "
+              << f107 << " " << f107a
+              << " -> " << f107_diff << "\n";
 
     for (int iWave = 0; iWave < nWavelengths; iWave++) {
       std::cout << "     " << iWave << " "
