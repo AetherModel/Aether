@@ -25,6 +25,7 @@
     "Euv" : {
 	"Model" : "euvac",
 	"File" : "UA/inputs/euv.csv",
+	"IncludePhotoElectrons" : true,
 	"HeatingEfficiency" : 0.05,
 	"dt" : 60.0},
 
