@@ -258,7 +258,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   if (headers.contains("Numerator")) {
     if (line[headers["Numerator"]].length() > 0) {
       reaction.numerator =  str_to_num(line[headers["Numerator"]]);
-      reaction.denominator = str_to_num(line[headers["Denominator"]]);
+      reaction.denominator = line[headers["Denominator"]];
 
       if (line[headers["Exponent"]].length() > 0)
         reaction.exponent = str_to_num(line[headers["Exponent"]]);
