@@ -62,7 +62,6 @@ int Electrodynamics::update(Planets planet,
   }
 
   report.exit(function);
-  //cout << "Found it: update function in electrodynamics.cpp\n";
   return 0;
 }
 
@@ -327,7 +326,6 @@ void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts, Report &report) {
 
 
   report.exit(function);
- // cout << "Found it: set_grid in electrodynamics.cpp\n";
 }
 
 // -----------------------------------------------------------------------------

@@ -29,10 +29,6 @@ int calc_euv(Planets planet,
     std::string function = "Euv::calc_euv";
     static int iFunction = -1;
     report.enter(function, iFunction);
-
-    if (input.get_is_student())
-      report.print(-1, "(2) What function is this " +
-		   input.get_student_name() + "? Found it: calc_euv in calc_euv.cpp");
     
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid, report);
@@ -139,6 +135,5 @@ void calc_ionization_heating(Euv euv,
     neutrals.Cv_scgc;
 
   report.exit(function);
-  //std::cout << "Found it: calc_ionization_heating in calc_euv.cpp\n";
   return;
 }

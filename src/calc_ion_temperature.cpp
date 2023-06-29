@@ -134,6 +134,5 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   }
 
   report.exit(function);
-    //cout << "Found it: calc_ion_temperature in calc_ion_temperature.cpp\n";
   return;
 }

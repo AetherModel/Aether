@@ -321,7 +321,6 @@ void calc_aurora(Grid grid,
   }  // nLons
 
   report.exit(function);
-  //cout << "Found it: calc_aurora in aurora.cpp\n";
 }
 
 

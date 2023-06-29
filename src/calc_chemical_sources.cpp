@@ -86,5 +86,4 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
   }  // for iReaction
 
   report.exit(function);
-    //cout << "Found it: calc_chemical_sources in calc_chemical_sources.cpp\n";
 }
