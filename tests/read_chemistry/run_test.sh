@@ -4,12 +4,12 @@
 rm -rf run.no_errors
 
 # run without any errors to check it works:
-#cp -R ../../share/run ./run.no_errors
-#cd run.no_errors
-#./aether
+cp -R ../../share/run ./run.no_errors
+cd run.no_errors
+./aether
 
 #now we get into the real testing
-#cd ../
+cd ../
 cd run.errors/UA/inputs
 for i in 0 1 2 3 4 5; 
 do 
