@@ -61,7 +61,8 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
   for(std::string head : non_essentials)
     exists.push_back(search(head, headers, error) ? head : "");
   error.clear();
-  //Check for columns that have "loss_something", "source_something", "rate", "branching", "heat"
+
+  //Check for columns that are essential, have "loss_something", "source_something", "rate", "branching", "heat"
   for(int i = 1; i < 4; ++i){
     //check loss
     std::string title = "loss" + std::to_string(i);
@@ -88,6 +89,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
     for(std::string err : error)
       std::cout << err << " ";
     std::cout << endl;
+    return false;
   }
   error.clear();
 
@@ -95,6 +97,11 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
   for (int iLine = 2; iLine < csv.size(); iLine++){
     bool temp_ok = true;
 
+    if(csv[0].size() != csv[iLine].size()) {
+      std::cout << "There are " << headers.size() << " headers but " << csv[iLine].size() << " columns in line " << iLine << ".\n";
+      return false;
+    }
+    
     if (csv[iLine][headers["rate"]].length() > 0) {
       std::string col;
       
@@ -329,9 +336,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
-        if(!check_chemistry_file(headers, csv, report))
+        if(!check_chemistry_file(headers, csv, report)) {
           iErr = 1;
-       
+          throw std::invalid_argument( "Invalid chemistry file" );
+        }
+
         nReactions = 0;
 
         // Skip 2 lines of headers!

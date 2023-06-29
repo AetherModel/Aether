@@ -1,0 +1,109 @@
+{
+  "AuroraFile": "UA/inputs/aurora_earth.csv",
+  "BField": "dipole",
+  "BoundaryConditions": {
+    "type": "Planet"
+  },
+  "ChemistryFile": "UA/inputs/chemistry_check_5.csv",
+  "CollisionsFile": "UA/inputs/ion_neutral_collision_frequencies.csv",
+  "CubeSphere": {
+    "is": false
+  },
+  "Debug": {
+    "TimingPercent": 1.0,
+    "doInheritVerbose": false,
+    "dt": 10.0,
+    "iFunctionVerbose": null,
+    "iProc": 0,
+    "iTimingDepth": 5,
+    "iVerbose": 0
+  },
+  "DoCalcBulkIonTemp": false,
+  "ElectrodynamicsFile": "UA/inputs/b20110320n_omni.bin",
+  "EndTime": [
+    2011,
+    3,
+    20,
+    0,
+    10,
+    0
+  ],
+  "Ensembles": {
+    "nMembers": 1
+  },
+  "Euv": {
+    "File": "UA/inputs/euv.csv",
+    "HeatingEfficiency": 0.05,
+    "Model": "euvac",
+    "dt": 60.0
+  },
+  "F107File": "UA/inputs/f107.txt",
+  "GeoBlockSize": {
+    "nAlts": 50,
+    "nBlocksLat": 1,
+    "nBlocksLon": 1,
+    "nLats": 18,
+    "nLons": 18
+  },
+  "GeoGrid": {
+    "AltFile": "",
+    "IsUniformAlt": true,
+    "MaxLat": 90.0,
+    "MaxLon": 360.0,
+    "MinAlt": 100.0,
+    "MinLat": -90.0,
+    "MinLon": 0.0,
+    "dAlt": 5.0
+  },
+  "IndicesLookupFile": "UA/inputs/indices_lookup.json",
+  "InitialConditions": {
+    "type": "Planet"
+  },
+  "Logfile": {
+    "append": false,
+    "dt": 10.0,
+    "name": "UA/output/log.txt",
+    "species": [
+      "O2",
+      "O2+"
+    ]
+  },
+  "OmniwebFiles": [
+    "UA/inputs/omni_20110319.txt"
+  ],
+  "OnmiwebFile": [
+    ""
+  ],
+  "Outputs": {
+    "dt": [
+      900,
+      0.0
+    ],
+    "type": [
+      "states",
+      "bfield"
+    ]
+  },
+  "Planet": "earth",
+  "PlanetCharacteristicsFile": "UA/inputs/orbits.csv",
+  "PlanetSpeciesFile": "UA/inputs/earth.in",
+  "Restart": {
+    "InDir": "UA/restartIn",
+    "OutDir": "UA/restartOut",
+    "do": false,
+    "dt": 3600.0
+  },
+  "Seed": -1776180707,
+  "StartTime": [
+    2011,
+    3,
+    20,
+    0,
+    0,
+    0
+  ],
+  "Student": {
+    "is": false,
+    "name": ""
+  }
+}
