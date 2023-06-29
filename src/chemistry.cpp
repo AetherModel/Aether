@@ -88,6 +88,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
     for(std::string err : error)
       std::cout << err << " ";
     std::cout << endl;
+    return false;
   }
   error.clear();
 
@@ -329,9 +330,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
-        if(!check_chemistry_file(headers, csv, report))
+        if(!check_chemistry_file(headers, csv, report)) {
           iErr = 1;
-       
+          throw std::invalid_argument( "Invalid chemistry file" );
+        }
+
         nReactions = 0;
 
         // Skip 2 lines of headers!
