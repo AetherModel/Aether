@@ -74,6 +74,13 @@ public:
   /// EUVAC model linear coefficients (2):
   std::vector<float> euvac_afac;
 
+  /// HFG model linear coefficients (1):
+  std::vector<float> solomon_hfg_c1;
+  /// HFG model linear coefficients (2):
+  std::vector<float> solomon_hfg_c2;
+  /// HFG model linear coefficients (3):
+  std::vector<float> solomon_hfg_fref;
+  
   /// NEUVAC model linear coefficients (1-3):
   std::vector<float> neuvac_s1;
   std::vector<float> neuvac_s2;
@@ -104,6 +111,14 @@ public:
    **/
   int euvac(Times time, Indices indices, Report &report);
 
+ /**********************************************************************
+     \brief Compute the EUV spectrum given F107 and F107a
+     \param time The times within the model (dt is needed)
+     \param indices Need the F107 and F107a
+     \param report allow reporting to occur
+   **/
+  int solomon_hfg(Times time, Indices indices, Report &report);
+  
   /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a (new version)
      \param time The times within the model (dt is needed)
@@ -137,7 +152,7 @@ public:
   bool pair_euv(Neutrals &neutrals,
 		Ions ions,
 		Inputs input,
-		Report report);
+		Report &report);
 
   /**********************************************************************
      \brief Check to see if internal state of class is ok

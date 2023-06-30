@@ -61,6 +61,14 @@ Euv::Euv(Inputs args, Report report) {
       if (IsOk)
 	IsOk = slot_euv("NEUV_I1", "", neuvac_int, report);
     }
+
+    if (args.get_euv_model() == "hfg") {
+      IsOk = slot_euv("HFGc1", "", solomon_hfg_c1, report);
+      if (IsOk)
+	IsOk = slot_euv("HFGc2", "", solomon_hfg_c2, report);
+      if (IsOk)
+	IsOk = slot_euv("HFGfref", "", solomon_hfg_fref, report);
+    }
     
   }
 
@@ -209,15 +217,16 @@ bool Euv::slot_euv(std::string item,
 bool Euv::pair_euv(Neutrals &neutrals,
 		   Ions ions,
 		   Inputs input,
-		   Report report) {
+		   Report &report) {
+
+  std::string function = "Euv::pair_euv";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   bool DidWork = true;
 
   bool includePhotoelectrons = input.get_include_photoelectrons();
   
-  if (report.test_verbose(3))
-    std::cout << "Euv::pair_euv \n";
-
   for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
     if (report.test_verbose(5))
@@ -232,7 +241,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
     for (int64_t iEuv = 0; iEuv < nEuvs; iEuv++) {
 
-      if (report.test_verbose(6))
+      if (report.test_verbose(4))
         std::cout << "  " << waveinfo[iEuv].name << "\n";
 
       // if this matches...
@@ -240,7 +249,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
         // First see if we can find absorbtion:
         if (waveinfo[iEuv].type == "abs") {
-          if (report.test_verbose(5))
+          if (report.test_verbose(4))
             std::cout << "  Found absorbtion\n";
 
           neutrals.species[iSpecies].iEuvAbsId_ = iEuv;
@@ -252,7 +261,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
           // Loop through the ions to see if names match:
           for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
             if (ions.species[iIon].cName == waveinfo[iEuv].to) {
-              if (report.test_verbose(5))
+              if (report.test_verbose(4))
                 std::cout << "  Found ionization!! --> "
                           << ions.species[iIon].cName << "\n";
 
@@ -286,6 +295,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
     }  // for iEuv
   }  // for iSpecies
 
+  report.exit(function);
   return DidWork;
 }
 
@@ -387,6 +397,51 @@ int Euv::neuvac(Times time,
     std::cout << "NEUVAC output : "
               << f107 << " " << f107a
               << " -> " << f107_diff << "\n";
+
+    for (int iWave = 0; iWave < nWavelengths; iWave++) {
+      std::cout << "     " << iWave << " "
+                << wavelengths_short[iWave] << " "
+                << wavelengths_long[iWave] << " "
+                << wavelengths_intensity_1au[iWave] << "\n";
+    }
+  }
+
+  report.exit(function);
+  return iErr;
+}
+
+
+// --------------------------------------------------------------------------
+// Calculate HFG
+// --------------------------------------------------------------------------
+
+int Euv::solomon_hfg(Times time,
+               Indices indices,
+               Report &report) {
+
+  std::string function = "Euv::solomon_hfg";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iErr = 0;
+  precision_t r1;
+  precision_t r2;
+  
+  precision_t f107 = indices.get_f107(time.get_current());
+  precision_t f107a = indices.get_f107a(time.get_current());
+
+  for (int iWave = 0; iWave < nWavelengths; iWave++) {
+    r1 = 0.0138 * (f107 - 71.5) + 0.005 * (f107 - f107a + 3.9);
+    r2 = 0.5943 * (f107 - 71.5) + 0.381 * (f107 - f107a + 3.9);
+    wavelengths_intensity_1au[iWave] =
+      (solomon_hfg_fref[iWave] +
+       (r1 * solomon_hfg_c1[iWave]) +
+       (r2 * solomon_hfg_c2[iWave])) * pcm2topm2; 
+  }
+
+  if (report.test_verbose(4)) {
+    std::cout << "HFG output : "
+              << f107 << " " << f107a << "\n";
 
     for (int iWave = 0; iWave < nWavelengths; iWave++) {
       std::cout << "     " << iWave << " "

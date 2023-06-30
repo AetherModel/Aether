@@ -41,6 +41,9 @@ int calc_euv(Planets planet,
       iErr = euv.euvac(time, indices, report);
     if (input.get_euv_model() == "neuvac")
       iErr = euv.neuvac(time, indices, report);
+    if (input.get_euv_model() == "hfg")
+      iErr = euv.solomon_hfg(time, indices, report);
+    
     iErr = euv.scale_from_1au(planet, time, report);
 
     calc_ionization_heating(euv, neutrals, ions, report);
