@@ -12,7 +12,7 @@ cd UA/output
 ../../../../../srcPython/postAether.py -rm
 # This assumes aetherpy is installed and the plotter is in the bin directory:
 ~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
+~/bin/run_plot_block_model_results.py -var=O2+ -alt=3 3DALL_20110320_003000.nc
 # into test directory
 cd ../../..
 
@@ -25,7 +25,7 @@ cd UA/output
 ../../../../../srcPython/postAether.py -rm
 # This assumes aetherpy is installed and the plotter is in the bin directory:
 ~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
+~/bin/run_plot_block_model_results.py -var=O2+ -alt=3 3DALL_20110320_003000.nc
 # into test directory
 cd ../../..
 
@@ -38,7 +38,7 @@ cd UA/output
 ../../../../../srcPython/postAether.py -rm
 # This assumes aetherpy is installed and the plotter is in the bin directory:
 ~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
+~/bin/run_plot_block_model_results.py -var=O2+ -alt=3 3DALL_20110320_003000.nc
 # into test directory
 cd ../../..
 
@@ -51,7 +51,7 @@ cd UA/output
 ../../../../../srcPython/postAether.py -rm
 # This assumes aetherpy is installed and the plotter is in the bin directory:
 ~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
+~/bin/run_plot_block_model_results.py -var=O2+ -alt=3 3DALL_20110320_003000.nc
 # into test directory
 cd ../../.. 
 
