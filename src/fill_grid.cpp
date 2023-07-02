@@ -336,7 +336,7 @@ void Grid::calc_cent_acc(Planets planet) {
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   // Longitudanal cent acc
-  cent_acc_vcgc[0] = 0;
+  cent_acc_vcgc[0].zeros();
 
   float omega = planet.get_omega();
   float omega2 = omega * omega;

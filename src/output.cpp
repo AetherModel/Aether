@@ -458,6 +458,8 @@ OutputContainer::OutputContainer() {
 #else
   output_type = binary_type;
 #endif
+
+
 }
 
 // -----------------------------------------------------------------------------
@@ -594,7 +596,7 @@ void output_binary_3d(std::ofstream &binary,
   // delete the c-array
   free(tmp_s3gc);
 }
-
+// DELETE read container binary  tools.cpp 
 // -----------------------------------------------------------------------------
 // dump the contents of the container out into a binary file
 // -----------------------------------------------------------------------------

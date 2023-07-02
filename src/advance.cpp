@@ -74,7 +74,7 @@ int advance(Planets &planet,
   if (input.get_O_cooling() == true)
     neutrals.calc_O_cool(report);
 
-  if (input.get_NO_cooling() == true)
+  if (input.get_NO_cooling())
     neutrals.calc_NO_cool(report);
 
   neutrals.exchange(gGrid, report);
