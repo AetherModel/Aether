@@ -199,6 +199,21 @@ bool Inputs::get_do_restart() {
 }
 
 // -----------------------------------------------------------------------
+// Return NO cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_NO_cooling() {
+  return settings["Sources"]["Neutrals"]["NO_cool"];
+}
+
+// -----------------------------------------------------------------------
+// Return O cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_O_cooling() {
+  return settings["Sources"]["Neutrals"]["O_cool"];
+}
+// -----------------------------------------------------------------------
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 
@@ -277,6 +292,8 @@ precision_t Inputs::get_n_outputs() {
 int Inputs::get_original_seed() {
   return settings["Seed"];
 }
+
+
 
 // -----------------------------------------------------------------------
 // Set random number seed

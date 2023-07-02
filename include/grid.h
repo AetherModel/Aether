@@ -67,7 +67,7 @@ public:
   arma_cube radius2_scgc;
   arma_cube radius2i_scgc;
   arma_cube gravity_scgc;
-  
+
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
 

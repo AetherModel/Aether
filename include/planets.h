@@ -63,7 +63,7 @@ public:
      \param latitude the latitude to get the radius at.
    **/
   precision_t get_radius(precision_t latitude);
-
+  
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time
 
@@ -105,7 +105,7 @@ public:
      \brief Returns the strength of the dipole at the surface (in nT)
    **/
   precision_t get_dipole_strength();
-  
+
   /**********************************************************************
      \brief returns neutrals json for neutral density BCs
    **/
