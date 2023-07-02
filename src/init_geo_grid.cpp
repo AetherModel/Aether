@@ -581,6 +581,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   IsGeoGrid = 1;
 
+  IsCubeSphereGrid = input.get_is_cubesphere();
+
   if (input.get_is_cubesphere())
     create_cubesphere_connection(quadtree, input, report);
   else

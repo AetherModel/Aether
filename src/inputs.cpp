@@ -84,6 +84,38 @@ bool Inputs::write_restart() {
 }
 
 // -----------------------------------------------------------------------
+// Settings for logfile
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_logfile() {
+  return settings["Logfile"]["name"];
+}
+
+precision_t Inputs::get_logfile_dt() {
+  return settings["Logfile"]["dt"];
+}
+
+bool Inputs::get_logfile_append() {
+  return settings["Logfile"]["append"];
+}
+
+int64_t Inputs::get_n_species() {
+  return settings["Logfile"]["species"].size();
+}
+
+std::vector<std::string> Inputs::get_species_vector() {
+  std::vector<std::string> species;
+  std::string value;
+
+  for (int iOutput = 0; iOutput < get_n_species(); iOutput++) {
+    value = settings.at("Logfile").at("species").at(iOutput);
+    species.push_back(value);
+  }
+
+  return species;
+}
+
+// -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
 // -----------------------------------------------------------------------
 
@@ -496,6 +528,32 @@ json Inputs::get_perturb_values() {
 
   if (settings.contains("Perturb"))
     values = settings["Perturb"];
+
+  return values;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+json Inputs::get_initial_condition_types() {
+  json values;
+
+  if (settings.contains("InitialConditions"))
+    values = settings["InitialConditions"];
+
+  return values;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+json Inputs::get_boundary_condition_types() {
+  json values;
+
+  if (settings.contains("BoundaryConditions"))
+    values = settings["BoundaryConditions"];
 
   return values;
 }

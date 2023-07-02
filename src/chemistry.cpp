@@ -6,6 +6,9 @@
 #include <vector>
 #include <iostream>
 
+#include <sstream>
+
+
 #include "aether.h"
 
 // -----------------------------------------------------------------------------
@@ -141,16 +144,16 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   }
 
   // Reaction Rate:
-  reaction.rate = stof(line[7]);
+  reaction.rate = str_to_num(line[7]);
 
   // for base, this is 8, for richards, this is 10:
   int iBranch_ = 8;
 
   // Branching Ratio:
-  reaction.branching_ratio = stof(line[iBranch_]);
+  reaction.branching_ratio = str_to_num(line[iBranch_]);
 
   // energy released as exo-thermic reaction:
-  reaction.energy = stof(line[iBranch_ + 1]);
+  reaction.energy = str_to_num(line[iBranch_ + 1]);
 
   report.exit(function);
   return reaction;
