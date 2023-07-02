@@ -70,6 +70,17 @@ int advance(Planets &planet,
   neutrals.set_bcs(report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
+
+  
+  //if (input.get_cent_acc())
+  //{
+    //cout << "T/F: " << input.get_cent_acc()<< endl;
+   // gGrid.calc_cent_acc(planet);
+
+  //}
+
+  
+
   neutrals.exchange(gGrid, report);
 
   time.increment_time();

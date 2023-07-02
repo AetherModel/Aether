@@ -81,7 +81,8 @@ int main() {
     gGrid.fill_grid(planet, report);
 
     //calc_centriptal
-    gGrid.calc_cent_acc(planet);
+    //gGrid.calc_cent_acc(planet);
+    
 
     // Initialize Magnetic grid:
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);

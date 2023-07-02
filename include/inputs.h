@@ -48,6 +48,7 @@ public:
   json get_perturb_values();  
 
   bool get_is_cubesphere();
+  bool get_cent_acc();
 
   std::string get_student_name();
   bool get_is_student();
