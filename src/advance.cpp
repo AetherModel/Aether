@@ -73,12 +73,11 @@ int advance(Planets &planet,
 
 
   
-  //if (input.get_cent_acc())
-  //{
-    //cout << "T/F: " << input.get_cent_acc()<< endl;
-   // gGrid.calc_cent_acc(planet);
-
-  //}
+  if (input.get_cent_acc())
+  {
+    cout << "T/F: " << input.get_cent_acc()<< endl;
+    gGrid.calc_cent_acc(planet);
+  }
 
   
 
