@@ -342,7 +342,7 @@ void Grid::calc_cent_acc(Planets planet) {
   float omega = planet.get_omega();
   float omega2 = omega * omega;
 
-  // Latitudanal cent acc
+  // Latitudinal cent acc
   cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(geoLat_scgc);
 
   // Radial cent acc

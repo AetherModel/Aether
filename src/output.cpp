@@ -201,15 +201,19 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
-      if (type_output == "cent_acc") {
-        AllOutputContainers[iOutput].store_variable("radius",
-                                                    "Magnetic Latitude",
-                                                    "degrees",
-                                                    grid.radius_scgc);
-        AllOutputContainers[iOutput].store_variable("geoLat",
-                                                    "Magnetic Longitude",
-                                                    "degrees",
-                                                    grid.geoLat_scgc);
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("Longitudinal",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Latitudinal",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Radial",
+                                                    "Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
       }
 
       // ------------------------------------------------------------
@@ -228,9 +232,11 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
-        
-      if (type_output == "cent_acc")
-        filename = "3DFBI_";
+
+      if (type_output == "moment"){
+        filename = "3DMMT_";
+        cout << "HERE3" << endl;
+      }
 
       if (type_output == "corners")
         filename = "3DCOR_";
