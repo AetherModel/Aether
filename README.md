@@ -192,7 +192,7 @@ You can check to make sure that these are valid json files (not checking the con
 ```bash
 cd run.test
 python -m json.tool aether.json
-python -m json.tool UA/inputs/default.json
+python -m json.tool UA/inputs/defaults.json
 ```
 
 At this time, there is no checker to see if all of the settings in each of the inputs files are actually valid and Aether understands them. 

@@ -86,10 +86,14 @@ public:
   int iTimingDepth;
 
   std::string get_logfile();
-  int64_t get_n_species();
   std::vector<std::string> get_species_vector();
   bool get_logfile_append();
   precision_t get_logfile_dt();
+
+  // Satellites
+  std::vector<std::string> get_satellite_files();
+  std::vector<std::string> get_satellite_names();
+  std::vector<precision_t> get_satellite_dts();
   
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);

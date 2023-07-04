@@ -84,36 +84,89 @@ bool Inputs::write_restart() {
 }
 
 // -----------------------------------------------------------------------
-// Settings for logfile
+// Return log file name
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_logfile() {
   return settings["Logfile"]["name"];
 }
 
+// -----------------------------------------------------------------------
+// Return how oftern to write log file
+// -----------------------------------------------------------------------
+
 precision_t Inputs::get_logfile_dt() {
   return settings["Logfile"]["dt"];
 }
+
+// -----------------------------------------------------------------------
+// Return whether to append or rewrite
+// -----------------------------------------------------------------------
 
 bool Inputs::get_logfile_append() {
   return settings["Logfile"]["append"];
 }
 
-int64_t Inputs::get_n_species() {
-  return settings["Logfile"]["species"].size();
-}
+// -----------------------------------------------------------------------
+// Return the name of specified variables as a vector
+// -----------------------------------------------------------------------
 
 std::vector<std::string> Inputs::get_species_vector() {
   std::vector<std::string> species;
-  std::string value;
+  const json &json_species = settings["Logfile"]["species"];
 
-  for (int iOutput = 0; iOutput < get_n_species(); iOutput++) {
-    value = settings.at("Logfile").at("species").at(iOutput);
-    species.push_back(value);
+  for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++) {
+    species.push_back(json_species.at(iOutput));
   }
 
   return species;
 }
+
+// -----------------------------------------------------------------------
+// Return the name of satellite files as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_satellite_files() {
+    std::vector<std::string> files;
+    const json &json_files = settings["Satellites"]["files"];
+
+    for (size_t i = 0; i < json_files.size(); ++i) {
+        files.push_back(json_files.at(i));
+    }
+
+    return files;
+}
+
+// -----------------------------------------------------------------------
+// Return the output file names of satellites as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_satellite_names() {
+    std::vector<std::string> names;
+    const json &json_names = settings["Satellites"]["names"];
+
+    for (size_t i = 0; i < json_names.size(); ++i) {
+        names.push_back(json_names.at(i));
+    }
+
+    return names;
+}
+
+// -----------------------------------------------------------------------
+// Return how oftern to write log file for satellites as a vector
+// -----------------------------------------------------------------------
+
+std::vector<precision_t> Inputs::get_satellite_dts() {
+    std::vector<precision_t> dts;
+    const json &json_dts = settings["Satellites"]["dts"];
+
+    for (size_t i = 0; i < json_dts.size(); ++i) {
+        dts.push_back(json_dts.at(i));
+    }
+
+    return dts;
+}
+
 
 // -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs

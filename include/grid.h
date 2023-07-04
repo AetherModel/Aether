@@ -194,7 +194,8 @@ public:
    * \param Alts The altitude of points
    * \pre This instance is an geo grid
    * \pre Lons, Lats and Alts have the same size
-   * \return true if the function succeeds, false otherwise.
+   * \return true if the function succeeds, false if the instance is not a
+   *         geo grid or the size of Lons, Lats and Alts are not the same.
    */
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
@@ -205,7 +206,7 @@ public:
    * \pre The size of the data should be the same as the geoLat/Lon/Alt_scgc
    * \return A vector of estimated value at the points set by the last
    *         set_interpolation_coefs function call if the function succeeds,
-   *         an empty vector otherwise.
+   *         an empty vector if the data is not the same size as the geo grid.
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 

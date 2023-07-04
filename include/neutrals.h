@@ -145,6 +145,9 @@ class Neutrals {
   /// Bulk neutral EUV heating temperatuare change (K/s)
   arma_cube heating_euv_scgc;
 
+  /// Bulk neutral chemical heating temperatuare change (K/s)
+  arma_cube heating_chemical_scgc;
+
   /// Nuetral gas direct absorption heating efficiency (~5%)
   precision_t heating_efficiency;
 

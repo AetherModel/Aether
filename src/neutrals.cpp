@@ -114,6 +114,7 @@ Neutrals::Neutrals(Grid grid,
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.set_size(nLons, nLats, nAlts);
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
@@ -212,7 +213,6 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
-
   calc_mass_density(report);
 }
 
