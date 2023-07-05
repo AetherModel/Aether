@@ -26,6 +26,10 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.lower_bc_density = -1.0;
 
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.newDensity_scgc.set_size(nLons, nLats, nAlts);
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.newVelocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
   tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
@@ -85,12 +89,15 @@ Neutrals::Neutrals(Grid grid,
   density_scgc.ones();
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
+  newTemperature_scgc.set_size(nLons, nLats, nAlts);
+  newTemperature_scgc.ones();
 
   // Derived quantities:
 
   rho_scgc.set_size(nLons, nLats, nAlts);
   rho_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
   mean_major_mass_scgc.ones();
   pressure_scgc.set_size(nLons, nLats, nAlts);
@@ -165,9 +172,12 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (all species)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
-void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
+void Neutrals::fill_with_hydrostatic(int64_t iStart,
+				     int64_t iEnd,
+				     Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -177,7 +187,7 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
 
-    for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+    for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
@@ -190,9 +200,12 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (only one constituent)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
+				     int64_t iStart,
+				     int64_t iEnd,
                                      Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
@@ -201,7 +214,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
     cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
 
   // Integrate with hydrostatic equilibrium up:
-  for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+  for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
     species[iSpecies].density_scgc.slice(iAlt) =
       species[iSpecies].density_scgc.slice(iAlt - 1) %
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
