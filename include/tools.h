@@ -16,6 +16,18 @@ void display_vector(arma_vec vec);
 
 bool sync_across_all_procs(bool value);
 
+// ----------------------------------------------------------------------------
+// Find max across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_max_across_all_procs(precision_t value);
+
+// ----------------------------------------------------------------------------
+// Find min across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_min_across_all_procs(precision_t value);
+
 // -----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // -----------------------------------------------------------------------------

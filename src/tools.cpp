@@ -29,6 +29,32 @@ bool sync_across_all_procs(bool value) {
 }
 
 // ----------------------------------------------------------------------------
+// Find min across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_min_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MIN, aether_comm);
+  global_value = vReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
+// Find max across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_max_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MAX, aether_comm);
+  global_value = vReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // ----------------------------------------------------------------------------
 
