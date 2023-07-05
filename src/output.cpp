@@ -235,7 +235,6 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "moment"){
         filename = "3DMMT_";
-        cout << "HERE3" << endl;
       }
 
       if (type_output == "corners")

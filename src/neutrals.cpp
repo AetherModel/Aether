@@ -86,12 +86,6 @@ Neutrals::Neutrals(Grid grid,
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
 
-  grid.cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-  for (int i = 0; i < 3; i++) {
-    grid.cent_acc_vcgc[i].zeros();
-  }
-
-
   // Derived quantities:
 
   rho_scgc.set_size(nLons, nLats, nAlts);
