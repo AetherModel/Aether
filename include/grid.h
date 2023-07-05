@@ -76,6 +76,12 @@ public:
   arma_cube dalt_ratio_scgc;
   arma_cube dalt_ratio_sq_scgc;
 
+  arma_cube MeshCoefm2;
+  arma_cube MeshCoefm1;
+  arma_cube MeshCoefp0;
+  arma_cube MeshCoefp1;
+  arma_cube MeshCoefp2;
+
   arma_cube dlon_center_scgc;
   arma_cube dlon_center_dist_scgc;
 
