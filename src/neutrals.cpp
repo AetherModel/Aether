@@ -176,8 +176,8 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
-				     int64_t iEnd,
-				     Grid grid, Report report) {
+                                     int64_t iEnd,
+                                     Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -204,8 +204,8 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
-				     int64_t iStart,
-				     int64_t iEnd,
+                                     int64_t iStart,
+                                     int64_t iEnd,
                                      Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
@@ -220,6 +220,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density(report);
 }
 

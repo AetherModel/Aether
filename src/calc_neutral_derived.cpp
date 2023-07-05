@@ -26,6 +26,7 @@ void Neutrals::calc_mass_density(Report &report) {
   density_scgc.zeros();
 
   velocity_vcgc[2].zeros();
+
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
                species[iSpecies].mass * species[iSpecies].density_scgc;
@@ -35,7 +36,7 @@ void Neutrals::calc_mass_density(Report &report) {
        species[iSpecies].density_scgc);
     density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
-  
+
   velocity_vcgc[2] = velocity_vcgc[2] / rho_scgc;
 
   mean_major_mass_scgc = rho_scgc / density_scgc;
@@ -92,9 +93,9 @@ void Neutrals::calc_specific_heat(Report &report) {
     std::cout << "max gamma : " << gamma_scgc.max() << "\n";
     std::cout << "max temperature : " << temperature_scgc.max() << "\n";
     std::cout << "max mean_major_mass speed : "
-	      << mean_major_mass_scgc.max() << "\n";
+              << mean_major_mass_scgc.max() << "\n";
   }
-  
+
   report.exit(function);
   return;
 }
@@ -105,17 +106,18 @@ void Neutrals::calc_specific_heat(Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_cMax(Report &report) {
-  
+
   std::string function = "Neutrals::calc_cMax";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   int iDir;
-  
+
   // simply some things, and just take the bulk value for now:
 
   if (report.test_verbose(3)) {
     std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+
     for (iDir = 0; iDir < 3; iDir++) {
       arma_cube tmp = abs(velocity_vcgc[iDir]);
       std::cout << "min velocity : " << tmp.min() << "\n";
@@ -124,7 +126,7 @@ void Neutrals::calc_cMax(Report &report) {
 
   for (iDir = 0; iDir < 3; iDir++)
     cMax_vcgc[iDir] = sound_scgc + abs(velocity_vcgc[iDir]);
-  
+
   report.exit(function);
   return;
 }
@@ -135,13 +137,13 @@ void Neutrals::calc_cMax(Report &report) {
 // ----------------------------------------------------------------------
 
 precision_t Neutrals::calc_dt(Grid grid, Report &report) {
-  
+
   std::string function = "Neutrals::calc_dt";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   int iDir;
-  
+
   // simply some things, and just take the bulk value for now:
   arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
   arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
@@ -150,14 +152,15 @@ precision_t Neutrals::calc_dt(Grid grid, Report &report) {
   dta(0) = dtx.min();
   dta(1) = dty.min();
   dta(2) = dtz.min();
-  
+
   dt = dta.min();
 
   if (report.test_verbose(3))
     std::cout << "dt for neutrals : " << dt << "\n";
+
   if (report.test_verbose(4))
     std::cout << " derived from dt(x, y, z) : " << dta << "\n";
-  
+
   report.exit(function);
   return dt;
 }

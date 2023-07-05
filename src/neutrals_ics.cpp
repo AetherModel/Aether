@@ -30,7 +30,7 @@ int Neutrals::initial_conditions(Grid grid,
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
   int64_t nAlts = grid.get_nZ();
-  
+
   report.print(3, "Creating Neutrals initial_condition");
 
   if (input.get_do_restart()) {
@@ -90,7 +90,7 @@ int Neutrals::initial_conditions(Grid grid,
             std::cout << "  NOT Found in MSIS - setting constant\n";
 
           species[iSpecies].density_scgc.slice(0).
-	    fill(species[iSpecies].lower_bc_density);
+          fill(species[iSpecies].lower_bc_density);
           fill_with_hydrostatic(iSpecies, 1, nAlts, grid, report);
         }
 
@@ -159,7 +159,7 @@ int Neutrals::initial_conditions(Grid grid,
       // Set the lower boundary condition:
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
-	  fill(species[iSpecies].lower_bc_density);
+        fill(species[iSpecies].lower_bc_density);
       }
 
       fill_with_hydrostatic(1, nAlts, grid, report);

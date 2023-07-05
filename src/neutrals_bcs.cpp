@@ -36,7 +36,7 @@ bool Neutrals::set_bcs(Grid grid,
   didWork = set_lower_bcs(grid, time, indices, input, report);
   didWork = set_upper_bcs(grid, input, report);
   calc_mass_density(report);
-  
+
   report.exit(function);
   return didWork;
 }
@@ -61,29 +61,30 @@ bool Neutrals::set_upper_bcs(Grid grid,
   int64_t nGCs = grid.get_nGCs();
   int64_t iAlt;
   arma_mat h;
-  
+
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     for (iAlt = nAlts - nGCs; iAlt < nAlts; iAlt++) {
 
       // Allow upflow, but not downflow:
       for (iX = nGCs; iX < nX - nGCs; iX++)
-	for (iY = nGCs; iY < nY - nGCs; iY++)
-	  if (species[iSpecies].velocity_vcgc[2](iX, iY, iAlt-1) > 0)
-	    species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) =
-	      species[iSpecies].velocity_vcgc[2](iX, iY, iAlt-1);
-	  else
-	    species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) = 0.0;
-      
-      h = cKB * temperature_scgc.slice(iAlt) / (species[iSpecies].mass * grid.gravity_scgc.slice(iAlt));
-      species[iSpecies].density_scgc.slice(iAlt) = 
-	species[iSpecies].density_scgc.slice(iAlt-1) %
-	exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
+        for (iY = nGCs; iY < nY - nGCs; iY++)
+          if (species[iSpecies].velocity_vcgc[2](iX, iY, iAlt - 1) > 0)
+            species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) =
+              species[iSpecies].velocity_vcgc[2](iX, iY, iAlt - 1);
+          else
+            species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) = 0.0;
+
+      h = cKB * temperature_scgc.slice(iAlt) / (species[iSpecies].mass *
+                                                grid.gravity_scgc.slice(iAlt));
+      species[iSpecies].density_scgc.slice(iAlt) =
+        species[iSpecies].density_scgc.slice(iAlt - 1) %
+        exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
     }
   }
 
   temperature_scgc.slice(nAlts - 2) = temperature_scgc.slice(nAlts - 3);
   temperature_scgc.slice(nAlts - 1) = temperature_scgc.slice(nAlts - 2);
-  
+
   report.exit(function);
   return didWork;
 }
@@ -157,7 +158,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
           std::cout << "  NOT Found in MSIS - setting constant\n";
 
         species[iSpecies].density_scgc.slice(0).
-	  fill(species[iSpecies].lower_bc_density);
+        fill(species[iSpecies].lower_bc_density);
       }
 
     }
@@ -172,19 +173,21 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
     report.print(2, "setting lower bcs to planet");
     arma_mat h;
-    
+
     // Set the lower boundary condition:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].density_scgc.slice(0).
-	fill(species[iSpecies].lower_bc_density);
+      fill(species[iSpecies].lower_bc_density);
       // fill the second grid cell with a hydrostatic solution:
-      h = cKB * temperature_scgc.slice(0) / (species[iSpecies].mass * grid.gravity_scgc.slice(0));
-      species[iSpecies].density_scgc.slice(1) = 
-	species[iSpecies].density_scgc.slice(0) %
-	exp(-grid.dalt_lower_scgc.slice(1) / h);
+      h = cKB * temperature_scgc.slice(0) / (species[iSpecies].mass *
+                                             grid.gravity_scgc.slice(0));
+      species[iSpecies].density_scgc.slice(1) =
+        species[iSpecies].density_scgc.slice(0) %
+        exp(-grid.dalt_lower_scgc.slice(1) / h);
       species[iSpecies].velocity_vcgc[2].slice(0).zeros();
       species[iSpecies].velocity_vcgc[2].slice(1).zeros();
     }
+
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
     temperature_scgc.slice(1).fill(initial_temperatures[0]);
   } // type == Planet

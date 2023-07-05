@@ -10,10 +10,11 @@
 // --------------------------------------------------------------------------
 
 precision_t min_of_three(precision_t one,
-			 precision_t two,
-			 precision_t three) {
+                         precision_t two,
+                         precision_t three) {
   if (one <= two && one <= three)
     return one;
+
   // one is not the smallest!
   if (two <= three)
     return two;
@@ -26,10 +27,11 @@ precision_t min_of_three(precision_t one,
 // --------------------------------------------------------------------------
 
 precision_t max_of_three(precision_t one,
-			 precision_t two,
-			 precision_t three) {
+                         precision_t two,
+                         precision_t three) {
   if (one >= two && one >= three)
     return one;
+
   // one is not the biggest!
   if (two >= three)
     return two;
@@ -42,10 +44,11 @@ precision_t max_of_three(precision_t one,
 // --------------------------------------------------------------------------
 
 precision_t limiter_mc(precision_t dUp,
-		       precision_t dDown,
-		       precision_t beta) {
+                       precision_t dDown,
+                       precision_t beta) {
   precision_t limited = 0.0;
   precision_t ave;
+
   if (dUp > 0) {
     if (dDown > 0) {
       ave = 0.5 * (dUp + dDown);
@@ -57,6 +60,7 @@ precision_t limiter_mc(precision_t dUp,
       limited = max_of_three(beta * dUp, beta * dDown, ave);
     } // else limited = 0.0
   }
+
   return limited;
 }
 

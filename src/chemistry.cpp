@@ -166,6 +166,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           if (reaction.nLosses > 0 && reaction.nSources > 0) {
             if (report.test_verbose(3))
               display_reaction(reaction);
+
             reactions.push_back(reaction);
             nReactions++;
           }

@@ -105,12 +105,15 @@ int Times::check_time_gate(precision_t dt_check) {
 // -----------------------------------------------------------------------------
 
 void Times::calc_dt(precision_t dtNeutral,
-		    precision_t dtIon) {
+                    precision_t dtIon) {
   dt = end - current;
+
   if (dtNeutral < dt)
     dt = 0.75 * dtNeutral;
+
   if (dtIon < dt)
     dt = 0.75 * dtIon;
+
   dt = sync_min_across_all_procs(dt);
   return;
 }

@@ -143,12 +143,13 @@ arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
 
   for (iAlt = 2; iAlt < nAlts - 2; iAlt++) {
     gradient.slice(iAlt) =
-      grid.MeshCoefm2.slice(iAlt) * value.slice(iAlt - 2) + 
-      grid.MeshCoefm1.slice(iAlt) * value.slice(iAlt - 1) + 
-      grid.MeshCoefp0.slice(iAlt) * value.slice(iAlt) + 
-      grid.MeshCoefp1.slice(iAlt) * value.slice(iAlt + 1) + 
+      grid.MeshCoefm2.slice(iAlt) * value.slice(iAlt - 2) +
+      grid.MeshCoefm1.slice(iAlt) * value.slice(iAlt - 1) +
+      grid.MeshCoefp0.slice(iAlt) * value.slice(iAlt) +
+      grid.MeshCoefp1.slice(iAlt) * value.slice(iAlt + 1) +
       grid.MeshCoefp2.slice(iAlt) * value.slice(iAlt + 2);
   }
+
   return gradient;
 }
 
