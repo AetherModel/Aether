@@ -40,7 +40,10 @@ int advance(Planets &planet,
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
   neutrals.calc_specific_heat(report);
-  time.calc_dt();
+  neutrals.calc_cMax(report);
+  precision_t dtNeutral = neutrals.calc_dt(gGrid, report);
+  precision_t dtIon = 100.0;
+  time.calc_dt(dtNeutral, dtIon);
 
   iErr = calc_euv(planet,
                   gGrid,
@@ -69,7 +72,8 @@ int advance(Planets &planet,
   ions.calc_electron_temperature(neutrals, gGrid, report);
 
   neutrals.set_bcs(gGrid, time, indices, input, report);
-  neutrals.fill_with_hydrostatic(gGrid, report);
+  //neutrals.fill_with_hydrostatic(1, gGrid.get_nZ(), gGrid, report);
+  neutrals.solver_vertical_rusanov(gGrid, time, input, report);
 
   neutrals.exchange(gGrid, report);
 
@@ -84,9 +88,8 @@ int advance(Planets &planet,
 
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
-  report.exit(function);
-
   logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
 
+  report.exit(function);
   return iErr;
 }
