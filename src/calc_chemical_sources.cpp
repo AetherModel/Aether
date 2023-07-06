@@ -109,7 +109,6 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
       }
     }
-    
     // if temperature dependence is piecewise, only operate on cells
     // within temperature range:
     if (reactions[iReaction].min || reactions[iReaction].max) {
