@@ -39,9 +39,9 @@ int calc_euv(Planets planet,
 
     if (input.get_euv_model() == "euvac")
       iErr = euv.euvac(time, indices, report);
-    if (input.get_euv_model() == "neuvac")
+    else if (input.get_euv_model() == "neuvac")
       iErr = euv.neuvac(time, indices, report);
-    if (input.get_euv_model() == "hfg")
+    else if (input.get_euv_model() == "hfg")
       iErr = euv.solomon_hfg(time, indices, report);
     
     iErr = euv.scale_from_1au(planet, time, report);
