@@ -103,7 +103,6 @@ void calc_ionization_heating(Euv euv,
       }
 
       intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
-      
       for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
         // Calculate Photo-Absorbtion for each species and add them up:
         // index of photo abs cross section
