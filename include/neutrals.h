@@ -69,6 +69,13 @@ class Neutrals {
     /// Which ion species results from the ionization?
     std::vector<int> iEuvIonSpecies_;
 
+    /// How many rows in the EUV CSV file are for ionization of this species?
+    int nEuvPeiSpecies;
+    /// Which row in the EUV CSV file if for the particular ionization?
+    std::vector<int> iEuvPeiId_;
+    /// Which ion species results from the ionization?
+    std::vector<int> iEuvPeiSpecies_;
+    
     int nAuroraIonSpecies;
     std::vector<int> iAuroraIonSpecies_;
     float Aurora_Coef;

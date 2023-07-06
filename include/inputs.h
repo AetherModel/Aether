@@ -17,6 +17,7 @@ public:
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
+  bool get_include_photoelectrons();
   precision_t get_dt_report();
   precision_t get_n_outputs();
   precision_t get_dt_output(int iOutput);

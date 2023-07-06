@@ -24,7 +24,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
   tmp.density_scgc.fill(1e10);
   tmp.temperature_scgc.set_size(nLons, nLats, nAlts);
-  tmp.temperature_scgc.ones();
+  tmp.temperature_scgc.fill(200.0);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.zeros();
 
@@ -82,9 +82,9 @@ Ions::Ions(Grid grid, Planets planet, Inputs input, Report report) {
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   temperature_scgc.set_size(nLons, nLats, nAlts);
-  temperature_scgc.ones();
+  temperature_scgc.fill(200.0);
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
-  electron_temperature_scgc.ones();
+  electron_temperature_scgc.fill(200);
 
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();
