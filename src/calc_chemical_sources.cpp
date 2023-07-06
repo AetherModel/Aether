@@ -55,7 +55,6 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     //    reaction rate * loss den 1 * loss den 2 (* loss den 3 if needed)
 
     change3d.fill(rate);
-    
     // check for type of temperature dependence and calculate
     if (reactions[iReaction].type > 0) {
       // Determined which temperature to use in equation:
