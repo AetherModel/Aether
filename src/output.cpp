@@ -189,27 +189,21 @@ int output(const Neutrals &neutrals,
                                                     "Local Time",
                                                     "hours",
                                                     grid.geoLocalTime_scgc);
-        AllOutputContainers[iOutput].store_variable("Glongitude",
+        AllOutputContainers[iOutput].store_variable("Geast",
                                                     "m/s^2",
                                                     grid.gravity_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("Glatitude",
+        AllOutputContainers[iOutput].store_variable("Gnorth",
                                                     "m/s^2",
                                                     grid.gravity_vcgc[1]);
-        AllOutputContainers[iOutput].store_variable("Galtitude",
+        AllOutputContainers[iOutput].store_variable("Gvertical",
                                                     "m/s^2",
-                                                    grid.gravity_vcgc[2]); 
-        AllOutputContainers[iOutput].store_variable("Radius",
+                                                    grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gpotential",
+                                                    "m^2/s^2",
+                                                    grid.gravity_potential_scgc);
+        AllOutputContainers[iOutput].store_variable("radius",
                                                     "m",
-                                                    grid.radius_scgc);
-        AllOutputContainers[iOutput].store_variable("unit_longitude",
-                                                    "degrees",
-                                                    grid.rad_unit_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("unit_latitude",
-                                                    "degrees",
-                                                    grid.rad_unit_vcgc[1]); 
-        AllOutputContainers[iOutput].store_variable("unit_altitude",
-                                                    "degrees",
-                                                    grid.rad_unit_vcgc[2]);   
+                                                    grid.radius_scgc);   
       }
 
       if (type_output == "bfield") {

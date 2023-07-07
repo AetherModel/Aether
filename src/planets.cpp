@@ -69,8 +69,6 @@ precision_t Planets::get_cos_dec(Times time) {
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_radius(precision_t latitude, Inputs &input) {
-  // Should modify this to allow an oblate spheriod, but not now.
-  // return planet.polar_radius + (2 * delta_rad * cos(latitude);
   if(input.get_do_lat_dependent_radius()){
     return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
   }
@@ -116,6 +114,17 @@ std::vector<float> Planets::get_dipole_center() {
 
 precision_t Planets::get_mu() {
   return planet.mu;
+}
+
+// -----------------------------------------------------------------------------
+// Get the J2 of the planet
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_J2(Inputs &input) {
+  if(input.get_do_J()){
+    return planet.J2;
+  }
+  return 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -435,6 +444,7 @@ bool Planets::read_file(Inputs input, Report report) {
             tmp.dipole_strength = stof(csv[iLine][20]);
             tmp.dipole_rotation = stof(csv[iLine][21]) * cDtoR;
             tmp.dipole_tilt = stof(csv[iLine][22]) * cDtoR;
+            tmp.J2 = stof(csv[iLine][23]);
 
             for (int j = 0; j < 3; j++)
               tmp.dipole_center[j] = stof(csv[iLine][23 + j]);

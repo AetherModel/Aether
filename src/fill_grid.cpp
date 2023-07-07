@@ -219,7 +219,7 @@ void Grid::fill_grid_radius(Planets planet, Report &report, Inputs &input) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       radius_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = radius0_1d;
 
-  radius_scgc = radius_scgc + geoAlt_scgc;
+  radius_scgc = radius_scgc + geoAlt_scgc
   report.print(3, "ending fill_grid_radius");
 }
 
@@ -251,10 +251,10 @@ void Grid::calc_gravity(Planets planet, Report &report, Inputs &input){
   report.print(3, "starting calc_gravity");
 
   precision_t mu = planet.get_mu();
-  
-  arma_cube grav_potential = (mu / radius_scgc) + ((CJ2* cG) / (2 * pow(radius_scgc,3)));
 
-  gravity_vcgc = calc_gradient_vector(grav_potential, *this);
+  gravity_potential_scgc = -(mu / radius_scgc) + ((3*(planet.get_J2(input) * planet.get_mu())) / (2 * pow(radius_scgc,3)) % ((sin(geoLat_scgc) % sin(geoLat_scgc))- 1.0 ));
+  gravity_vcgc = calc_gradient_vector(gravity_potential_scgc, *this);
+  
   
   report.print(3, "ending calc_gravity");
 }

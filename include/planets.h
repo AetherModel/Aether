@@ -56,6 +56,11 @@ public:
   precision_t get_mu();
 
   /**********************************************************************
+     \brief Gets J2
+   **/
+  precision_t get_J2(Inputs &input);
+
+  /**********************************************************************
      \brief Returns radius of the planet, which can be a function of latitude
 
      currently, this ignores the latitude, but should be implemented.
@@ -207,6 +212,9 @@ public:
     precision_t dipole_tilt;
     /// Offset of the dipole center from the geographic center of planet
     std::vector<float> dipole_center{ 0.0, 0.0, 0.0 };
+
+    //J2 value
+    precision_t J2;
 
     // ---------------------------------------
     // These are updated during the run:
