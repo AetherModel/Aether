@@ -22,6 +22,8 @@
 	"dt" : 60.0},
 
     "DoCalcBulkIonTemp" : false,
+    
+    "EddyCoefficient" : 1,
 
     "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 1, 0, 0],

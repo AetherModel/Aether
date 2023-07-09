@@ -35,6 +35,7 @@ public:
   std::string get_planet_species_file();
   std::string get_collision_file();
   bool get_do_calc_bulk_ion_temp();
+  precision_t get_eddy_coef();
   std::string get_bfield_type();
   std::string get_electrodynamics_file();
   bool get_do_restart();
