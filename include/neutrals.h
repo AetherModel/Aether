@@ -48,6 +48,21 @@ class Neutrals {
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
+    
+    /// Velocity of each species (m/s). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
+    std::vector<arma_cube> velocity_vcgc;
+      
+    /// Acceleration of each species (m/s^2). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
+    std::vector<arma_cube> acc_vcgc;
+      
+    /// Acceleration of each species based on Eddy contribution. Only in vertical direction.
+    arma_cube acc_eddy;
+      
+    /// Acceleration of each species due to ion drag.
+    std::vector<arma_cube> acc_ion_drag;
+            
+    /// concentration (density of species / total density)
+    arma_cube concentration_scgc;
 
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
@@ -104,7 +119,7 @@ class Neutrals {
   /// bulk number density (/m3)
   arma_cube density_scgc;
 
-  /// bulk velocity (m/s)
+  /// bulk velocity (m/s). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
   std::vector<arma_cube> velocity_vcgc;
 
   /// bunk temperature (K)
@@ -217,10 +232,34 @@ class Neutrals {
   void fill_with_hydrostatic(Grid grid, Report report);
 
   /**********************************************************************
-     \brief Calculate the bulk mass density from individual species densities
+     \brief Calculate the bulk mass density and bulk number density from individual species densities
      \param report allow reporting to occur
    **/
   void calc_mass_density(Report &report);
+
+  /**********************************************************************
+     \brief Calculate the concentration for each species (species ndensity / total ndensity)
+     \param report allow reporting to occur
+   **/
+  void calc_concentration(Report &report);
+    
+  /**********************************************************************
+     \brief Calculate the bulk mean major mass
+     \param report allow reporting to occur
+   **/
+  void calc_mean_major_mass(Report &report);
+    
+  /**********************************************************************
+     \brief Calculate the mean pressure
+     \param report allow reporting to occur
+   **/
+  void calc_pressure(Report &report);
+    
+  /**********************************************************************
+     \brief Calculate the mean pressure
+     \param report allow reporting to occur
+   **/
+  void calc_bulk_velocity(Report &report);
 
   /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
@@ -286,6 +325,23 @@ class Neutrals {
   bool exchange(Grid &grid, Report &report);
 
   /**********************************************************************
+   \brief add eddy contributions to vertical acceleration
+   \param grid The grid to define the neutrals on
+   \param report allow reporting to occur
+   \param inputs access eddy coefficient
+ **/ 
+  void vertical_momentum_eddy(Grid &grid, Report &report, Input inputs);
+    
+  /**********************************************************************
+      \brief Calculate acceleration due to ion drag
+      \param ions The ions with which we are calculating drag
+      \param grid The grid to define the neutrals on
+      \param dt The change in time
+      \param report allow reporting to occur
+     **/
+  void calc_ion_collisions(Ions &ions, Grid &grid, precision_t dt, Report &report);
+
+/**********************************************************************
      \brief Exchange one face for the NEUTRALS
 
      1. pack all of the variables (den, temp, vel)
