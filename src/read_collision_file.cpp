@@ -209,9 +209,6 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
 
   int nLines = csv.size();
 
-  // 1. check to see that we have a coefficient
-  // in the last line:
-  cout << csv[nLines - 1][0];
   float coef = stof(csv[nLines - 1][0]);
 
   // 2. we figure out which neutrals we have (0th col):
@@ -488,7 +485,6 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
 
     if (ion_id > -1) {
       for (int iCol = 1; iCol < nCol; iCol++) {
-        cout << csv[iLine][iCol] << " ";
 
         if (iIonSIds_[iCol - 1] > -1) {
           neutrals.species[ion_id].diff0[iIonSIds_[iCol - 1]] = stof(
