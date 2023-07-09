@@ -31,7 +31,7 @@ int main() {
     if (input.get_is_student())
       report.print(-1, "Hello " +
 		   input.get_student_name() + " - welcome to Aether!");
-    
+
     Quadtree quadtree(input, report);
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -51,7 +51,7 @@ int main() {
     Euv euv(input, report);
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
-    
+
     // Initialize the planet:
     Planets planet(input, report);
     MPI_Barrier(aether_comm);

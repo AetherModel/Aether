@@ -27,7 +27,7 @@ Chemistry::Chemistry(Neutrals neutrals,
   std::string function = "Chemistry::Chemistry";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
+  std::cout << "here1";
   read_chemistry_file(neutrals, ions, args, report);
 
   report.exit(function);
@@ -85,10 +85,10 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
 
   //output missing headers & clear cache of errors
   if(!IsOk){
-    std::cout << "Errors in chemistry header, missing: ";
+    std::string error_message = "Errors in chemistry header, missing: ";
     for(std::string err : error)
-      std::cout << err << " ";
-    std::cout << endl;
+      error_message = error_message + err + " ";
+    report.error(error_message);
     return false;
   }
   error.clear();
@@ -276,12 +276,12 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
     }
     //report errors when they are encountered, also update the function variable IsOk
     if(!temp_ok){
-      std::cout << "There is an issue with the Chemistry csv file, on line " 
-                << iLine + 1 << ", with columns:\n";
+      std::string error_message = "There is an issue with the Chemistry csv file, on line " 
+                + std::to_string(iLine + 1) + ", with columns:\n";
       for(std::string err : error) {
-        std::cout << err << ": ";
-        std::cout << csv[iLine][headers[err]] << endl;
+        error_message = error_message + err + ":" + csv[iLine][headers[err]];
       }
+      report.error(error_message);
       IsOk = false;
       error.clear();
     }

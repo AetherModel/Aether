@@ -67,22 +67,19 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
   // ---------------------------------------------------
 
   std::string f107_file = args.get_f107_file();
-
   if (f107_file.length() > 0) {
     report.print(1, "Reading F107 File : " + f107_file);
     index_file_output_struct f107_contents;
     f107_contents = read_f107_file(f107_file, indices, report);
-
-    if (f107_contents.nTimes > 0)
+    if (f107_contents.nTimes > 0){
       indices.set_f107(f107_contents);
-
+    }
     else {
       DidWork = false;
       report.error("ERROR in reading f107 file!!!\n");
       return DidWork;
     }
   }
-
   // ---------------------------------------------------
   // Read in OMNIWeb files.
   // The user can enter as many as they would like:
@@ -118,8 +115,8 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
       }  // for iVar
     }  // for iFile
   }  // if nFiles
-
   report.exit(function);
+  return DidWork;
 }
 
 // ----------------------------------------------------------------------
@@ -284,7 +281,6 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
             average_time,
             average_f107,
             f107_contents.missing_values[0]);
-
   return;
 }
 
