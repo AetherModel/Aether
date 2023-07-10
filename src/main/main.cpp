@@ -111,7 +111,7 @@ int main() {
       report.print(1, "Restarting! Reading time file!");
       DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
       if (!DidWork)
-	throw std::string("Reading Restart for time Failed!!!\n");
+	      throw std::string("Reading Restart for time Failed!!!\n");
     }
 
     // This is for the initial output.  If it is not a restart, this will go:

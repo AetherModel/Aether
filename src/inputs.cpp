@@ -303,7 +303,6 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
   if(check_settings("GeoGrid", "IsUniformAlt")){
     bool reality = settings.at("GeoGrid").at("IsUniformAlt");
-    std::cout << reality;
     geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
   }else
     geo_grid_input.IsUniformAlt = true;
