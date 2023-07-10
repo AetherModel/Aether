@@ -7,36 +7,8 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
-//  Calculate a bunch of derived products:
-//    - mass density
-//    - number density
-//    - mean major mass
-//    - pressure
+//  Calculate mass density and number density:
 // ----------------------------------------------------------------------
-
-void Neutrals::calc_mass_density(Report &report) {
-
-  int64_t iSpecies;
-
-  std::string function = "Neutrals::calc_mass_density";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  rho_scgc.zeros();
-  density_scgc.zeros();
-
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    rho_scgc = rho_scgc +
-               species[iSpecies].mass * species[iSpecies].density_scgc;
-    density_scgc = density_scgc + species[iSpecies].density_scgc;
-  }
-
-  mean_major_mass_scgc = rho_scgc / density_scgc;
-  pressure_scgc = cKB * density_scgc % temperature_scgc;
-
-  report.exit(function);
-  return;
-}
 
 void Neutrals::calc_mass_density(Report &report) {
     
@@ -56,6 +28,10 @@ void Neutrals::calc_mass_density(Report &report) {
     report.exit(function);
 }
 
+// ----------------------------------------------------------------------
+//  Calculate concentration (species number density / total density)
+// ----------------------------------------------------------------------
+
 void Neutrals::calc_concentration(Report &report) {
     
     std::string function = "Neutrals::calc_concentration";
@@ -70,6 +46,10 @@ void Neutrals::calc_concentration(Report &report) {
     
 }
 
+// ----------------------------------------------------------------------
+//  Calculate mean major mass
+// ----------------------------------------------------------------------
+
 void Neutrals::calc_mean_major_mass(Report &report) {
     
     std::string function = "Neutrals::calc_mean_major_mass";
@@ -81,6 +61,10 @@ void Neutrals::calc_mean_major_mass(Report &report) {
     report.exit(function);
 }
 
+// ----------------------------------------------------------------------
+//  Calculate pressure
+// ----------------------------------------------------------------------
+
 void Neutrals::calc_pressure(Report &report) {
     
     std::string function = "Neutrals::calc_pressure";
@@ -91,6 +75,11 @@ void Neutrals::calc_pressure(Report &report) {
     
     report.exit(function);
 }
+
+// ----------------------------------------------------------------------
+//  Calculate bulk velocity:
+// ((sum of species mass * density * velocity) / bulk mass density)
+// ----------------------------------------------------------------------
 
 void Neutrals::calc_bulk_velocity(Report &report) {
     
