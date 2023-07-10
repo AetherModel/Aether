@@ -256,7 +256,7 @@ class Neutrals {
   void calc_pressure(Report &report);
     
   /**********************************************************************
-     \brief Calculate the mean pressure
+     \brief Calculate bulk velocity
      \param report allow reporting to occur
    **/
   void calc_bulk_velocity(Report &report);

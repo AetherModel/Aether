@@ -38,6 +38,76 @@ void Neutrals::calc_mass_density(Report &report) {
   return;
 }
 
+void Neutrals::calc_mass_density(Report &report) {
+    
+    std::string function = "Neutrals::calc_mass_density";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
+    
+    rho_scgc.zeros();
+    density_scgc.zeros();
+    
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      rho_scgc = rho_scgc +
+                 species[iSpecies].mass * species[iSpecies].density_scgc;
+      density_scgc = density_scgc + species[iSpecies].density_scgc;
+    }
+    
+    report.exit(function);
+}
+
+void Neutrals::calc_concentration(Report &report) {
+    
+    std::string function = "Neutrals::calc_concentration";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
+    
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        concentration_scgc = species[iSpecies].density_scgc / density_scgc;
+    }
+    
+    report.exit(function);
+    
+}
+
+void Neutrals::calc_mean_major_mass(Report &report) {
+    
+    std::string function = "Neutrals::calc_mean_major_mass";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
+    
+    mean_major_mass_scgc = rho_scgc / density_scgc;
+    
+    report.exit(function);
+}
+
+void Neutrals::calc_pressure(Report &report) {
+    
+    std::string function = "Neutrals::calc_pressure";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
+    
+    pressure_scgc = cKB * density_scgc % temperature_scgc;
+    
+    report.exit(function);
+}
+
+void Neutrals::calc_bulk_velocity(Report &report) {
+    
+    std::string function = "Neutrals::calc_bulk_velocity";
+    static int iFunction = -1;
+    report.enter(function, iFunction);
+    
+    for (int64_t iDir = 0; iDir < 3; iDir++) {
+        for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+            velocity_vcgc[iDir] += species[iSpecies].mass * species[iSpecies].density_scgc * species[iSpecies].velocity_vcgc[iDir];
+        }
+        velocity_vcgc[iDir] /= rho_scgc;
+    }
+    
+    report.exit(function);
+}
+
 // ----------------------------------------------------------------------
 // Calculate a bunch of derived products:
 //   - Specific Heat at Constant Volume (Cv)
@@ -81,7 +151,6 @@ void Neutrals::calc_specific_heat(Report &report) {
                     mean_major_mass_scgc);
 
   report.exit(function);
-  //cout << "Found it: calc_specific_heat in calc_neutral_derived.cpp\n";
   return;
 }
 
