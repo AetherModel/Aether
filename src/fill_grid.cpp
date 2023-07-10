@@ -219,7 +219,7 @@ void Grid::fill_grid_radius(Planets planet, Report &report, Inputs &input) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
       radius_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = radius0_1d;
 
-  radius_scgc = radius_scgc + geoAlt_scgc
+  radius_scgc = radius_scgc + geoAlt_scgc;
   report.print(3, "ending fill_grid_radius");
 }
 

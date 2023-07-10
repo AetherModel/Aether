@@ -22,5 +22,8 @@
     "type" : ["states", "gravity"],
     "dt" : [900, 0.0] },
     "DoCalcBulkIonTemp" : false,
-    "DoLatDependentRadius": true
+    "Oblate" : {
+	"isOblate" : true,
+        "isJ2" : true
+    }
 }
