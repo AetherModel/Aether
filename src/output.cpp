@@ -207,8 +207,6 @@ int output(const Neutrals &neutrals,
       }
 
       if (type_output == "bfield") {
-  
-        
         AllOutputContainers[iOutput].store_variable("mlat",
                                                     "Magnetic Latitude",
                                                     "degrees",
@@ -256,12 +254,11 @@ int output(const Neutrals &neutrals,
         filename = "3DCOR_";
 
       filename = filename + time.get_YMD_HMS();
-      //PROBLEM
+
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-
-        filename = filename + "_" + cGrid;
+      filename = filename + "_" + cGrid;
 
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
