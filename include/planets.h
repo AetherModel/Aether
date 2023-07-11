@@ -63,7 +63,7 @@ public:
      \param latitude the latitude to get the radius at.
    **/
   precision_t get_radius(precision_t latitude);
-  
+
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time
 
