@@ -73,8 +73,6 @@ precision_t Planets::get_radius(precision_t latitude) {
   return planet.radius;
 }
 
-
-
 // -----------------------------------------------------------------------------
 // Get the rotation of the dipole (in radians, rotation in longitude)
 // -----------------------------------------------------------------------------
@@ -156,7 +154,7 @@ precision_t Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-// Get the omega value of the planet 
+// Get the omega (rotational rate) value of the planet 
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_omega() {
