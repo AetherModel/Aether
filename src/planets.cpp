@@ -121,10 +121,10 @@ precision_t Planets::get_mu() {
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_J2(Inputs &input) {
-  if(input.get_do_J()){
+  if (input.get_do_J2())
     return planet.J2;
-  }
-  return 0;
+  else
+    return 0;
 }
 
 // -----------------------------------------------------------------------------

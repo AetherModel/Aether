@@ -497,10 +497,16 @@ json Inputs::get_perturb_values() {
 // -----------------------------------------------------------------------
 // Flag to have a latitude dependent radius, and by extension gravity
 // -----------------------------------------------------------------------
+
 bool Inputs::get_do_lat_dependent_radius() {
   return settings["Oblate"]["isOblate"];
 }
-bool Inputs::get_do_J() {
+
+// -----------------------------------------------------------------------
+// Flag to include J2 term in the gravity calculation
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_J2() {
   return settings["Oblate"]["isJ2"];
 }
 

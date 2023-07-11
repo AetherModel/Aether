@@ -47,7 +47,7 @@ public:
   bool write_restart();
   json get_perturb_values(); 
   bool get_do_lat_dependent_radius();
-  bool get_do_J();
+  bool get_do_J2();
 
   bool get_is_cubesphere();
 
