@@ -202,12 +202,12 @@ int output(const Neutrals &neutrals,
 
       // Thermal:
       if (type_output == "therm") {
-        AllOutputContainers[iOutput].store_variable("O_cool_scgc",
-                                                    "O cooling",
+        AllOutputContainers[iOutput].store_variable("O Rad Cooling",
+                                                    "[O] Radiative Cooling",
                                                     "K/s",
                                                     neutrals.O_cool_scgc);
-        AllOutputContainers[iOutput].store_variable("NO_cool_scgc",
-                                                    "NO cooling",
+        AllOutputContainers[iOutput].store_variable("NO Rad Cooling",
+                                                    "[NO] Radiative Cooling",
                                                     "K/s",
                                                     neutrals.NO_cool_scgc);
       }
@@ -245,6 +245,7 @@ int output(const Neutrals &neutrals,
 
       filename = filename + "_" + cGrid;
 
+      report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);
 
       // ------------------------------------------------------------
