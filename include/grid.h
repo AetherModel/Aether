@@ -110,15 +110,14 @@ public:
   void calc_sza(Planets planet, Times time, Report &report);
   void calc_gse(Planets planet, Times time, Report &report);
   void calc_mlt(Report &report);
-  //void fill_grid(Planets planet, Report &report);
-  //NEW FUNCTIONS
+
   void calc_grid_spacing(Planets planet, Report &report);
   void calc_alt_grid_spacing();
   void calc_lat_grid_spacing();
   void calc_long_grid_spacing();
-  void fill_grid_radius(Planets planet, Report &report, Inputs &input);
-  void calc_rad_unit(Planets planet, Report &report, Inputs &input);
-  void calc_gravity(Planets planet, Report &report, Inputs &input);
+  void fill_grid_radius(Planets planet, Inputs &input, Report &report);
+  void calc_rad_unit(Planets planet, Inputs &input, Report &report);
+  void calc_gravity(Planets planet, Inputs &input, Report &report);
   bool init_geo_grid(Quadtree quadtree,
 		     Planets planet,
 		     Inputs input,
