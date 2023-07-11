@@ -9,10 +9,7 @@
 	"nLats" : 18,
 	"nAlts" : 50},
 
-    "Mysetting" : {
-	"setting1" : "this_is_an_example",
-	"setting2" : 42,
-	"setting3" : true},
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
