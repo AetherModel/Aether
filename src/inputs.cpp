@@ -284,6 +284,12 @@ bool Inputs::get_do_restart() {
 }
 
 // -----------------------------------------------------------------------
+// Return centripetal acceleration
+// -----------------------------------------------------------------------
+
+bool Inputs::get_cent_acc() {
+  return settings["Sources"]["Grid"]["Cent_acc"];
+}
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 

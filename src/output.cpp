@@ -201,6 +201,21 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("Cent Acc East",
+                                                    "Logitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc North",
+                                                    "Latitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc Vert",
+                                                    "Radial Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
+      }
+
       // ------------------------------------------------------------
       // Set output file names
 
@@ -217,6 +232,10 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
+
+      if (type_output == "moment"){
+        filename = "3DMMT_";
+      }
 
       if (type_output == "corners")
         filename = "3DCOR_";

@@ -57,6 +57,13 @@
     "Ensembles" : {
         "nMembers" : 1},
 
+    "Sources" : {
+	"Grid" : {
+	    "Cent_acc" : true },
+	"Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool": false } },
+    
     "Seed" : 0,
     
     "F107File" : "UA/inputs/f107.txt",

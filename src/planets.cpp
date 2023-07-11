@@ -154,6 +154,14 @@ precision_t Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
+// Get the omega (rotational rate) value of the planet 
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_omega() {
+  return planet.omega;
+}
+
+// -----------------------------------------------------------------------------
 // Update lots of information about the planet, such as the location
 // declination, and offset to compute local time from longitude
 // -----------------------------------------------------------------------------
