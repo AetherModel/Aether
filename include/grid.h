@@ -69,7 +69,6 @@ public:
   arma_cube gravity_scgc;
   std::vector<arma_cube> cent_acc_vcgc;
 
-
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
 
@@ -129,7 +128,6 @@ public:
   bool write_restart(std::string dir);
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
-
 
   // Need to move these to private at some point:
 
