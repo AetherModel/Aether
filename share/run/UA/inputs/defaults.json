@@ -45,7 +45,11 @@
 
     "CubeSphere" : {
 	"is" : false},
-
+    
+    "Oblate" : {
+	"isOblate" : false,
+        "isJ2" : false},
+    
     "Ensembles" : {
         "nMembers" : 1},
 
