@@ -356,8 +356,6 @@ def read_aether_one_binary_file(header, ifile, vars_to_read, isVerbose = True):
 
         # Data were saved as floats, not doubles
         data_len = num_tot * 4
-        print(num_tot, data_len)
-        print(data["nlons"], data["nlats"], data["nalts"] )
         endChar = '<'
         for ivar in vars_to_read:
             fin.seek(header_len + ivar * data_len)
