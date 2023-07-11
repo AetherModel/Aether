@@ -8,7 +8,7 @@
 	"nLats" : 16,
 	"nAlts" : 40 },
 	 
-    "EndTime" : [2011, 3, 20, 0, 20, 0],
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 

@@ -16,13 +16,13 @@ cd UA/output
 python3 ../../../../../srcPython/postAether.py -rm
 
 # plot latitudinal centripetal acceleration
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Latitudinal
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Latitudinal
 
 # plot longitudinal centripetal acceleration 
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Longitudinal
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Longitudinal
 
 # plot radial centripetal acceleration 
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Radial
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Radial
 
 cd ..
 mv output output.centacc
@@ -39,13 +39,13 @@ cd UA/output
 python3 ../../../../../srcPython/postAether.py -rm
 
 # plot latitudinal centripetal acceleration
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Latitudinal
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Latitudinal
 
 # plot longitudinal centripetal acceleration 
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Longitudinal
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Longitudinal
 
 # plot radial centripetal acceleration 
-python3 ~/Aether/aetherpy/bin/run_plot_block_model_results.py 3DMMT_20110320_002000.nc -alt=30 -var=Radial
+python3 ~/bin/run_plot_block_model_results.py 3DMMT_20110320_001000.nc -alt=30 -var=Radial
 
 cd ..
 mv output output.no_centacc
