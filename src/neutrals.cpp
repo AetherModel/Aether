@@ -257,10 +257,9 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
-      //CHANGED:
       species[iSpecies].scale_height_scgc.slice(iAlt) =
         cKB * temperature_scgc.slice(iAlt) /
-        (species[iSpecies].mass * -grid.gravity_vcgc[2].slice(iAlt));
+        (species[iSpecies].mass * abs(grid.gravity_vcgc[2].slice(iAlt)));
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
