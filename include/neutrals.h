@@ -250,17 +250,13 @@ class Neutrals {
   void calc_conduction(Grid grid, Times time, Report &report);
 
   /**********************************************************************
-     \brief Calculate the neutral bulk vertical thermal conduction
-     \param grid The grid to define the neutrals on
-     \param time The times within the model (dt is needed)
+     \brief Calculate the O radiative cooling
      \param report allow reporting to occur
    **/
   void calc_O_cool(Report &report);
 
   /**********************************************************************
-     \brief Calculate the neutral bulk vertical thermal conduction
-     \param grid The grid to define the neutrals on
-     \param time The times within the model (dt is needed)
+     \brief Calculate the NO radiative cooling
      \param report allow reporting to occur
    **/
   void calc_NO_cool(Report &report);
