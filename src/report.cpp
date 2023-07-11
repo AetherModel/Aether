@@ -204,9 +204,9 @@ int Report::get_verbose() {
 // -----------------------------------------------------------------------
 
 void Report::student_checker_function_name(bool isStudent,
-                                          std::string cStudentName,
-                                          int iFunctionNumber,
-                                          std::string cFunctionName) {
+					   std::string cStudentName,
+					   int iFunctionNumber,
+					   std::string cFunctionName) {
   if (isStudent) {
     if (cFunctionName.length() > 1)
       print(-1, cStudentName + " found function " + cFunctionName);
