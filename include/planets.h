@@ -107,7 +107,7 @@ public:
   precision_t get_dipole_strength();
 
   /**********************************************************************
-     \brief Returns omega of the planet 
+     \brief Returns omega (rotation rate) of the planet 
    **/
   precision_t get_omega();
 
@@ -131,8 +131,7 @@ public:
    **/
   
   bool is_ok();
-  
-  
+
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
