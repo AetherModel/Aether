@@ -1,41 +1,29 @@
 {
-	"Debug" : {
-		"iVerbose" : 0,
-		"dt" : 10.0},
-	 
-	 
-		"GeoBlockSize" : {
-		"nLons" : 16,
-		"nLats" : 16,
-		"nAlts" : 40},
-	 
-	 
-		"Mysetting" : {
-		"setting1" : "this_is_an_example",
-		"setting2" : 42,
-		"setting3" : true},
-	 
-	"EndTime" : [2011, 3, 20, 0, 20, 0],
+    "Debug" : {
+        "iVerbose" : 0,
+	"dt" : 10.0},
 
-		"OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "GeoBlockSize" : {
+	"nLons" : 16,
+	"nLats" : 16,
+	"nAlts" : 40 },
+	 
+    "EndTime" : [2011, 3, 20, 0, 20, 0],
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "Outputs" : {
         "type" : ["states", "moment"],
         "dt" : [600, 600] },
 
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
 
-		"ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-
-
-		"DoCalcBulkIonTemp" : false,
+    "DoCalcBulkIonTemp" : false,
 
     "Sources" : {
-		"Grid" : {
-			"Cent_acc" : false
-		},
-		"Neutrals" : {
-			"NO_cool" : false,
-			"O_cool": false
-		}
-	}
+	"Grid" : {
+	    "Cent_acc" : false },
+	"Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool": false } }
 }
