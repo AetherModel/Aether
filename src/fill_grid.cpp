@@ -6,7 +6,6 @@
 
 #include "aether.h"
 
-
 // ---------------------------------------------------------------------------
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
 // ---------------------------------------------------------------------------
@@ -330,7 +329,6 @@ void Grid::fill_grid(Planets planet, Report &report) {
 // -----------------------------------------------------------------------------
 //  Calaculate centripetal acceleration
 // -----------------------------------------------------------------------------
-
 
 void Grid::calc_cent_acc(Planets planet) {
   // Longitudanal cent acc
