@@ -21,6 +21,6 @@
     "DoCalcBulkIonTemp" : false,
     
     "Oblate" : {
-	"isOblate" : true,
-        "isJ2" : true }
+	"isOblate" : false,
+        "isJ2" : false }
 }
