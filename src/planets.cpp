@@ -69,10 +69,10 @@ precision_t Planets::get_cos_dec(Times time) {
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_radius(precision_t latitude, Inputs &input) {
-  if(input.get_do_lat_dependent_radius()){
+  if (input.get_do_lat_dependent_radius())
     return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
-  }
-  return planet.radius;
+  else
+    return planet.radius;
 }
 
 // -----------------------------------------------------------------------------
