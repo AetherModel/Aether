@@ -202,16 +202,16 @@ int output(const Neutrals &neutrals,
       }
 
       if (type_output == "moment") {
-        AllOutputContainers[iOutput].store_variable("Longitudinal",
-                                                    "Centripetal Acceleration",
+        AllOutputContainers[iOutput].store_variable("Cent Acc East",
+                                                    "Logitudinal Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("Latitudinal",
-                                                    "Centripetal Acceleration",
+        AllOutputContainers[iOutput].store_variable("Cent Acc North",
+                                                    "Latitudinal Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[1]);
-        AllOutputContainers[iOutput].store_variable("Radial",
-                                                    "Centripetal Acceleration",
+        AllOutputContainers[iOutput].store_variable("Cent Acc Vert",
+                                                    "Radial Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[2]);
       }
