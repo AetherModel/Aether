@@ -30,7 +30,6 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
   sza_scgc = acos(cos_sza_scgc);
 
   report.exit(function);
-
 }
 
 // ---------------------------------------------------------------------------

@@ -573,8 +573,6 @@ bool Grid::init_geo_grid(Quadtree quadtree,
                          Planets planet,
                          Inputs input,
                          Report &report) {
-    
-    
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -612,7 +610,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
 				       input.get_student_name(),
-				       4, "init_geo_grid in init_geo_grid.cpp");
+				       4, "");
   
   report.exit(function);
   return DidWork;

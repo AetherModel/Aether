@@ -84,7 +84,6 @@ void read_collision_file(Neutrals &neutrals,
         if (csv.size() > 1)
           parse_bst_in_table(csv, neutrals, ions, report);
 
-
         else
           std::cout << "Bst table is empty!!! Yikes!!!\n";
       }
@@ -209,6 +208,8 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
 
   int nLines = csv.size();
 
+  // 1. check to see that we have a coefficient
+  // in the last line:
   float coef = stof(csv[nLines - 1][0]);
 
   // 2. we figure out which neutrals we have (0th col):
@@ -354,6 +355,7 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
   return;
 }
 
+
 // -----------------------------------------------------------------------------
 // parse Bst table - Coulomb collision frequency coefficients
 //                 - Ionospheres Book, Table 4.3
@@ -390,7 +392,6 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   //  Read ion specie names down first column of table
   for (iLine = 1; iLine < nLines - 1; iLine++) {
-
     iIonT = ions.get_species_id(csv[iLine][0], report);
 
     // Found a used specie, time to extract Bst table data

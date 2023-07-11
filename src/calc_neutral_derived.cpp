@@ -305,7 +305,6 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
       }  // iLat
     }  // iLon
   }  // iSpecies
-    
 
   report.exit(function);
   return;
