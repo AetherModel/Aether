@@ -127,7 +127,6 @@ public:
   bool write_restart(std::string dir);
   void report_grid_boundaries();
 
-
   // Need to move these to private at some point:
 
   bool IsLatLonGrid;
