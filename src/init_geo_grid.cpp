@@ -601,16 +601,14 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     DidWork = write_restart(input.get_restartout_dir());
   }
 
-  
-
-  // Calculate the radius, etc:
-  fill_grid_radius(planet, report, input);
+  // Calculate the radius (for spherical or non-spherical)
+  fill_grid_radius(planet, input, report);
   // Calculate grid spacing
   calc_grid_spacing(planet, report);
-  //calculate rad unit vector
-  calc_rad_unit(planet, report, input);
-  // Calculate gravity
-  calc_gravity(planet, report, input);
+  //calculate radial unit vector (for spherical or oblate planet)
+  calc_rad_unit(planet, input, report);
+  // Calculate gravity (including J2 term, if desired)
+  calc_gravity(planet, input, report);
 
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet, input, report);
