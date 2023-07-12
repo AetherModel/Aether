@@ -5,9 +5,9 @@
 #define INCLUDE_CALC_MOMENTUM_FRICTION_H_
 
 arma_vec neutral_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
-                               precision_t dt,
-                               arma_vec &vels,
-                               Neutrals &neutrals,
+				   precision_t dt,
+				   arma_vec &vels,
+				   Neutrals &neutrals,
                                    Report &report);
 
 void calc_neutral_friction(precision_t dt,
