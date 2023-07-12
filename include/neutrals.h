@@ -49,13 +49,17 @@ class Neutrals {
     /// Number density of species (/m3)
     arma_cube density_scgc;
     
-    /// Velocity of each species (m/s). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
+    /// Velocity of each species (m/s). For all below:
+    /// Index 0 = longitudinal component of velocity
+    /// Index 1 = latitudinal
+    /// Index 2 = altitudinal
     std::vector<arma_cube> velocity_vcgc;
       
-    /// Acceleration of each species (m/s^2). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
+    /// Acceleration of each species (m/s^2)
     std::vector<arma_cube> acc_vcgc;
       
-    /// Acceleration of each species based on Eddy contribution. Only in vertical direction.
+    /// Acceleration of each species based on Eddy contribution.
+    /// Only in vertical direction.
     arma_cube acc_eddy;
       
     /// Acceleration of each species due to ion drag.
@@ -119,7 +123,7 @@ class Neutrals {
   /// bulk number density (/m3)
   arma_cube density_scgc;
 
-  /// bulk velocity (m/s). Index 0 is the longitudinal component of velocity, Index 1 is lat, Index 2 is alt.
+  /// bulk velocity (m/s)
   std::vector<arma_cube> velocity_vcgc;
 
   /// bunk temperature (K)
