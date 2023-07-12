@@ -176,6 +176,36 @@ int output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable(ions.potential_name,
                                                     ions.potential_unit,
                                                     ions.potential_scgc);
+                        
+      if (type_output == "gravity"){
+        AllOutputContainers[iOutput].store_variable("glat",
+                                                    "grav Latitude",
+                                                    "degrees",
+                                                    grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("glon",
+                                                    "grav Longitude",
+                                                    "degrees",
+                                                    grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("lt",
+                                                    "Local Time",
+                                                    "hours",
+                                                    grid.geoLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Geast",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Gnorth",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Gvertical",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gpotential",
+                                                    "m^2/s^2",
+                                                    grid.gravity_potential_scgc);
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "m",
+                                                    grid.radius_scgc);   
+      }
 
       if (type_output == "bfield") {
         AllOutputContainers[iOutput].store_variable("mlat",
@@ -233,6 +263,9 @@ int output(const Neutrals &neutrals,
       if (type_output == "bfield")
         filename = "3DBFI_";
 
+      if (type_output == "gravity")
+        filename = "3DGRA_";
+
       if (type_output == "moment"){
         filename = "3DMMT_";
       }
@@ -245,9 +278,7 @@ int output(const Neutrals &neutrals,
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-
       filename = filename + "_" + cGrid;
-
 
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);

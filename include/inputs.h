@@ -46,7 +46,9 @@ public:
   int get_updated_seed();
   void set_seed(int seed);
   bool write_restart();
-  json get_perturb_values();  
+  json get_perturb_values(); 
+  bool get_do_lat_dependent_radius();
+  bool get_do_J2();
 
   bool get_is_cubesphere();
   bool get_cent_acc();

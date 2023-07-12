@@ -1,4 +1,3 @@
-
 {
 
     "Debug" : {
@@ -10,17 +9,17 @@
 	"nLats" : 18,
 	"nAlts" : 50},
 
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-    
     "Outputs" : {
-	"type" : ["states", "gravity"],
-	"dt" : [900, 0.0] },
-    
+    "type" : ["states", "gravity"],
+    "dt" : [900, 0.0] },
     "DoCalcBulkIonTemp" : false,
-    
     "Oblate" : {
-	"isOblate" : false,
-        "isJ2" : false }
+	"isOblate" : true,
+        "isJ2" : false
+    }
 }

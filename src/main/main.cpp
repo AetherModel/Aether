@@ -78,7 +78,7 @@ int main() {
     MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("init_geo_grid failed!");
-    gGrid.fill_grid(planet, report);
+  
 
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);

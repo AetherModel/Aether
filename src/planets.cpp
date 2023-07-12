@@ -68,9 +68,11 @@ precision_t Planets::get_cos_dec(Times time) {
 // Get the radius of the planet as a function of latitude (meters)
 // -----------------------------------------------------------------------------
 
-precision_t Planets::get_radius(precision_t latitude) {
-  // Should modify this to allow an oblate spheriod, but not now.
-  return planet.radius;
+precision_t Planets::get_radius(precision_t latitude, Inputs &input) {
+  if (input.get_do_lat_dependent_radius())
+    return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
+  else
+    return planet.radius;
 }
 
 // -----------------------------------------------------------------------------
@@ -112,6 +114,17 @@ std::vector<float> Planets::get_dipole_center() {
 
 precision_t Planets::get_mu() {
   return planet.mu;
+}
+
+// -----------------------------------------------------------------------------
+// Get the J2 of the planet
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_J2(Inputs &input) {
+  if (input.get_do_J2())
+    return planet.J2;
+  else
+    return 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -342,6 +355,7 @@ bool Planets::set_planet(Inputs input, Report report) {
       planet.mu = planets[i].mass * cG;
       planet.equator_radius = planets[i].equator_radius * 1000.0;  // km -> m
       planet.polar_radius = planets[i].polar_radius * 1000.0;  // km -> m
+      planet.delta_radius = planet.equator_radius - planet.polar_radius;
       // Looking at Earth and Saturn, it seems like the Volumetric
       // mean radius is at roughly 47 deg (cos(47)=0.68) Obviously an
       // approximation...
@@ -438,6 +452,7 @@ bool Planets::read_file(Inputs input, Report report) {
             tmp.dipole_strength = stof(csv[iLine][20]);
             tmp.dipole_rotation = stof(csv[iLine][21]) * cDtoR;
             tmp.dipole_tilt = stof(csv[iLine][22]) * cDtoR;
+            tmp.J2 = stof(csv[iLine][23]);
 
             for (int j = 0; j < 3; j++)
               tmp.dipole_center[j] = stof(csv[iLine][23 + j]);
