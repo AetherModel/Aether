@@ -71,6 +71,8 @@ public:
   arma_cube gravity_potential_scgc;
   std::vector<arma_cube> gravity_vcgc;
 
+  std::vector<arma_cube> cent_acc_vcgc;
+
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
 
@@ -135,6 +137,7 @@ public:
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);
   void report_grid_boundaries();
+  void calc_cent_acc(Planets planet);
 
   // Need to move these to private at some point:
 
@@ -192,6 +195,29 @@ public:
   bool send_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
 
+  /**
+   * \brief Set the interpolation coefficients
+   * \param Lons The longitude of points
+   * \param Lats The latitude of points
+   * \param Alts The altitude of points
+   * \pre This instance is an geo grid
+   * \pre Lons, Lats and Alts have the same size
+   * \return true if the function succeeds, false if the instance is not a
+   *         geo grid or the size of Lons, Lats and Alts are not the same.
+   */
+  bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
+                               const std::vector<precision_t> &Lats,
+                               const std::vector<precision_t> &Alts);
+  /**
+   * \brief Create a map of geographic locations to data and do the interpolation
+   * \param data The value at the positions of geoLon, geoLat, and geoAlt
+   * \pre The size of the data should be the same as the geoLat/Lon/Alt_scgc
+   * \return A vector of estimated value at the points set by the last
+   *         set_interpolation_coefs function call if the function succeeds,
+   *         an empty vector if the data is not the same size as the geo grid.
+   */
+  std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
+
  private:
 
   int IsGeoGrid;
@@ -203,6 +229,83 @@ public:
 
   int nGCs; // number of ghostcells
 
+  // interpolation members
+  // The struct representing the range of a spherical grid
+  struct sphere_range {
+    precision_t lon_min;
+    precision_t lon_max;
+    precision_t dLon;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t dLat;
+    precision_t alt_min;
+    precision_t alt_max;
+  };
+  // The struct representing the range of a cubesphere grid
+  struct cubesphere_range {
+    // The minimum value and delta change of row and col
+    // We don't use row_max and col_max because they are not promised to be
+    // greater than min, for example the right norm of suface 2 expands along
+    // the -x axis. drow and dcol can be negative, and boundary checking will
+    // compare the theoretical index with 0 and nLon or nLat
+    precision_t row_min;
+    precision_t drow;
+    precision_t col_min;
+    precision_t dcol;
+    // Range of altitude
+    precision_t alt_min;
+    precision_t alt_max;
+    // The surface number of the grid
+    int64_t surface_number;
+    // The axis that row and col expands along
+    // 0 means x-axis, 1 means y-axix, and 2 means z-axis
+    int64_t row_direction;
+    int64_t col_direction;
+    // Used to promise that one and only one processor
+    // returns the interpolation value and all others return cNinf
+    bool row_min_exclusive;
+    bool row_max_exclusive;
+    bool col_min_exclusive;
+    bool col_max_exclusive;
+  };
+
+  // The index and coefficient used for interpolation
+  // Each point is processed by the function set_interpolation_coefs and stored
+  // in the form of this structure.
+  // If the point is out of the grid, in_grid = false and all other members are undefined
+  struct interp_coef_t {
+    // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
+    uint64_t iRow;
+    uint64_t iCol;
+    uint64_t iAlt;
+    // The coefficients along row, column and altitude
+    precision_t rRow;
+    precision_t rCol;
+    precision_t rAlt;
+    // Whether the point is within this grid or not
+    bool in_grid;
+  };
+
+  // Return the index of the last element that has altitude smaller than or euqal to the input
+  uint64_t search_altitude(const precision_t alt_in) const;
+
+  // Calculate the range of a spherical grid
+  void get_sphere_grid_range(struct sphere_range &sr) const;
+  // Calculate the range of a cubesphere grid
+  void get_cubesphere_grid_range(struct cubesphere_range &cr) const;
+
+  // Helper function for set_interpolation_coefs
+  void set_interp_coef_sphere(const sphere_range &sr,
+                              const precision_t lon_in,
+                              const precision_t lat_in,
+                              const precision_t alt_in);
+  void set_interp_coef_cubesphere(const cubesphere_range &cr,
+                                  const precision_t lon_in,
+                                  const precision_t lat_in,
+                                  const precision_t alt_in);
+
+  // Processed interpolation coefficients
+  std::vector<struct interp_coef_t> interp_coefs;
 };
 
 #endif  // INCLUDE_GRID_H_

@@ -69,6 +69,13 @@ class Neutrals {
     /// Which ion species results from the ionization?
     std::vector<int> iEuvIonSpecies_;
 
+    /// How many rows in the EUV CSV file are for ionization of this species?
+    int nEuvPeiSpecies;
+    /// Which row in the EUV CSV file if for the particular ionization?
+    std::vector<int> iEuvPeiId_;
+    /// Which ion species results from the ionization?
+    std::vector<int> iEuvPeiSpecies_;
+    
     int nAuroraIonSpecies;
     std::vector<int> iAuroraIonSpecies_;
     float Aurora_Coef;
@@ -145,6 +152,9 @@ class Neutrals {
   /// Bulk neutral EUV heating temperatuare change (K/s)
   arma_cube heating_euv_scgc;
 
+  /// Bulk neutral chemical heating temperatuare change (K/s)
+  arma_cube heating_chemical_scgc;
+
   /// Nuetral gas direct absorption heating efficiency (~5%)
   precision_t heating_efficiency;
 
@@ -170,10 +180,17 @@ class Neutrals {
      \brief Initialize the neutrals
      \param grid The grid to define the neutrals on
      \param planet contains information about the species to simulate
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  Neutrals(Grid grid, Planets planet, Inputs input, Report report);
+  Neutrals(Grid grid,
+	   Planets planet,
+	   Times time,
+	   Indices indices,
+	   Inputs input,
+	   Report report);
 
   /**********************************************************************
      \brief Creates the variables within the species_chars structure
@@ -199,10 +216,16 @@ class Neutrals {
   /**********************************************************************
      \brief Sets the initial conditions of the neutrals
      \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
      \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  int initial_conditions(Grid grid, Inputs input, Report report);
+  int initial_conditions(Grid grid,
+			 Times time,
+			 Indices indices,
+			 Inputs input,
+			 Report &report);
 
   /**********************************************************************
      \brief temporary function to set neutral densities with in the model
@@ -211,11 +234,16 @@ class Neutrals {
      of the model using a hydrostatic approximation and the bulk
      temperature.  It is temporary until we get a vertical solver.
 
+     \param iSpecies The species to fill (optional)
      \param grid The grid to define the neutrals on
      \param report allow reporting to occur
    **/
   void fill_with_hydrostatic(Grid grid, Report report);
 
+  void fill_with_hydrostatic(int64_t iSpecies,
+			     Grid grid, Report report);
+
+  
   /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
      \param report allow reporting to occur
@@ -252,9 +280,43 @@ class Neutrals {
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+     \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  void set_bcs(Report &report);
+  bool set_bcs(Grid grid,
+	       Times time,
+	       Indices indices,
+	       Inputs input,
+	       Report &report);
+
+  /**********************************************************************
+     \brief Set lower boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+     \param input info about how user has configured things
+     \param report allow reporting to occur
+   **/
+  bool set_lower_bcs(Grid grid,
+		     Times time,
+		     Indices indices,
+		     Inputs input,
+		     Report &report);
+
+  /**********************************************************************
+     \brief Set upper boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+     \param input info about how user has configured things
+     \param report allow reporting to occur
+   **/
+  bool set_upper_bcs(Grid grid,
+		     Inputs input,
+		     Report &report);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
@@ -262,7 +324,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param report allow reporting to occur
   **/
-  void set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
+  bool set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
   
   /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
@@ -317,8 +379,6 @@ class Neutrals {
 		       bool DoReverseX,
 		       bool DoReverseY,
 		       bool XbecomesY);
-
-  
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

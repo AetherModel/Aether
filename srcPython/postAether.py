@@ -314,7 +314,7 @@ def read_aether_json_header(filename):
 # ----------------------------------------------------------------------
 # read aether file that is in binary format
 
-def read_aether_one_binary_file(header, ifile, vars_to_read):
+def read_aether_one_binary_file(header, ifile, vars_to_read, isVerbose = True):
     """Read in list of variables from a single netCDF file.
 
     Parameters
@@ -341,7 +341,8 @@ def read_aether_one_binary_file(header, ifile, vars_to_read):
     """
 
     file_to_read = header["filename"][ifile]
-    print("Reading file : ", file_to_read)
+    if (isVerbose):
+        print("    Reading file : ", file_to_read)
 
     data = {hkey: header[hkey] for hkey in ["version",
                                             "nlons", "nlats",
@@ -392,7 +393,7 @@ def read_aether_file(filename, file_vars=None, epoch_name='time'):
 
     """
     data = dict()
-    print("Reading file : ", filename)
+    print("  Reading file : ", filename)
 
     if not os.path.isfile(filename):
         raise IOError('input file does not exist')
@@ -436,6 +437,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description = 'Post process Aether files')
     parser.add_argument('-rm', \
                         help='removes processed files', \
+                        action="store_true")
+    parser.add_argument('-v', \
+                        help='turn on verbose mode', \
                         action="store_true")
 
     args = parser.parse_args()
@@ -577,7 +581,7 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
     if (iAlt < 0):
         iAlt = find_var_index(data['vars'], 'alt')
     iVar = find_var_index(data['vars'], varToPlot)
-
+    
     if (mini < 0):
         cmap = cm.bwr
     else:
@@ -652,7 +656,7 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
     ax.set_title(varToPlot)
     ax.set_xlabel('Longitude (deg)')
     ax.set_ylabel('Latitude (deg)')
-    print('  Outputting file : ', plotFile)
+    print('  --> Outputting plotfile : ', plotFile)
     fig.savefig(plotFile)
     plt.close(fig)
     
@@ -660,8 +664,10 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
 # Read all of the block files in, given the core filename
 #----------------------------------------------------------------------------
 
-def read_block_files(coreFile, isNetCDF):
-    print('Figuring out coreFile : ', coreFile)
+def read_block_files(coreFile, isNetCDF, isVerbose = True):
+
+    if (isVerbose):
+        print('  --> Figuring out coreFile : ', coreFile)
     if (isNetCDF):
         fileList = sorted(glob(coreFile + '_g*.nc'))
         filetype = "netcdf"
@@ -671,7 +677,8 @@ def read_block_files(coreFile, isNetCDF):
     header = read_aether_headers(fileList, filetype=filetype)
     allBlockData = []
     for iFile, file in enumerate(fileList):
-        print('  Reading file : ', file)
+        if (isVerbose):
+            print('    Reading file : ', file)
         if (isNetCDF):
             varsToRead = header['vars']
             data = read_aether_file(file, file_vars=varsToRead)
@@ -679,7 +686,8 @@ def read_block_files(coreFile, isNetCDF):
             varsToRead = range(len(header['vars']))
             data = read_aether_one_binary_file(header,
                                                iFile,
-                                               varsToRead)
+                                               varsToRead,
+                                               isVerbose = isVerbose)
             
         allBlockData.append(data)
     return allBlockData, fileList
@@ -700,9 +708,10 @@ def get_sizes(allBlockData):
 # Write a NetCDF file from the data
 #----------------------------------------------------------------------------
 
-def write_netcdf(allBlockData, fileName):
+def write_netcdf(allBlockData, fileName, isVerbose = True):
 
-    print('  Outputting file : ', fileName)
+    if (isVerbose):
+        print('    Outputting file : ', fileName)
     ncfile = Dataset(fileName, 'w')
 
     nBlocks = len(allBlockData)
@@ -723,6 +732,8 @@ def write_netcdf(allBlockData, fileName):
     # create all of the variables
     varList = []
     for iV, v in enumerate(oneBlock['vars']):
+        if (v == 'alt'):
+            v = 'z'
         varList.append(v)
         if ('long_name' in oneBlock):
             longName = oneBlock['long_name'][iV]
@@ -820,8 +831,9 @@ def calc_std_of_ensembles(filesInfo,
     
     for i, iF in enumerate(ensembleIndexList):
         cF = filesInfo[iF]['coreFile']
+        nC = filesInfo[iF]['isNetCDF']
         print('---> Going back through corefiles: ', cF)
-        allBlockData, filelist = read_block_files(cF)
+        allBlockData, filelist = read_block_files(cF, nC)
 
         # subtract
         diff = do_math_on_block_data(allBlockData,
@@ -858,10 +870,12 @@ def write_and_plot_data(dataToWrite,
                         fileStart,
                         fileAddon,
                         iVar,
-                        iAlt):
+                        iAlt,
+                        isVerbose = True):
 
     netcdfFile = fileStart + fileAddon + '.nc'
-    write_netcdf(dataToWrite, netcdfFile)
+    print('  --> Outputting nc file : ', netcdfFile)
+    write_netcdf(dataToWrite, netcdfFile, isVerbose = isVerbose)
 
     plotFile = fileStart + fileAddon + '.png'
     var = dataToWrite[0]['vars'][iVar]
@@ -877,6 +891,7 @@ def write_and_plot_data(dataToWrite,
 if __name__ == '__main__':  # main code block
 
     args = parse_args()
+    isVerbose = args.v
 
     filesInfo = get_base_files()
 
@@ -888,8 +903,12 @@ if __name__ == '__main__':  # main code block
     for iFile, fileInfo in enumerate(filesInfo):
         coreFile = fileInfo['coreFile']
         isNetCDF = fileInfo['isNetCDF']
-        allBlockData, filelist = read_block_files(coreFile, isNetCDF)
-        write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt)
+        print('--> Core file: ', coreFile)
+        allBlockData, filelist = read_block_files(coreFile, isNetCDF,
+                                                  isVerbose = isVerbose)
+
+        write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt,
+                            isVerbose = isVerbose)
     
         if (fileInfo['isEnsemble']):
             factor = 1.0 / float(fileInfo['ensembleMembers'])
@@ -914,8 +933,15 @@ if __name__ == '__main__':  # main code block
                                     '_std', iVar, iAlt)
                             
         if (args.rm):
-            print('  ---> Removing files...')
+            print('  --> Removing files ...')
             for file in filelist:
                 command = 'rm -f '+file
+                if (isVerbose):
+                    print('    ', command)
                 os.system(command)
+                if (not isNetCDF):
+                    command = 'rm -f '+file.replace('json','bin')
+                    if (isVerbose):
+                        print('    ', command)
+                    os.system(command)
     

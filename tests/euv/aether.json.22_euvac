@@ -1,0 +1,32 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"iFunctionVerbose" : {
+            "Euv::pair_euv" : 5,
+            "Euv::euvac" : 5},
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 40},
+
+    "EndTime" : [2011, 3, 20, 0, 30, 0],    
+
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [900]},
+    
+    "Euv" : {
+	"Model" : "euvac",
+	"File" : "UA/inputs/euv_solomon.csv"
+    },
+    
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : false
+}

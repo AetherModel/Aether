@@ -581,6 +581,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   IsGeoGrid = 1;
 
+  IsCubeSphereGrid = input.get_is_cubesphere();
+
   if (input.get_is_cubesphere())
     create_cubesphere_connection(quadtree, input, report);
   else
@@ -615,9 +617,9 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
-				       input.get_student_name(),
-				       4, "");
-  
+                                       input.get_student_name(),
+                                       4, "");
+
   report.exit(function);
   return DidWork;
 }

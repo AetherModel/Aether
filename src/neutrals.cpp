@@ -52,7 +52,12 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 //  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid, Planets planet, Inputs input, Report report) {
+Neutrals::Neutrals(Grid grid,
+                   Planets planet,
+                   Times time,
+                   Indices indices,
+                   Inputs input,
+                   Report report) {
 
   int iErr;
   species_chars tmp;
@@ -103,6 +108,7 @@ Neutrals::Neutrals(Grid grid, Planets planet, Inputs input, Report report) {
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.set_size(nLons, nLats, nAlts);
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
@@ -113,7 +119,7 @@ Neutrals::Neutrals(Grid grid, Planets planet, Inputs input, Report report) {
     std::cout << "Error reading planet file!" << '\n';
 
   // This specifies the initial conditions for the neutrals:
-  iErr = initial_conditions(grid, input, report);
+  iErr = initial_conditions(grid, time, indices, input, report);
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
@@ -157,96 +163,8 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
   return iErr;
 }
 
-// -----------------------------------------------------------------------------
-//  This is a place holder for creating initial conditions
-// -----------------------------------------------------------------------------
-
-int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
-
-  int iErr = 0;
-  int64_t iLon, iLat, iAlt, iA;
-  precision_t alt, r;
-
-  report.print(3, "Creating Neutrals initial_condition");
-
-  if (input.get_do_restart()) {
-    report.print(1, "Restarting! Reading neutral files!");
-    bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
-
-    if (!DidWork)
-      std::cout << "Reading Restart for Neutrals Failed!!!\n";
-  } else {
-
-    // ---------------------------------------------------------------------
-    // This section assumes we want a hydrostatic solution given the
-    // temperature profile in the planet.in file.
-    // ---------------------------------------------------------------------
-
-    int64_t nLons = grid.get_nLons();
-    int64_t nLats = grid.get_nLats();
-    int64_t nAlts = grid.get_nAlts();
-
-    // Let's assume that the altitudes are not dependent on lat/lon:
-
-    arma_vec alt1d(nAlts);
-    arma_vec temp1d(nAlts);
-
-    arma_mat H2d(nLons, nLats);
-
-    alt1d = grid.geoAlt_scgc.tube(0, 0);
-
-    if (nInitial_temps > 0) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-        alt = alt1d(iAlt);
-
-        // Find temperatures:
-        if (alt <= initial_altitudes[0])
-          temp1d[iAlt] = initial_temperatures[0];
-
-        else {
-          if (alt >= initial_altitudes[nInitial_temps - 1])
-            temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
-
-          else {
-            // Linear interpolation!
-            iA = 0;
-
-            while (alt > initial_altitudes[iA])
-              iA++;
-
-            iA--;
-            // alt will be between iA and iA+1:
-            r = (alt - initial_altitudes[iA]) /
-                (initial_altitudes[iA + 1] - initial_altitudes[iA]);
-            temp1d[iAlt] =
-              (1.0 - r) * initial_temperatures[iA] +
-              (r) * initial_temperatures[iA + 1];
-          }
-        }
-      }
-    } else
-      temp1d = 200.0;
-
-    // spread the 1D temperature across the globe:
-    for (iLon = 0; iLon < nLons; iLon++) {
-      for (iLat = 0; iLat < nLats; iLat++)
-        temperature_scgc.tube(iLon, iLat) = temp1d;
-    }
-
-    // Set the lower boundary condition:
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      species[iSpecies].density_scgc.slice(0).
-      fill(species[iSpecies].lower_bc_density);
-    }
-
-    fill_with_hydrostatic(grid, report);
-  }
-
-  return iErr;
-}
-
 //----------------------------------------------------------------------
-// Fill With Hydrostatic Solution
+// Fill With Hydrostatic Solution (all species)
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
@@ -256,6 +174,9 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
     // Integrate with hydrostatic equilibrium up:
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
+
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       species[iSpecies].scale_height_scgc.slice(iAlt) =
         cKB * temperature_scgc.slice(iAlt) /
@@ -271,139 +192,25 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 }
 
 //----------------------------------------------------------------------
-// set_bcs
+// Fill With Hydrostatic Solution (only one constituent)
 //----------------------------------------------------------------------
 
-void Neutrals::set_bcs(Report &report) {
+void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
+                                     Grid grid, Report report) {
 
-  std::string function = "Neutrals::set_bcs";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
+  int64_t nAlts = grid.get_nAlts();
 
-  int64_t nAlts = temperature_scgc.n_slices;
+  species[iSpecies].scale_height_scgc =
+    cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
 
-  // Set the lower boundary condition:
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    species[iSpecies].density_scgc.slice(0).
-    fill(species[iSpecies].lower_bc_density);
+  // Integrate with hydrostatic equilibrium up:
+  for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+    species[iSpecies].density_scgc.slice(iAlt) =
+      species[iSpecies].density_scgc.slice(iAlt - 1) %
+      exp(-grid.dalt_lower_scgc.slice(iAlt) /
+          species[iSpecies].scale_height_scgc.slice(iAlt));
   }
-
-  temperature_scgc.slice(nAlts - 2) = temperature_scgc.slice(nAlts - 3);
-  temperature_scgc.slice(nAlts - 1) = temperature_scgc.slice(nAlts - 2);
-
-  report.exit(function);
-}
-
-//----------------------------------------------------------------------
-// set_horizontal_bcs
-//   iDir tells which direction to set:
-//      iDir = 0 -> +x
-//      iDir = 1 -> +y
-//      iDir = 2 -> -x
-//      iDir = 3 -> -y
-//----------------------------------------------------------------------
-
-void Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
-
-  std::string function = "Neutrals::set_horizontal_bcs";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  int64_t nX = grid.get_nX(), iX;
-  int64_t nY = grid.get_nY(), iY;
-  int64_t nAlts = grid.get_nAlts(), iAlt;
-  int64_t nGCs = grid.get_nGCs();
-  int64_t iV;
-
-  // iDir = 0 is right BC:
-  if (iDir == 0) {
-    for (iX = nX - nGCs; iX < nX; iX++) {
-      for (iY = 0; iY < nY; iY++) {
-        // Constant Gradient for Temperature:
-        temperature_scgc.tube(iX, iY) =
-          2 * temperature_scgc.tube(iX - 1, iY) -
-          temperature_scgc.tube(iX - 2, iY);
-
-        // Constant Value for Velocity:
-        for (iV = 0; iV < 3; iV++)
-          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX - 1, iY);
-
-        // Constant Gradient for densities:
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-          species[iSpecies].density_scgc.tube(iX, iY) =
-            2 * species[iSpecies].density_scgc.tube(iX - 1, iY) -
-            species[iSpecies].density_scgc.tube(iX - 2, iY);
-      }
-    }
-  }
-
-  // iDir = 2 is left BC:
-  if (iDir == 2) {
-    for (iX = nGCs - 1; iX >= 0; iX--) {
-      for (iY = 0; iY < nY; iY++) {
-        // Constant Gradient for Temperature:
-        temperature_scgc.tube(iX, iY) =
-          2 * temperature_scgc.tube(iX + 1, iY) -
-          temperature_scgc.tube(iX + 2, iY);
-
-        // Constant Value for Velocity:
-        for (iV = 0; iV < 3; iV++)
-          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX + 1, iY);
-
-        // Constant Gradient for densities:
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-          species[iSpecies].density_scgc.tube(iX, iY) =
-            2 * species[iSpecies].density_scgc.tube(iX + 1, iY) -
-            species[iSpecies].density_scgc.tube(iX + 2, iY);
-      }
-    }
-  }
-
-  // iDir = 1 is upper BC:
-  if (iDir == 1) {
-    for (iX = 0; iX < nX; iX++) {
-      for (iY = nX - nGCs; iY < nY; iY++) {
-        // Constant Gradient for Temperature:
-        temperature_scgc.tube(iX, iY) =
-          2 * temperature_scgc.tube(iX, iY - 1) -
-          temperature_scgc.tube(iX, iY - 2);
-
-        // Constant Value for Velocity:
-        for (iV = 0; iV < 3; iV++)
-          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY - 1);
-
-        // Constant Gradient for densities:
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-          species[iSpecies].density_scgc.tube(iX, iY) =
-            2 * species[iSpecies].density_scgc.tube(iX, iY - 1) -
-            species[iSpecies].density_scgc.tube(iX, iY - 2);
-      }
-    }
-  }
-
-  // iDir = 2 is left BC:
-  if (iDir == 3) {
-    for (iX = 0; iX < nX; iX++) {
-      for (iY = nGCs - 1; iY >= 0; iY--) {
-        // Constant Gradient for Temperature:
-        temperature_scgc.tube(iX, iY) =
-          2 * temperature_scgc.tube(iX, iY + 1) -
-          temperature_scgc.tube(iX, iY + 2);
-
-        // Constant Value for Velocity:
-        for (iV = 0; iV < 3; iV++)
-          velocity_vcgc[iV].tube(iX, iY) = velocity_vcgc[iV].tube(iX, iY + 1);
-
-        // Constant Gradient for densities:
-        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-          species[iSpecies].density_scgc.tube(iX, iY) =
-            2 * species[iSpecies].density_scgc.tube(iX, iY + 1) -
-            species[iSpecies].density_scgc.tube(iX, iY + 2);
-      }
-    }
-  }
-
-  report.exit(function);
+  calc_mass_density(report);
 }
 
 //----------------------------------------------------------------------

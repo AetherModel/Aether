@@ -1,7 +1,7 @@
 # Aether
 This is the home of the Aether model of the thermosphere and ionosphere
 
-The Aether model has been developed using gnu c++ (version 10). If
+The Aether model has been developed using gnu c++ (versions 9, 10, 11). If
 you are using this, hopefully it will just work out of the box. We have 
 been doing development of Aether on Mac OSX, and in Ubuntu Linux.  We have 
 also used the Windows Subsystem for Linux, Ubuntu distribution, which 
@@ -13,33 +13,99 @@ starting with the doc/student.md file.
 
 ## Dependencies:
 
-1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have it installed,
+On Mac, installing some of the dependencies can be awkward, depending
+on which c++ compiler you are using. Since there is one that
+essentially comes with Mac OSX, called clang, the default compiler is
+often this.  Much of the other software is not built with this, so you
+need to switch compilers, which can be challenging.
 
-For MacOS [homebrew](https://formulae.brew.sh/formula/cmake):
+While the development team has tried to remove as many of the
+dependencies as possible to reduce this issues, it is still a good
+idea to try to get a different compiler to work.  If you want to
+use netCDF files or the fortran compiled options (like MSIS), you
+will probably have to do this.
+
+0. Install gcc.  This comes install by default on Ubuntu. For MacOS,
+this can be installed using [macports](https://www.macports.org/):
 ```bash
-sudo brew install cmake
+sudo port install gcc11
 ```
+(At this moment, gcc11 is the latest version, there may be a more up-to-date version available now.)
 
-This can also be installed using [macports](https://www.macports.org/)
+
+1. Aether uses [CMake](https://cmake.org/) instead of make. If you don't have it installed, you need it.
+
+For MacOS, this can be installed using
+[macports](https://www.macports.org/)
 ```bash
 sudo port install cmake
 ```
+
+Or using [homebrew](https://formulae.brew.sh/formula/cmake):
+```bash
+sudo brew install cmake
+```
+The development team has mostly used macports and not homebrew.
 
 For Ubuntu/Debian Linux:
 ```bash
 sudo apt install cmake
 ```
+This can be done on redhat using yum also.
 
-2. Aether uses the netcdf library (netcdf-cxx4). As above, netCDF can be installed using a package manager
+2. Aether uses the nlohman json package for reading and writing json files.
 
-On Mac, this is can be awkward, depending on which c++ compiler you are using. Since there is one that essentially comes with Mac OSX, called clang, the default compiler is often this.  Much of the other software is not built with this, so you need to switch compilers, which can be challenging.  
+On Ubuntu:
+
+```bash
+sudo apt-get install -y nlohmann-json3-dev
+```
+
+On Mac:
+
+```bash
+sudo port install nlohmann-json 
+```
+
+3. The armadillo headers need to be installed. Simplistically,
+Armadillo is a system that allows matrix math to be done in C++
+easily. We mostly use it for doing math with matrices (like
+multiplication, addition, etc.), but it is much more powerful than
+this.  You will notice that there are not many 3D loops in Aether,
+which is due to Armadillo.  To make this all fast, it is best to
+install the lapack abd blas libraries too.
+
+On Ubuntu:
+
+```bash
+sudo apt-get install liblapack-dev
+sudo apt-get install libblas-dev
+sudo apt-get install libboost-dev
+sudo apt-get install libarmadillo-dev
+sudo apt-get install openmpi-bin libopenmpi-dev
+```
+
+On Mac:
+
+```bash
+sudo port install lapack
+sudo port install OpenBLAS
+sudo port install boost
+sudo port install armadillo
+sudo port install openmpi-bin libopenmpi-dev
+ ```
+
+4. We have removed the strict dependency for netcdf, but a lot of
+codes used netCDF, so it doesn't hurt to try to install the libraries.
+Aether uses the netcdf library (netcdf-cxx4). As above, netCDF can be
+installed using a package manager.
 
 On Mac, if you want the clang compiled version of netcdf, then:
 ```bash
 sudo port install netcdf-cxx4
 ```
 
-If you want the gcc version of netcdf (recommended), then:
+If you want the gcc version of netcdf, then:
 ```bash
 sudo port install netcdf-cxx4 +gcc10
 ```
@@ -50,59 +116,17 @@ sudo apt-get install libnetcdf-dev
 sudo apt install libnetcdf-c++4-dev
 ```
 
-3. Aether uses the nlohman json package for reading and writing json files.
-
-On Ubuntu:
-
-```bash
-sudo apt-get install -y nlohmann-json-dev
-```
-
-On Mac:
-
-```bash
-sudo port install nlohmann-json 
-```
-
-4. The armadillo headers need to be installed. Simplistically, Armadillo is a
-system that allows matrix math to be done in C++ easily. We mostly use it for
-doing math with matrices (like multiplication, addition, etc.), but it is much
-more powerful than this.  You will notice that there are not many 3D loops in
-Aether, which is due to Armadillo.  To make this all fast, it is best to install
-the lapack abd blas libraries too.
-
-On Ubuntu:
-
-```bash
-sudo apt-get install liblapack-dev
-sudo apt-get install libblas-dev
-sudo apt-get install libboost-dev
-sudo apt-get install libarmadillo-dev
-```
-
-On Mac:
-
-```bash
-sudo port install lapack
-sudo port install OpenBLAS
-sudo port install boost
-sudo port install armadillo
- ```
-
 ## Quick Start:
 
 These are unix commands, assuming that you have access to a unix/linux
-terminal. This has been tested on a MacBook Pro and Ubuntu.
+terminal. This has been tested on a MacBook Pro and Ubuntu. (This is
+assuming that you are installing the root version of Aether and not a
+forked version.  If you are using a forked version, replace the
+"AetherModel" with the appropriate location of the fork.)
 
 ```bash
 git clone https://github.com/AetherModel/Aether
-```
-
-```bash
 cd Aether
-```
-
-```bash
 git checkout develop
 ```
 
@@ -111,15 +135,25 @@ To compile Aether:
 mkdir build
 cd build
 cmake ..
-make -j
+make [-j4]
 ```
-
+The -j4 is optional and uses 4 processors, but you could use 2, 4, 8,
+or whatever.
+ 
 To compile Aether with NetCDF:
 ```bash
 mkdir build
 cd build
 cmake -DUSE_NETCDF=Y ..
-make -j
+make [-j4] (the -j4 uses 4 processors)
+```
+
+To compile Aether with FORTRAN codes:
+```bash
+mkdir build
+cd build
+cmake -DUSE_FORTRAN=Y ..
+make [-j4] (the -j4 uses 4 processors)
 ```
 
 To compile Aether with double precision:
@@ -127,7 +161,7 @@ To compile Aether with double precision:
 mkdir build
 cd build
 cmake -DUSE_DOUBLE_PRECISION=Y ..
-make -j
+make [-j4] (the -j4 uses 4 processors)
 ```
 
 Once you have compiled you can install Aether with an example run directory
@@ -151,6 +185,16 @@ settings that you want to change to this file:
 code to run the way that you would like.  You can copy settings from
 the default.json file and then modify them here. This will be covered
 in the reference manual, once we have written one.
+
+You can check to make sure that these are valid json files (not checking the content, though) with:
+
+```bash
+cd run.test
+python -m json.tool aether.json
+python -m json.tool UA/inputs/defaults.json
+```
+
+At this time, there is no checker to see if all of the settings in each of the inputs files are actually valid and Aether understands them. 
 
 Output files are in UA/output.
 

@@ -139,4 +139,10 @@ const bool DoWrite = false;
 
 const precision_t cSmall = 1e-6;
 
+// -------------------------------------------------------------------------
+// Define the negative infinity to indicate input error
+// -------------------------------------------------------------------------
+
+const precision_t cNinf = -1e32;
+
 #endif  // INCLUDE_CONSTANTS_H_

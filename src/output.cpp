@@ -4,6 +4,7 @@
 // #include <netcdf>
 
 #include "aether.h"
+//#include "output.cpp"
 
 /* ---------------------------------------------------------------------
 
@@ -53,9 +54,9 @@ int output(const Neutrals &neutrals,
   }
 
   report.student_checker_function_name(args.get_is_student(),
-				       args.get_student_name(),
-				       3, "");
-  
+                                       args.get_student_name(),
+                                       3, "");
+
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
     if (time.check_time_gate(args.get_dt_output(iOutput))) {
@@ -230,6 +231,21 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("Cent Acc East",
+                                                    "Logitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc North",
+                                                    "Latitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc Vert",
+                                                    "Radial Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
+      }
+
       // ------------------------------------------------------------
       // Set output file names
 
@@ -249,6 +265,10 @@ int output(const Neutrals &neutrals,
 
       if (type_output == "gravity")
         filename = "3DGRA_";
+
+      if (type_output == "moment"){
+        filename = "3DMMT_";
+      }
 
       if (type_output == "corners")
         filename = "3DCOR_";
@@ -453,11 +473,11 @@ void OutputContainer::clear_variables() {
 
 OutputContainer::OutputContainer() {
   // Set default output type to netCDF
-  #ifdef NETCDF
-    output_type = netcdf_type;
-  #else
-    output_type = binary_type;
-  #endif
+#ifdef NETCDF
+  output_type = netcdf_type;
+#else
+  output_type = binary_type;
+#endif
 }
 
 // -----------------------------------------------------------------------------

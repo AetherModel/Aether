@@ -399,3 +399,21 @@ void Grid::calc_long_grid_spacing(){
   dlon_center_dist_scgc =
     dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
 }
+
+// -----------------------------------------------------------------------------
+//  Calaculate centripetal acceleration
+// -----------------------------------------------------------------------------
+
+void Grid::calc_cent_acc(Planets planet) {
+  // Longitudanal cent acc
+  cent_acc_vcgc[0].zeros();
+  
+  float omega = planet.get_omega();
+  float omega2 = omega * omega;
+
+  // Latitudinal cent acc
+  cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(geoLat_scgc);
+
+  // Radial cent acc
+  cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
+}

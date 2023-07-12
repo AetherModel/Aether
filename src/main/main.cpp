@@ -80,17 +80,20 @@ int main() {
       throw std::string("init_geo_grid failed!");
   
 
+    if (input.get_cent_acc())
+      gGrid.calc_cent_acc(planet);
+
     // Initialize Magnetic grid:
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
 
     // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, planet, input, report);
+    Neutrals neutrals(gGrid, planet, time, indices, input, report);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet, input, report);
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
-    euv.pair_euv(neutrals, ions, report);
+    euv.pair_euv(neutrals, ions, input, report);
 
     // Initialize Chemical scheme (including reading file):
     Chemistry chemistry(neutrals, ions, input, report);
@@ -130,6 +133,8 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
+    Logfile logfile(indices, input, report);
+
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);
@@ -146,7 +151,8 @@ int main() {
 		       electrodynamics,
 		       indices,
 		       input,
-		       report);
+		       report,
+		       logfile);
 
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
@@ -177,7 +183,6 @@ int main() {
       // Do some coupling here. But we have no coupling to do. Sad.
 
     } // End of outer time loop - done with run!
-
 
     report.exit(function);
     report.times();
