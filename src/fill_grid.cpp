@@ -223,7 +223,9 @@ void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
 	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat), input);
 
   radius_scgc = radius_scgc + geoAlt_scgc;
-
+  radius2_scgc = radius_scgc % radius_scgc;
+  radius2i_scgc = 1.0 / radius2_scgc;
+  
   report.exit(function);
   return;
 }
@@ -267,7 +269,7 @@ void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
 
 void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
 
-  std::string function = "Grid::calc_rad_unit";
+  std::string function = "Grid::calc_gravity";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -276,10 +278,15 @@ void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
   gravity_potential_scgc =
     - (mu / radius_scgc)
     + ((3 * (planet.get_J2(input) * planet.get_mu())) /
-       (2 * pow(radius_scgc, 3)) % ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
+       (2 * pow(radius_scgc, 3)) %
+       ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
 
   // *this is the grid class....
   gravity_vcgc = calc_gradient_vector(gravity_potential_scgc, *this);
+
+  gravity_vcgc[0] = - gravity_vcgc[0];
+  gravity_vcgc[1] = - gravity_vcgc[1];
+  gravity_vcgc[2] = - gravity_vcgc[2];
 
   report.exit(function);
   return;
