@@ -68,7 +68,7 @@ int advance(Planets &planet,
   calc_aurora(gGrid, neutrals, ions, input, report);
 
   neutrals.calc_conduction(gGrid, time, report);
-  //chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
+  chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
 
   neutrals.vertical_momentum_eddy(gGrid, input, report);
   calc_ion_collisions(neutrals, ions, report);
