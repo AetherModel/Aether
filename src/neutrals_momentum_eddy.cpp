@@ -5,27 +5,25 @@
 
 #include "aether.h"
 
-void Neutrals::vertical_momentum_eddy(Grid &gGrid, Report &report, Input inputs) {
+void Neutrals::vertical_momentum_eddy(Grid &gGrid, Inputs inputs, Report &report) {
     
-    std::string function = "Neutrals::vertical_momentum_eddy";
-    static int iFunction = -1;
-    report.enter(function, iFunction);
+  std::string function = "Neutrals::vertical_momentum_eddy";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
     
-    arma_cube log_cons;
-    arma_cube grad_cons;
-    
-    for (int64_t iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
+  arma_cube log_cons;
+  arma_cube grad_cons;
+
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         
-        // Take the natural log of each concentration cube:
-        log_cons = log(species[iSpecies].concentration_scgc);
-        
-        // calculate gradient:
-        grad_cons = calc_gradient_alt(log_cons, gGrid);
-        
-        species[iSpec].acc_eddy += -grad_cons * inputs.get_eddy_coef();
-        
-        
-    }
-    
-    report.exit(function);
+    // Take the natural log of each concentration cube:
+    log_cons = log(species[iSpecies].concentration_scgc);
+
+    // calculate gradient:
+    grad_cons = calc_gradient_alt(log_cons, gGrid);
+    species[iSpecies].acc_eddy =
+      - grad_cons * inputs.get_eddy_coef();
+  }
+  report.exit(function);
+  return;
 } // neutral_friction_momentum_eddy
