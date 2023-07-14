@@ -83,6 +83,18 @@ std::string tostr(int64_t num_to_convert, int64_t zero_padding_len) {
   return ss.str();
 }
 
+// -----------------------------------------------------------------------------
+// Convert a number to a float/double
+//    - Can convert scientific notation
+// -----------------------------------------------------------------------------
+
+precision_t str_to_num(std::string input) {
+  std::stringstream ss(input);
+  precision_t output = 0;
+  ss >> output;
+  return output;
+}
+
 // -----------------------------------------------------------------------
 // Read json file
 // -----------------------------------------------------------------------
