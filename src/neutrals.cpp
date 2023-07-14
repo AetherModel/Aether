@@ -30,6 +30,13 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
 
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_eddy.set_size(nLons, nLats, nAlts);
+
+  tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
+  
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
