@@ -365,6 +365,7 @@ bool Logfile::write_logfile(Indices &indices,
         // Set the interpolation coefficients using the location of satellites
         if (!gGrid.set_interpolation_coefs(lons, lats, alts)) {
             std::cout << "Logfile: Can not set interpolation coefficients!\n";
+	    report.exit(function);
             return false;
         }
 
@@ -403,6 +404,7 @@ bool Logfile::write_logfile(Indices &indices,
         // Report error if the file stream is not open
         if (!logfilestream.is_open()) {
             std::cout << "Logfile: Can not open output file stream!\n";
+	    report.exit(function);
             return false;
         }
 
