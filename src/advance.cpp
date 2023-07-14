@@ -94,9 +94,8 @@ int advance(Planets &planet,
 
   iErr = output(neutrals, ions, gGrid, time, planet, input, report);
 
-  report.exit(function);
-
   logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
 
+  report.exit(function);
   return iErr;
 }
