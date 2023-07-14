@@ -48,23 +48,8 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
       coefmatrix(iSpecies, jSpecies) =
 	ktom * neutrals.species[jSpecies].density_scgc(iLon, iLat, iAlt) /
 	(temp_dij * neutrals.density_scgc(iLon, iLat, iAlt));
-
-//      std::cout << "coefmatrix : " << neutrals.species[iSpecies].cName
-//		<< " " << neutrals.species[jSpecies].cName
-//		<< " " << iLon << " " << iLat << " " << iAlt 
-//		<< " " << neutrals.density_scgc(iLon, iLat, iAlt)
-//		<< " " << neutrals.temperature_scgc(iLon, iLat, iAlt)
-//		<< " " << neutrals.species[jSpecies].density_scgc(iLon, iLat, iAlt)
-//		<< " " << neutrals.species[iSpecies].diff0[jSpecies]
-//		<< " " << neutrals.species[iSpecies].diff_exp[jSpecies]
-//		<< " " << coefmatrix(iSpecies, jSpecies)
-//		<< " " << temp_dij
-//		<< "\n";
-
-      
     } // jSpec loop
   } // iSpec loop
-
   
   matrix = -1 * coefmatrix;
     
@@ -106,7 +91,6 @@ void calc_neutral_friction(Neutrals &neutrals,
   int64_t nZs = neutrals.temperature_scgc.n_slices;
     
   for (iAlt = 0; iAlt < nZs; iAlt++) {
-    // std::cout << "cnf : " << iAlt << "\n";
     for (iLat = 0; iLat < nYs; iLat++) {
       for (iLon = 0; iLon < nXs; iLon++) {
 	for (iDir = 0; iDir < 3; iDir++) {
