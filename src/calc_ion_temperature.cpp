@@ -65,6 +65,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       neutrals.temperature_scgc;
   temperature_scgc = neutrals.temperature_scgc;
 
+  report.exit(function);
   return;
   
   // Loop over all species or assume only bulk calculation
