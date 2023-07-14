@@ -35,10 +35,15 @@ int advance(Planets &planet,
   if (input.get_is_student())
         report.print(-1, "(1) What function is this " +
              input.get_student_name() + "?");
-    
+
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
   neutrals.calc_specific_heat(report);
+  neutrals.calc_concentration(report);
+  neutrals.calc_mean_major_mass(report);
+  neutrals.calc_pressure(report);
+  neutrals.calc_bulk_velocity(report);
+
   time.calc_dt();
 
   iErr = calc_euv(planet,
@@ -62,7 +67,12 @@ int advance(Planets &planet,
   calc_aurora(gGrid, neutrals, ions, input, report);
 
   neutrals.calc_conduction(gGrid, time, report);
-  chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
+  //chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
+
+  neutrals.vertical_momentum_eddy(gGrid, input, report);
+  calc_ion_collisions(neutrals, ions, report);
+  calc_neutral_friction(neutrals, report);
+
   neutrals.add_sources(time, report);
   ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
   ions.calc_electron_temperature(neutrals, gGrid, report);
