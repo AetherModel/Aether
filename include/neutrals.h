@@ -4,6 +4,8 @@
 #ifndef INCLUDE_NEUTRALS_H_
 #define INCLUDE_NEUTRALS_H_
 
+#include "../include/aether.h"
+
 /**************************************************************
  * \class Neutrals
  *
@@ -56,7 +58,7 @@ class Neutrals {
     std::vector<arma_cube> velocity_vcgc;
       
     /// Acceleration of each species (m/s^2)
-    std::vector<arma_cube> acc_vcgc;
+    std::vector<arma_cube> acc_neutral_friction;
       
     /// Acceleration of each species based on Eddy contribution.
     /// Only in vertical direction.
@@ -325,7 +327,7 @@ class Neutrals {
      \brief Exchange messages between processors
      \param grid The grid to define the neutrals on
      \param report allow reporting to occur
-   **/
+  **/
   bool exchange(Grid &grid, Report &report);
 
   /**********************************************************************
@@ -333,19 +335,10 @@ class Neutrals {
    \param grid The grid to define the neutrals on
    \param report allow reporting to occur
    \param inputs access eddy coefficient
- **/ 
-  void vertical_momentum_eddy(Grid &grid, Report &report, Input inputs);
-    
+  **/ 
+  void vertical_momentum_eddy(Grid &grid, Inputs inputs, Report &report);
+  
   /**********************************************************************
-      \brief Calculate acceleration due to ion drag
-      \param ions The ions with which we are calculating drag
-      \param grid The grid to define the neutrals on
-      \param dt The change in time
-      \param report allow reporting to occur
-     **/
-  void calc_ion_collisions(Ions &ions, Grid &grid, precision_t dt, Report &report);
-
-/**********************************************************************
      \brief Exchange one face for the NEUTRALS
 
      1. pack all of the variables (den, temp, vel)
