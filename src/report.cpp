@@ -138,6 +138,7 @@ void Report::times() {
   if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
     float min_timing = entries[0].timing_total * TimingPercent / 100.0;
+    std::cout << "  --> Setting min timing to : " << min_timing << "\n";
 
     for (int i = 0; i < nEntries; i++) {
       if (entries[i].iLevel <= iTimingDepth &&
