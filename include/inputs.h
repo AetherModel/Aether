@@ -17,6 +17,7 @@ public:
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
+  bool get_include_photoelectrons();
   precision_t get_dt_report();
   precision_t get_n_outputs();
   precision_t get_dt_output(int iOutput);
@@ -46,12 +47,18 @@ public:
   int get_updated_seed();
   void set_seed(int seed);
   bool write_restart();
-  json get_perturb_values();  
+  json get_perturb_values(); 
+  bool get_do_lat_dependent_radius();
+  bool get_do_J2();
 
   bool get_is_cubesphere();
+  bool get_cent_acc();
 
   std::string get_student_name();
   bool get_is_student();
+  
+  json get_initial_condition_types();
+  json get_boundary_condition_types();
   
   // ------------------------------
   // Grid inputs:
@@ -82,6 +89,16 @@ public:
   int iVerboseProc;
   int iTimingDepth;
 
+  std::string get_logfile();
+  std::vector<std::string> get_species_vector();
+  bool get_logfile_append();
+  precision_t get_logfile_dt();
+
+  // Satellites
+  std::vector<std::string> get_satellite_files();
+  std::vector<std::string> get_satellite_names();
+  std::vector<precision_t> get_satellite_dts();
+  
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
   std::vector<int> get_settings_timearr(std::string key1);

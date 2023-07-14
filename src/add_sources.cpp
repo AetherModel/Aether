@@ -21,7 +21,8 @@ void Neutrals::add_sources(Times time, Report &report) {
   temperature_scgc =
     temperature_scgc +
     dt * (heating_euv_scgc +
-          conduction_scgc);
+	  heating_chemical_scgc +
+	  conduction_scgc);
 
   for (int64_t iSpec = 0; iSpec < nSpecies; iSpec++) {
     for (int iDir = 0; iDir < 3; iDir++) {

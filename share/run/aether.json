@@ -10,14 +10,17 @@
 	"nLats" : 18,
 	"nAlts" : 50},
 
-    "Mysetting" : {
-	"setting1" : "this_is_an_example",
-	"setting2" : 42,
-	"setting3" : true},
-
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-
-    "DoCalcBulkIonTemp" : false
+    
+    "Outputs" : {
+	"type" : ["states", "gravity"],
+	"dt" : [900, 0.0] },
+    
+    "DoCalcBulkIonTemp" : false,
+    
+    "Oblate" : {
+	"isOblate" : false,
+        "isJ2" : false }
 }

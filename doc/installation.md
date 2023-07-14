@@ -34,8 +34,9 @@ MacPorts, Homebrew (Mac OS X), apt-get (Ubuntu), or Chocolatey (Windows).
 | liblapack-dev      |                |
 | libnetcdf-dev      |                |
 | libnetcdf-c++4-dev |                |
-| nlohmann-json-dev  |                |
-| openMPI            | same as gcc    |
+| libopenmpi-dev     |                |
+| nlohmann-json3-dev |                |
+| openmpi-bin        | same as gcc    |
 
 ## Get Aether
 
