@@ -29,12 +29,10 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
 			    Neutrals &neutrals,
-			    Ions &ions,
 			    Report &report);
 
 void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
                           Neutrals &neutrals,
-                          Ions &ions,
                           Report &report);
 
 void check_collision_frequncies(Ions ions,
