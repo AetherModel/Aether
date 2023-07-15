@@ -29,6 +29,22 @@ bool sync_across_all_procs(bool value) {
 }
 
 // ----------------------------------------------------------------------------
+// Calculate the average value across all processors
+// ----------------------------------------------------------------------------
+
+precision_t sync_mean_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  double nSend, nReceive;
+  vSend = value;
+  nSend = 1.0;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
+  MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
+  global_value = vReceive/nReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // ----------------------------------------------------------------------------
 
