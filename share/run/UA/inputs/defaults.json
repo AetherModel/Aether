@@ -31,7 +31,12 @@
 
     "DoCalcBulkIonTemp" : false,
     
-    "EddyCoefficient" : 1,
+    "Eddy" : {
+	"Coefficient" : 50.0,
+	"BottomPressure" : 0.01,
+	"TopPressure" : 0.005,
+	"UseInEnergy": true,
+	"UseInMomentum": true},
 
     "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 0, 10, 0],
