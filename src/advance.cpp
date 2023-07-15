@@ -44,6 +44,7 @@ int advance(Planets &planet,
   neutrals.calc_mean_major_mass(report);
   neutrals.calc_pressure(report);
   neutrals.calc_bulk_velocity(report);
+  neutrals.calc_kappa_eddy(input, report);
 
   time.calc_dt();
 
@@ -67,7 +68,7 @@ int advance(Planets &planet,
 
   calc_aurora(gGrid, neutrals, ions, input, report);
 
-  neutrals.calc_conduction(gGrid, time, report);
+  neutrals.calc_conduction(gGrid, time, input, report);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
 
   neutrals.vertical_momentum_eddy(gGrid, input, report);
@@ -79,6 +80,8 @@ int advance(Planets &planet,
   ions.calc_electron_temperature(neutrals, gGrid, report);
 
   neutrals.set_bcs(gGrid, time, indices, input, report);
+
+  neutrals.calc_scale_height(gGrid, input, report);
   neutrals.fill_with_hydrostatic(gGrid, report);
 
   neutrals.exchange(gGrid, report);
