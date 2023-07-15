@@ -159,6 +159,9 @@ class Neutrals {
   /// Bulk thermal heat conduction:
   arma_cube kappa_scgc;
 
+  /// Eddy Diffusion
+  arma_cube kappa_eddy_scgc;
+
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
   
@@ -272,6 +275,21 @@ class Neutrals {
   void calc_mass_density(Report &report);
 
   /**********************************************************************
+     \brief Calculate the scale heights for the individual species
+     \param grid The grid to define the neutrals on
+     \param inputs info about how user has configured things
+     \param report allow reporting to occur
+   **/
+  void calc_scale_height(Grid grid, Inputs inputs, Report &report);
+  
+  /**********************************************************************
+     \brief Calculate the eddy diffusion coefficient in valid pressure
+     \param input info about how user has configured things
+     \param report allow reporting to occur
+   **/
+  void calc_kappa_eddy(Inputs inputs, Report &report);
+  
+  /**********************************************************************
      \brief Calculate the concentration for each species (species ndensity / total ndensity)
      \param report allow reporting to occur
    **/
@@ -312,9 +330,10 @@ class Neutrals {
      \brief Calculate the neutral bulk vertical thermal conduction
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
+     \param input info about how user has configured things
      \param report allow reporting to occur
    **/
-  void calc_conduction(Grid grid, Times time, Report &report);
+  void calc_conduction(Grid grid, Times time, Inputs input, Report &report);
 
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations

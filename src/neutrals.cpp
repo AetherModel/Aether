@@ -112,6 +112,8 @@ Neutrals::Neutrals(Grid grid,
   gamma_scgc.zeros();
   kappa_scgc.set_size(nLons, nLats, nAlts);
   kappa_scgc.zeros();
+  kappa_eddy_scgc.set_size(nLons, nLats, nAlts);
+  kappa_eddy_scgc.zeros();
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
@@ -179,12 +181,6 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
   int64_t nAlts = grid.get_nAlts();
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-
-    // Integrate with hydrostatic equilibrium up:
-    species[iSpecies].scale_height_scgc =
-      cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
-
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
@@ -192,7 +188,6 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
             species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
-
   calc_mass_density(report);
 }
 
@@ -204,10 +199,6 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
                                      Grid grid, Report report) {
 
   int64_t nAlts = grid.get_nAlts();
-
-  species[iSpecies].scale_height_scgc =
-    cKB * temperature_scgc /
-    (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
 
   // Integrate with hydrostatic equilibrium up:
   for (int iAlt = 1; iAlt < nAlts; iAlt++) {

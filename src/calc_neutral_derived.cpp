@@ -7,6 +7,30 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
+//  Calculate eddy diffusion coefficient
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
+    
+  std::string function = "Neutrals::calc_kappa_eddy";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+    
+  kappa_eddy_scgc.zeros();
+
+  precision_t coef = inputs.get_eddy_coef();
+  precision_t bottom = inputs.get_eddy_bottom();
+  precision_t top = inputs.get_eddy_top();
+
+  kappa_eddy_scgc = coef * (pressure_scgc - top) / (bottom - top);
+  kappa_eddy_scgc.elem( find(kappa_eddy_scgc > coef)).fill(coef);
+  kappa_eddy_scgc.elem( find(kappa_eddy_scgc < 0)).zeros();
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
 //  Calculate mass density and number density:
 // ----------------------------------------------------------------------
 
@@ -96,6 +120,53 @@ void Neutrals::calc_bulk_velocity(Report &report) {
   }
 
   report.exit(function);
+}
+
+//----------------------------------------------------------------------
+// Calculate scale heights of different species
+//----------------------------------------------------------------------
+
+void Neutrals::calc_scale_height(Grid grid, Inputs inputs, Report &report) {
+
+  int64_t nAlts = grid.get_nAlts();
+
+  int64_t iSpecies;
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+  }
+
+  // adjust scale heights if eddy diffusion is used:
+  if (inputs.get_use_eddy_momentum()) {
+    // find the density-weighted average scale height in the bottom cell:
+    precision_t Htotal = 0.0, Rtotal = 0.0, H;
+    arma_mat Hslice, Rslice;
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      Hslice =
+	species[iSpecies].mass *
+	species[iSpecies].density_scgc.slice(0) %
+	species[iSpecies].scale_height_scgc.slice(0);
+      Rslice =
+	species[iSpecies].mass *
+	species[iSpecies].density_scgc.slice(0);
+      Htotal = Htotal + accu(Hslice);
+      Rtotal = Rtotal + accu(Rslice);
+    }
+    H = Htotal / Rtotal;
+    H = sync_mean_across_all_procs(H);
+    // percentage will go from 1 = use bulk scale, to 0 = use individual
+    arma_cube percentage = kappa_eddy_scgc / inputs.get_eddy_coef();
+    arma_cube one = percentage;
+    one.ones();
+    arma_cube omp = one - percentage;
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      species[iSpecies].scale_height_scgc =
+	omp % species[iSpecies].scale_height_scgc +
+	percentage * H;
+    }
+  }
+  return;
 }
 
 // ----------------------------------------------------------------------
@@ -315,7 +386,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
+void Neutrals::calc_conduction(Grid grid, Times time, Inputs input, Report &report) {
 
   precision_t dt;
 
@@ -335,7 +406,10 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
   rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
   // Need to make this eddy * rho * cv:
-  prandtl3d.zeros();
+  if (input.get_use_eddy_energy())
+    prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
+  else
+    prandtl3d.zeros();
   lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
   arma_vec temp1d(nAlts);
