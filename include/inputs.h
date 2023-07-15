@@ -37,6 +37,10 @@ public:
   std::string get_collision_file();
   bool get_do_calc_bulk_ion_temp();
   precision_t get_eddy_coef();
+  precision_t get_eddy_bottom();
+  precision_t get_eddy_top();
+  bool get_use_eddy_momentum();
+  bool get_use_eddy_energy();
   std::string get_bfield_type();
   std::string get_electrodynamics_file();
   bool get_do_restart();

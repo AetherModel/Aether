@@ -585,7 +585,40 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_eddy_coef() {
-  return settings["EddyCoefficient"];
+  return settings["Eddy"]["Coefficient"];
+}
+
+// -----------------------------------------------------------------------
+// Return pressure where Eddy Diffusion starts to drop off
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_eddy_bottom() {
+  return settings["Eddy"]["BottomPressure"];
+}
+
+// -----------------------------------------------------------------------
+// Return pressure where Eddy Diffusion becomes zero
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_eddy_top() {
+  return settings["Eddy"]["TopPressure"];
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_eddy_momentum() {
+  return settings["Eddy"]["UseInMomentum"];
+}
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_eddy_energy() {
+  return settings["Eddy"]["UseInEnergy"];
 }
 
 // -----------------------------------------------------------------------
