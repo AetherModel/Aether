@@ -13,13 +13,13 @@ cp ../aether.json.no_true ./aether.json
 
 # post-processing
 cd UA/output
-python3 ../../../../../srcPython/postAether.py -rm
+~/bin/postAether.py -rm
 
 # plot O cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=O_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="O Rad Cooling" -alt=10
 
 # plot NO cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=NO_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="NO Rad Cooling" -alt=10
 
 
 cd ..
@@ -34,13 +34,13 @@ cp ../aether.json.o_true ./aether.json
 
 # post-processing
 cd UA/output
-python3 ../../../../../srcPython/postAether.py -rm
+~/bin/postAether.py -rm
 
 # plot O cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=O_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="O Rad Cooling" -alt=10
 
 # plot NO cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=NO_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="NO Rad Cooling" -alt=10
 
 
 cd ..
@@ -55,13 +55,13 @@ cp ../aether.json.all_true ./aether.json
 
 # post-processing
 cd UA/output
-python3 ../../../../../srcPython/postAether.py -rm
+~/bin/postAether.py -rm
 
 # plot O cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=O_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="O Rad Cooling" -alt=10
 
 # plot NO cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=NO_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="NO Rad Cooling" -alt=10
 
 cd ..
 mv output output.all.cooling
@@ -75,18 +75,18 @@ cp ../aether.json.all_false ./aether.json
 
 # post-processing
 cd UA/output
-python3 ../../../../../srcPython/postAether.py -rm
+~/bin/postAether.py -rm
 
 # plot O cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=O_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="O Rad Cooling" -alt=10
 
 # plot NO cooling
-python3 /Users/arushisingh/aetherpy/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var=NO_cool_scgc
+~/bin/run_plot_block_model_results.py 3DTHR_20110320_001000.nc -var="NO Rad Cooling" -alt=10
 
 cd ..
 mv output output.none.cooling
 mkdir output
 
 # To open the png files, go into individual output file (ex aether.json.no_true) 
-# open 3DTHR_20110320_001000_O_cool_scgc.png
-# open 3DTHR_20110320_001000_NO_cool_scgc.png
+# open 3DTHR_20110320_001000_ORadCooling.png
+# open 3DTHR_20110320_001000_NORadCooling.png
