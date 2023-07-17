@@ -24,16 +24,69 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   geoAlt_scgc.set_size(nX, nY, nZ);
   geoLocalTime_scgc.set_size(nX, nY, nZ);
 
+  refx_scgc.set_size(nX, nY, nZ);
+  refy_scgc.set_size(nX, nY, nZ);
+
+  A11_scgc.set_size(nX, nY, nZ);
+  A12_scgc.set_size(nX, nY, nZ);
+  A21_scgc.set_size(nX, nY, nZ);
+  A22_scgc.set_size(nX, nY, nZ);
+  A11_inv_scgc.set_size(nX, nY, nZ);
+  A12_inv_scgc.set_size(nX, nY, nZ);
+  A21_inv_scgc.set_size(nX, nY, nZ);
+  A22_inv_scgc.set_size(nX, nY, nZ);
+  g11_upper_scgc.set_size(nX, nY, nZ);
+  g12_upper_scgc.set_size(nX, nY, nZ);
+  g21_upper_scgc.set_size(nX, nY, nZ);
+  g22_upper_scgc.set_size(nX, nY, nZ);
+  sqrt_g_scgc.set_size(nX, nY, nZ);
 
   geoLon_Left.set_size(nX + 1, nY, nZ);
   geoLat_Left.set_size(nX + 1, nY, nZ);
 
+  refx_Left.set_size(nX + 1, nY, nZ);
+  refy_Left.set_size(nX + 1, nY, nZ);
+
+  A11_Left.set_size(nX + 1, nY, nZ);
+  A12_Left.set_size(nX + 1, nY, nZ);
+  A21_Left.set_size(nX + 1, nY, nZ);
+  A22_Left.set_size(nX + 1, nY, nZ);
+  A11_inv_Left.set_size(nX + 1, nY, nZ);
+  A12_inv_Left.set_size(nX + 1, nY, nZ);
+  A21_inv_Left.set_size(nX + 1, nY, nZ);
+  A22_inv_Left.set_size(nX + 1, nY, nZ);
+  g11_upper_Left.set_size(nX + 1, nY, nZ);
+  g12_upper_Left.set_size(nX + 1, nY, nZ);
+  g21_upper_Left.set_size(nX + 1, nY, nZ);
+  g22_upper_Left.set_size(nX + 1, nY, nZ);
+  sqrt_g_Left.set_size(nX + 1, nY, nZ);
+
   geoLon_Down.set_size(nX, nY + 1, nZ);
   geoLat_Down.set_size(nX, nY + 1, nZ);
+
+  refx_Down.set_size(nX, nY + 1, nZ);
+  refy_Down.set_size(nX, nY + 1, nZ);
+
+  A11_Down.set_size(nX, nY + 1, nZ);
+  A12_Down.set_size(nX, nY + 1, nZ);
+  A21_Down.set_size(nX, nY + 1, nZ);
+  A22_Down.set_size(nX, nY + 1, nZ);
+  A11_inv_Down.set_size(nX, nY + 1, nZ);
+  A12_inv_Down.set_size(nX, nY + 1, nZ);
+  A21_inv_Down.set_size(nX, nY + 1, nZ);
+  A22_inv_Down.set_size(nX, nY + 1, nZ);
+  g11_upper_Down.set_size(nX, nY + 1, nZ);
+  g12_upper_Down.set_size(nX, nY + 1, nZ);
+  g21_upper_Down.set_size(nX, nY + 1, nZ);
+  g22_upper_Down.set_size(nX, nY + 1, nZ);
+  sqrt_g_Down.set_size(nX, nY + 1, nZ);
 
   geoLon_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   geoLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   geoAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+
+  refx_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  refy_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
   geoAlt_Below.set_size(nX, nY, nZ + 1);
 

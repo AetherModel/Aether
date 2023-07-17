@@ -15,11 +15,22 @@ class Grid {
 public:
 
   // Armidillo Cube Versions:
+  // Cell Center Coordinates
   arma_cube geoLon_scgc, geoX_scgc;
   arma_cube geoLat_scgc, geoY_scgc;
   arma_cube geoAlt_scgc, geoZ_scgc;
   arma_cube geoLocalTime_scgc;
 
+  // Reference coordinate
+  arma_cube refx_scgc, refy_scgc;
+
+  // Transformation matrices, cell center
+  arma_cube A11_scgc, A12_scgc, A21_scgc, A22_scgc;
+  arma_cube A11_inv_scgc, A12_inv_scgc, A21_inv_scgc, A22_inv_scgc;
+  arma_cube g11_upper_scgc, g12_upper_scgc, g21_upper_scgc, g22_upper_scgc;
+  arma_cube sqrt_g_scgc;
+
+  // Edge/Corner coordinates
   arma_cube geoLon_Left;
   arma_cube geoLon_Down;
   arma_cube geoLon_Corner;
@@ -30,6 +41,21 @@ public:
 
   arma_cube geoAlt_Below;
   arma_cube geoAlt_Corner;
+
+  // Reference Coordinate
+  arma_cube refx_Left, refy_Left;
+  arma_cube refx_Down, refy_Down;
+  arma_cube refx_Corner, refy_Corner;
+  // Transformation coordinates
+  arma_cube A11_Left, A12_Left, A21_Left, A22_Left;
+  arma_cube A11_inv_Left, A12_inv_Left, A21_inv_Left, A22_inv_Left;
+  arma_cube g11_upper_Left, g12_upper_Left, g21_upper_Left, g22_upper_Left;
+  arma_cube sqrt_g_Left;
+
+  arma_cube A11_Down, A12_Down, A21_Down, A22_Down;
+  arma_cube A11_inv_Down, A12_inv_Down, A21_inv_Down, A22_inv_Down;
+  arma_cube g11_upper_Down, g12_upper_Down, g21_upper_Down, g22_upper_Down;
+  arma_cube sqrt_g_Down;
 
   // These define the magnetic grid:
   // Armidillo Cube Versions:
