@@ -13,7 +13,7 @@
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "Outputs" : {
-        "type" : ["states", "moment"],
+        "type" : ["states", "therm"],
         "dt" : [600, 600] },
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
