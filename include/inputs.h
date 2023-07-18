@@ -51,6 +51,10 @@ public:
   bool get_do_J2();
 
   bool get_is_cubesphere();
+
+  bool get_NO_cooling();
+  bool get_O_cooling();
+
   bool get_cent_acc();
 
   std::string get_student_name();

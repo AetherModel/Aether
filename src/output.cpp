@@ -231,6 +231,18 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
+      // Thermal:
+      if (type_output == "therm") {
+        AllOutputContainers[iOutput].store_variable("O Rad Cooling",
+                                                    "[O] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.O_cool_scgc);
+        AllOutputContainers[iOutput].store_variable("NO Rad Cooling",
+                                                    "[NO] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.NO_cool_scgc);
+      }
+
       if (type_output == "moment") {
         AllOutputContainers[iOutput].store_variable("Cent Acc East",
                                                     "Logitudinal Centripetal Acceleration",
@@ -263,15 +275,20 @@ int output(const Neutrals &neutrals,
       if (type_output == "bfield")
         filename = "3DBFI_";
 
+      if (type_output == "moment")
+        filename = "3DMMT_";
+
       if (type_output == "gravity")
         filename = "3DGRA_";
 
-      if (type_output == "moment"){
+      if (type_output == "moment")
         filename = "3DMMT_";
-      }
 
       if (type_output == "corners")
         filename = "3DCOR_";
+
+      if (type_output == "therm")
+        filename = "3DTHR_";
 
       filename = filename + time.get_YMD_HMS();
 

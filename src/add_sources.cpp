@@ -18,11 +18,12 @@ void Neutrals::add_sources(Times time, Report &report) {
 
   precision_t dt = time.get_dt();
 
-  temperature_scgc =
-    temperature_scgc +
-    dt * (heating_euv_scgc +
-	  heating_chemical_scgc +
-	  conduction_scgc);
+  temperature_scgc = temperature_scgc +
+    dt * (heating_euv_scgc
+          + heating_chemical_scgc
+          + conduction_scgc
+          - O_cool_scgc
+          - NO_cool_scgc);
 
   report.exit(function);
   return;

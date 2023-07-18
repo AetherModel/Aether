@@ -138,6 +138,12 @@ class Neutrals {
   /// Bulk thermal heat conduction:
   arma_cube kappa_scgc;
 
+  /// O cooling 
+  arma_cube O_cool_scgc;
+
+  /// NO cooling
+  arma_cube NO_cool_scgc;
+
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
   
@@ -270,6 +276,18 @@ class Neutrals {
      \param report allow reporting to occur
    **/
   void calc_conduction(Grid grid, Times time, Report &report);
+
+  /**********************************************************************
+     \brief Calculate the O radiative cooling
+     \param report allow reporting to occur
+   **/
+  void calc_O_cool(Report &report);
+
+  /**********************************************************************
+     \brief Calculate the NO radiative cooling
+     \param report allow reporting to occur
+   **/
+  void calc_NO_cool(Report &report);
 
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations
