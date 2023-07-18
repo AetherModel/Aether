@@ -158,11 +158,11 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
         refx(iLR, iDU) = sqrt(3)/3*tan(lonp - cPI/4 - 3*cPI/2.);
         refy(iLR, iDU) = sqrt(3)/3*tan(latp)/cos(lonp - cPI/4. - 3*cPI/2.);
       } else if (quadtree.iSide == 5-1) {
-        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp-cTWOPI - cPI/4.)/tan(latp);
-        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp-cTWOPI - cPI/4.)/tan(latp);
+        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp-cTWOPI - 3*cPI/4.)/tan(latp);
+        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp-cTWOPI - 3*cPI/4.)/tan(latp);
       } else if(quadtree.iSide == 6-1) {
-        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp -cPI - cPI/4.)/tan(latp);
-        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp -cPI - cPI/4.)/tan(latp);
+        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp -cPI - 3*cPI/4.)/tan(latp);
+        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp -cPI - 3*cPI/4.)/tan(latp);
       }
     }
   }
@@ -284,28 +284,28 @@ void transformation_metrics(Quadtree quadtree,
         A22_inv(i, j) = p2 / cos(latp);
       } else if (quadtree.iSide == 5-1) {
         double p1 = R * sin(latp) / a;
-        A11(i, j) = p1 * cos(lonp - cPI/4.);
-        A12(i, j) = p1 * sin(lonp - cPI/4.);
-        A21(i, j) = -p1 * sin(latp) * sin(lonp - cPI/4.);
-        A22(i, j) = p1 * sin(latp) * cos(lonp - cPI/4.);
+        A11(i, j) = p1 * cos(lonp - 3*cPI/4.);
+        A12(i, j) = p1 * sin(lonp - 3*cPI/4.);
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - 3*cPI/4.);
+        A22(i, j) = p1 * sin(latp) * cos(lonp - 3*cPI/4.);
 
         double p2 = a / R / sin(latp) / sin(latp);
-        A11_inv(i, j) = p2 * sin(latp) * cos(lonp - cPI/4.);
-        A12_inv(i, j) = -p2 * sin(lonp - cPI/4.);
-        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - cPI/4.);
-        A22_inv(i, j) = p2 * cos(lonp - cPI/4.);
+        A11_inv(i, j) = p2 * sin(latp) * cos(lonp - 3*cPI/4.);
+        A12_inv(i, j) = -p2 * sin(lonp - 3*cPI/4.);
+        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - 3*cPI/4.);
+        A22_inv(i, j) = p2 * cos(lonp - 3*cPI/4.);
       } else if(quadtree.iSide == 6-1) {
         double p1 = R * sin(latp) / a;
-        A11(i, j) = -p1 * cos(lonp - cPI/4.);
-        A12(i, j) = p1 * sin(lonp - cPI/4.);
-        A21(i, j) = p1 * sin(latp) * sin(lonp - cPI/4.);
-        A22(i, j) = p1 * sin(latp) * cos(lonp - cPI/4.);
+        A11(i, j) = -p1 * cos(lonp - 3*cPI/4.);
+        A12(i, j) = p1 * sin(lonp - 3*cPI/4.);
+        A21(i, j) = p1 * sin(latp) * sin(lonp - 3*cPI/4.);
+        A22(i, j) = p1 * sin(latp) * cos(lonp - 3*cPI/4.);
 
         double p2 = a / R / sin(latp) / sin(latp);
-        A11_inv(i, j) = -p2 * sin(latp) * cos(lonp - cPI/4.);
-        A12_inv(i, j) = p2 * sin(lonp - cPI/4.);
-        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - cPI/4.);
-        A22_inv(i, j) = p2 * cos(lonp - cPI/4.);
+        A11_inv(i, j) = -p2 * sin(latp) * cos(lonp - 3*cPI/4.);
+        A12_inv(i, j) = p2 * sin(lonp - 3*cPI/4.);
+        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - 3*cPI/4.);
+        A22_inv(i, j) = p2 * cos(lonp - 3*cPI/4.);
       }
     }
   }
