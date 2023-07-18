@@ -186,6 +186,12 @@ class Neutrals {
   std::vector<double> initial_altitudes;
   std::vector<double> initial_temperatures;
   int64_t nInitial_temps = 0;
+    
+  /// Number of species to advect:
+  int nSpeciesAdvect;
+    
+  /// IDs of species to advect:
+  std::vector<int> species_to_advect;
 
   /// names and units
   std::string density_name = "Neutral Bulk Density";

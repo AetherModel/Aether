@@ -149,6 +149,7 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
   json neutrals = planet.get_neutrals();
 
   nSpecies = neutrals["name"].size();
+  nSpeciesAdvect = 0;
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].cName = neutrals["name"][iSpecies];
@@ -158,8 +159,12 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
     species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
     species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
     species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    if (neutrals["advect"][iSpecies] = 1) {
+        nSpeciesAdvect++;
+        species_to_advect.push_back(get_species_id(neutrals["name"][iSpecies], report));
+    }
+      exit(1);
     species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
-  }
 
   json temperatures = planet.get_temperatures();
   nInitial_temps = temperatures["alt"].size();
