@@ -3,6 +3,7 @@
 
 #include "../include/aether.h"
 
+
 // ----------------------------------------------------------------------------
 //
 // ----------------------------------------------------------------------------
@@ -81,6 +82,18 @@ std::string tostr(int64_t num_to_convert, int64_t zero_padding_len) {
   std::ostringstream ss;
   ss << std::setw( zero_padding_len ) << std::setfill( '0' ) << num_to_convert;
   return ss.str();
+}
+
+// -----------------------------------------------------------------------------
+// Convert a number to a float/double
+//    - Can convert scientific notation
+// -----------------------------------------------------------------------------
+
+precision_t str_to_num(std::string input) {
+  std::stringstream ss(input);
+  precision_t output = 0;
+  ss >> output;
+  return output;
 }
 
 // -----------------------------------------------------------------------
@@ -237,3 +250,49 @@ precision_t standard_deviation(std::vector<precision_t> values) {
   return s;
 }
 
+//-------------------------------------------------------------
+// Get min, mean, and max of an arma_cube
+//-------------------------------------------------------------
+
+std::vector<precision_t> get_min_mean_max(const arma_cube &value) {
+  std::vector<precision_t> mmm(3);
+  mmm[0] = value.min();
+  mmm[1] = arma::accu(value) / value.n_elem;
+  mmm[2] = value.max();
+  return mmm;
+}
+
+//-------------------------------------------------------------
+// Find the name of given species in neutrals and ions. Throw exception if not found
+//-------------------------------------------------------------
+
+const arma_cube& find_species_density(const std::string &name,
+                                      Neutrals &neutrals,
+                                      Ions &ions,
+                                      Report &report) {
+  // Try to find the name in neutrals
+  int id = neutrals.get_species_id(name, report);
+  if (id > -1) {
+    return neutrals.species[id].density_scgc;
+  }
+
+  // Try to find the name in ions
+  id = ions.get_species_id(name, report);
+  if (id > -1) {
+    return ions.species[id].density_scgc;
+  }
+
+  // Throw an exception if the species is not found
+  throw std::string("Can not find species named " + name);
+}
+
+//-------------------------------------------------------------
+// Get min, mean, and max of either a neutral or ion species
+//-------------------------------------------------------------
+
+std::vector<precision_t> get_min_mean_max_density(const std::string &name,
+                                                  Neutrals &neutrals,
+                                                  Ions &ions,
+                                                  Report &report) {
+  return get_min_mean_max(find_species_density(name, neutrals, ions, report));
+}

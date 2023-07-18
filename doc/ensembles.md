@@ -71,3 +71,15 @@ When Aether is run, it will create and perturb all of the ensemble
 members, outputting member files with the addition of "_m0NML", where
 NML is the member number.  These files can be viewed on their own, or
 the post processing code can create mean and std files.
+
+You can also perturb chemical reaction rates, but doing something like:
+
+    "Perturb": {
+	"Chemistry" : ["R2", "R10", "R20"] }
+
+This will perturb the reaction rates in the chemistry file.  The Rxx
+names have to be in the "name" column.  The percentage of uncertainty
+is given in the "uncertainty" column and is expressed as a percentage.
+This is used as the standard deviation in the perturbation.  In the
+language used above, this perturbation is multiplicative with a mean
+of 1.0 and a standard deviation set as the uncertainty.
