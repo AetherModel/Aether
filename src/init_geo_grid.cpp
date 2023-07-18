@@ -115,7 +115,8 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
       // This is the normalized coordinate:
       xyz = ll + dr * iL + du * iD;
       // Ghost cells could be off the edge, so wrap to other face:
-      xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      //xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      xyz_wrapped = xyz * a;
       // Normalize the coordinate to a unit vector:
       xyzn = normalise(xyz_wrapped);
       xp = xyzn(0);
