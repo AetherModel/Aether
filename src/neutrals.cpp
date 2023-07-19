@@ -151,21 +151,22 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
   nSpecies = neutrals["name"].size();
   nSpeciesAdvect = 0;
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    species[iSpecies].cName = neutrals["name"][iSpecies];
-    double mass = neutrals["mass"][iSpecies];
-    species[iSpecies].mass = mass * cAMU;
-    species[iSpecies].vibe = neutrals["vibration"][iSpecies];
-    species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
-    species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
-    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
-    if (neutrals["advect"][iSpecies] = 1) {
-        nSpeciesAdvect++;
-        species_to_advect.push_back(get_species_id(neutrals["name"][iSpecies], report));
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        species[iSpecies].cName = neutrals["name"][iSpecies];
+        double mass = neutrals["mass"][iSpecies];
+        species[iSpecies].mass = mass * cAMU;
+        species[iSpecies].vibe = neutrals["vibration"][iSpecies];
+        species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
+        species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
+        species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+        if (neutrals["advect"][iSpecies] == 1) {
+            nSpeciesAdvect++;
+            species_to_advect.push_back(get_species_id(neutrals["name"][iSpecies], report));
+            cout << "Species to advect: " << species[species_to_advect.back()].cName << endl;
+        }
+        species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
     }
-      exit(1);
-    species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
-
+      cout << "Count: " << nSpeciesAdvect << endl;
   json temperatures = planet.get_temperatures();
   nInitial_temps = temperatures["alt"].size();
 
