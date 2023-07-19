@@ -24,19 +24,20 @@ void Neutrals::add_sources(Times time, Report &report) {
 	  heating_chemical_scgc +
 	  conduction_scgc);
 
-  for (int64_t iSpec = 0; iSpec < nSpecies; iSpec++) {
+  for (int64_t iSpec = 0; iSpec < nSpeciesAdvect; iSpec++) {
+    species_chars & advected_neutral = species[species_to_advect[iSpec]];
     for (int iDir = 0; iDir < 3; iDir++) {
       // update velocities based on acceleration:
       // reduce neutral friction until solver is added
-      species[iSpec].velocity_vcgc[iDir] =
-	species[iSpec].velocity_vcgc[iDir] +
-	dt * (species[iSpec].acc_neutral_friction[iDir]/4.0 +
-	      species[iSpec].acc_ion_drag[iDir]);
+      advected_neutral.velocity_vcgc[iDir] =
+	advected_neutral.velocity_vcgc[iDir] +
+	dt * (advected_neutral.acc_neutral_friction[iDir]/4.0 +
+	      advected_neutral.acc_ion_drag[iDir]);
       // eddy acceleration is only in the vertical direction:
       if (iDir == 2)
-	species[iSpec].velocity_vcgc[iDir] =
-	  species[iSpec].velocity_vcgc[iDir] =
-	  dt * species[iSpec].acc_eddy;
+	advected_neutral.velocity_vcgc[iDir] =
+	  advected_neutral.velocity_vcgc[iDir] =
+	  dt * advected_neutral.acc_eddy;
     }
   }
   calc_bulk_velocity(report);
