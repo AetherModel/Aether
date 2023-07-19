@@ -135,6 +135,7 @@ public:
   void calc_mlt(Report &report);
   void fill_grid(Planets planet, Report &report);
   void fill_grid_radius(Planets planet, Report &report);
+  void correct_xy_grid(Planets planet, Report &report);
   bool init_geo_grid(Quadtree quadtree,
 		     Planets planet,
 		     Inputs input,

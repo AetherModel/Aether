@@ -846,6 +846,90 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 }
 
 // ----------------------------------------------------------------------
+// Corrects xy grid by scaling the R used in xy coordinate generation
+// and transformation laws, as in previous generation R = 1. 
+// This function should only be used when cubesphere is used. 
+// Assumes radius of planet and altitude are constant
+// ----------------------------------------------------------------------
+
+void Grid::correct_xy_grid(Planets planet, Report &report) {
+
+  std::string function = "Grid::correct_xy_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iAlt;
+
+  // Planet.get_radius() takes in latitude
+  // but at current stage is unimplemented
+  // Anyway, we use equator radius as assumption for CubeSphere
+  // CubeSphere must be a perfect sphere!!
+  precision_t planet_R = planet.get_radius(0);
+
+  // radius of planet + altitude
+  // just pick alt at some atltitude
+  arma_vec R_Alts = geoAlt_scgc.tube(0, 0) + planet_R;
+  
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    precision_t R = R_Alts(iAlt);
+    refx_scgc.slice(iAlt) *= R;
+    refy_scgc.slice(iAlt) *= R;
+    A11_scgc.slice(iAlt) *= R;
+    A12_scgc.slice(iAlt) *= R;
+    A21_scgc.slice(iAlt) *= R;
+    A22_scgc.slice(iAlt) *= R;
+    A11_inv_scgc.slice(iAlt) /= R;
+    A12_inv_scgc.slice(iAlt) /= R;
+    A21_inv_scgc.slice(iAlt) /= R;
+    A22_inv_scgc.slice(iAlt) /= R;
+    g11_upper_scgc.slice(iAlt) /= R * R;
+    g12_upper_scgc.slice(iAlt) /= R * R;
+    g21_upper_scgc.slice(iAlt) /= R * R;
+    g22_upper_scgc.slice(iAlt) /= R * R;
+    sqrt_g_scgc.slice(iAlt) /= R;
+
+    refx_Left.slice(iAlt) *= R;
+    refy_Left.slice(iAlt) *= R;
+    A11_Left.slice(iAlt) *= R;
+    A12_Left.slice(iAlt) *= R;
+    A21_Left.slice(iAlt) *= R;
+    A22_Left.slice(iAlt) *= R;
+    A11_inv_Left.slice(iAlt) /= R;
+    A12_inv_Left.slice(iAlt) /= R;
+    A21_inv_Left.slice(iAlt) /= R;
+    A22_inv_Left.slice(iAlt) /= R;
+    g11_upper_Left.slice(iAlt) /= R * R;
+    g12_upper_Left.slice(iAlt) /= R * R;
+    g21_upper_Left.slice(iAlt) /= R * R;
+    g22_upper_Left.slice(iAlt) /= R * R;
+    sqrt_g_Left.slice(iAlt) /= R;
+
+    refx_Down.slice(iAlt) *= R;
+    refy_Down.slice(iAlt) *= R;
+    A11_Down.slice(iAlt) *= R;
+    A12_Down.slice(iAlt) *= R;
+    A21_Down.slice(iAlt) *= R;
+    A22_Down.slice(iAlt) *= R;
+    A11_inv_Down.slice(iAlt) /= R;
+    A12_inv_Down.slice(iAlt) /= R;
+    A21_inv_Down.slice(iAlt) /= R;
+    A22_inv_Down.slice(iAlt) /= R;
+    g11_upper_Down.slice(iAlt) /= R * R;
+    g12_upper_Down.slice(iAlt) /= R * R;
+    g21_upper_Down.slice(iAlt) /= R * R;
+    g22_upper_Down.slice(iAlt) /= R * R;
+    sqrt_g_Down.slice(iAlt) /= R;
+
+    refx_Corner.slice(iAlt) *= R;
+    refy_Corner.slice(iAlt) *= R;
+  }
+
+  report.exit(function);
+  return;
+}
+
+
+// ----------------------------------------------------------------------
 // Initialize the geographic grid.  At the moment, this is a simple
 // Lon/Lat/Alt grid.  The grid structure is general enough that each
 // of the lon, lat, and alt can be a function of the other variables.
@@ -890,6 +974,12 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet, input, report);
+
+  // Correct the reference grid with correct length scale: 
+  // (with R = actual radius)
+  if (input.get_is_cubesphere()) {
+    correct_xy_grid(planet, report);
+  }
 
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
