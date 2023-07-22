@@ -473,7 +473,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
     }
 
     double alt = grid_input.alt_min;
-    radius = planet.get_radius(0.0) + alt;
+    radius = planet.get_radius(0.0,input) + alt;
     precision_t mu = planet.get_mu();
     gravity = mu / (radius * radius);
 
@@ -512,7 +512,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 
       alt = alt1d(iAlt - 1);
       temperature = interpolate_1d(alt, input_alt, input_temp);
-      radius = planet.get_radius(0.0) + alt;
+      radius = planet.get_radius(0.0, input) + alt;
       gravity = mu / (radius * radius);
 
       mass = 0.0;
@@ -603,8 +603,14 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     DidWork = write_restart(input.get_restartout_dir());
   }
 
-  // Calculate the radius, etc:
-  fill_grid_radius(planet, report);
+  // Calculate the radius (for spherical or non-spherical)
+  fill_grid_radius(planet, input, report);
+  // Calculate grid spacing
+  calc_grid_spacing(planet, report);
+  //calculate radial unit vector (for spherical or oblate planet)
+  calc_rad_unit(planet, input, report);
+  // Calculate gravity (including J2 term, if desired)
+  calc_gravity(planet, input, report);
 
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet, input, report);
@@ -613,7 +619,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   report.student_checker_function_name(input.get_is_student(),
 				       input.get_student_name(),
 				       4, "");
-  
+
   report.exit(function);
   return DidWork;
 }

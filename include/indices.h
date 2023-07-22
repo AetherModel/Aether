@@ -167,12 +167,6 @@ class Indices {
    **/
   void perturb_index(int iIndex, int seed, json style, bool DoReport);
 
-  //given the indices number, return the indices name from index_time_pair structure
-  std::string get_name(int iIndex);
-
-  //given the indices number, return the number of values that are stored
-  int64_t get_nValues(int iIndex); 
-
   /**************************************************************
    \brief The general function that returns the index value at the time
    \param time the time in seconds that the index is requested at
@@ -180,11 +174,18 @@ class Indices {
    **/
   precision_t get_index(double time, int index);
 
-  //returns the size of all_indices_array
+  /**************************************************************
+   * \brief Get the name of the indices at the specified index
+   * \param iIndex which index to get name
+   * \return The string of name if the function succeeds, empty string if iIndex is out of range
+   **/
+  std::string get_name(int iIndex); 
+
+  /**************************************************************
+   \brief Return the number of the indices vector
+   **/
   int all_indices_array_size();
 
-  //returns how many indices there are in total (nIndices in the class)
-  int64_t get_nIndices();
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------

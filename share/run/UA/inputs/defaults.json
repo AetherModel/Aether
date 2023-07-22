@@ -8,6 +8,12 @@
 	"iTimingDepth" : 5,
 	"iProc" : 0},
 
+    "InitialConditions" : {
+	"type" : "Planet"},    
+
+    "BoundaryConditions" : {
+	"type" : "Planet"},
+
     "Student" : {
 	"name" : "",
 	"is" : false },
@@ -19,9 +25,15 @@
     "Euv" : {
 	"Model" : "euvac",
 	"File" : "UA/inputs/euv.csv",
+	"IncludePhotoElectrons" : true,
 	"HeatingEfficiency" : 0.05,
 	"dt" : 60.0},
 
+    "Sources": {
+	"Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool" : false } },
+    
     "DoCalcBulkIonTemp" : false,
 
     "StartTime" : [2011, 3, 20, 0, 0, 0],
@@ -29,9 +41,7 @@
 
     "GeoBlockSize" : {
 	"nLons" : 36,
-	"nBlocksLon" : 1,
 	"nLats" : 36,
-	"nBlocksLat" : 1,
 	"nAlts" : 50},
 
     "GeoGrid" : {
@@ -47,18 +57,29 @@
     "CubeSphere" : {
 	"is" : false},
 
+    "Oblate" : {
+	"isOblate" : false,
+        "isJ2" : false},
+
     "Ensembles" : {
         "nMembers" : 1},
 
-    "Seed" : 0,
+    "Sources" : {
+	"Grid" : {
+	    "Cent_acc" : true },
+	"Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool": false } },
     
+    "Seed" : 0,
+
     "F107File" : "UA/inputs/f107.txt",
-    "ChemistryFile" : "UA/inputs/chemistry_earth.csv",
+    "ChemistryFile" : "UA/inputs/chemistry_earth_richards.csv",
     "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
     "PlanetCharacteristicsFile" : "UA/inputs/orbits.csv",
     "AuroraFile" : "UA/inputs/aurora_earth.csv",
     "IndicesLookupFile" : "UA/inputs/indices_lookup.json",
-    
+
     "OnmiwebFile" : [""],
     "ElectrodynamicsFile" : [""],
     
@@ -70,8 +91,7 @@
 
     "Outputs" : {
 	"type" : ["states", "bfield"],
-	"dt" : [900, 0.0]
-	},
+	"dt" : [900, 0.0]},
 
     "Restart" : {
 	"do" : false,

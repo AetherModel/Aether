@@ -29,7 +29,7 @@ bfield_info_type get_dipole(precision_t lon,
 
   precision_t llr[3];
   precision_t xyz[3];
-  precision_t radius = planet.get_radius(lat);
+  precision_t radius = planet.get_radius(lat, input);
 
   llr[0] = lon;
   llr[1] = lat;

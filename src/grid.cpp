@@ -92,6 +92,11 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_south_gse.push_back(tmp_col);
 
   HasBField = 0;
+
+  cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  for (int i = 0; i < 3; i++)
+    cent_acc_vcgc[i].zeros();
+  
 }
 
 // --------------------------------------------------------------------------

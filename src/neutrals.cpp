@@ -85,6 +85,10 @@ Neutrals::Neutrals(Grid grid,
   density_scgc.ones();
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
+  O_cool_scgc.set_size(nLons, nLats, nAlts);
+  O_cool_scgc.zeros();
+  NO_cool_scgc.set_size(nLons, nLats, nAlts);
+  NO_cool_scgc.zeros();
 
   // Derived quantities:
 
@@ -108,6 +112,7 @@ Neutrals::Neutrals(Grid grid,
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.set_size(nLons, nLats, nAlts);
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
@@ -174,7 +179,8 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 
     // Integrate with hydrostatic equilibrium up:
     species[iSpecies].scale_height_scgc =
-      cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
 
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
@@ -197,7 +203,8 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
   int64_t nAlts = grid.get_nAlts();
 
   species[iSpecies].scale_height_scgc =
-    cKB * temperature_scgc / (species[iSpecies].mass * grid.gravity_scgc);
+    cKB * temperature_scgc /
+    (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
 
   // Integrate with hydrostatic equilibrium up:
   for (int iAlt = 1; iAlt < nAlts; iAlt++) {
@@ -206,7 +213,6 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
-
   calc_mass_density(report);
 }
 
@@ -301,5 +307,50 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
   }
 
   return DidWork;
+}
+
+//----------------------------------------------------------------------
+// Calculate value of NO Cooling
+//----------------------------------------------------------------------
+
+void Neutrals::calc_NO_cool(Report &report) {
+  // finds O & NO species
+  int iO = get_species_id("O", report);
+  int iNO = get_species_id("NO", report);
+
+  if (iNO != -1) {
+    // omega value using O density
+    arma_cube omega = 3.6e-17 * species[iO].density_scgc / (3.6e-17 *
+                                                            species[iO].density_scgc + 13.3);
+
+    arma_cube v = -cH * cC / (5.3e-6 * cKB * temperature_scgc);
+
+    // calculation for NO_cool_scgc
+    arma_cube NO_cool_scgc_calc = cH * cC /
+                                  5.3e-6 * omega * 13.3 % exp(v) % species[iNO].density_scgc;
+
+    NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
+  }
+}
+
+//----------------------------------------------------------------------
+// Calculate value of O Cooling
+//----------------------------------------------------------------------
+
+void Neutrals::calc_O_cool(Report &report) {
+  // find O species
+  int iO = get_species_id("O", report);
+
+  if (iO != -1) {
+    arma_cube tmp2 = exp(-228 / temperature_scgc);
+    arma_cube tmp3 = exp(-326 / temperature_scgc);
+
+    // calculation for O_cool_scgc
+    arma_cube O_cool_scgc_calc = (1.69e-18 * tmp2 + 4.59e-20 * tmp3) %
+                                 (species[iO].density_scgc / 1.0e6) / (1.0 + 0.6 * tmp2 + 0.2 * tmp3);
+
+    O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
+
+  }
 }
 

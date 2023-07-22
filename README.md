@@ -1,5 +1,5 @@
 # Aether
-This is the home of the Aether model of the thermosphere and ionosphere
+This is the home of the Aether model of the thermosphere and ionosphere.
 
 The Aether model has been developed using gnu c++ (versions 9, 10, 11). If
 you are using this, hopefully it will just work out of the box. We have 
@@ -191,7 +191,7 @@ You can check to make sure that these are valid json files (not checking the con
 ```bash
 cd run.test
 python -m json.tool aether.json
-python -m json.tool UA/inputs/default.json
+python -m json.tool UA/inputs/defaults.json
 ```
 
 At this time, there is no checker to see if all of the settings in each of the inputs files are actually valid and Aether understands them. 

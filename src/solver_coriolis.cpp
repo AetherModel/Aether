@@ -11,8 +11,8 @@
 #include "../include/aether.h"
 
 std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity,
-				precision_t rotation_rate,
-				arma_cube lat_scgc) {
+                                precision_t rotation_rate,
+                                arma_cube lat_scgc) {
   std::vector<arma_cube> coriolis_vec(3);
   coriolis_vec[0] = -2 * rotation_rate * velocity[1] % sin(lat_scgc);
   coriolis_vec[1] =

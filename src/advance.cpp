@@ -35,8 +35,8 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-		 input.get_student_name() + "?");
-  
+		  input.get_student_name() + "?");
+
   gGrid.calc_sza(planet, time, report);
   neutrals.calc_mass_density(report);
   neutrals.calc_specific_heat(report);
@@ -62,9 +62,16 @@ int advance(Planets &planet,
 
   calc_aurora(gGrid, neutrals, ions, input, report);
 
+  // Calculate some neutral source terms:
   neutrals.calc_conduction(gGrid, time, report);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
+  if (input.get_O_cooling())
+    neutrals.calc_O_cool(report);
+  if (input.get_NO_cooling())
+    neutrals.calc_NO_cool(report);
   neutrals.add_sources(time, report);
+
+  // Calculate Ion and Electron Temperatures:
   ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
   ions.calc_electron_temperature(neutrals, gGrid, report);
 
@@ -86,8 +93,7 @@ int advance(Planets &planet,
 
   report.exit(function);
 
-  if (iGrid == 0)
-    logfile.write_logfile(time, neutrals, ions, input, indices, report);
+  logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
 
   return iErr;
 }

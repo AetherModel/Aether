@@ -1,6 +1,12 @@
 
 name is the character string that identifies the species
 
+O(3P) is the base state of neutral atomic oxygen and is called O.
+O(1D) is an excited state of oxygen and is called O_1D
+N(4S) is the base state of neutral atomic nitrogen and is called N.
+N(2D) is an excited state of nitrogen and is called N_2D
+N(2P) is an excited state of nitrogen and is called N_2P
+
 Vibration is the degrees of freedom for the atom/molecule
 
 thermal conduction is typically:
@@ -19,10 +25,11 @@ BC is a density that is used in the lowest boundary cell if you
   In this example file, the values are from 96.87 km Jan 1, 2013
   O_1D is made up.
 
+
 #NEUTRALS
 name, mass, vibration, thermal_cond, thermal_exp, advect, BC
 O, 16, 5, 5.6e-4, 0.69, 1, 5.0e17
-N_4S, 14, 5, 5.6e-4, 0.69, 1, 2.5e11
+N, 14, 5, 5.6e-4, 0.69, 1, 2.5e11
 O2, 32, 7, 3.6e-4, 0.69, 1, 4.0e18
 N2, 28, 7, 3.6e-4, 0.69, 1, 1.7e19
 NO, 30, 7, 3.6e-4, 0.69, 1, 5.4e14
@@ -46,6 +53,9 @@ alt, temp
 200.0, 800.0
 300.0, 800.0
 
+O+ is O+(4S) is the base state of O+, but is just called O+
+O+ has excited states of O+(2D) and O+(2P).
+
 #IONS
 name, mass, charge, advect
 O+, 16, 1, 1
@@ -54,5 +64,5 @@ N2+, 28, 1, 0
 NO+, 30, 1, 0
 N+, 14, 1, 0
 He+, 4, 1, 1
-O+2D, 16, 1, 0
-O+2P, 16, 1, 0
+O+_2D, 16, 1, 0
+O+_2P, 16, 1, 0

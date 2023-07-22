@@ -271,7 +271,7 @@ fmat interpolate_3d_w_index(std::vector<fmat> values,
 precision_t linear_interpolation(const precision_t y0,
                                  const precision_t y1,
                                  const precision_t ratio) {
-    return (1.0 - ratio) * y0 + ratio * y1;
+  return (1.0 - ratio) * y0 + ratio * y1;
 }
 
 // ----------------------------------------------------------------------
@@ -285,26 +285,25 @@ precision_t interpolate_unit_cube(const arma_cube &data,
                                   const precision_t xRatio,
                                   const precision_t yRatio,
                                   const precision_t zRatio) {
-    
-    // check the number of elements
-    if (data.n_rows != 2 || data.n_cols != 2 || data.n_slices != 2) {
-        return std::numeric_limits<precision_t>::quiet_NaN();
-    }
 
-    // interpolate along the x axis, calculate the value at
-    // (xRatio, 0, 0), (xRatio, 1, 0), (xRatio, 0, 1), (xRatio, 1, 1)
-    precision_t yzPlane[4];
-    for (int64_t i = 0; i < 4; ++i) {
-        yzPlane[i] = linear_interpolation(data[2*i], data[2*i + 1], xRatio);
-    }
+  // check the number of elements
+  if (data.n_rows != 2 || data.n_cols != 2 || data.n_slices != 2)
+    return std::numeric_limits<precision_t>::quiet_NaN();
 
-    // interpolate along the y axis, calculate the value at
-    // (xRatio, yRatio, 0), (xRatio, yRatio, 1)
-    precision_t zLine[2];
-    for (int64_t i = 0; i < 2; ++i) {
-        zLine[i] = linear_interpolation(yzPlane[2*i], yzPlane[2*i + 1], yRatio);
-    }
+  // interpolate along the x axis, calculate the value at
+  // (xRatio, 0, 0), (xRatio, 1, 0), (xRatio, 0, 1), (xRatio, 1, 1)
+  precision_t yzPlane[4];
 
-    // return the value at (xRatio, yRatio, zRatio)
-    return linear_interpolation(zLine[0], zLine[1], zRatio);
+  for (int64_t i = 0; i < 4; ++i)
+    yzPlane[i] = linear_interpolation(data[2 * i], data[2 * i + 1], xRatio);
+
+  // interpolate along the y axis, calculate the value at
+  // (xRatio, yRatio, 0), (xRatio, yRatio, 1)
+  precision_t zLine[2];
+
+  for (int64_t i = 0; i < 2; ++i)
+    zLine[i] = linear_interpolation(yzPlane[2 * i], yzPlane[2 * i + 1], yRatio);
+
+  // return the value at (xRatio, yRatio, zRatio)
+  return linear_interpolation(zLine[0], zLine[1], zRatio);
 }

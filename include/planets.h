@@ -56,13 +56,18 @@ public:
   precision_t get_mu();
 
   /**********************************************************************
+     \brief Gets J2
+   **/
+  precision_t get_J2(Inputs &input);
+
+  /**********************************************************************
      \brief Returns radius of the planet, which can be a function of latitude
 
      currently, this ignores the latitude, but should be implemented.
 
      \param latitude the latitude to get the radius at.
    **/
-  precision_t get_radius(precision_t latitude);
+  precision_t get_radius(precision_t latitude, Inputs &input);
 
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time
@@ -105,7 +110,12 @@ public:
      \brief Returns the strength of the dipole at the surface (in nT)
    **/
   precision_t get_dipole_strength();
-  
+
+  /**********************************************************************
+     \brief Returns omega (rotation rate) of the planet 
+   **/
+  precision_t get_omega();
+
   /**********************************************************************
      \brief returns neutrals json for neutral density BCs
    **/
@@ -126,7 +136,7 @@ public:
    **/
   
   bool is_ok();
-  
+
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
@@ -196,6 +206,8 @@ public:
     precision_t polar_radius;
     /// mean radius
     precision_t radius;
+    /// Difference between polar and equator radius
+    precision_t delta_radius;
 
     /// Dipole strength (nT)
     precision_t dipole_strength;
@@ -205,6 +217,9 @@ public:
     precision_t dipole_tilt;
     /// Offset of the dipole center from the geographic center of planet
     std::vector<float> dipole_center{ 0.0, 0.0, 0.0 };
+
+    //J2 value
+    precision_t J2;
 
     // ---------------------------------------
     // These are updated during the run:

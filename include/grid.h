@@ -66,7 +66,12 @@ public:
   arma_cube radius_scgc;
   arma_cube radius2_scgc;
   arma_cube radius2i_scgc;
-  arma_cube gravity_scgc;
+
+  std::vector<arma_cube> rad_unit_vcgc;
+  arma_cube gravity_potential_scgc;
+  std::vector<arma_cube> gravity_vcgc;
+
+  std::vector<arma_cube> cent_acc_vcgc;
 
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
@@ -107,8 +112,14 @@ public:
   void calc_sza(Planets planet, Times time, Report &report);
   void calc_gse(Planets planet, Times time, Report &report);
   void calc_mlt(Report &report);
-  void fill_grid(Planets planet, Report &report);
-  void fill_grid_radius(Planets planet, Report &report);
+
+  void calc_grid_spacing(Planets planet, Report &report);
+  void calc_alt_grid_spacing();
+  void calc_lat_grid_spacing();
+  void calc_long_grid_spacing();
+  void fill_grid_radius(Planets planet, Inputs &input, Report &report);
+  void calc_rad_unit(Planets planet, Inputs &input, Report &report);
+  void calc_gravity(Planets planet, Inputs &input, Report &report);
   bool init_geo_grid(Quadtree quadtree,
 		     Planets planet,
 		     Inputs input,
@@ -126,6 +137,7 @@ public:
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);
   void report_grid_boundaries();
+  void calc_cent_acc(Planets planet);
 
   // Need to move these to private at some point:
 
@@ -190,7 +202,8 @@ public:
    * \param Alts The altitude of points
    * \pre This instance is an geo grid
    * \pre Lons, Lats and Alts have the same size
-   * \return true if the function succeeds, false otherwise.
+   * \return true if the function succeeds, false if the instance is not a
+   *         geo grid or the size of Lons, Lats and Alts are not the same.
    */
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
@@ -201,7 +214,7 @@ public:
    * \pre The size of the data should be the same as the geoLat/Lon/Alt_scgc
    * \return A vector of estimated value at the points set by the last
    *         set_interpolation_coefs function call if the function succeeds,
-   *         an empty vector otherwise.
+   *         an empty vector if the data is not the same size as the geo grid.
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 

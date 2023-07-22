@@ -69,6 +69,13 @@ class Neutrals {
     /// Which ion species results from the ionization?
     std::vector<int> iEuvIonSpecies_;
 
+    /// How many rows in the EUV CSV file are for ionization of this species?
+    int nEuvPeiSpecies;
+    /// Which row in the EUV CSV file if for the particular ionization?
+    std::vector<int> iEuvPeiId_;
+    /// Which ion species results from the ionization?
+    std::vector<int> iEuvPeiSpecies_;
+    
     int nAuroraIonSpecies;
     std::vector<int> iAuroraIonSpecies_;
     float Aurora_Coef;
@@ -131,6 +138,12 @@ class Neutrals {
   /// Bulk thermal heat conduction:
   arma_cube kappa_scgc;
 
+  /// O cooling 
+  arma_cube O_cool_scgc;
+
+  /// NO cooling
+  arma_cube NO_cool_scgc;
+
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
   
@@ -144,6 +157,9 @@ class Neutrals {
 
   /// Bulk neutral EUV heating temperatuare change (K/s)
   arma_cube heating_euv_scgc;
+
+  /// Bulk neutral chemical heating temperatuare change (K/s)
+  arma_cube heating_chemical_scgc;
 
   /// Nuetral gas direct absorption heating efficiency (~5%)
   precision_t heating_efficiency;
@@ -260,6 +276,18 @@ class Neutrals {
      \param report allow reporting to occur
    **/
   void calc_conduction(Grid grid, Times time, Report &report);
+
+  /**********************************************************************
+     \brief Calculate the O radiative cooling
+     \param report allow reporting to occur
+   **/
+  void calc_O_cool(Report &report);
+
+  /**********************************************************************
+     \brief Calculate the NO radiative cooling
+     \param report allow reporting to occur
+   **/
+  void calc_NO_cool(Report &report);
 
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations
