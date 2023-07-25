@@ -26,10 +26,8 @@ public:
 
   /**********************************************************************
      \brief Initialize the Planet class
-     \param args info about how user has configured things
-     \param report allow reporting to occur
    **/
-  Planets(Inputs args, Report report);
+  Planets();
 
   /**********************************************************************
      \brief Returns the distance from the star to the planet being modeled
@@ -58,7 +56,7 @@ public:
   /**********************************************************************
      \brief Gets J2
    **/
-  precision_t get_J2(Inputs &input);
+  precision_t get_J2();
 
   /**********************************************************************
      \brief Returns radius of the planet, which can be a function of latitude
@@ -67,7 +65,7 @@ public:
 
      \param latitude the latitude to get the radius at.
    **/
-  precision_t get_radius(precision_t latitude, Inputs &input);
+  precision_t get_radius(precision_t latitude);
 
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time
@@ -267,11 +265,8 @@ public:
 
      This function just copies over the chosen planet's characteristics
      from the vector into the stand-alone structure.
-
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool set_planet(Inputs args, Report report);
+  bool set_planet();
 
   /**********************************************************************
      \brief Updates the planetary characteristics that depend on time
@@ -285,17 +280,13 @@ public:
 
   /**********************************************************************
      \brief Reads in the planetary characteristics and stores them
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool read_file(Inputs input, Report report);
+  bool read_file();
 
   /**********************************************************************
      \brief Reads in the planets neutral, ion, temperature characteristics
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool read_planet_specific_file(Inputs input, Report report);
+  bool read_planet_specific_file();
 
 };
 

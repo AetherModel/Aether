@@ -188,21 +188,15 @@ class Neutrals {
      \param planet contains information about the species to simulate
      \param time contains information about the current time
      \param indices used to help set initial conditions
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
   Neutrals(Grid grid,
 	   Planets planet,
 	   Times time,
-	   Indices indices,
-	   Inputs input,
-	   Report report);
+	   Indices indices);
 
   /**********************************************************************
      \brief Creates the variables within the species_chars structure
      \param grid The grid to define the neutrals on
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
   species_chars create_species(Grid grid);
 
@@ -214,24 +208,18 @@ class Neutrals {
      for specifying the neutrals.
 
      \param planet contains information about the species to simulate
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  int read_planet_file(Planets planet, Inputs input, Report report);
+  int read_planet_file(Planets planet);
 
   /**********************************************************************
      \brief Sets the initial conditions of the neutrals
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
      \param indices used to help set initial conditions
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
   int initial_conditions(Grid grid,
 			 Times time,
-			 Indices indices,
-			 Inputs input,
-			 Report &report);
+			 Indices indices);
 
   /**********************************************************************
      \brief temporary function to set neutral densities with in the model
@@ -242,114 +230,92 @@ class Neutrals {
 
      \param iSpecies The species to fill (optional)
      \param grid The grid to define the neutrals on
-     \param report allow reporting to occur
    **/
-  void fill_with_hydrostatic(Grid grid, Report report);
+  void fill_with_hydrostatic(Grid grid);
 
   void fill_with_hydrostatic(int64_t iSpecies,
-			     Grid grid, Report report);
+			     Grid grid);
 
   
   /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
-     \param report allow reporting to occur
    **/
-  void calc_mass_density(Report &report);
+  void calc_mass_density();
 
   /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
-     \param report allow reporting to occur
    **/
-  void calc_specific_heat(Report &report);
+  void calc_specific_heat();
 
   /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
      \param grid The grid to define the neutrals on
-     \param report allow reporting to occur
    **/
-  void calc_chapman(Grid grid, Report &report);
+  void calc_chapman(Grid grid);
 
   /**********************************************************************
      \brief Calculate the neutral bulk vertical thermal conduction
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
-     \param report allow reporting to occur
    **/
-  void calc_conduction(Grid grid, Times time, Report &report);
+  void calc_conduction(Grid grid, Times time);
 
   /**********************************************************************
      \brief Calculate the O radiative cooling
-     \param report allow reporting to occur
    **/
-  void calc_O_cool(Report &report);
+  void calc_O_cool();
 
   /**********************************************************************
      \brief Calculate the NO radiative cooling
-     \param report allow reporting to occur
    **/
-  void calc_NO_cool(Report &report);
+  void calc_NO_cool();
 
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations
      \param time The times within the model (dt is needed)
-     \param report allow reporting to occur
    **/
-  void add_sources(Times time, Report &report);
+  void add_sources(Times time);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
      \param indices used to help set initial conditions
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
   bool set_bcs(Grid grid,
 	       Times time,
-	       Indices indices,
-	       Inputs input,
-	       Report &report);
+	       Indices indices);
 
   /**********************************************************************
      \brief Set lower boundary conditions for the neutrals
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
      \param indices used to help set initial conditions
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
   bool set_lower_bcs(Grid grid,
 		     Times time,
-		     Indices indices,
-		     Inputs input,
-		     Report &report);
+		     Indices indices);
 
   /**********************************************************************
      \brief Set upper boundary conditions for the neutrals
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
      \param indices used to help set initial conditions
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool set_upper_bcs(Grid grid,
-		     Inputs input,
-		     Report &report);
+  bool set_upper_bcs(Grid grid);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
      \param iDir direction of the BC to set
      \param grid The grid to define the neutrals on
-     \param report allow reporting to occur
   **/
-  bool set_horizontal_bcs(int64_t iDir, Grid grid, Report &report);
+  bool set_horizontal_bcs(int64_t iDir, Grid grid);
   
   /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
-     \param report allow reporting to occur
    **/
-  int get_species_id(std::string name, Report &report);
+  int get_species_id(std::string name);
 
   /**********************************************************************
      \brief Read / Write restart files for the neutral variables
@@ -361,9 +327,8 @@ class Neutrals {
   /**********************************************************************
      \brief Exchange messages between processors
      \param grid The grid to define the neutrals on
-     \param report allow reporting to occur
    **/
-  bool exchange(Grid &grid, Report &report);
+  bool exchange(Grid &grid);
 
   /**********************************************************************
      \brief Exchange one face for the NEUTRALS

@@ -14,8 +14,7 @@
 // -----------------------------------------------------------------------------
 
 index_file_output_struct read_f107_file(std::string f107_file,
-                                        Indices indices,
-                                        Report &report) {
+                                        Indices indices) {
 
   std::ifstream myFile;
   index_file_output_struct f107_contents;

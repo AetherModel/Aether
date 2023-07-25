@@ -79,8 +79,7 @@ std::vector<precision_t> get_min_mean_max(const arma_cube &value);
 
 const arma_cube& find_species_density(const std::string &name,
                                       Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report);
+                                      Ions &ions);
 
 //-------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
@@ -88,7 +87,6 @@ const arma_cube& find_species_density(const std::string &name,
 
 std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
-                                                  Ions &ions,
-                                                  Report &report);
+                                                  Ions &ions);
 
 #endif  // INCLUDE_TOOLS_H_

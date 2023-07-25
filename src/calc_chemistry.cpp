@@ -13,8 +13,7 @@
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,
                                Times time,
-                               Grid grid,
-                               Report &report) {
+                               Grid grid) {
 
   int iSpecies;
 
@@ -28,7 +27,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Calculate electron densities
   // ------------------------------------
 
-  ions.fill_electrons(report);
+  ions.fill_electrons();
 
   // ----------------------------------------------------------
   // Initialize the sources and losses with EUV stuff:
@@ -52,7 +51,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Calculate the chemical sources and losses
   // ----------------------------------------------------
 
-  calc_chemical_sources(neutrals, ions, report);
+  calc_chemical_sources(neutrals, ions);
 
   // ---------------------------------------------------------
   // Once sources and losses are done, solve for new densities
@@ -78,7 +77,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Recalculate electrons
   // ---------------------------------------------------------
 
-  ions.fill_electrons(report);
+  ions.fill_electrons();
 
   report.exit(function);
   return;

@@ -268,16 +268,15 @@ std::vector<precision_t> get_min_mean_max(const arma_cube &value) {
 
 const arma_cube& find_species_density(const std::string &name,
                                       Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report) {
+                                      Ions &ions) {
   // Try to find the name in neutrals
-  int id = neutrals.get_species_id(name, report);
+  int id = neutrals.get_species_id(name);
   if (id > -1) {
     return neutrals.species[id].density_scgc;
   }
 
   // Try to find the name in ions
-  id = ions.get_species_id(name, report);
+  id = ions.get_species_id(name);
   if (id > -1) {
     return ions.species[id].density_scgc;
   }
@@ -292,7 +291,6 @@ const arma_cube& find_species_density(const std::string &name,
 
 std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
-                                                  Ions &ions,
-                                                  Report &report) {
-  return get_min_mean_max(find_species_density(name, neutrals, ions, report));
+                                                  Ions &ions) {
+  return get_min_mean_max(find_species_density(name, neutrals, ions));
 }

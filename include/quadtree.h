@@ -101,17 +101,13 @@ public:
   
   /**********************************************************************
      \brief Initializes the quadtree
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  Quadtree(Inputs input, Report report);
+  Quadtree();
 
   /**********************************************************************
      \brief Builds the quadtree
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  void build(Inputs input, Report report); 
+  void build(); 
 
   /**********************************************************************
      \brief Makes a new node on the quadtree, recursively

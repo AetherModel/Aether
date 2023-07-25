@@ -11,9 +11,10 @@ class Inputs {
 
 public:
 
-  Inputs(Times &time, Report &report);
-  int read(Times &time, Report &report);
-  bool read_inputs_json(Times &time, Report &report);
+  Inputs() {}
+  Inputs(Times &time);
+  int read(Times &time);
+  bool read_inputs_json(Times &time);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
@@ -158,5 +159,7 @@ private:
   /// An internal variable to hold the state of the class
   bool IsOk;
 };
+
+extern Inputs input;
 
 #endif  // INCLUDE_INPUTS_H_

@@ -24,29 +24,23 @@
   2. OMNIWeb files that include IMF, Solar Wind, and/or AE/AU/AL.
 
   \param indices the indices class
-  \param args info about how user has configured things
-  \param report allow reporting to occur
 **/
-bool read_and_store_indices(Indices &indices, Inputs args, Report &report);
+bool read_and_store_indices(Indices &indices);
 
 /**********************************************************************
   \brief Read the NGDC F10.7 file format and store in the index_file struct
   \param f107_file the f10.7 file to read in
-  \param report allow reporting to occur
 **/
 index_file_output_struct read_f107_file(std::string f107_file,
-					Indices indices,
-					Report &report);
+					Indices indices);
 
 /**********************************************************************
   \brief Read the OMNIWeb file format and store in the index_file struct
   \param omni_file the onmiweb file to read
   \param indices needed to get the indices index for each variable
-  \param report allow reporting to occur
 **/
 index_file_output_struct read_omni_file(std::string omni_file,
-					Indices indices,
-					Report &report);
+					Indices indices);
 
 /**********************************************************************
   \brief This code compares a string to return the variable index

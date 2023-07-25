@@ -7,8 +7,7 @@
 // TODO (#24): this currently just sets the electron temperature to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid,
-                                     Report &report) {
+void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
 
   electron_temperature_scgc = neutrals.temperature_scgc;
 

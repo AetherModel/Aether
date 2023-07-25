@@ -7,28 +7,22 @@
 #include "../include/aether.h"
 
 void read_collision_file(Neutrals &neutrals,
-			 Ions &ions,
-			 Inputs input,
-			 Report &report);
+			 Ions &ions);
 
 void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
 		       Neutrals &neutrals,
-		       Ions &ions,
-		       Report &report);
+		       Ions &ions);
 
 void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
 				Neutrals &neutrals,
-				Ions &ions,
-				Report &report);
+				Ions &ions);
 
 void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 				Neutrals &neutrals,
-				Ions &ions,
-				Report &report);
+				Ions &ions);
 
 void check_collision_frequncies(Ions ions,
-				Neutrals neutrals,
-				Report &report);
+				Neutrals neutrals);
 
 #endif  // INCLUDE_IONS_H_
 
