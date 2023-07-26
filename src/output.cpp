@@ -24,9 +24,7 @@ int output(const Neutrals &neutrals,
            const Ions &ions,
            const Grid &grid,
            Times time,
-           const Planets &planet,
-           Inputs args,
-           Report &report) {
+           const Planets &planet) {
 
   std::string function = "output";
   static int iFunction = -1;
@@ -36,7 +34,7 @@ int output(const Neutrals &neutrals,
 
   int iErr = 0;
 
-  int nOutputs = args.get_n_outputs();
+  int nOutputs = input.get_n_outputs();
   static std::vector<OutputContainer> AllOutputContainers;
 
   if (IsFirstTime) {
@@ -53,20 +51,20 @@ int output(const Neutrals &neutrals,
     IsFirstTime = false;
   }
 
-  report.student_checker_function_name(args.get_is_student(),
-                                       args.get_student_name(),
+  report.student_checker_function_name(input.get_is_student(),
+                                       input.get_student_name(),
                                        3, "");
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+    if (time.check_time_gate(input.get_dt_output(iOutput))) {
 
       // ------------------------------------------------------------
       // Store time in all of the files:
 
       AllOutputContainers[iOutput].set_time(time.get_current());
 
-      std::string type_output = args.get_type_output(iOutput);
+      std::string type_output = input.get_type_output(iOutput);
 
       // ------------------------------------------------------------
       // Put Lon, Lat, Alt into all output containers:

@@ -220,17 +220,13 @@ class OutputContainer {
    \param grid The grid to define the neutrals on
    \param time information about the current time
    \param planet information about the planet
-   \param input info about how user has configured things
-   \param report allow reporting to occur
 **/
 
 int output(const Neutrals &neutrals,
 	   const Ions &ions,
 	   const Grid &grid,
 	   Times time,
-	   const Planets &planet,
-	   Inputs args,
-	   Report &report);
+	   const Planets &planet);
 
 void output_binary_3d(std::ofstream &binary,
 		      arma_cube value);

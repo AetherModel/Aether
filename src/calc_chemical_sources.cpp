@@ -17,8 +17,7 @@
 // -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report) {
+                                      Ions &ions) {
 
   std::string function = "Chemistry::calc_chemical_sources";
   static int iFunction = -1;

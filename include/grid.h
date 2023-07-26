@@ -109,31 +109,25 @@ public:
 
   int64_t get_nGCs();
 
-  void calc_sza(Planets planet, Times time, Report &report);
-  void calc_gse(Planets planet, Times time, Report &report);
-  void calc_mlt(Report &report);
+  void calc_sza(Planets planet, Times time);
+  void calc_gse(Planets planet, Times time);
+  void calc_mlt();
 
-  void calc_grid_spacing(Planets planet, Report &report);
+  void calc_grid_spacing(Planets planet);
   void calc_alt_grid_spacing();
   void calc_lat_grid_spacing();
   void calc_long_grid_spacing();
-  void fill_grid_radius(Planets planet, Inputs &input, Report &report);
-  void calc_rad_unit(Planets planet, Inputs &input, Report &report);
-  void calc_gravity(Planets planet, Inputs &input, Report &report);
+  void fill_grid_radius(Planets planet);
+  void calc_rad_unit(Planets planet);
+  void calc_gravity(Planets planet);
   bool init_geo_grid(Quadtree quadtree,
-		     Planets planet,
-		     Inputs input,
-		     Report &report);
-  void create_sphere_connection(Quadtree quadtree,
-                                Inputs input,
-                                Report &report);
-  void create_sphere_grid(Quadtree quadtree, Inputs input, Report &report);
-  void create_cubesphere_connection(Quadtree quadtree,
-                                    Inputs input,
-                                    Report &report);
-  void create_cubesphere_grid(Quadtree quadtree, Inputs input, Report &report);
-  void create_altitudes(Planets planet, Inputs input, Report &report);
-  void fill_grid_bfield(Planets planet, Inputs input, Report &report);
+		     Planets planet);
+  void create_sphere_connection(Quadtree quadtree);
+  void create_sphere_grid(Quadtree quadtree);
+  void create_cubesphere_connection(Quadtree quadtree);
+  void create_cubesphere_grid(Quadtree quadtree);
+  void create_altitudes(Planets planet);
+  void fill_grid_bfield(Planets planet);
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);
   void report_grid_boundaries();

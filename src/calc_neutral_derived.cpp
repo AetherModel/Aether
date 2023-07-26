@@ -14,7 +14,7 @@
 //    - pressure
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density(Report &report) {
+void Neutrals::calc_mass_density() {
 
   int64_t iSpecies;
 
@@ -46,7 +46,7 @@ void Neutrals::calc_mass_density(Report &report) {
 //   - Speed of sound
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat(Report &report) {
+void Neutrals::calc_specific_heat() {
 
   int64_t iSpecies;
 
@@ -91,7 +91,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid, Report &report) {
+void Neutrals::calc_chapman(Grid grid) {
 
   int64_t iAlt, iLon, iLat;
 
@@ -255,7 +255,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
+void Neutrals::calc_conduction(Grid grid, Times time) {
 
   precision_t dt;
 

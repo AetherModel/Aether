@@ -8,12 +8,14 @@
 
 #include "aether.h"
 
+Inputs input;
+
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
 // The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
-Inputs::Inputs(Times &time, Report &report) {
+Inputs::Inputs(Times &time) {
 
   // ------------------------------------------------
   // Set some defaults:
@@ -60,7 +62,7 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  IsOk = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time);
 
   if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";

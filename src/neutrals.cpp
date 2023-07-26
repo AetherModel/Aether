@@ -55,9 +55,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 Neutrals::Neutrals(Grid grid,
                    Planets planet,
                    Times time,
-                   Indices indices,
-                   Inputs input,
-                   Report report) {
+                   Indices indices) {
 
   int iErr;
   species_chars tmp;
@@ -117,13 +115,13 @@ Neutrals::Neutrals(Grid grid,
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
   // This gets a bunch of the species-dependent characteristics:
-  iErr = read_planet_file(planet, input, report);
+  iErr = read_planet_file(planet);
 
   if (iErr > 0)
     std::cout << "Error reading planet file!" << '\n';
 
   // This specifies the initial conditions for the neutrals:
-  iErr = initial_conditions(grid, time, indices, input, report);
+  iErr = initial_conditions(grid, time, indices);
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
@@ -133,7 +131,7 @@ Neutrals::Neutrals(Grid grid,
 // Read in the planet file that describes the species - only neutrals
 // -----------------------------------------------------------------------------
 
-int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
+int Neutrals::read_planet_file(Planets planet) {
 
   int iErr = 0;
   std::string hash;
@@ -171,7 +169,7 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
 // Fill With Hydrostatic Solution (all species)
 //----------------------------------------------------------------------
 
-void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
+void Neutrals::fill_with_hydrostatic(Grid grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -190,7 +188,7 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
     }
   }
 
-  calc_mass_density(report);
+  calc_mass_density();
 }
 
 //----------------------------------------------------------------------
@@ -198,7 +196,7 @@ void Neutrals::fill_with_hydrostatic(Grid grid, Report report) {
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
-                                     Grid grid, Report report) {
+                                     Grid grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -213,7 +211,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
-  calc_mass_density(report);
+  calc_mass_density();
 }
 
 //----------------------------------------------------------------------
@@ -221,7 +219,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
 // This will return -1 if the species is not found or name is empty
 //----------------------------------------------------------------------
 
-int Neutrals::get_species_id(std::string name, Report &report) {
+int Neutrals::get_species_id(std::string name) {
 
   std::string function = "Neutrals::get_species_id";
   static int iFunction = -1;
@@ -313,10 +311,10 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 // Calculate value of NO Cooling
 //----------------------------------------------------------------------
 
-void Neutrals::calc_NO_cool(Report &report) {
+void Neutrals::calc_NO_cool() {
   // finds O & NO species
-  int iO = get_species_id("O", report);
-  int iNO = get_species_id("NO", report);
+  int iO = get_species_id("O");
+  int iNO = get_species_id("NO");
 
   if (iNO != -1) {
     // omega value using O density
@@ -337,9 +335,9 @@ void Neutrals::calc_NO_cool(Report &report) {
 // Calculate value of O Cooling
 //----------------------------------------------------------------------
 
-void Neutrals::calc_O_cool(Report &report) {
+void Neutrals::calc_O_cool() {
   // find O species
-  int iO = get_species_id("O", report);
+  int iO = get_species_id("O");
 
   if (iO != -1) {
     arma_cube tmp2 = exp(-228 / temperature_scgc);
