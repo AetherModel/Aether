@@ -121,7 +121,6 @@ void read_collision_file(Neutrals &neutrals,
     infile_ptr.close();
     check_collision_frequncies(ions, neutrals, report);
   }
-
   report.exit(function);
   return;
 }
@@ -189,7 +188,6 @@ void check_collision_frequncies(Ions ions,
 
     std::cout << "Done with check_collision_frequncies\n";
   }
-
   return;
 }
 
@@ -276,7 +274,6 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
-
   report.exit(function);
   return;
 }
@@ -342,19 +339,22 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
           std::cout << "Found Neutral : " << iNeutral << " "
                     << neutrals.species[iNeutral].cName << "\n";
 
-        ions.species[iIon].nu_in_res_temp_min[iNeutral] = str_to_num(csv[iLine][2]);
-        ions.species[iIon].nu_in_res_coef1[iNeutral] = str_to_num(csv[iLine][3]);
-        ions.species[iIon].nu_in_res_tn_frac[iNeutral] = str_to_num(csv[iLine][4]);
-        ions.species[iIon].nu_in_res_ti_frac[iNeutral] = str_to_num(csv[iLine][5]);
-        ions.species[iIon].nu_in_res_coef2[iNeutral] = str_to_num(csv[iLine][6]);
+        ions.species[iIon].nu_in_res_temp_min[iNeutral] =
+	  str_to_num(csv[iLine][2]);
+        ions.species[iIon].nu_in_res_coef1[iNeutral] =
+	  str_to_num(csv[iLine][3]);
+        ions.species[iIon].nu_in_res_tn_frac[iNeutral] =
+	  str_to_num(csv[iLine][4]);
+        ions.species[iIon].nu_in_res_ti_frac[iNeutral] =
+	  str_to_num(csv[iLine][5]);
+        ions.species[iIon].nu_in_res_coef2[iNeutral] =
+	  str_to_num(csv[iLine][6]);
       }
     }
   }
-
   report.exit(function);
   return;
 }
-
 
 // -----------------------------------------------------------------------------
 // parse Bst table - Coulomb collision frequency coefficients
@@ -409,14 +409,16 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
             std::cout << "Species s vs t : "
                       << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
             std::cout << "nu_ion_ion     : "
-                      << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] << "\n";
+                      << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]]
+		      << "\n";
           }
         }  // End iIonSIds_
       }  // End iCol
     }  // End iIonT
   }  // End iLine
 
-  // Copy Bst from O+ to O+2P and O+2D since the sub-flavors of O+ don't exist in table
+  // Copy Bst from O+ to O+2P and O+2D since the sub-flavors of O+
+  // don't exist in table
   iIonT = ions.get_species_id("O+", report);
   iIonD = ions.get_species_id("O+2D", report);
   iIonP = ions.get_species_id("O+2P", report);
@@ -424,20 +426,24 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
   if (iIonT > -1 && iIonD > -1) {
     for (iIon = 0; iIon < ions.nSpecies; iIon++) {
       // Fill for each specie the O+2D Bst value with the O+ Bst value
-      ions.species[iIon].nu_ion_ion[iIonD] = ions.species[iIon].nu_ion_ion[iIonT];
+      ions.species[iIon].nu_ion_ion[iIonD] =
+	ions.species[iIon].nu_ion_ion[iIonT];
 
       // Fill O+2D Bst table values with O+ Bst table values for each specie
-      ions.species[iIonD].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
+      ions.species[iIonD].nu_ion_ion[iIon] =
+	ions.species[iIonT].nu_ion_ion[iIon];
     }
   }
 
   if (iIonT > -1 && iIonP > -1) {
     for (iIon = 0; iIon < ions.nSpecies; iIon++) {
       // Fill for each specie the O+2P Bst value with the O+ Bst value
-      ions.species[iIon].nu_ion_ion[iIonP] = ions.species[iIon].nu_ion_ion[iIonT];
+      ions.species[iIon].nu_ion_ion[iIonP] =
+	ions.species[iIon].nu_ion_ion[iIonT];
 
       // Fill O+2P Bst table values with O+ Bst table values for each specie
-      ions.species[iIonP].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
+      ions.species[iIonP].nu_ion_ion[iIon] =
+	ions.species[iIonT].nu_ion_ion[iIon];
     }
   }
 
@@ -450,7 +456,6 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
-
   report.exit(function);
   return;
 } // parse_bst_in_table
@@ -531,8 +536,8 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
       cout << endl;
     }
   }
-
   report.exit(function);
+  return;
 } // parse_diff0_in_table
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
@@ -608,7 +613,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
       cout << endl;
     }
   }
-
   report.exit(function);
+  return;
 } // parse_diffexp_in_table
 
