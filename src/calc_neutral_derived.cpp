@@ -39,7 +39,7 @@ void Neutrals::calc_mass_density(Report &report) {
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   rho_scgc.zeros();
   density_scgc.zeros();
     
