@@ -68,6 +68,12 @@ class Ions {
   arma_mat eflux;
   arma_mat avee;
 
+  /// Number of species to advect:
+  int nSpeciesAdvect;
+      
+  /// IDs of species to advect:
+  std::vector<int> species_to_advect;
+    
   // names and units
   const std::string density_name = "Neutral Bulk Density";
   const std::string density_unit = "/m3";

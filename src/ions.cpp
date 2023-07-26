@@ -143,6 +143,14 @@ int Ions::read_planet_file(Planets planet, Inputs input, Report report) {
     species[iSpecies].charge = ions["charge"][iSpecies];
     species[iSpecies].DoAdvect = ions["advect"][iSpecies];
   }
+    
+    // account for advected ions:
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        if (species[iSpecies].DoAdvect == 1) {
+            nSpeciesAdvect++;
+            species_to_advect.push_back(iSpecies);
+        }
+    }
 
   species[nSpecies].cName = "e-";
   species[nSpecies].mass = cME;

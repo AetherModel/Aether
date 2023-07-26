@@ -159,14 +159,17 @@ int Neutrals::read_planet_file(Planets planet, Inputs input, Report report) {
         species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
         species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
         species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
-        if (neutrals["advect"][iSpecies] == 1) {
-            nSpeciesAdvect++;
-            species_to_advect.push_back(get_species_id(neutrals["name"][iSpecies], report));
-            cout << "Species to advect: " << species[species_to_advect.back()].cName << endl;
-        }
         species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
     }
-      cout << "Count: " << nSpeciesAdvect << endl;
+    
+    // account for advected neutrals:
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        if (species[iSpecies].DoAdvect == 1) {
+            nSpeciesAdvect++;
+            species_to_advect.push_back(iSpecies);
+        }
+    }
+
   json temperatures = planet.get_temperatures();
   nInitial_temps = temperatures["alt"].size();
 
