@@ -35,14 +35,14 @@ void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_mass_density(Report &report) {
-    
+
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   rho_scgc.zeros();
   density_scgc.zeros();
-    
+
   for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
       species[iSpecies].mass * species[iSpecies].density_scgc;
@@ -57,11 +57,11 @@ void Neutrals::calc_mass_density(Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_concentration(Report &report) {
-    
+
   std::string function = "Neutrals::calc_concentration";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     species[iSpecies].concentration_scgc =
       species[iSpecies].density_scgc / density_scgc;
@@ -74,7 +74,7 @@ void Neutrals::calc_concentration(Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_mean_major_mass(Report &report) {
-    
+
   std::string function = "Neutrals::calc_mean_major_mass";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -89,7 +89,7 @@ void Neutrals::calc_mean_major_mass(Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_pressure(Report &report) {
-    
+
   std::string function = "Neutrals::calc_pressure";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -104,11 +104,11 @@ void Neutrals::calc_pressure(Report &report) {
 // ----------------------------------------------------------------------
 
 void Neutrals::calc_bulk_velocity(Report &report) {
-    
+
   std::string function = "Neutrals::calc_bulk_velocity";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   for (int64_t iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
@@ -118,7 +118,6 @@ void Neutrals::calc_bulk_velocity(Report &report) {
 	species[iSpecies].velocity_vcgc[iDir];
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
   }
-
   report.exit(function);
 }
 
