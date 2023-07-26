@@ -29,7 +29,7 @@ int calc_euv(Planets planet,
     std::string function = "Euv::calc_euv";
     static int iFunction = -1;
     report.enter(function, iFunction);
-    
+
     if (input.get_is_student())
       report.print(-1, "(2) What function is this " +
 		    input.get_student_name() + "?");
