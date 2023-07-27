@@ -18,12 +18,10 @@
 // -----------------------------------------------------------------------------
 
 void read_aurora(Neutrals &neutrals,
-                 Ions &ions,
-                 Inputs args,
-                 Report &report) {
+                 Ions &ions) {
 
   std::ifstream myFile;
-  myFile.open(args.get_aurora_file());
+  myFile.open(input.get_aurora_file());
 
   if (myFile.good()) {
     std::vector<std::vector<std::string>> csv = read_csv(myFile);
@@ -32,8 +30,8 @@ void read_aurora(Neutrals &neutrals,
 
     for (int iLine = 0; iLine < nLines; iLine++) {
       //Set the auroral ion and neutral indices and coefficients
-      int iNeutral_ = neutrals.get_species_id(csv[iLine][0], report);
-      int iIon_ = ions.get_species_id(csv[iLine][1], report);
+      int iNeutral_ = neutrals.get_species_id(csv[iLine][0]);
+      int iIon_ = ions.get_species_id(csv[iLine][1]);
       neutrals.species[iNeutral_].iAuroraIonSpecies_.push_back(iIon_);
       neutrals.species[iNeutral_].nAuroraIonSpecies++;
       neutrals.species[iNeutral_].Aurora_Coef = stod(csv[iLine][2]);
@@ -70,8 +68,7 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
                            arma_vec rhoH,
                            std::vector<precision_t> Ci,
                            arma_vec scale_height,
-                           bool DoDebug,
-                           Report &report) {
+                           bool DoDebug) {
 
   // Set up function reporting
   std::string function = "calc_fang";
@@ -116,9 +113,7 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
 // -----------------------------------------------------------------------------
 void calc_aurora(Grid grid,
                  Neutrals &neutrals,
-                 Ions &ions,
-                 Inputs args,
-                 Report &report) {
+                 Ions &ions) {
 
   std::string function = "calc_aurora";
   static int iFunction = -1;
@@ -162,7 +157,7 @@ void calc_aurora(Grid grid,
 
   if (IsFirstTime) {
     // Initialize the aurora using the auroral csv file
-    read_aurora(neutrals, ions, args, report);
+    read_aurora(neutrals, ions);
 
     precision_t lnE;
 
@@ -213,7 +208,7 @@ void calc_aurora(Grid grid,
   weighted_sum.set_size(nAlts);
 
   scale_height = cKB * neutrals.temperature_scgc /
-                 (neutrals.mean_major_mass_scgc % abs(grid.gravity_scgc));
+                 (neutrals.mean_major_mass_scgc % abs(grid.gravity_vcgc[2]));
 
   precision_t eflux;
   precision_t avee;
@@ -262,8 +257,7 @@ void calc_aurora(Grid grid,
                                    rhoH1d,
                                    Ci,
                                    H,
-                                   DoDebug,
-                                   report);
+                                   DoDebug);
           ionization1d = ionization1d + temp;
         }
 

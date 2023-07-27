@@ -19,8 +19,6 @@ int advance(Planets &planet,
             Chemistry &chemistry,
             Electrodynamics &electrodynamics,
             Indices &indices,
-            Inputs &input,
-            Report &report,
             Logfile &logfile) {
 
   int iErr = 0;
@@ -35,13 +33,22 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-                 input.get_student_name() + "?");
+		  input.get_student_name() + "?");
 
-  gGrid.calc_sza(planet, time, report);
-  neutrals.calc_mass_density(report);
-  neutrals.calc_specific_heat(report);
-  neutrals.calc_cMax(report);
-  precision_t dtNeutral = neutrals.calc_dt(gGrid, report);
+  gGrid.calc_sza(planet, time);
+  neutrals.calc_mass_density();
+  neutrals.calc_specific_heat();
+  neutrals.calc_concentration();
+  neutrals.calc_mean_major_mass();
+  neutrals.calc_pressure();
+  neutrals.calc_bulk_velocity();
+  neutrals.calc_kappa_eddy();
+
+  gGrid.calc_sza(planet, time);
+  neutrals.calc_mass_density();
+  neutrals.calc_specific_heat();
+  neutrals.calc_cMax();
+  precision_t dtNeutral = neutrals.calc_dt(gGrid);
   precision_t dtIon = 100.0;
   time.calc_dt(dtNeutral, dtIon);
 
@@ -51,31 +58,44 @@ int advance(Planets &planet,
                   euv,
                   neutrals,
                   ions,
-                  indices,
-                  input,
-                  report);
+                  indices);
 
   iErr = electrodynamics.update(planet,
                                 gGrid,
                                 time,
-                                ions,
-                                report);
-  calc_ion_neutral_coll_freq(neutrals, ions, report);
-  ions.calc_ion_drift(neutrals, gGrid, time.get_dt(), report);
+                                ions);
+  calc_ion_neutral_coll_freq(neutrals, ions);
+  ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
 
-  calc_aurora(gGrid, neutrals, ions, input, report);
+  calc_aurora(gGrid, neutrals, ions);
 
-  neutrals.calc_conduction(gGrid, time, report);
-  chemistry.calc_chemistry(neutrals, ions, time, gGrid, report);
-  neutrals.add_sources(time, report);
-  ions.calc_ion_temperature(neutrals, gGrid, time, input, report);
-  ions.calc_electron_temperature(neutrals, gGrid, report);
+  // Calculate some neutral source terms:
+  neutrals.calc_conduction(gGrid, time);
+  chemistry.calc_chemistry(neutrals, ions, time, gGrid);
+  if (input.get_O_cooling())
+    neutrals.calc_O_cool();
+  if (input.get_NO_cooling())
+    neutrals.calc_NO_cool();
+  neutrals.add_sources(time);
 
-  neutrals.set_bcs(gGrid, time, indices, input, report);
-  //neutrals.fill_with_hydrostatic(1, gGrid.get_nZ(), gGrid, report);
-  neutrals.solver_vertical_rusanov(gGrid, time, input, report);
+  neutrals.calc_conduction(gGrid, time);
+  chemistry.calc_chemistry(neutrals, ions, time, gGrid);
 
-  neutrals.exchange(gGrid, report);
+  neutrals.vertical_momentum_eddy(gGrid);
+  calc_ion_collisions(neutrals, ions);
+  calc_neutral_friction(neutrals);
+
+  neutrals.set_bcs(gGrid, time, indices);
+  neutrals.calc_scale_height(gGrid);
+  // Need to add a switch for using the vertical solver vs hydrostatic:
+  //neutrals.fill_with_hydrostatic(1, gGrid.get_nZ(), gGrid);
+  neutrals.solver_vertical_rusanov(gGrid, time);
+
+  neutrals.add_sources(time);
+  ions.calc_ion_temperature(neutrals, gGrid, time);
+  ions.calc_electron_temperature(neutrals, gGrid);
+
+  neutrals.exchange(gGrid);
 
   time.increment_time();
 
@@ -86,9 +106,9 @@ int advance(Planets &planet,
     time.restart_file(input.get_restartout_dir(), DoWrite);
   }
 
-  iErr = output(neutrals, ions, gGrid, time, planet, input, report);
+  iErr = output(neutrals, ions, gGrid, time, planet);
 
-  logfile.write_logfile(indices, neutrals, ions, gGrid, time, report);
+  logfile.write_logfile(indices, neutrals, ions, gGrid, time);
 
   report.exit(function);
   return iErr;

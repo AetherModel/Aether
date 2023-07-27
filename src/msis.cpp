@@ -27,7 +27,7 @@ extern "C" void call_msis_f(int *iYear,
 //
 // -----------------------------------------------------------------------------
 
-Msis::Msis(Inputs args) {
+Msis::Msis() {
 
 #ifdef FORTRAN
   // Initialize msis (reading in the data file):

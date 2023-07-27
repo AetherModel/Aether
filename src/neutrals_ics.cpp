@@ -18,9 +18,7 @@
 
 int Neutrals::initial_conditions(Grid grid,
                                  Times time,
-                                 Indices indices,
-                                 Inputs input,
-                                 Report &report) {
+                                 Indices indices) {
 
   std::string function = "Neutrals::initial_conditions";
   static int iFunction = -1;
@@ -47,7 +45,7 @@ int Neutrals::initial_conditions(Grid grid,
 
       report.print(2, "Using MSIS for Initial Conditions");
 
-      Msis msis(input);
+      Msis msis;
 
       if (!msis.is_ok()) {
         iErr = 1;
@@ -91,7 +89,7 @@ int Neutrals::initial_conditions(Grid grid,
 
           species[iSpecies].density_scgc.slice(0).
           fill(species[iSpecies].lower_bc_density);
-          fill_with_hydrostatic(iSpecies, 1, nAlts, grid, report);
+          fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
         }
 
       }
@@ -161,11 +159,9 @@ int Neutrals::initial_conditions(Grid grid,
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
-
-      fill_with_hydrostatic(1, nAlts, grid, report);
-
+      calc_scale_height(grid);      
+      fill_with_hydrostatic(1, nAlts, grid);
     } // type = planet
-
   }
 
   report.exit(function);

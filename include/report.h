@@ -236,4 +236,6 @@ private:
   bool DoReportOnExit = true;
 };
 
+extern Report report;
+
 #endif  // INCLUDE_REPORT_H_

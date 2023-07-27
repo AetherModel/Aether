@@ -12,7 +12,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   int64_t iIon;
 
@@ -37,11 +37,11 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
-                                Times time, Inputs input, Report &report) {
+                                Times time) {
 
   std::string function = "Ions::calc_ion_temperature";
   static int iFunction = -1;
-  // report.enter(function, iFunction);
+  report.enter(function, iFunction);
 
   int64_t iIon, iLon, iLat, nSpecs;
   int64_t nLons = grid.get_nLons();
@@ -66,6 +66,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   temperature_scgc = neutrals.temperature_scgc;
 
+  report.exit(function);
   return;
 
   // Loop over all species or assume only bulk calculation
@@ -82,7 +83,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   // Loop over all species or assume only bulk calculation
   for (iIon = 0; iIon < nSpecs; iIon++) {
-
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
 
@@ -143,6 +143,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       species[iIon].temperature_scgc = temperature_scgc;
   }
 
-  //report.exit(function);
+  report.exit(function);
   return;
 }

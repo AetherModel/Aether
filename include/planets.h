@@ -26,10 +26,8 @@ public:
 
   /**********************************************************************
      \brief Initialize the Planet class
-     \param args info about how user has configured things
-     \param report allow reporting to occur
    **/
-  Planets(Inputs args, Report report);
+  Planets();
 
   /**********************************************************************
      \brief Returns the distance from the star to the planet being modeled
@@ -54,6 +52,11 @@ public:
      \brief Gets mu, which is planet mass times gravitational constant
    **/
   precision_t get_mu();
+
+  /**********************************************************************
+     \brief Gets J2
+   **/
+  precision_t get_J2();
 
   /**********************************************************************
      \brief Returns radius of the planet, which can be a function of latitude
@@ -105,7 +108,12 @@ public:
      \brief Returns the strength of the dipole at the surface (in nT)
    **/
   precision_t get_dipole_strength();
-  
+
+  /**********************************************************************
+     \brief Returns omega (rotation rate) of the planet 
+   **/
+  precision_t get_omega();
+
   /**********************************************************************
      \brief returns neutrals json for neutral density BCs
    **/
@@ -126,7 +134,7 @@ public:
    **/
   
   bool is_ok();
-  
+
 // -----------------------------------------------------------------------
 // Private functions and variables
 // -----------------------------------------------------------------------
@@ -196,6 +204,8 @@ public:
     precision_t polar_radius;
     /// mean radius
     precision_t radius;
+    /// Difference between polar and equator radius
+    precision_t delta_radius;
 
     /// Dipole strength (nT)
     precision_t dipole_strength;
@@ -205,6 +215,9 @@ public:
     precision_t dipole_tilt;
     /// Offset of the dipole center from the geographic center of planet
     std::vector<float> dipole_center{ 0.0, 0.0, 0.0 };
+
+    //J2 value
+    precision_t J2;
 
     // ---------------------------------------
     // These are updated during the run:
@@ -252,11 +265,8 @@ public:
 
      This function just copies over the chosen planet's characteristics
      from the vector into the stand-alone structure.
-
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool set_planet(Inputs args, Report report);
+  bool set_planet();
 
   /**********************************************************************
      \brief Updates the planetary characteristics that depend on time
@@ -270,17 +280,13 @@ public:
 
   /**********************************************************************
      \brief Reads in the planetary characteristics and stores them
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool read_file(Inputs input, Report report);
+  bool read_file();
 
   /**********************************************************************
      \brief Reads in the planets neutral, ion, temperature characteristics
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool read_planet_specific_file(Inputs input, Report report);
+  bool read_planet_specific_file();
 
 };
 

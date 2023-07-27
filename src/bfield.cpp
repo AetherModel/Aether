@@ -12,9 +12,7 @@ bfield_info_type get_bfield(precision_t lon,
                             precision_t lat,
                             precision_t alt,
                             bool DoDebug,
-                            Planets planet,
-                            Inputs input,
-                            Report &report) {
+                            Planets planet) {
 
   std::string function = "get_bfield";
   static int iFunction = -1;
@@ -47,7 +45,7 @@ bfield_info_type get_bfield(precision_t lon,
     bfield_info.lat = lat;
     bfield_info.lon = lon;
   } else if (input.get_bfield_type() == "dipole")
-    bfield_info = get_dipole(lon, lat, alt, DoDebug, planet, input, report);
+    bfield_info = get_dipole(lon, lat, alt, DoDebug, planet);
 
   if (DoDebug)
     report.exit(function);
@@ -61,9 +59,7 @@ bfield_info_type get_bfield(precision_t lon,
 // -----------------------------------------------------------------------------
 
 arma_vec get_magnetic_pole(int IsNorth,
-                           Planets planet,
-                           Inputs input,
-                           Report &report) {
+                           Planets planet) {
 
   arma_vec lonlat(2, fill::zeros);
 

@@ -17,8 +17,7 @@
 // -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report) {
+                                      Ions &ions) {
 
   std::string function = "Chemistry::calc_chemical_sources";
   static int iFunction = -1;
@@ -56,7 +55,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
     change3d.fill(rate);
 
-    // check for type of temperature dependence and calculate
+    // Check for type of temperature dependence and calculate
     if (reactions[iReaction].type > 0) {
       // Determined which temperature to use in equation:
       // use Tn by default
@@ -113,7 +112,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       }
     }
 
-    // if temperature dependence is piecewise, only operate on cells
+    // If temperature dependence is piecewise, only operate on cells
     // within temperature range:
     if (reactions[iReaction].min || reactions[iReaction].max) {
       // Figure out which temperature is the limiter.  Default to ions:

@@ -23,9 +23,7 @@
 
 bool Neutrals::set_bcs(Grid grid,
                        Times time,
-                       Indices indices,
-                       Inputs input,
-                       Report &report) {
+                       Indices indices) {
 
   std::string function = "Neutrals::set_bcs";
   static int iFunction = -1;
@@ -33,9 +31,9 @@ bool Neutrals::set_bcs(Grid grid,
 
   bool didWork;
 
-  didWork = set_lower_bcs(grid, time, indices, input, report);
-  didWork = set_upper_bcs(grid, input, report);
-  calc_mass_density(report);
+  didWork = set_lower_bcs(grid, time, indices);
+  didWork = set_upper_bcs(grid);
+  calc_mass_density();
 
   report.exit(function);
   return didWork;
@@ -45,9 +43,7 @@ bool Neutrals::set_bcs(Grid grid,
 // set lower boundary conditions for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::set_upper_bcs(Grid grid,
-                             Inputs input,
-                             Report &report) {
+bool Neutrals::set_upper_bcs(Grid grid) {
 
   std::string function = "Neutrals::set_upper_bcs";
   static int iFunction = -1;
@@ -95,9 +91,7 @@ bool Neutrals::set_upper_bcs(Grid grid,
 
 bool Neutrals::set_lower_bcs(Grid grid,
                              Times time,
-                             Indices indices,
-                             Inputs input,
-                             Report &report) {
+                             Indices indices) {
 
   std::string function = "Neutrals::set_lower_bcs";
   static int iFunction = -1;
@@ -115,7 +109,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
     report.print(2, "Using MSIS for Boundary Conditions");
 
-    Msis msis(input);
+    Msis msis;
 
     if (!msis.is_ok()) {
       didWork = false;
@@ -205,7 +199,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 //      iDir = 3 -> -y
 //----------------------------------------------------------------------
 
-bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
+bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
 
   std::string function = "Neutrals::set_horizontal_bcs";
   static int iFunction = -1;

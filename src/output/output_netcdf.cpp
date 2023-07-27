@@ -59,13 +59,11 @@ int output(Neutrals neutrals,
            Ions ions,
            Grid grid,
            Times time,
-           Planets planet,
-           Inputs args,
-           Report &report) {
+           Planets planet) {
 
   int iErr = 0;
 
-  int nOutputs = args.get_n_outputs();
+  int nOutputs = input.get_n_outputs();
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -81,11 +79,11 @@ int output(Neutrals neutrals,
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+    if (time.check_time_gate(input.get_dt_output(iOutput))) {
 
-      grid.calc_sza(planet, time, report);
-      grid.calc_gse(planet, time, report);
-      grid.calc_mlt(report);
+      grid.calc_sza(planet, time);
+      grid.calc_gse(planet, time);
+      grid.calc_mlt();
 
       std::string time_string;
       std::string file_name;
@@ -94,7 +92,7 @@ int output(Neutrals neutrals,
       std::string LONG_NAME = "long_name";
       std::string file_pre;
 
-      std::string type_output = args.get_type_output(iOutput);
+      std::string type_output = input.get_type_output(iOutput);
 
       if (type_output == "neutrals")
         file_pre = "3DNEU";

@@ -13,21 +13,21 @@
 // Initialize EUV
 // -----------------------------------------------------------------------------
 
-Euv::Euv(Inputs args, Report report) {
+Euv::Euv() {
 
   precision_t ave;
 
   IsOk = true;
 
   // Read in the EUV file:
-  IsOk = read_file(args, report);
+  IsOk = read_file();
 
   if (IsOk) {
     // Slot the short and long wavelengths into their arrays:
-    IsOk = slot_euv("Long", "", wavelengths_long, report);
+    IsOk = slot_euv("Long", "", wavelengths_long);
 
     if (IsOk)
-      IsOk = slot_euv("Short", "", wavelengths_short, report);
+      IsOk = slot_euv("Short", "", wavelengths_short);
 
     // This means we found both long and short wavelengths:
     if (IsOk) {
@@ -42,12 +42,12 @@ Euv::Euv(Inputs args, Report report) {
     }
 
     // Slot the EUVAC model coefficients:
-    if (args.get_euv_model() == "euvac") {
-      IsOk = slot_euv("F74113", "", euvac_f74113, report);
-      IsOk = slot_euv("AFAC", "", euvac_afac, report);
+    if (input.get_euv_model() == "euvac") {
+      IsOk = slot_euv("F74113", "", euvac_f74113);
+      IsOk = slot_euv("AFAC", "", euvac_afac);
     }
 
-    // Slot the EUVAC model coefficients:
+    // Slot the NEUVAC model coefficients:
     if (args.get_euv_model() == "neuvac") {
       IsOk = slot_euv("NEUV_S1", "", neuvac_s1, report);
 
@@ -66,7 +66,8 @@ Euv::Euv(Inputs args, Report report) {
       if (IsOk)
         IsOk = slot_euv("NEUV_I1", "", neuvac_int, report);
     }
-
+    
+    // Slot the HFG model coefficients:
     if (args.get_euv_model() == "hfg") {
       IsOk = slot_euv("HFGc1", "", solomon_hfg_c1, report);
 
@@ -87,7 +88,7 @@ Euv::Euv(Inputs args, Report report) {
 // cross sections
 // ---------------------------------------------------------------------------
 
-bool Euv::read_file(Inputs args, Report report) {
+bool Euv::read_file() {
 
   waveinfotype tmp;
   std::string line, col;
@@ -95,9 +96,9 @@ bool Euv::read_file(Inputs args, Report report) {
   std::ifstream infile_ptr;
   bool DidWork = true;
 
-  report.print(1, "Reading EUV File : " + args.get_euv_file());
+  report.print(1, "Reading EUV File : " + input.get_euv_file());
 
-  infile_ptr.open(args.get_euv_file());
+  infile_ptr.open(input.get_euv_file());
 
   if (!infile_ptr.is_open()) {
     if (iProc == 0)
@@ -168,8 +169,7 @@ bool Euv::read_file(Inputs args, Report report) {
 
 bool Euv::slot_euv(std::string item,
                    std::string item2,
-                   std::vector<float> &values,
-                   Report report) {
+                   std::vector<float> &values) {
 
   bool DidWork = true;
   int iLine;
@@ -222,9 +222,7 @@ bool Euv::slot_euv(std::string item,
 // ---------------------------------------------------------------------
 
 bool Euv::pair_euv(Neutrals &neutrals,
-                   Ions ions,
-                   Inputs input,
-                   Report &report) {
+                   Ions ions) {
 
   std::string function = "Euv::pair_euv";
   static int iFunction = -1;
@@ -312,8 +310,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 // --------------------------------------------------------------------------
 
 int Euv::scale_from_1au(Planets planet,
-                        Times time,
-                        Report report) {
+                        Times time) {
   int iErr = 0;
   precision_t d = planet.get_star_to_planet_dist(time);
   precision_t scale = 1.0 / (d * d);
@@ -332,8 +329,7 @@ int Euv::scale_from_1au(Planets planet,
 // --------------------------------------------------------------------------
 
 int Euv::euvac(Times time,
-               Indices indices,
-               Report &report) {
+               Indices indices) {
 
   int iErr = 0;
   precision_t slope;
@@ -377,8 +373,7 @@ int Euv::euvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::neuvac(Times time,
-                Indices indices,
-                Report &report) {
+                Indices indices) {
 
   int iErr = 0;
   precision_t slope;
@@ -423,8 +418,7 @@ int Euv::neuvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::solomon_hfg(Times time,
-                     Indices indices,
-                     Report &report) {
+                     Indices indices) {
 
   std::string function = "Euv::solomon_hfg";
   static int iFunction = -1;

@@ -112,8 +112,7 @@ std::string read_in_string(FILE *infile) {
 // a write function.
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
-                                                       Report &report) {
+void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
 
   std::string function = "Electrodynamics::read_netcdf_electrodynamics_file";
   static int iFunction = -1;

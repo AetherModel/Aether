@@ -70,9 +70,8 @@ class Indices {
 
   /**************************************************************
    \brief Initialize the class
-   \param args info about how user has configured things
    **/
-  Indices(Inputs args);
+  Indices();
 
   /**************************************************************
    \brief get the daily f107 value at the given time
@@ -153,10 +152,8 @@ class Indices {
   
   /**************************************************************
    \brief Perturbs the indices requested by user input
-   \param args info about how user has configured things
-   \param report allow reporting to occur
    **/
-  bool perturb(Inputs args, Report &report);
+  bool perturb();
 
   /**************************************************************
    \brief Perturbs the specific indices based on the user input

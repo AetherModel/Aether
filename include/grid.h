@@ -66,7 +66,12 @@ public:
   arma_cube radius_scgc;
   arma_cube radius2_scgc;
   arma_cube radius2i_scgc;
-  arma_cube gravity_scgc;
+
+  std::vector<arma_cube> rad_unit_vcgc;
+  arma_cube gravity_potential_scgc;
+  std::vector<arma_cube> gravity_vcgc;
+
+  std::vector<arma_cube> cent_acc_vcgc;
 
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
@@ -110,28 +115,29 @@ public:
 
   int64_t get_nGCs();
 
-  void calc_sza(Planets planet, Times time, Report &report);
-  void calc_gse(Planets planet, Times time, Report &report);
-  void calc_mlt(Report &report);
-  void fill_grid(Planets planet, Report &report);
-  void fill_grid_radius(Planets planet, Report &report);
+  void calc_sza(Planets planet, Times time);
+  void calc_gse(Planets planet, Times time);
+  void calc_mlt();
+
+  void calc_grid_spacing(Planets planet);
+  void calc_alt_grid_spacing();
+  void calc_lat_grid_spacing();
+  void calc_long_grid_spacing();
+  void fill_grid_radius(Planets planet);
+  void calc_rad_unit(Planets planet);
+  void calc_gravity(Planets planet);
   bool init_geo_grid(Quadtree quadtree,
-		     Planets planet,
-		     Inputs input,
-		     Report &report);
-  void create_sphere_connection(Quadtree quadtree,
-                                Inputs input,
-                                Report &report);
-  void create_sphere_grid(Quadtree quadtree, Inputs input, Report &report);
-  void create_cubesphere_connection(Quadtree quadtree,
-                                    Inputs input,
-                                    Report &report);
-  void create_cubesphere_grid(Quadtree quadtree, Inputs input, Report &report);
-  void create_altitudes(Planets planet, Inputs input, Report &report);
-  void fill_grid_bfield(Planets planet, Inputs input, Report &report);
+		     Planets planet);
+  void create_sphere_connection(Quadtree quadtree);
+  void create_sphere_grid(Quadtree quadtree);
+  void create_cubesphere_connection(Quadtree quadtree);
+  void create_cubesphere_grid(Quadtree quadtree);
+  void create_altitudes(Planets planet);
+  void fill_grid_bfield(Planets planet);
   bool read_restart(std::string dir);
   bool write_restart(std::string dir);
   void report_grid_boundaries();
+  void calc_cent_acc(Planets planet);
 
   // Need to move these to private at some point:
 
