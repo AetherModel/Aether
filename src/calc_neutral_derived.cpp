@@ -130,30 +130,42 @@ void Neutrals::calc_scale_height(Grid grid) {
   int64_t nAlts = grid.get_nAlts();
 
   int64_t iSpecies;
+  // Calculate scale-heights of each species, completely independently:
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
       (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
   }
 
-  // adjust scale heights if eddy diffusion is used:
+  // If we have eddy diffusion, the scale-heights need to be adjusted,
+  // since all of the scale heights should be the same in the region
+  // where eddy diffusion is dominant.
+  
   if (input.get_use_eddy_momentum()) {
-    // find the density-weighted average scale height in the bottom cell:
-    precision_t Htotal = 0.0, Rtotal = 0.0, H;
-    arma_mat Hslice, Rslice;
+    // We need the mean major mass in the bottom-most cell, which we
+    // assume is the region where the atmosphere is well-mixed:
+
+    // sum mass densities and densities to calculate mean major mass:
+    precision_t mTotal = 0.0, dTotal = 0.0, mmm;
+    // Need the mass density and the number density in the bottom slice:
+    arma_mat mSlice, dSlice;
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      Hslice =
-	species[iSpecies].mass *
-	species[iSpecies].density_scgc.slice(0) %
-	species[iSpecies].scale_height_scgc.slice(0);
-      Rslice =
+      mSlice =
 	species[iSpecies].mass *
 	species[iSpecies].density_scgc.slice(0);
-      Htotal = Htotal + accu(Hslice);
-      Rtotal = Rtotal + accu(Rslice);
+      dSlice =
+	species[iSpecies].density_scgc.slice(0);
+      mTotal = mTotal + accu(mSlice);
+      dTotal = dTotal + accu(dSlice);
     }
-    H = Htotal / Rtotal;
-    H = sync_mean_across_all_procs(H);
+    mmm = mTotal / dTotal;
+    mmm = sync_mean_across_all_procs(mmm);
+
+    // bulk scale height, assuming well mixed atmosphere:
+    arma_cube bulkH = 
+      cKB * temperature_scgc /
+      (mmm * abs(grid.gravity_vcgc[2]));
+
     // percentage will go from 1 = use bulk scale, to 0 = use individual
     arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
     arma_cube one = percentage;
@@ -162,7 +174,7 @@ void Neutrals::calc_scale_height(Grid grid) {
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].scale_height_scgc =
 	omp % species[iSpecies].scale_height_scgc +
-	percentage * H;
+	percentage % bulkH;      
     }
   }
   return;
