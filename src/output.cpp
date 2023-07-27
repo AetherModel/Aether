@@ -125,7 +125,7 @@ int output(const Neutrals &neutrals,
                        neutrals.temperature_unit,
                        neutrals.temperature_scgc);
 
-      // Neutral Winds:
+      // Bulk Neutral Winds:
       if (type_output == "neutrals" ||
           type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
@@ -133,6 +133,16 @@ int output(const Neutrals &neutrals,
           store_variable(neutrals.velocity_name[iDir],
                          neutrals.velocity_unit,
                          neutrals.velocity_vcgc[iDir]);
+
+      // Neutral Species Winds:
+      if (type_output == "neutrals")
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+	  for (int iDir = 0; iDir < 3; iDir++)
+	    AllOutputContainers[iOutput].
+	      store_variable(neutrals.species[iSpecies].cName + " " +
+			     neutrals.velocity_name[iDir],
+			     neutrals.velocity_unit,
+			     neutrals.species[iSpecies].velocity_vcgc[iDir]);
 
       // Ion Densities:
       if (type_output == "ions" ||

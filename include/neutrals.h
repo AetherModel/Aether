@@ -4,6 +4,8 @@
 #ifndef INCLUDE_NEUTRALS_H_
 #define INCLUDE_NEUTRALS_H_
 
+#include "../include/aether.h"
+
 /**************************************************************
  * \class Neutrals
  *
@@ -48,6 +50,25 @@ class Neutrals {
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
+    
+    /// Velocity of each species (m/s). For all below:
+    /// Index 0 = longitudinal component of velocity
+    /// Index 1 = latitudinal
+    /// Index 2 = altitudinal
+    std::vector<arma_cube> velocity_vcgc;
+      
+    /// Acceleration of each species (m/s^2)
+    std::vector<arma_cube> acc_neutral_friction;
+      
+    /// Acceleration of each species based on Eddy contribution.
+    /// Only in vertical direction.
+    arma_cube acc_eddy;
+      
+    /// Acceleration of each species due to ion drag.
+    std::vector<arma_cube> acc_ion_drag;
+            
+    /// concentration (density of species / total density)
+    arma_cube concentration_scgc;
 
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
@@ -137,6 +158,9 @@ class Neutrals {
 
   /// Bulk thermal heat conduction:
   arma_cube kappa_scgc;
+
+  /// Eddy Diffusion
+  arma_cube kappa_eddy_scgc;
 
   /// O cooling 
   arma_cube O_cool_scgc;
@@ -243,6 +267,37 @@ class Neutrals {
   void calc_mass_density();
 
   /**********************************************************************
+     \brief Calculate the scale heights for the individual species
+     \param grid The grid to define the neutrals on
+   **/
+  void calc_scale_height(Grid grid);
+  
+  /**********************************************************************
+     \brief Calculate the eddy diffusion coefficient in valid pressure
+   **/
+  void calc_kappa_eddy();
+  
+  /**********************************************************************
+     \brief Calculate the concentration for each species (species ndensity / total ndensity)
+   **/
+  void calc_concentration();
+    
+  /**********************************************************************
+     \brief Calculate the bulk mean major mass
+   **/
+  void calc_mean_major_mass();
+    
+  /**********************************************************************
+     \brief Calculate the mean pressure
+   **/
+  void calc_pressure();
+    
+  /**********************************************************************
+     \brief Calculate bulk velocity
+   **/
+  void calc_bulk_velocity();
+
+  /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
    **/
   void calc_specific_heat();
@@ -330,6 +385,12 @@ class Neutrals {
    **/
   bool exchange(Grid &grid);
 
+  /**********************************************************************
+   \brief add eddy contributions to vertical acceleration
+   \param grid The grid to define the neutrals on
+  **/ 
+  void vertical_momentum_eddy(Grid &grid);
+  
   /**********************************************************************
      \brief Exchange one face for the NEUTRALS
 

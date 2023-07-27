@@ -267,7 +267,7 @@ void Grid::calc_rad_unit(Planets planet) {
 //  Calculates gravity, including J2 perturbation
 // -----------------------------------------------------------------------------
 
-void Grid::calc_gravity(Planets planet){
+void Grid::calc_gravity(Planets planet) {
 
   std::string function = "Grid::calc_gravity";
   static int iFunction = -1;
@@ -277,7 +277,7 @@ void Grid::calc_gravity(Planets planet){
 
   gravity_potential_scgc =
     - (mu / radius_scgc)
-    + ((3 * (planet.get_J2() * planet.get_mu())) /
+    + ((3 * (planet.get_J2() * mu)) /
        (2 * pow(radius_scgc, 3)) %
        ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
 
@@ -324,7 +324,7 @@ void Grid::calc_grid_spacing(Planets planet) {
 // Grid spacing for altitude:
 // ---------------------------------------
 
-void Grid::calc_alt_grid_spacing(){
+void Grid::calc_alt_grid_spacing() {
 
   int64_t iAlt;
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
@@ -361,7 +361,7 @@ void Grid::calc_alt_grid_spacing(){
 // Grid spacing for latitude:
 // ---------------------------------------
 
-void Grid::calc_lat_grid_spacing(){
+void Grid::calc_lat_grid_spacing() {
 
   int64_t iLat;
   for (iLat = 1; iLat < nLats - 1; iLat++) {
@@ -386,7 +386,7 @@ void Grid::calc_lat_grid_spacing(){
 // Grid spacing for longitude:
 // ---------------------------------------
 
-void Grid::calc_long_grid_spacing(){
+void Grid::calc_long_grid_spacing() {
 
   int64_t iLon;
   for (iLon = 1; iLon < nLons - 1; iLon++)

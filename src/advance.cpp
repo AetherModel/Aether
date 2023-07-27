@@ -38,6 +38,12 @@ int advance(Planets &planet,
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
   neutrals.calc_specific_heat();
+  neutrals.calc_concentration();
+  neutrals.calc_mean_major_mass();
+  neutrals.calc_pressure();
+  neutrals.calc_bulk_velocity();
+  neutrals.calc_kappa_eddy();
+
   time.calc_dt();
 
   iErr = calc_euv(planet,
@@ -66,13 +72,20 @@ int advance(Planets &planet,
     neutrals.calc_NO_cool();
   neutrals.add_sources(time);
 
-  // Calculate Ion and Electron Temperatures:
+  neutrals.calc_conduction(gGrid, time);
+  chemistry.calc_chemistry(neutrals, ions, time, gGrid);
+
+  neutrals.vertical_momentum_eddy(gGrid);
+  calc_ion_collisions(neutrals, ions);
+  calc_neutral_friction(neutrals);
+
+  neutrals.add_sources(time);
   ions.calc_ion_temperature(neutrals, gGrid, time);
   ions.calc_electron_temperature(neutrals, gGrid);
 
   neutrals.set_bcs(gGrid, time, indices);
+  neutrals.calc_scale_height(gGrid);
   neutrals.fill_with_hydrostatic(gGrid);
-
   neutrals.exchange(gGrid);
 
   time.increment_time();
@@ -86,9 +99,8 @@ int advance(Planets &planet,
 
   iErr = output(neutrals, ions, gGrid, time, planet);
 
-  report.exit(function);
-
   logfile.write_logfile(indices, neutrals, ions, gGrid, time);
 
+  report.exit(function);
   return iErr;
 }

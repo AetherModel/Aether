@@ -30,6 +30,13 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
 
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_eddy.set_size(nLons, nLats, nAlts);
+
+  tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
+  
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
@@ -107,6 +114,8 @@ Neutrals::Neutrals(Grid grid,
   gamma_scgc.zeros();
   kappa_scgc.set_size(nLons, nLats, nAlts);
   kappa_scgc.zeros();
+  kappa_eddy_scgc.set_size(nLons, nLats, nAlts);
+  kappa_eddy_scgc.zeros();
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
@@ -125,6 +134,7 @@ Neutrals::Neutrals(Grid grid,
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
+  return;
 }
 
 // -----------------------------------------------------------------------------
@@ -174,12 +184,6 @@ void Neutrals::fill_with_hydrostatic(Grid grid) {
   int64_t nAlts = grid.get_nAlts();
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-
-    // Integrate with hydrostatic equilibrium up:
-    species[iSpecies].scale_height_scgc =
-      cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
-
     for (int iAlt = 1; iAlt < nAlts; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
@@ -189,6 +193,7 @@ void Neutrals::fill_with_hydrostatic(Grid grid) {
   }
 
   calc_mass_density();
+  return;
 }
 
 //----------------------------------------------------------------------
@@ -200,10 +205,6 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
 
   int64_t nAlts = grid.get_nAlts();
 
-  species[iSpecies].scale_height_scgc =
-    cKB * temperature_scgc /
-    (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
-
   // Integrate with hydrostatic equilibrium up:
   for (int iAlt = 1; iAlt < nAlts; iAlt++) {
     species[iSpecies].density_scgc.slice(iAlt) =
@@ -212,6 +213,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
   calc_mass_density();
+  return;
 }
 
 //----------------------------------------------------------------------
@@ -303,7 +305,6 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     std::cout << "Error reading in neutral restart file!\n";
     DidWork = false;
   }
-
   return DidWork;
 }
 
@@ -329,6 +330,7 @@ void Neutrals::calc_NO_cool() {
 
     NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+  return;
 }
 
 //----------------------------------------------------------------------
@@ -348,7 +350,7 @@ void Neutrals::calc_O_cool() {
                                  (species[iO].density_scgc / 1.0e6) / (1.0 + 0.6 * tmp2 + 0.2 * tmp3);
 
     O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
-
   }
+  return;
 }
 

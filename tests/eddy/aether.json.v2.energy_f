@@ -4,10 +4,17 @@
     "Debug" : {
 	"iVerbose" : 0,
         "iFunctionVerbose" : {
-            "Grid::create_altitudes": 0},	
+            "Grid::create_altitudes": 5},
 	"dt" : 10.0},
 
     "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "Eddy" : {
+	"Coefficient" : 50.0,
+	"BottomPressure" : 0.01,
+	"TopPressure" : 0.005,
+	"UseInEnergy": false,
+	"UseInMomentum": true},
 
     "GeoBlockSize" : {
 	"nLons" : 18,
@@ -16,16 +23,19 @@
 
     "GeoGrid" : {
 	"dAlt"   : 0.25,
-	"IsUniformAlt" : false},    
+	"IsUniformAlt" : false},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-    
+
     "Outputs" : {
-	"type" : ["states"],
-	"dt" : [900] },
+	"type" : ["neutrals"],
+	"dt" : [300] },
+
+    "DoCalcBulkIonTemp" : false,
     
-    "DoCalcBulkIonTemp" : false
-    
+    "Oblate" : {
+	"isOblate" : false,
+        "isJ2" : false }
 }

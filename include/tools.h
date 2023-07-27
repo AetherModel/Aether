@@ -16,6 +16,12 @@ void display_vector(arma_vec vec);
 
 bool sync_across_all_procs(bool value);
 
+// ----------------------------------------------------------------------------
+// Calculate the average value across all processors
+// ----------------------------------------------------------------------------
+
+precision_t sync_mean_across_all_procs(precision_t value);
+
 // -----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // -----------------------------------------------------------------------------
