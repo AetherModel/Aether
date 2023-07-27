@@ -12,8 +12,7 @@
 
 arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
 				   arma_vec &vels,
-				   Neutrals &neutrals,
-				   Report &report) {
+				   Neutrals &neutrals) {
     
   std::string function = "neutral_friction_one_cell";
   static int iFunction = -1;
@@ -76,8 +75,7 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
 //
 // ---------------------------------------------------------------------
 
-void calc_neutral_friction(Neutrals &neutrals,
-                           Report &report) {
+void calc_neutral_friction(Neutrals &neutrals) {
             
   std::string function = "calc_neutral_friction";
   static int iFunction = -1;
@@ -98,7 +96,7 @@ void calc_neutral_friction(Neutrals &neutrals,
 	  //Put the old velocities into vels:
 	  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
 	    vels(iSpecies) = neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
-	  acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals, report);
+	  acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
 	  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
 	    neutrals.species[iSpecies].acc_neutral_friction[iDir](iLon, iLat, iAlt) = acc(iSpecies);
 	} // for direction

@@ -10,17 +10,17 @@
 //  Calculate eddy diffusion coefficient
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_kappa_eddy(Inputs inputs) {
-    
+void Neutrals::calc_kappa_eddy() {
+
   std::string function = "Neutrals::calc_kappa_eddy";
   static int iFunction = -1;
   report.enter(function, iFunction);
     
   kappa_eddy_scgc.zeros();
 
-  precision_t coef = inputs.get_eddy_coef();
-  precision_t bottom = inputs.get_eddy_bottom();
-  precision_t top = inputs.get_eddy_top();
+  precision_t coef = input.get_eddy_coef();
+  precision_t bottom = input.get_eddy_bottom();
+  precision_t top = input.get_eddy_top();
 
   kappa_eddy_scgc = coef * (pressure_scgc - top) / (bottom - top);
   kappa_eddy_scgc.elem( find(kappa_eddy_scgc > coef)).fill(coef);
@@ -137,7 +137,7 @@ void Neutrals::calc_scale_height(Grid grid) {
   }
 
   // adjust scale heights if eddy diffusion is used:
-  if (inputs.get_use_eddy_momentum()) {
+  if (input.get_use_eddy_momentum()) {
     // find the density-weighted average scale height in the bottom cell:
     precision_t Htotal = 0.0, Rtotal = 0.0, H;
     arma_mat Hslice, Rslice;
@@ -155,7 +155,7 @@ void Neutrals::calc_scale_height(Grid grid) {
     H = Htotal / Rtotal;
     H = sync_mean_across_all_procs(H);
     // percentage will go from 1 = use bulk scale, to 0 = use individual
-    arma_cube percentage = kappa_eddy_scgc / inputs.get_eddy_coef();
+    arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
     arma_cube one = percentage;
     one.ones();
     arma_cube omp = one - percentage;
@@ -393,13 +393,7 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
   report.enter(function, iFunction);
 
   precision_t dt;
-
   int64_t iLon, iLat;
-
-  std::string function = "Neutrals::calc_conduction";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();

@@ -277,7 +277,7 @@ void Grid::calc_gravity(Planets planet) {
 
   gravity_potential_scgc =
     - (mu / radius_scgc)
-    + ((3 * (planet.get_J2(input) * mu)) /
+    + ((3 * (planet.get_J2() * mu)) /
        (2 * pow(radius_scgc, 3)) %
        ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
 

@@ -94,7 +94,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_diff0_in_table(csv, neutrals, report);
+          parse_diff0_in_table(csv, neutrals);
 
         else
           std::cout << "diff0 table is empty!!! Yikes!!!\n";
@@ -108,7 +108,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_diffexp_in_table(csv, neutrals, report);
+          parse_diffexp_in_table(csv, neutrals);
 
         else
           std::cout << "diffexp table is empty!!! Yikes!!!\n";
@@ -424,8 +424,8 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 } // parse_bst_in_table
 
 void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
-                          Neutrals &neutrals,
-                          Report &report) {
+                          Neutrals &neutrals) {
+  
   std::string function = "parse_diff0_in_table";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -442,7 +442,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
-    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
 
   // set array size and fill with zeros
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
@@ -458,7 +458,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
-    int neutral_id = neutrals.get_species_id(csv[iLine][0], report);
+    int neutral_id = neutrals.get_species_id(csv[iLine][0]);
 
     if (neutral_id > -1) {
       for (iCol = 1; iCol < nCol; iCol++) {
@@ -504,8 +504,8 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
 } // parse_diff0_in_table
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
-                          Neutrals &neutrals,
-                          Report &report) {
+                          Neutrals &neutrals) {
+
   std::string function = "parse_diffexp_in_table";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -519,7 +519,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
-    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
 
   // set array size and fill with zeros
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
@@ -535,7 +535,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
-    int neutral_id = neutrals.get_species_id(csv[iLine][0], report);
+    int neutral_id = neutrals.get_species_id(csv[iLine][0]);
 
     if (neutral_id > -1) {
       for (iCol = 1; iCol < nCol; iCol++) {

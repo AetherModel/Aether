@@ -4,8 +4,7 @@
 #include "../include/aether.h"
 
 void calc_ion_collisions(Neutrals &neutrals,
-			 Ions &ions,
-			 Report &report) {
+			 Ions &ions) {
 
   std::string function = "calc_ion_collisions";
   static int iFunction = -1;

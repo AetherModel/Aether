@@ -40,7 +40,7 @@ void Neutrals::add_sources(Times time) {
 	  dt * species[iSpec].acc_eddy;
     }
   }
-  calc_bulk_velocity(report);
+  calc_bulk_velocity();
 
   report.exit(function);
   return;

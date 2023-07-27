@@ -42,7 +42,7 @@ int advance(Planets &planet,
   neutrals.calc_mean_major_mass();
   neutrals.calc_pressure();
   neutrals.calc_bulk_velocity();
-  neutrals.calc_kappa_eddy(input, );
+  neutrals.calc_kappa_eddy();
 
   time.calc_dt();
 
@@ -79,7 +79,7 @@ int advance(Planets &planet,
   calc_ion_collisions(neutrals, ions);
   calc_neutral_friction(neutrals);
 
-  neutrals.add_sources(time, report);
+  neutrals.add_sources(time);
   ions.calc_ion_temperature(neutrals, gGrid, time);
   ions.calc_electron_temperature(neutrals, gGrid);
 
