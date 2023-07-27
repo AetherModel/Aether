@@ -8,7 +8,7 @@
 #include "planets.h"
 #include "grid.h"
 
-bool init_geo_grid(Grid &gGrid, Planets planet, Inputs input);
+bool init_geo_grid(Grid &gGrid, Planets planet);
 
 #endif  // INCLUDE_INIT_GEO_GRID_H_
 

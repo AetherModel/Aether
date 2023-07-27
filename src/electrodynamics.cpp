@@ -8,12 +8,12 @@
 // netCDF file.
 // -----------------------------------------------------------------------------
 
-Electrodynamics::Electrodynamics(Times time, Inputs input, Report &report) {
+Electrodynamics::Electrodynamics(Times time) {
 
   IsOk = true;
 
   HaveElectrodynamics = false;
-  read_netcdf_electrodynamics_file(input.get_electrodynamics_file(), report);
+  read_netcdf_electrodynamics_file(input.get_electrodynamics_file());
 
   bool times_are_aligned = check_times(time.get_current(), time.get_end());
 
@@ -36,22 +36,20 @@ Electrodynamics::Electrodynamics(Times time, Inputs input, Report &report) {
 int Electrodynamics::update(Planets planet,
                             Grid gGrid,
                             Times time,
-                            Ions &ions,
-                            Report &report) {
+                            Ions &ions) {
 
   std::string function = "Electrodynamics::update";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   if (HaveElectrodynamics) {
-    set_time(time.get_current(), report);
-    gGrid.calc_sza(planet, time, report);
-    gGrid.calc_gse(planet, time, report);
-    gGrid.calc_mlt(report);
+    set_time(time.get_current());
+    gGrid.calc_sza(planet, time);
+    gGrid.calc_gse(planet, time);
+    gGrid.calc_mlt();
     auto electrodynamics_values =
       get_electrodynamics(gGrid.magLat_scgc,
-                          gGrid.magLocalTime_scgc,
-                          report);
+                          gGrid.magLocalTime_scgc);
     ions.potential_scgc = std::get<0>(electrodynamics_values);
     ions.eflux = std::get<1>(electrodynamics_values);
     ions.avee = std::get<2>(electrodynamics_values);
@@ -71,8 +69,7 @@ int Electrodynamics::update(Planets planet,
 // -----------------------------------------------------------------------------
 
 arma_cube Electrodynamics::get_potential(arma_cube magLat,
-                                         arma_cube magLocalTime,
-                                         Report &report) {
+                                         arma_cube magLocalTime) {
   arma_cube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
   pot.zeros();
 
@@ -81,7 +78,7 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
     arma_mat e_potentials = input_electrodynamics[0].potential[time_pos];
 
     for (int i = 0; i < magLat.n_slices; ++i) {
-      set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+      set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i));
       pot.slice(i) = get_values(e_potentials, magLat.n_rows, magLat.n_cols);
     }
   }
@@ -94,15 +91,14 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_eflux(arma_cube magLat,
-                                    arma_cube magLocalTime,
-                                    Report &report) {
+                                    arma_cube magLocalTime) {
 
   arma_mat eflux(magLat.n_rows, magLat.n_cols);
   eflux.zeros();
 
   if (HaveElectrodynamics) {
     int i = magLat.n_slices - 1;
-    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i));
     int time_pos = static_cast<int>(time_index);
     arma_mat e_e_flux = input_electrodynamics[0].energy_flux[time_pos];
     eflux = get_values(e_e_flux, magLat.n_rows, magLat.n_cols);
@@ -116,14 +112,13 @@ arma_mat Electrodynamics::get_eflux(arma_cube magLat,
 // -----------------------------------------------------------------------------
 
 arma_mat Electrodynamics::get_avee(arma_cube magLat,
-                                   arma_cube magLocalTime,
-                                   Report &report) {
+                                   arma_cube magLocalTime) {
   arma_mat avee(magLat.n_rows, magLat.n_cols);
   avee.zeros();
 
   if (HaveElectrodynamics) {
     int i = magLat.n_slices - 1;
-    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i), report);
+    set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i));
     int time_pos = static_cast<int>(time_index);
     arma_mat e_avee = input_electrodynamics[0].average_energy[time_pos];
     avee = get_values(e_avee, magLat.n_rows, magLat.n_cols);
@@ -193,16 +188,15 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
 std::tuple<arma_cube,
     arma_mat,
     arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
-                                                   arma_cube magLocalTime,
-Report &report) {
+                                                   arma_cube magLocalTime) {
   arma_cube pot;
   arma_mat eflux;
   arma_mat avee;
 
   if (!input_electrodynamics.empty()) {
-    pot = get_potential(magLat, magLocalTime, report);
-    eflux = get_eflux(magLat, magLocalTime, report);
-    avee = get_avee(magLat, magLocalTime, report);
+    pot = get_potential(magLat, magLocalTime);
+    eflux = get_eflux(magLat, magLocalTime);
+    avee = get_avee(magLat, magLocalTime);
   } else {
     pot.set_size(magLat.n_rows, magLat.n_cols, magLat.n_slices);
     pot.zeros();
@@ -235,7 +229,7 @@ bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
 // interpolation indices for use when the user requests parameters.
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::set_time(double time, Report &report) {
+void Electrodynamics::set_time(double time) {
   std::string function = "Electrodynamics::set_time";
   static int iFunction = -1;
   //report.enter(function, iFunction);
@@ -301,7 +295,7 @@ void Electrodynamics::set_time(double time, Report &report) {
 // so the code can easy get the requested electrodynamics parameters later
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts, Report &report) {
+void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts) {
   std::string function = "Electrodynamics::set_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);

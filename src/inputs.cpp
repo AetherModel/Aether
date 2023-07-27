@@ -8,12 +8,14 @@
 
 #include "aether.h"
 
+Inputs input;
+
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
 // The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
-Inputs::Inputs(Times &time, Report &report) {
+Inputs::Inputs(Times &time) {
 
   // ------------------------------------------------
   // Set some defaults:
@@ -60,7 +62,7 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  IsOk = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time);
 
   if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
@@ -284,12 +286,30 @@ bool Inputs::get_do_restart() {
 }
 
 // -----------------------------------------------------------------------
+// Return NO cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_NO_cooling() {
+  return settings["Sources"]["Neutrals"]["NO_cool"];
+}
+
+// -----------------------------------------------------------------------
+// Return O cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_O_cooling() {
+  return settings["Sources"]["Neutrals"]["O_cool"];
+}
+
+// -----------------------------------------------------------------------
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
 bool Inputs::get_cent_acc() {
   return settings["Sources"]["Grid"]["Cent_acc"];
 }
+
+// -----------------------------------------------------------------------
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 

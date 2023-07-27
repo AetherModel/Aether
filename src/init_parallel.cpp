@@ -23,9 +23,7 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-bool init_parallel(Inputs &input,
-                   Quadtree &quadtree,
-                   Report &report) {
+bool init_parallel(Quadtree &quadtree) {
 
   bool DidWork = true;
 
@@ -100,7 +98,7 @@ bool init_parallel(Inputs &input,
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
-    quadtree.build(input, report);
+    quadtree.build();
 
   } else {
     if (iProc == 0) {

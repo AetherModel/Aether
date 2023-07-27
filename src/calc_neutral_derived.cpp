@@ -10,7 +10,7 @@
 //  Calculate eddy diffusion coefficient
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
+void Neutrals::calc_kappa_eddy(Inputs inputs) {
     
   std::string function = "Neutrals::calc_kappa_eddy";
   static int iFunction = -1;
@@ -34,7 +34,7 @@ void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
 //  Calculate mass density and number density:
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density(Report &report) {
+void Neutrals::calc_mass_density() {
 
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
@@ -56,7 +56,7 @@ void Neutrals::calc_mass_density(Report &report) {
 //    Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_concentration(Report &report) {
+void Neutrals::calc_concentration() {
 
   std::string function = "Neutrals::calc_concentration";
   static int iFunction = -1;
@@ -73,7 +73,7 @@ void Neutrals::calc_concentration(Report &report) {
 //     Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mean_major_mass(Report &report) {
+void Neutrals::calc_mean_major_mass() {
 
   std::string function = "Neutrals::calc_mean_major_mass";
   static int iFunction = -1;
@@ -88,7 +88,7 @@ void Neutrals::calc_mean_major_mass(Report &report) {
 //     Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_pressure(Report &report) {
+void Neutrals::calc_pressure() {
 
   std::string function = "Neutrals::calc_pressure";
   static int iFunction = -1;
@@ -103,7 +103,7 @@ void Neutrals::calc_pressure(Report &report) {
 // ((sum of species mass * density * velocity) / bulk mass density)
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_bulk_velocity(Report &report) {
+void Neutrals::calc_bulk_velocity() {
 
   std::string function = "Neutrals::calc_bulk_velocity";
   static int iFunction = -1;
@@ -125,7 +125,7 @@ void Neutrals::calc_bulk_velocity(Report &report) {
 // Calculate scale heights of different species
 //----------------------------------------------------------------------
 
-void Neutrals::calc_scale_height(Grid grid, Inputs inputs, Report &report) {
+void Neutrals::calc_scale_height(Grid grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -176,7 +176,7 @@ void Neutrals::calc_scale_height(Grid grid, Inputs inputs, Report &report) {
 //   - Speed of sound
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat(Report &report) {
+void Neutrals::calc_specific_heat() {
 
   int64_t iSpecies;
 
@@ -221,7 +221,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid, Report &report) {
+void Neutrals::calc_chapman(Grid grid) {
 
   int64_t iAlt, iLon, iLat;
 
@@ -385,7 +385,12 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Inputs input, Report &report) {
+
+void Neutrals::calc_conduction(Grid grid, Times time) {
+
+  std::string function = "Neutrals::calc_conduction";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   precision_t dt;
 
@@ -438,4 +443,5 @@ void Neutrals::calc_conduction(Grid grid, Times time, Inputs input, Report &repo
   }  // lon
 
   report.exit(function);
+  return;
 }
