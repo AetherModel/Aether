@@ -269,41 +269,33 @@ class Neutrals {
   /**********************************************************************
      \brief Calculate the scale heights for the individual species
      \param grid The grid to define the neutrals on
-     \param inputs info about how user has configured things
-     \param report allow reporting to occur
    **/
-  void calc_scale_height(Grid grid, Inputs inputs, Report &report);
+  void calc_scale_height(Grid grid);
   
   /**********************************************************************
      \brief Calculate the eddy diffusion coefficient in valid pressure
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  void calc_kappa_eddy(Inputs inputs, Report &report);
+  void calc_kappa_eddy();
   
   /**********************************************************************
      \brief Calculate the concentration for each species (species ndensity / total ndensity)
-     \param report allow reporting to occur
    **/
-  void calc_concentration(Report &report);
+  void calc_concentration();
     
   /**********************************************************************
      \brief Calculate the bulk mean major mass
-     \param report allow reporting to occur
    **/
-  void calc_mean_major_mass(Report &report);
+  void calc_mean_major_mass();
     
   /**********************************************************************
      \brief Calculate the mean pressure
-     \param report allow reporting to occur
    **/
-  void calc_pressure(Report &report);
+  void calc_pressure();
     
   /**********************************************************************
      \brief Calculate bulk velocity
-     \param report allow reporting to occur
    **/
-  void calc_bulk_velocity(Report &report);
+  void calc_bulk_velocity();
 
   /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
@@ -396,10 +388,8 @@ class Neutrals {
   /**********************************************************************
    \brief add eddy contributions to vertical acceleration
    \param grid The grid to define the neutrals on
-   \param report allow reporting to occur
-   \param inputs access eddy coefficient
   **/ 
-  void vertical_momentum_eddy(Grid &grid, Inputs inputs, Report &report);
+  void vertical_momentum_eddy(Grid &grid);
   
   /**********************************************************************
      \brief Exchange one face for the NEUTRALS
