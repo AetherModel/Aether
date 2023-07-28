@@ -96,8 +96,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
                                      arma_cube &inVar,
                                      arma_cube &cMax,
                                      arma_cube &outGrad,
-                                     arma_cube &outDiff,
-                                     Report &report) {
+                                     arma_cube &outDiff) {
 
   std::string function = "Neutrals::calc_grad_and_diff_alts_rusanov";
   static int iFunction = -1;
@@ -158,9 +157,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
 // --------------------------------------------------------------------------
 
 void Neutrals::solver_vertical_rusanov(Grid grid,
-                                       Times time,
-                                       Inputs input,
-                                       Report &report) {
+                                       Times time) {
 
   std::string function = "Neutrals::solver_vertical_rusanov";
   static int iFunction = -1;
@@ -185,8 +182,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                                   temperature_scgc,
                                   cMax_vcgc[2],
                                   gradTemp,
-                                  diffTemp,
-                                  report);
+                                  diffTemp);
 
   arma_cube gradDummy(nXs, nYs, nZs), diffDummy(nXs, nYs, nZs);
 
@@ -195,8 +191,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                                     velocity_vcgc[iDir],
                                     cMax_vcgc[2],
                                     gradDummy,
-                                    diffDummy,
-                                    report);
+                                    diffDummy);
     gradVel[iDir] = gradDummy;
     diffVel[iDir] = diffDummy;
   }
@@ -227,8 +222,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                                       log_s,
                                       cMax_vcgc[2],
                                       gradDummy,
-                                      diffDummy,
-                                      report);
+                                      diffDummy);
       gradLogN_s[iSpecies] = gradDummy;
       diffLogN_s[iSpecies] = diffDummy;
 
@@ -238,8 +232,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                                       vv_s,
                                       cMax_vcgc[2],
                                       gradDummy,
-                                      diffDummy,
-                                      report);
+                                      diffDummy);
       gradVertVel_s[iSpecies] = gradDummy;
       diffVertVel_s[iSpecies] = diffDummy;
       divVertVel_s[iSpecies] = gradDummy + 2 * vv_s / grid.radius_scgc;
@@ -283,7 +276,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                 - v2or
                 + 0.25 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
                           + gradTemp * cKB / mass
-                          + grid.gravity_scgc)) // assume gravity is + here!!!
+                          + abs(grid.gravity_vcgc[2]))) 
         + dt * diffVertVel_s[iSpecies];
     } else {
       species[iSpecies].newVelocity_vcgc[2].zeros();
@@ -372,9 +365,9 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     if (!species[iSpecies].DoAdvect)
-      fill_with_hydrostatic(iSpecies, nGCs, nZs, grid, report);
+      fill_with_hydrostatic(iSpecies, nGCs, nZs, grid);
 
-  calc_mass_density(report);
+  calc_mass_density();
 
   //std::cout << "min/max temp : " << newTemperature_scgc.min()
   //      << " " << newTemperature_scgc.max() << "\n";
