@@ -321,6 +321,7 @@ Logfile::Logfile(Indices &indices) {
   MPI_Barrier(aether_comm);
 
   report.exit(function);
+  return;
 }
 
 //-------------------------------------------------------------
@@ -380,122 +381,46 @@ bool Logfile::write_logfile(Indices &indices,
     // Set the interpolation coefficients using the location of satellites
     if (!gGrid.set_interpolation_coefs(lons, lats, alts)) {
       std::cout << "Logfile: Can not set interpolation coefficients!\n";
+      report.exit(function);
       return false;
     }
 
     // Temperature
     interp_result = gGrid.get_interpolation_values(neutrals.temperature_scgc);
-
-    for (size_t i = 0; i < interp_result.size(); ++i)
+    for (size_t i = 0; i < interp_result.size(); ++i) {
       values_sat[i].push_back(interp_result[i]);
+    }
 
     // Specified variables
     for (auto &it : species) {
-      const arma_cube &density = find_species_density(it, neutrals, ions, report);
+      const arma_cube &density = find_species_density(it, neutrals, ions);
       interp_result = gGrid.get_interpolation_values(density);
-
-      for (size_t i = 0; i < interp_result.size(); ++i)
-        values_sat[i].push_back(interp_result[i]);
+      for (size_t i = 0; i < interp_result.size(); ++i) {
+	values_sat[i].push_back(interp_result[i]);
+      }
     }
-
-    // Time
-    std::vector<int> iCurrent = time.get_iCurrent();
-
-    // Check if there are open time gates for satellites
-    if (!idx.empty()) {
-        // Store the values to display for each satellite and the
-        // result of interpolation
-        std::vector<std::vector<precision_t>> values_sat(idx.size());
-        std::vector<precision_t> interp_result;
-
-        // The lon, lat, and alt of each satellite
-        for (size_t i = 0; i < values_sat.size(); ++i) {
-            values_sat[i].push_back(lons[i] * cRtoD);
-            values_sat[i].push_back(lats[i] * cRtoD);
-            values_sat[i].push_back(alts[i] * cMtoKM);
-        }
-
-        // Set the interpolation coefficients using the location of satellites
-        if (!gGrid.set_interpolation_coefs(lons, lats, alts)) {
-            std::cout << "Logfile: Can not set interpolation coefficients!\n";
-	          report.exit(function);
-            return false;
-        }
-
-        // Temperature
-        interp_result = gGrid.get_interpolation_values(neutrals.temperature_scgc);
-        for (size_t i = 0; i < interp_result.size(); ++i) {
-            values_sat[i].push_back(interp_result[i]);
-        }
-
-        // Specified variables
-        for (auto &it : species) {
-            const arma_cube &density = find_species_density(it, neutrals, ions);
-            interp_result = gGrid.get_interpolation_values(density);
-            for (size_t i = 0; i < interp_result.size(); ++i) {
-                values_sat[i].push_back(interp_result[i]);
-            }
-        }
         
-        // Write the values to satellite log
-        for (size_t i = 0; i < values_sat.size(); ++i) {
-            // Use the index 3 (temp) to check whether the satellite
-            // is in grid or not
-            if (values_sat[i][3] != cNinf) {
-                satellites[idx[i]].write_log(iCurrent, values_sat[i]);
-            }
-        }
+    // Write the values to satellite log
+    for (size_t i = 0; i < values_sat.size(); ++i) {
+      // Use the index 3 (temp) to check whether the satellite
+      // is in grid or not
+      if (values_sat[i][3] != cNinf) {
+	satellites[idx[i]].write_log(iCurrent, values_sat[i]);
+      }
     }
   }
   
-    // Check if the time gate for general log file is open
-    if (iProc == 0 && time.check_time_gate(dt)) {
-        // Open the file stream if append
-        if (doAppend) {
-            logfilestream.open(logfileName, std::ofstream::app);
-            logfilestream.precision(4);
-        }
-        // Report error if the file stream is not open
-        if (!logfilestream.is_open()) {
-            std::cout << "Logfile: Can not open output file stream!\n";
-	    report.exit(function);
-            return false;
-        }
-
-        std::vector<precision_t> values_log;
-        std::vector<precision_t> min_mean_max;
-        // Temperature
-        min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
-        values_log.insert(values_log.end(),
-                          min_mean_max.begin(),
-                          min_mean_max.end());
-        // Temperature at the chosen point
-        values_log.push_back(neutrals.temperature_scgc(lla[0],
-                                                       lla[1],
-                                                       lla[2]));
-        // Specified variables
-        for (auto it : species) {
-            min_mean_max = get_min_mean_max_density(it, neutrals, ions);
-            values_log.insert(values_log.end(),
-                              min_mean_max.begin(),
-                              min_mean_max.end());
-        }
-        // Indices
-        for (int i = 0; i < indices.all_indices_array_size(); ++i) {
-            values_log.push_back(indices.get_index(current, i));
-        }
-        // Output
-        write_logfile_line(logfilestream, iCurrent, values_log);
-
-        // Close the file stream if append
-        if (doAppend) {
-            logfilestream.close();
-        }
+  // Check if the time gate for general log file is open
+  if (iProc == 0 && time.check_time_gate(dt)) {
+    // Open the file stream if append
+    if (doAppend) {
+      logfilestream.open(logfileName, std::ofstream::app);
+      logfilestream.precision(4);
     }
-
     // Report error if the file stream is not open
     if (!logfilestream.is_open()) {
       std::cout << "Logfile: Can not open output file stream!\n";
+      report.exit(function);
       return false;
     }
 
@@ -504,32 +429,68 @@ bool Logfile::write_logfile(Indices &indices,
     // Temperature
     min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
     values_log.insert(values_log.end(),
-                      min_mean_max.begin(),
-                      min_mean_max.end());
+		      min_mean_max.begin(),
+		      min_mean_max.end());
     // Temperature at the chosen point
     values_log.push_back(neutrals.temperature_scgc(lla[0],
-                                                   lla[1],
-                                                   lla[2]));
-
+						   lla[1],
+						   lla[2]));
     // Specified variables
     for (auto it : species) {
-      min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
+      min_mean_max = get_min_mean_max_density(it, neutrals, ions);
       values_log.insert(values_log.end(),
-                        min_mean_max.begin(),
-                        min_mean_max.end());
+			min_mean_max.begin(),
+			min_mean_max.end());
     }
-
     // Indices
-    for (int i = 0; i < indices.all_indices_array_size(); ++i)
+    for (int i = 0; i < indices.all_indices_array_size(); ++i) {
       values_log.push_back(indices.get_index(current, i));
-
+    }
     // Output
     write_logfile_line(logfilestream, iCurrent, values_log);
 
     // Close the file stream if append
-    if (doAppend)
+    if (doAppend) {
       logfilestream.close();
+    }
   }
+
+  // Report error if the file stream is not open
+  if (!logfilestream.is_open()) {
+    std::cout << "Logfile: Can not open output file stream!\n";
+    return false;
+  }
+
+  std::vector<precision_t> values_log;
+  std::vector<precision_t> min_mean_max;
+  // Temperature
+  min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
+  values_log.insert(values_log.end(),
+		    min_mean_max.begin(),
+		    min_mean_max.end());
+  // Temperature at the chosen point
+  values_log.push_back(neutrals.temperature_scgc(lla[0],
+						 lla[1],
+						 lla[2]));
+
+  // Specified variables
+  for (auto it : species) {
+    min_mean_max = get_min_mean_max_density(it, neutrals, ions);
+    values_log.insert(values_log.end(),
+		      min_mean_max.begin(),
+		      min_mean_max.end());
+  }
+
+  // Indices
+  for (int i = 0; i < indices.all_indices_array_size(); ++i)
+    values_log.push_back(indices.get_index(current, i));
+
+  // Output
+  write_logfile_line(logfilestream, iCurrent, values_log);
+
+  // Close the file stream if append
+  if (doAppend)
+    logfilestream.close();
 
   report.exit(function);
   return true;
