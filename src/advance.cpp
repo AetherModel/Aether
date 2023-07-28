@@ -85,8 +85,10 @@ int advance(Planets &planet,
   calc_ion_collisions(neutrals, ions);
   calc_neutral_friction(neutrals);
 
-  neutrals.set_bcs(gGrid, time, indices);
+  // Upper BCs requires the scale height to be calculated, so do that
+  // first
   neutrals.calc_scale_height(gGrid);
+  neutrals.set_bcs(gGrid, time, indices);
   // Need to add a switch for using the vertical solver vs hydrostatic:
   //neutrals.fill_with_hydrostatic(1, gGrid.get_nZ(), gGrid);
   neutrals.solver_vertical_rusanov(gGrid, time);
