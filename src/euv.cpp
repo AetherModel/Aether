@@ -48,39 +48,38 @@ Euv::Euv() {
     }
 
     // Slot the NEUVAC model coefficients:
-    if (args.get_euv_model() == "neuvac") {
-      IsOk = slot_euv("NEUV_S1", "", neuvac_s1, report);
+    if (input.get_euv_model() == "neuvac") {
+      IsOk = slot_euv("NEUV_S1", "", neuvac_s1);
 
       if (IsOk)
-        IsOk = slot_euv("NEUV_S2", "", neuvac_s2, report);
+        IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
 
       if (IsOk)
-        IsOk = slot_euv("NEUV_S3", "", neuvac_s3, report);
+        IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
 
       if (IsOk)
-        IsOk = slot_euv("NEUV_P1", "", neuvac_p1, report);
+        IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
 
       if (IsOk)
-        IsOk = slot_euv("NEUV_P2", "", neuvac_p2, report);
+        IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
 
       if (IsOk)
-        IsOk = slot_euv("NEUV_I1", "", neuvac_int, report);
+        IsOk = slot_euv("NEUV_I1", "", neuvac_int);
     }
     
     // Slot the HFG model coefficients:
-    if (args.get_euv_model() == "hfg") {
-      IsOk = slot_euv("HFGc1", "", solomon_hfg_c1, report);
+    if (input.get_euv_model() == "hfg") {
+      IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
 
       if (IsOk)
-        IsOk = slot_euv("HFGc2", "", solomon_hfg_c2, report);
+        IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
 
       if (IsOk)
-        IsOk = slot_euv("HFGfref", "", solomon_hfg_fref, report);
+        IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
     }
-
   }
-
   IsOk = sync_across_all_procs(IsOk);
+  return;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,7 +157,6 @@ bool Euv::read_file() {
 
     infile_ptr.close();
   }
-
   return DidWork;
 }
 
@@ -207,7 +205,6 @@ bool Euv::slot_euv(std::string item,
     for (int iWavelength = 0; iWavelength < nWavelengths; iWavelength++)
       values.push_back(waveinfo[iLine].values[iWavelength]);
   }
-
   return DidWork;
 }
 
@@ -389,11 +386,11 @@ int Euv::neuvac(Times time,
   precision_t f107p, f107ap;
 
   for (int iWave = 0; iWave < nWavelengths; iWave++)
-    wavelengths_intensity_1au[iWave] = (
-                                         neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
-                                         neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
-                                         neuvac_s2[iWave] * (f107_diff) +
-                                         neuvac_int[iWave]) / wavelengths_energy[iWave];
+    wavelengths_intensity_1au[iWave] =
+      (neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
+       neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
+       neuvac_s2[iWave] * (f107_diff) +
+       neuvac_int[iWave]) / wavelengths_energy[iWave];
 
   if (report.test_verbose(4)) {
     std::cout << "NEUVAC output : "
