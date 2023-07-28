@@ -313,11 +313,11 @@ const arma_cube& find_species_density(const std::string &name,
                                       Ions &ions) {
   // Try to find the name in neutrals
   int id = neutrals.get_species_id(name);
-  if (id > -1) {
+  if (id > -1)
     return neutrals.species[id].density_scgc;
 
   id = ions.get_species_id(name);
-  if (id > -1) {
+  if (id > -1)
     return ions.species[id].density_scgc;
 
   // Throw an exception if the species is not found
