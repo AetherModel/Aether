@@ -58,9 +58,21 @@ bool Neutrals::set_upper_bcs(Grid grid) {
   int64_t iAlt;
   arma_mat h;
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    for (iAlt = nAlts - nGCs; iAlt < nAlts; iAlt++) {
+  for (iAlt = nAlts - nGCs; iAlt < nAlts; iAlt++) {
 
+    // Bulk Quantities:
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+    velocity_vcgc[0].slice(iAlt) = velocity_vcgc[0].slice(iAlt - 1);
+    velocity_vcgc[1].slice(iAlt) = velocity_vcgc[1].slice(iAlt - 1);
+      
+    // For each species:
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      // Horizontal velocities - zero gradient:
+      species[iSpecies].velocity_vcgc[0].slice(iAlt) = 
+	species[iSpecies].velocity_vcgc[0].slice(iAlt-1);
+      species[iSpecies].velocity_vcgc[1].slice(iAlt) = 
+	species[iSpecies].velocity_vcgc[1].slice(iAlt-1);
+      
       // Allow upflow, but not downflow:
       for (iX = nGCs; iX < nX - nGCs; iX++)
         for (iY = nGCs; iY < nY - nGCs; iY++)
@@ -70,16 +82,12 @@ bool Neutrals::set_upper_bcs(Grid grid) {
           else
             species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) = 0.0;
 
-      h = cKB * temperature_scgc.slice(iAlt) / (species[iSpecies].mass *
-                                                grid.gravity_scgc.slice(iAlt));
+      h = species[iSpecies].scale_height_scgc.slice(iAlt);
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
     }
   }
-
-  temperature_scgc.slice(nAlts - 2) = temperature_scgc.slice(nAlts - 3);
-  temperature_scgc.slice(nAlts - 1) = temperature_scgc.slice(nAlts - 2);
 
   report.exit(function);
   return didWork;
@@ -100,6 +108,8 @@ bool Neutrals::set_lower_bcs(Grid grid,
   bool didWork = true;
 
   json bcs = input.get_boundary_condition_types();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iSpecies, iAlt, iDir;
 
   //-----------------------------------------------
   // MSIS BCs - only works if FORTRAN is enabled!
@@ -137,7 +147,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
       // if it is not, then fill with a value:
       temperature_scgc.slice(0).fill(initial_temperatures[0]);
 
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       if (report.test_verbose(3))
         std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
 
@@ -152,7 +162,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
           std::cout << "  NOT Found in MSIS - setting constant\n";
 
         species[iSpecies].density_scgc.slice(0).
-        fill(species[iSpecies].lower_bc_density);
+	  fill(species[iSpecies].lower_bc_density);
       }
 
     }
@@ -166,25 +176,34 @@ bool Neutrals::set_lower_bcs(Grid grid,
   if (bcs["type"] == "Planet") {
 
     report.print(2, "setting lower bcs to planet");
-    arma_mat h;
 
     // Set the lower boundary condition:
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].density_scgc.slice(0).
       fill(species[iSpecies].lower_bc_density);
-      // fill the second grid cell with a hydrostatic solution:
-      h = cKB * temperature_scgc.slice(0) / (species[iSpecies].mass *
-                                             grid.gravity_scgc.slice(0));
-      species[iSpecies].density_scgc.slice(1) =
-        species[iSpecies].density_scgc.slice(0) %
-        exp(-grid.dalt_lower_scgc.slice(1) / h);
-      species[iSpecies].velocity_vcgc[2].slice(0).zeros();
-      species[iSpecies].velocity_vcgc[2].slice(1).zeros();
     }
-
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
-    temperature_scgc.slice(1).fill(initial_temperatures[0]);
-  } // type == Planet
+  }
+
+  // fill the second+ grid cells with the bottom temperature:
+  for (iAlt = 1; iAlt < nGCs; iAlt++)
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt-1);
+  
+  // fill the second+ grid cells with a hydrostatic solution:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    fill_with_hydrostatic(iSpecies, 1, nGCs, grid);
+
+  // Force vertical velocities to be zero in the ghost cells:
+  for (iDir = 0; iDir < 3; iDir++) {
+    for (iAlt = 0; iAlt < nGCs; iAlt++) {
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+	// species velocity:
+	species[iSpecies].velocity_vcgc[iDir].slice(iAlt).zeros();
+      }
+      // bulk velocity:
+      velocity_vcgc[iDir].slice(iAlt).zeros();
+    }
+  }
 
   report.exit(function);
   return didWork;
