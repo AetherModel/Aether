@@ -64,15 +64,15 @@ bool Neutrals::set_upper_bcs(Grid grid) {
     temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
     velocity_vcgc[0].slice(iAlt) = velocity_vcgc[0].slice(iAlt - 1);
     velocity_vcgc[1].slice(iAlt) = velocity_vcgc[1].slice(iAlt - 1);
-      
+
     // For each species:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       // Horizontal velocities - zero gradient:
-      species[iSpecies].velocity_vcgc[0].slice(iAlt) = 
-	species[iSpecies].velocity_vcgc[0].slice(iAlt-1);
-      species[iSpecies].velocity_vcgc[1].slice(iAlt) = 
-	species[iSpecies].velocity_vcgc[1].slice(iAlt-1);
-      
+      species[iSpecies].velocity_vcgc[0].slice(iAlt) =
+        species[iSpecies].velocity_vcgc[0].slice(iAlt - 1);
+      species[iSpecies].velocity_vcgc[1].slice(iAlt) =
+        species[iSpecies].velocity_vcgc[1].slice(iAlt - 1);
+
       // Allow upflow, but not downflow:
       for (iX = nGCs; iX < nX - nGCs; iX++)
         for (iY = nGCs; iY < nY - nGCs; iY++)
@@ -162,7 +162,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
           std::cout << "  NOT Found in MSIS - setting constant\n";
 
         species[iSpecies].density_scgc.slice(0).
-	  fill(species[iSpecies].lower_bc_density);
+        fill(species[iSpecies].lower_bc_density);
       }
 
     }
@@ -182,13 +182,14 @@ bool Neutrals::set_lower_bcs(Grid grid,
       species[iSpecies].density_scgc.slice(0).
       fill(species[iSpecies].lower_bc_density);
     }
+
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
   }
 
   // fill the second+ grid cells with the bottom temperature:
   for (iAlt = 1; iAlt < nGCs; iAlt++)
-    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt-1);
-  
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+
   // fill the second+ grid cells with a hydrostatic solution:
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     fill_with_hydrostatic(iSpecies, 1, nGCs, grid);
@@ -197,9 +198,10 @@ bool Neutrals::set_lower_bcs(Grid grid,
   for (iDir = 0; iDir < 3; iDir++) {
     for (iAlt = 0; iAlt < nGCs; iAlt++) {
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-	// species velocity:
-	species[iSpecies].velocity_vcgc[iDir].slice(iAlt).zeros();
+        // species velocity:
+        species[iSpecies].velocity_vcgc[iDir].slice(iAlt).zeros();
       }
+
       // bulk velocity:
       velocity_vcgc[iDir].slice(iAlt).zeros();
     }

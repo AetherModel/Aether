@@ -54,7 +54,7 @@ precision_t sync_max_across_all_procs(precision_t value) {
   return global_value;
 }
 
-// ----------------------------------------------------------------------------  
+// ----------------------------------------------------------------------------
 // Calculate the average value across all processors
 // ----------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ precision_t sync_mean_across_all_procs(precision_t value) {
   nSend = 1.0;
   MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
   MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
-  global_value = vReceive/nReceive;
+  global_value = vReceive / nReceive;
   return global_value;
 }
 
@@ -313,10 +313,12 @@ const arma_cube& find_species_density(const std::string &name,
                                       Ions &ions) {
   // Try to find the name in neutrals
   int id = neutrals.get_species_id(name);
+
   if (id > -1)
     return neutrals.species[id].density_scgc;
 
   id = ions.get_species_id(name);
+
   if (id > -1)
     return ions.species[id].density_scgc;
 

@@ -276,7 +276,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                 - v2or
                 + 0.25 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
                           + gradTemp * cKB / mass
-                          + abs(grid.gravity_vcgc[2]))) 
+                          + abs(grid.gravity_vcgc[2])))
         + dt * diffVertVel_s[iSpecies];
     } else {
       species[iSpecies].newVelocity_vcgc[2].zeros();

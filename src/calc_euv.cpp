@@ -30,7 +30,7 @@ int calc_euv(Planets planet,
 
     if (input.get_is_student())
       report.print(-1, "(2) What function is this " +
-		    input.get_student_name() + "?");
+                   input.get_student_name() + "?");
 
     // Chapman integrals for EUV energy deposition:
     neutrals.calc_chapman(grid);
@@ -41,7 +41,7 @@ int calc_euv(Planets planet,
       iErr = euv.neuvac(time, indices);
     else if (input.get_euv_model() == "hfg")
       iErr = euv.solomon_hfg(time, indices);
-    
+
     iErr = euv.scale_from_1au(planet, time);
 
     calc_ionization_heating(euv, neutrals, ions);

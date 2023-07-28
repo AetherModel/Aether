@@ -33,7 +33,7 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-		  input.get_student_name() + "?");
+                 input.get_student_name() + "?");
 
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
@@ -72,10 +72,13 @@ int advance(Planets &planet,
   // Calculate some neutral source terms:
   neutrals.calc_conduction(gGrid, time);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid);
+
   if (input.get_O_cooling())
     neutrals.calc_O_cool();
+
   if (input.get_NO_cooling())
     neutrals.calc_NO_cool();
+
   neutrals.add_sources(time);
 
   neutrals.calc_conduction(gGrid, time);

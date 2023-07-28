@@ -188,7 +188,7 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
 std::tuple<arma_cube,
     arma_mat,
     arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
-                                                   arma_cube magLocalTime) {
+arma_cube magLocalTime) {
   arma_cube pot;
   arma_mat eflux;
   arma_mat avee;

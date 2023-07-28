@@ -40,7 +40,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.acc_eddy.set_size(nLons, nLats, nAlts);
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
-  
+
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
@@ -141,6 +141,7 @@ Neutrals::Neutrals(Grid grid,
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
+
   return;
 }
 
@@ -190,7 +191,7 @@ int Neutrals::read_planet_file(Planets planet) {
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
                                      int64_t iEnd,
                                      Grid grid) {
-  
+
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
@@ -200,6 +201,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
             species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
+
   calc_mass_density();
   return;
 }
@@ -221,6 +223,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density();
   return;
 }
@@ -314,6 +317,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     std::cout << "Error reading in neutral restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -339,6 +343,7 @@ void Neutrals::calc_NO_cool() {
 
     NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
 
@@ -360,6 +365,7 @@ void Neutrals::calc_O_cool() {
 
     O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
 

@@ -66,7 +66,7 @@ Euv::Euv() {
       if (IsOk)
         IsOk = slot_euv("NEUV_I1", "", neuvac_int);
     }
-    
+
     // Slot the HFG model coefficients:
     if (input.get_euv_model() == "hfg") {
       IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
@@ -78,6 +78,7 @@ Euv::Euv() {
         IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
     }
   }
+
   IsOk = sync_across_all_procs(IsOk);
   return;
 }
@@ -157,6 +158,7 @@ bool Euv::read_file() {
 
     infile_ptr.close();
   }
+
   return DidWork;
 }
 
@@ -205,6 +207,7 @@ bool Euv::slot_euv(std::string item,
     for (int iWavelength = 0; iWavelength < nWavelengths; iWavelength++)
       values.push_back(waveinfo[iLine].values[iWavelength]);
   }
+
   return DidWork;
 }
 

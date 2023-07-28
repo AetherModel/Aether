@@ -159,7 +159,8 @@ int Neutrals::initial_conditions(Grid grid,
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
-      calc_scale_height(grid);      
+
+      calc_scale_height(grid);
       fill_with_hydrostatic(1, nAlts, grid);
     } // type = planet
   }

@@ -70,7 +70,7 @@ precision_t Planets::get_cos_dec(Times time) {
 
 precision_t Planets::get_radius(precision_t latitude) {
   if (input.get_do_lat_dependent_radius())
-    return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
+    return planet.polar_radius + (planet.delta_radius * cos(latitude));
   else
     return planet.radius;
 }
@@ -167,7 +167,7 @@ precision_t Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-// Get the omega (rotational rate) value of the planet 
+// Get the omega (rotational rate) value of the planet
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_omega() {

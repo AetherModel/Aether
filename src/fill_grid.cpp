@@ -219,13 +219,13 @@ void Grid::fill_grid_radius(Planets planet) {
   for (iLon = 0; iLon < nLons; iLon++)
     for (iLat = 0; iLat < nLats; iLat++)
       for (iAlt = 0; iAlt < nAlts; iAlt++)
-	radius_scgc(iLon, iLat, iAlt) =
-	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat));
+        radius_scgc(iLon, iLat, iAlt) =
+          planet.get_radius(geoLat_scgc(iLon, iLat, iLat));
 
   radius_scgc = radius_scgc + geoAlt_scgc;
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;
-  
+
   report.exit(function);
   return;
 }
@@ -247,16 +247,17 @@ void Grid::calc_rad_unit(Planets planet) {
   std::vector<arma_cube> gradient_vcgc = calc_gradient_vector(radius_scgc, *this);
 
   arma_cube mag_radius_gradient = sqrt( pow(gradient_vcgc[0], 2) +
-					pow(gradient_vcgc[1], 2) +
-					pow(gradient_vcgc[2], 2));
+                                        pow(gradient_vcgc[1], 2) +
+                                        pow(gradient_vcgc[2], 2));
   arma_cube mag_radius_gradienti =  1.0 / mag_radius_gradient;
 
   rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
   for (int iV = 0; iV < 3; iV++)
     rad_unit_vcgc[iV].zeros();
 
   rad_unit_vcgc[0] = (gradient_vcgc[0] % mag_radius_gradienti);
-  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti); 
+  rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti);
   rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);
 
   report.exit(function);
@@ -327,6 +328,7 @@ void Grid::calc_grid_spacing(Planets planet) {
 void Grid::calc_alt_grid_spacing() {
 
   int64_t iAlt;
+
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
     dalt_center_scgc.slice(iAlt) =
       (geoAlt_scgc.slice(iAlt + 1) - geoAlt_scgc.slice(iAlt - 1)) / 2.0;
@@ -364,6 +366,7 @@ void Grid::calc_alt_grid_spacing() {
 void Grid::calc_lat_grid_spacing() {
 
   int64_t iLat;
+
   for (iLat = 1; iLat < nLats - 1; iLat++) {
     dlat_center_scgc.col(iLat) =
       (geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat - 1)) / 2.0;
@@ -389,6 +392,7 @@ void Grid::calc_lat_grid_spacing() {
 void Grid::calc_long_grid_spacing() {
 
   int64_t iLon;
+
   for (iLon = 1; iLon < nLons - 1; iLon++)
     dlon_center_scgc.row(iLon) =
       (geoLon_scgc.row(iLon + 1) - geoLon_scgc.row(iLon - 1)) / 2.0;
@@ -414,12 +418,13 @@ void Grid::calc_long_grid_spacing() {
 void Grid::calc_cent_acc(Planets planet) {
   // Longitudanal cent acc
   cent_acc_vcgc[0].zeros();
-  
+
   float omega = planet.get_omega();
   float omega2 = omega * omega;
 
   // Latitudinal cent acc
-  cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(geoLat_scgc);
+  cent_acc_vcgc[1] = -1 * omega2 * radius_scgc  % cos(geoLat_scgc) % sin(
+                       geoLat_scgc);
 
   // Radial cent acc
   cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
