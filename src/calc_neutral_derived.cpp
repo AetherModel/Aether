@@ -44,6 +44,8 @@ void Neutrals::calc_mass_density() {
   density_scgc.zeros();
   velocity_vcgc[2].zeros();
 
+  int64_t iSpecies;
+  
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
                species[iSpecies].mass * species[iSpecies].density_scgc;
@@ -250,7 +252,7 @@ void Neutrals::calc_specific_heat() {
 // direction
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_cMax(Report &report) {
+void Neutrals::calc_cMax() {
 
   std::string function = "Neutrals::calc_cMax";
   static int iFunction = -1;
@@ -281,7 +283,7 @@ void Neutrals::calc_cMax(Report &report) {
 // direction
 // ----------------------------------------------------------------------
 
-precision_t Neutrals::calc_dt(Grid grid, Report &report) {
+precision_t Neutrals::calc_dt(Grid grid) {
 
   std::string function = "Neutrals::calc_dt";
   static int iFunction = -1;
