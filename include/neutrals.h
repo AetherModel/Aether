@@ -57,7 +57,8 @@ class Neutrals {
     /// Index 1 = latitudinal
     /// Index 2 = altitudinal
     std::vector<arma_cube> velocity_vcgc;
-      
+    std::vector<arma_cube> newVelocity_vcgc;
+
     /// Acceleration of each species (m/s^2)
     std::vector<arma_cube> acc_neutral_friction;
       
@@ -71,10 +72,6 @@ class Neutrals {
     /// concentration (density of species / total density)
     arma_cube concentration_scgc;
 
-    /// Species Dependent Velocity (m/s)
-    std::vector<arma_cube> velocity_vcgc;
-    std::vector<arma_cube> newVelocity_vcgc;
-    
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
     std::vector<float> diff_exp;
@@ -321,15 +318,13 @@ class Neutrals {
 
   /**********************************************************************
      \brief Calculate speed of sound + abs(velocity) in all 3 directions
-     \param report allow reporting to occur
    **/
-  void calc_cMax(Report &report);
+  void calc_cMax();
 
   /**********************************************************************
      \brief Calculate dt (cell size / cMax) in each direction, and take min
      \param dt returns the neutral time-step
      \param grid The grid to define the neutrals on
-     \param report allow reporting to occur
    **/
   precision_t calc_dt(Grid grid);
   
@@ -460,12 +455,10 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
      \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
 
   void solver_vertical_rusanov(Grid grid,
-			       Times time,
-			       Inputs input);
+			       Times time);
   
 };
 
