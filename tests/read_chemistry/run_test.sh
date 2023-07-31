@@ -3,6 +3,12 @@
 # remove old directory:
 rm -rf run.no_errors run.errors
 
+#DELETE THIS WHEN YOU PUSH (iterative updates)
+cd ~/Aether/build
+cmake ..
+make -j16
+cd ~/Aether/tests/read_chemistry
+
 # run without any errors to check it works:
 cp -R ../../share/run ./run.no_errors
 cd run.no_errors
@@ -15,7 +21,7 @@ cd run.errors
 
 cp -f ../aether.json.errors ./aether.json
 
-for i in 0 1 2 3 4 5; 
+for i in 0 1 2 3 4 5 6; 
 do 
     echo
     echo Test $i: checking for successful crash 
