@@ -27,8 +27,11 @@ Chemistry::Chemistry(Neutrals neutrals,
   std::string function = "Chemistry::Chemistry";
   static int iFunction = -1;
   report.enter(function, iFunction);
-  std::cout << "here1";
-  read_chemistry_file(neutrals, ions, args, report);
+  
+  if(read_chemistry_file(neutrals, ions, args, report) > 0){
+    std::cout << "Could not read chemistry file!\n";
+    throw std::invalid_argument( "Invalid chemistry file" );
+  }
 
   report.exit(function);
   return;
@@ -82,12 +85,15 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
     IsOk = false;
   if(!search("heat", headers, error))
     IsOk = false;
-
+  
   //output missing headers & clear cache of errors
   if(!IsOk){
-    std::string error_message = "Errors in chemistry header, missing: ";
-    for(std::string err : error)
-      error_message = error_message + err + " ";
+    std::string error_message = "Errors in chemistry header, missing: \n";
+    for(std::string err : error){
+      std::cout << err << " ";
+      error_message += err + " ";
+    }
+    std::cout << "are missing from the Chemistry file header. \n";
     report.error(error_message);
     return false;
   }
@@ -109,7 +115,7 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
       //(check if the first character is a letter)
       bool loss1 = csv[iLine][headers["loss1"]] == "";
       bool source1 = csv[iLine][headers["source1"]] == "";
-      for (int num = 1; num<4; num++){
+      for (int num = 1; num < 4; num++){
         col = "loss" + std::to_string(num);
         if(csv[iLine][headers[col]] != "") {
           if(!std::isalpha(csv[iLine][headers[col]][0]) || (loss1 && num > 1)){
@@ -277,11 +283,12 @@ bool Chemistry::check_chemistry_file(json &headers, std::vector<std::vector<std:
     //report errors when they are encountered, also update the function variable IsOk
     if(!temp_ok){
       std::string error_message = "There is an issue with the Chemistry csv file, on line " 
-                + std::to_string(iLine + 1) + ", with columns:\n";
+                + std::to_string(iLine + 1) + ", with columns:\n ";
       for(std::string err : error) {
-        error_message = error_message + err + ":" + csv[iLine][headers[err]];
+        error_message = error_message + err + ": " + csv[iLine][headers[err]] + "\n";
       }
       report.error(error_message);
+      std::cout << error_message;
       IsOk = false;
       error.clear();
     }
@@ -294,7 +301,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
                                    Ions ions,
                                    Inputs args,
                                    Report &report) {
-
+  
   std::string function = "Chemistry::read_chemistry_file";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -309,9 +316,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
   infile_ptr.open(args.get_chemistry_file());
 
+
   if (!infile_ptr.is_open()) {
     std::cout << "Could not open chemistry file!\n";
     iErr = 1;
+    throw std::invalid_argument( "Invalid chemistry file" );
   } else {
 
     if (infile_ptr.good()) {
@@ -320,10 +329,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
       int nLines = csv.size();
 
-      if (nLines <= 2)
+      if (nLines <= 2) {
         iErr = 1;
-
-      else {
+        std::cout << "Chemistry file doesn't contain data!\n";
+        throw std::invalid_argument( "Invalid chemistry file" );
+      } else {
 
         json headers;
 
@@ -331,8 +341,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           headers[csv[0][x]] = x;
 
         // Check before here, then set rate & loss1
-        if(search("rate", headers, errors) || search("loss1", headers, errors))
+        if(!search("rate", headers, errors) || !search("loss1", headers, errors)) {
           iErr = 1;
+          std::cout << "Missing rate or loss columns for Chemistry file!\n";
+          throw std::invalid_argument( "Invalid chemistry file" );
+        }
         int iRate_ = headers["rate"];
         int iLoss1_ = headers["loss1"];
 
@@ -432,6 +445,10 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           }
         }
       }
+    } else {
+      std::cout << "Could not open good chemistry file!\n";
+      iErr = 1;
+      throw std::invalid_argument( "Invalid chemistry file" );
     }
   }
 
