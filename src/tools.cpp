@@ -296,3 +296,88 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Report &report) {
   return get_min_mean_max(find_species_density(name, neutrals, ions, report));
 }
+
+//-------------------------------------------------------------
+// Checks whether two arma vectors are approximately equal
+//-------------------------------------------------------------
+bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol) {
+  // Check for absolute largest relative difference
+  // if max diff is beyond tol, return false
+  precision_t max_diff = 0.;
+  
+  // Find maximum value
+  precision_t vec1_max = abs(vec1).max();
+  precision_t vec2_max = abs(vec2).max();
+  precision_t vec_max = std::max(vec1_max, vec2_max);
+
+  // Check whether vectors are the same size
+  // if not, return false
+  if (vec1.size() != vec2.size()) {
+    return false;
+  }
+
+  // Loop through every member of vector
+  for (int64_t i = 0; i < vec1.size(); i++) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i))/vec_max;
+    if (curr_diff > max_diff) {
+      max_diff = curr_diff;
+    }
+  }
+
+  if (max_diff > tol) {
+    return false;
+  }
+
+  return true; 
+}
+
+//-------------------------------------------------------------
+// Overload col vector function with row vec
+//-------------------------------------------------------------
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t tol) {
+  // Check for absolute largest relative difference
+  // if max diff is beyond tol, return false
+  precision_t max_diff = 0.;
+  
+  // Find maximum value
+  precision_t vec1_max = abs(vec1).max();
+  precision_t vec2_max = abs(vec2).max();
+  precision_t vec_max = std::max(vec1_max, vec2_max);
+
+  // Check whether vectors are the same size
+  // if not, return false
+  if (vec1.size() != vec2.size()) {
+    return false;
+  }
+
+  // Loop through every member of vector
+  for (int64_t i = 0; i < vec1.size(); i++) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i))/vec_max;
+    if (curr_diff > max_diff) {
+      max_diff = curr_diff;
+    }
+  }
+
+  if (max_diff > tol) {
+    return false;
+  }
+
+  return true; 
+}
+
+//-------------------------------------------------------------
+// Checks whether a vector is constant (all values the same)
+// Method uses variance as evaluating factor
+//-------------------------------------------------------------
+bool is_approx_constant(arma_vec &vec, precision_t tol) {
+  // Find variance (normalize with vector 2-norm)
+  precision_t vec_norm = arma::norm(vec, 2);
+
+  precision_t vec_var = arma::var(vec)/vec_norm;
+
+  if (vec_var > tol) {
+    return false;
+  }
+
+  return true;
+}

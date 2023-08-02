@@ -91,4 +91,20 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Ions &ions,
                                                   Report &report);
 
+//-------------------------------------------------------------
+// Checks whether two arma vectors are approximately equal
+//-------------------------------------------------------------
+bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol);
+
+//-------------------------------------------------------------
+// Overload col vector function with row vec
+//-------------------------------------------------------------
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t tol);
+
+//-------------------------------------------------------------
+// Checks whether a vector is constant (all values the same)
+// Method uses variance as a factor
+//-------------------------------------------------------------
+bool is_approx_constant(arma_vec &vec, precision_t tol);
+
 #endif  // INCLUDE_TOOLS_H_

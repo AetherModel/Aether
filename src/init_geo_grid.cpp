@@ -158,11 +158,11 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
         refx(iLR, iDU) = sqrt(3)/3*tan(lonp - cPI/4 - 3*cPI/2.);
         refy(iLR, iDU) = sqrt(3)/3*tan(latp)/cos(lonp - cPI/4. - 3*cPI/2.);
       } else if (quadtree.iSide == 5-1) {
-        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp-cTWOPI - 3*cPI/4.)/tan(latp);
-        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp-cTWOPI - 3*cPI/4.)/tan(latp);
+        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp - 3*cPI/4.)/tan(latp);
+        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp - 3*cPI/4.)/tan(latp);
       } else if(quadtree.iSide == 6-1) {
-        refx(iLR, iDU) = -sqrt(3)/3*sin(lonp -cPI - 3*cPI/4.)/tan(latp);
-        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp -cPI - 3*cPI/4.)/tan(latp);
+        refx(iLR, iDU) = sqrt(3)/3*sin(lonp - 3*cPI/4.)/tan(latp);
+        refy(iLR, iDU) = -sqrt(3)/3*cos(lonp - 3*cPI/4.)/tan(latp);
       }
     }
   }
