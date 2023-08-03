@@ -141,7 +141,7 @@ bool range_check(arma_mat &x, arma_mat &y, precision_t R, precision_t tol, int64
   precision_t x_vec_tail = x_vec(x_vec.size()-1);
   precision_t y_vec_head = y_vec(0);
   precision_t y_vec_tail = y_vec(y_vec.size()-1);
-  
+
   if (std::abs(x_vec_head+a) > tol) {
     return false;
   }
@@ -157,6 +157,94 @@ bool range_check(arma_mat &x, arma_mat &y, precision_t R, precision_t tol, int64
   }
 
   return true; 
+}
+
+/**
+ * A inverse square checker
+ * 
+ * Checks A^{-1} A^{-T} = g^{ij}
+ *
+ * @param A_inv 2x2 matrix struct
+ * @param g_upper metric tensor with upper indicies (for comparison)
+ * @param tol tolerance
+ * 
+ */
+bool A_inv_square_check(mat_2x2 A_inv, mat_2x2 g_upper, precision_t tol) {
+  // Compute g from A_invs (A_inv)(A_inv)^T = g^{ij}
+  arma_mat g_11_compute = A_inv.A11%A_inv.A11 + A_inv.A12%A_inv.A12;
+  arma_mat g_12_compute = A_inv.A11%A_inv.A21 + A_inv.A12%A_inv.A22;
+  arma_mat g_21_compute = A_inv.A21%A_inv.A11 + A_inv.A22%A_inv.A12;
+  arma_mat g_22_compute = A_inv.A21%A_inv.A21 + A_inv.A22%A_inv.A22;
+
+  // Compare
+  if (!approx_equal(g_11_compute, g_upper.A11, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_12_compute, g_upper.A12, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_21_compute, g_upper.A21, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_22_compute, g_upper.A22, "absolute", tol)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * A square checker
+ * 
+ * Checks A^T A = g_{ij}
+ * Also checks the determinant of g_{ij}
+ *
+ * @param A 2x2 matrix struct
+ * @param g_upper metric tensor with upper indicies (for comparison)
+ * @param sqrt_g square root of det(g_{ij}) (for comparison)
+ * @param tol tolerance
+ * 
+ */
+bool A_square_check(mat_2x2 A, mat_2x2 g_upper, arma_mat sqrt_g, precision_t tol) {
+  // Compute g from A (A^T)A = g_{ij}
+  arma_mat g_11_lower = A.A11%A.A11 + A.A21%A.A21;
+  arma_mat g_12_lower = A.A11%A.A12 + A.A21%A.A22;
+  arma_mat g_21_lower = A.A12%A.A11 + A.A22%A.A21;
+  arma_mat g_22_lower = A.A12%A.A12 + A.A22%A.A22;
+
+
+  // Find determinant of g_ij
+  arma_mat det_g_compute = g_11_lower % g_22_lower - g_12_lower % g_21_lower;
+  arma_mat sqrt_g_compute = sqrt(det_g_compute);
+
+  output(det_g_compute, "det_g_compute.txt", false);
+  output(sqrt_g_compute, "sqrt_g_compute.txt", false);
+  output(sqrt_g, "sqrt_g_given.txt", false);
+
+  // Check whether determinant matches
+  if (!approx_equal(sqrt_g_compute, sqrt_g, "relative", tol)) {
+    return false;
+  }
+
+  // Compute g^{ij}
+  arma_mat g_11_compute = g_22_lower /det_g_compute;
+  arma_mat g_12_compute = -g_12_lower / det_g_compute;
+  arma_mat g_21_compute = -g_21_lower / det_g_compute;
+  arma_mat g_22_compute = g_11_lower / det_g_compute;
+
+  // Compare
+  if (!approx_equal(g_11_compute, g_upper.A11, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_12_compute, g_upper.A12, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_21_compute, g_upper.A21, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(g_22_compute, g_upper.A22, "absolute", tol)) {
+    return false;
+  }
+  return true;
 }
 
 
@@ -244,6 +332,25 @@ int main() {
       arma_mat aether_g12_upper_cc = gGrid.g12_upper_scgc.slice(0);
       arma_mat aether_g21_upper_cc = gGrid.g21_upper_scgc.slice(0);
       arma_mat aether_g22_upper_cc = gGrid.g22_upper_scgc.slice(0);
+      arma_mat aether_sqrt_g_cc = gGrid.sqrt_g_scgc.slice(0);
+
+      mat_2x2 A_inv_cc;
+      A_inv_cc.A11 = aether_A11_inv_cc;
+      A_inv_cc.A12 = aether_A12_inv_cc;
+      A_inv_cc.A21 = aether_A21_inv_cc;
+      A_inv_cc.A22 = aether_A22_inv_cc;
+
+      mat_2x2 A_cc;
+      A_cc.A11= aether_A11_cc;
+      A_cc.A12 = aether_A12_cc;
+      A_cc.A21 = aether_A21_cc;
+      A_cc.A22 = aether_A22_cc;
+
+      mat_2x2 g_upper_cc;
+      g_upper_cc.A11 = aether_g11_upper_cc;
+      g_upper_cc.A12 = aether_g12_upper_cc;
+      g_upper_cc.A21 = aether_g21_upper_cc;
+      g_upper_cc.A22 = aether_g22_upper_cc;
 
       // X Edge coordinates 
       arma_mat aether_lon_xedge = gGrid.geoLon_Left.slice(0);
@@ -262,6 +369,25 @@ int main() {
       arma_mat aether_g12_upper_xedge = gGrid.g12_upper_Left.slice(0);
       arma_mat aether_g21_upper_xedge = gGrid.g21_upper_Left.slice(0);
       arma_mat aether_g22_upper_xedge = gGrid.g22_upper_Left.slice(0);
+      arma_mat aether_sqrt_g_xedge = gGrid.sqrt_g_Left.slice(0);
+
+      mat_2x2 A_inv_xedge;
+      A_inv_xedge.A11 = aether_A11_inv_xedge;
+      A_inv_xedge.A12 = aether_A12_inv_xedge;
+      A_inv_xedge.A21 = aether_A21_inv_xedge;
+      A_inv_xedge.A22 = aether_A22_inv_xedge;
+
+      mat_2x2 A_xedge;
+      A_xedge.A11= aether_A11_xedge;
+      A_xedge.A12 = aether_A12_xedge;
+      A_xedge.A21 = aether_A21_xedge;
+      A_xedge.A22 = aether_A22_xedge;
+
+      mat_2x2 g_upper_xedge;
+      g_upper_xedge.A11 = aether_g11_upper_xedge;
+      g_upper_xedge.A12 = aether_g12_upper_xedge;
+      g_upper_xedge.A21 = aether_g21_upper_xedge;
+      g_upper_xedge.A22 = aether_g22_upper_xedge;
 
       // Y Edge coordinates 
       arma_mat aether_lon_yedge = gGrid.geoLon_Down.slice(0);
@@ -280,6 +406,25 @@ int main() {
       arma_mat aether_g12_upper_yedge = gGrid.g12_upper_Down.slice(0);
       arma_mat aether_g21_upper_yedge = gGrid.g21_upper_Down.slice(0);
       arma_mat aether_g22_upper_yedge = gGrid.g22_upper_Down.slice(0);
+      arma_mat aether_sqrt_g_yedge = gGrid.sqrt_g_Down.slice(0);
+
+      mat_2x2 A_inv_yedge;
+      A_inv_yedge.A11 = aether_A11_inv_yedge;
+      A_inv_yedge.A12 = aether_A12_inv_yedge;
+      A_inv_yedge.A21 = aether_A21_inv_yedge;
+      A_inv_yedge.A22 = aether_A22_inv_yedge;
+
+      mat_2x2 A_yedge;
+      A_yedge.A11= aether_A11_yedge;
+      A_yedge.A12 = aether_A12_yedge;
+      A_yedge.A21 = aether_A21_yedge;
+      A_yedge.A22 = aether_A22_yedge;
+
+      mat_2x2 g_upper_yedge;
+      g_upper_yedge.A11 = aether_g11_upper_yedge;
+      g_upper_yedge.A12 = aether_g12_upper_yedge;
+      g_upper_yedge.A21 = aether_g21_upper_yedge;
+      g_upper_yedge.A22 = aether_g22_upper_yedge;
 
       /**
       if (stoi(side_num) == 6) {
@@ -345,6 +490,34 @@ int main() {
       // Test 2: Range Check
       if (!range_check(aether_x_xedge, aether_y_yedge, R, tol, nGCs_lcl)) {
         std::string err_msg = "Range Check Failed for Side " + side_num;
+        throw std::string(err_msg);
+      }
+
+      // Test 3: (A^{-1}(A^{-1})^T = g^{ij})
+      if (!A_inv_square_check(A_inv_cc, g_upper_cc, tol)) {
+        std::string err_msg = "A inverse square Check Failed for Side " + side_num + " , Cell Centers";
+        throw std::string(err_msg);
+      }
+      if (!A_inv_square_check(A_inv_xedge, g_upper_xedge, tol)) {
+        std::string err_msg = "A inverse square Check Failed for Side " + side_num + " , X edge";
+        throw std::string(err_msg);
+      }
+      if (!A_inv_square_check(A_inv_yedge, g_upper_yedge, tol)) {
+        std::string err_msg = "A inverse square Check Failed for Side " + side_num + " , Y edge";
+        throw std::string(err_msg);
+      }
+
+      // Test 4: (A^T@A = g_{ij} = {g^{ij}}^{-1}) and sqrt(det(g)) Check
+      if (!A_square_check(A_cc, g_upper_cc, aether_sqrt_g_cc, tol)) {
+        std::string err_msg = "A square Check Failed for Side " + side_num + " , Cell Centers";
+        throw std::string(err_msg);
+      }
+      if (!A_square_check(A_xedge, g_upper_xedge, aether_sqrt_g_xedge, tol)) {
+        std::string err_msg = "A square Check Failed for Side " + side_num + " , X edge";
+        throw std::string(err_msg);
+      }
+      if (!A_square_check(A_yedge, g_upper_yedge, aether_sqrt_g_yedge, tol)) {
+        std::string err_msg = "A square Check Failed for Side " + side_num + " , Y edge";
         throw std::string(err_msg);
       }
 

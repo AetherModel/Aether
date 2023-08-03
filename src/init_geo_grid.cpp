@@ -212,8 +212,8 @@ void transformation_metrics(Quadtree quadtree,
       latp = lat2d(i, j);
       lonp = lon2d(i, j);
       
-      double g = R*R*a/(rref*rref*rref);
-      sqrt_g(i, j) = std::sqrt(g);
+      sqrt_g(i, j) = R*R*a/(rref*rref*rref);
+      g = sqrt_g(i,j) * sqrt_g(i,j);
 
       // metric tensor with lower indices
       double front_factor = R * R / (rref * rref * rref * rref);
@@ -886,7 +886,7 @@ void Grid::correct_xy_grid(Planets planet, Report &report) {
     g12_upper_scgc.slice(iAlt) /= R * R;
     g21_upper_scgc.slice(iAlt) /= R * R;
     g22_upper_scgc.slice(iAlt) /= R * R;
-    sqrt_g_scgc.slice(iAlt) /= R;
+    sqrt_g_scgc.slice(iAlt) *= R * R;
 
     refx_Left.slice(iAlt) *= R;
     refy_Left.slice(iAlt) *= R;
@@ -902,7 +902,7 @@ void Grid::correct_xy_grid(Planets planet, Report &report) {
     g12_upper_Left.slice(iAlt) /= R * R;
     g21_upper_Left.slice(iAlt) /= R * R;
     g22_upper_Left.slice(iAlt) /= R * R;
-    sqrt_g_Left.slice(iAlt) /= R;
+    sqrt_g_Left.slice(iAlt) *= R * R;
 
     refx_Down.slice(iAlt) *= R;
     refy_Down.slice(iAlt) *= R;
@@ -918,7 +918,7 @@ void Grid::correct_xy_grid(Planets planet, Report &report) {
     g12_upper_Down.slice(iAlt) /= R * R;
     g21_upper_Down.slice(iAlt) /= R * R;
     g22_upper_Down.slice(iAlt) /= R * R;
-    sqrt_g_Down.slice(iAlt) /= R;
+    sqrt_g_Down.slice(iAlt) *= R * R;
 
     refx_Corner.slice(iAlt) *= R;
     refy_Corner.slice(iAlt) *= R;

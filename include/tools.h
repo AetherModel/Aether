@@ -4,6 +4,14 @@
 #ifndef INCLUDE_TOOLS_H_
 #define INCLUDE_TOOLS_H_
 
+// Structure for a 2x2 matrix
+struct mat_2x2{
+    arma_mat A11; 
+    arma_mat A12; 
+    arma_mat A21; 
+    arma_mat A22;
+};
+
 // ----------------------------------------------------------------------------
 // 
 // ----------------------------------------------------------------------------
