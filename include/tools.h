@@ -115,4 +115,20 @@ bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t
 //-------------------------------------------------------------
 bool is_approx_constant(arma_vec &vec, precision_t tol);
 
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &A_inv_mat);
+
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v, mat_2x2 &A_mat);
+
 #endif  // INCLUDE_TOOLS_H_

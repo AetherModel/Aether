@@ -867,7 +867,7 @@ void Grid::correct_xy_grid(Planets planet, Report &report) {
   precision_t planet_R = planet.get_radius(0);
 
   // radius of planet + altitude
-  // just pick alt at some atltitude
+  // just pick alt at (0,0) loction
   arma_vec R_Alts = geoAlt_scgc.tube(0, 0) + planet_R;
   
   for (iAlt = 0; iAlt < nAlts; iAlt++) {

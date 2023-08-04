@@ -4,7 +4,7 @@
 #include "../include/aether.h"
 
 /**
- * Output function
+ * Output function for debugging
  *
  * @param values Values
  * @param filename FileName
@@ -247,6 +247,51 @@ bool A_square_check(mat_2x2 A, mat_2x2 g_upper, arma_mat sqrt_g, precision_t tol
   return true;
 }
 
+/**
+ * Vector transformation check
+ * 
+ * Checks whether A matrices can convert spherical vector to contravriant
+ * and convert it backwards. 
+ * 
+ * Randomly generates a spherical vector for testing
+ *
+ * @param A 2x2 matrix struct
+ * @param A_inv 2x2 matrix struct
+ * @param tol tolerance
+ * 
+ */
+bool vec_trans_check(mat_2x2 A_mat, mat_2x2 A_inv, precision_t tol) {
+  // Get matrix size
+  int64_t x_size = A_mat.A11.n_rows;
+  int64_t y_size = A_mat.A11.n_cols;
+
+  // Randomly generate some spherical vector u, v
+  arma::arma_rng::set_seed_random();
+  arma_mat u(x_size, y_size, arma::fill::randu);
+  arma::arma_rng::set_seed_random();
+  arma_mat v(x_size, y_size, arma::fill::randu);
+
+  // Create contravariant velocity
+  arma_mat u1(x_size, y_size);
+  arma_mat u2(x_size, y_size);
+
+  sphvect2ref(u, v, u1, u2, A_inv);
+
+  // Convert contravariant velocity back to spherical one
+  arma_mat u_compute(x_size, y_size);
+  arma_mat v_compute(x_size, y_size);
+  refvect2sph(u1, u2, u_compute, v_compute, A_mat);
+
+  // Compare generated u and u_computed
+  if (!approx_equal(u, u_compute, "absolute", tol)) {
+    return false;
+  }
+  if (!approx_equal(v, v_compute, "absolute", tol)) {
+    return false;
+  }
+  return true;
+}
+
 
 int main() {
 
@@ -425,38 +470,6 @@ int main() {
       g_upper_yedge.A12 = aether_g12_upper_yedge;
       g_upper_yedge.A21 = aether_g21_upper_yedge;
       g_upper_yedge.A22 = aether_g22_upper_yedge;
-
-      /**
-      if (stoi(side_num) == 6) {
-        output(aether_x_cc, "x_cc6.txt", false);
-        output(aether_y_cc, "y_cc6.txt", false);
-        output(aether_x_xedge, "x_xedge6.txt", false);
-        output(aether_y_xedge, "y_xedge6.txt", false);
-        output(aether_x_yedge, "x_yedge6.txt", false);
-        output(aether_y_yedge, "y_yedge6.txt", false);
-        output(aether_lat_cc, "lat_cc6.txt", false);
-        output(aether_lon_cc, "lon_cc6.txt", false);
-        output(aether_lat_xedge, "lat_xedge6.txt", false);
-        output(aether_lon_xedge, "lon_xedge6.txt", false);
-        output(aether_lat_yedge, "lat_yedge6.txt", false);
-        output(aether_lon_yedge, "lon_yedge6.txt", false);
-      }
-
-      if (stoi(side_num) == 1) {
-        output(aether_x_cc, "x_cc1.txt", false);
-        output(aether_y_cc, "y_cc1.txt", false);
-        output(aether_x_xedge, "x_xedge1.txt", false);
-        output(aether_y_xedge, "y_xedge1.txt", false);
-        output(aether_x_yedge, "x_yedge1.txt", false);
-        output(aether_y_yedge, "y_yedge1.txt", false);
-        output(aether_lat_cc, "lat_cc1.txt", false);
-        output(aether_lon_cc, "lon_cc1.txt", false);
-        output(aether_lat_xedge, "lat_xedge1.txt", false);
-        output(aether_lon_xedge, "lon_xedge1.txt", false);
-        output(aether_lat_yedge, "lat_yedge1.txt", false);
-        output(aether_lon_yedge, "lon_yedge1.txt", false);
-      }
-      */
   
       // Test 0: Reference Coordinate behavior check
       // rows of y should be the same, cols of x should be the same
@@ -520,6 +533,22 @@ int main() {
         std::string err_msg = "A square Check Failed for Side " + side_num + " , Y edge";
         throw std::string(err_msg);
       }
+
+      // Test 5: Vector Transformation Test: Transformation matrices can convert spherical vector
+      // to contravariant vector and convert it back. 
+      if (!vec_trans_check(A_cc, A_inv_cc, tol)) {
+        std::string err_msg = "Vector Transformation Check Failed for Side " + side_num + " , Cell Centers";
+        throw std::string(err_msg);
+      }
+      if (!vec_trans_check(A_xedge, A_inv_xedge, tol)) {
+        std::string err_msg = "Vector Transformation Check Failed for Side " + side_num + " , X edge";
+        throw std::string(err_msg);
+      }
+      if (!vec_trans_check(A_yedge, A_inv_yedge, tol)) {
+        std::string err_msg = "Vector Transformation Check Failed for Side " + side_num + " , Y edge";
+        throw std::string(err_msg);
+      }
+      
 
       std::cout << "All tests passed for side " + side_num << std::endl;
     }
