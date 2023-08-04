@@ -336,6 +336,14 @@ int main() {
 	           nGeoGhosts);
     DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
 
+    // First check whether the initialization uses exactly 6 processes. 
+    // The exactly 6 requirements is due to the checking of the range of reference coordinate system
+    int world_size;
+    MPI_Comm_size(aether_comm, &world_size);
+    if (world_size != 6) {
+      throw std::string("Comm size must be 6!!!");
+    }
+
     // Coordinate Generation Testing
     {
       // Set tolerance limit 
