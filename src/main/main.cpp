@@ -22,7 +22,6 @@ int main() {
   report.enter(function, iFunction);
 
   try {
-  
     // Create inputs (reading the input file):
     input = Inputs(time);
     if (!input.is_ok())
@@ -31,7 +30,7 @@ int main() {
     if (input.get_is_student())
       report.print(-1, "Hello " +
 		   input.get_student_name() + " - welcome to Aether!");
-    
+
     Quadtree quadtree;
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -40,17 +39,17 @@ int main() {
     DidWork = init_parallel(quadtree);
     if (!DidWork)
       throw std::string("init_parallel failed!");
-  
+
     // Everything should be set for the inputs now, so write a restart file:
     DidWork = input.write_restart();
     if (!DidWork)
       throw std::string("input.write_restart failed!");
-    
+
     // Initialize the EUV system:
     Euv euv;
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
-    
+
     // Initialize the planet:
     Planets planet;
     MPI_Barrier(aether_comm);
@@ -63,7 +62,7 @@ int main() {
     MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
-
+    
     // Perturb the inputs if user has asked for this
     indices.perturb();
     MPI_Barrier(aether_comm);
@@ -113,7 +112,7 @@ int main() {
       report.print(1, "Restarting! Reading time file!");
       DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
       if (!DidWork)
-	throw std::string("Reading Restart for time Failed!!!\n");
+	      throw std::string("Reading Restart for time Failed!!!\n");
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
@@ -185,6 +184,7 @@ int main() {
     report.times();
 
   } catch (std::string error) {
+    report.report_errors();
     if (iProc == 0) {
       std::cout << error << "\n";
       std::cout << "---- Must Exit! ----\n";
