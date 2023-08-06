@@ -33,7 +33,7 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-		  input.get_student_name() + "?");
+                 input.get_student_name() + "?");
 
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
@@ -43,7 +43,6 @@ int advance(Planets &planet,
   neutrals.calc_pressure();
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
-
   time.calc_dt();
 
   iErr = calc_euv(planet,
@@ -87,7 +86,7 @@ int advance(Planets &planet,
   neutrals.calc_scale_height(gGrid);
   neutrals.fill_with_hydrostatic(gGrid);
   neutrals.exchange(gGrid);
-
+  
   time.increment_time();
 
   if (time.check_time_gate(input.get_dt_write_restarts())) {

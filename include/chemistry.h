@@ -93,6 +93,13 @@ class Chemistry {
                              Ions &ions);
 
  private:
+  bool search(std::string name, 
+              json &headers, 
+              std::vector<std::string> &error);
+
+  bool check_chemistry_file(json &headers, 
+                            std::vector<std::vector<std::string>> csv, 
+                            Report &report);
 
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions);
