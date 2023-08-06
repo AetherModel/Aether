@@ -310,3 +310,117 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Ions &ions) {
   return get_min_mean_max(find_species_density(name, neutrals, ions));
 }
+
+bool all_finite(std::vector<arma_cube> cubes, std::string name, Report &report){
+  bool no_nans = true;
+  for(int i=0; i<cubes.size(); ++i){
+    std::string new_name = name + "[" + std::to_string(i) + "] ";
+    if(!all_finite(cubes.at(i), new_name, report)){
+      no_nans = false;
+    }
+  }
+  return no_nans;
+}
+
+
+bool all_finite(arma_cube cube, std::string name, Report &report){
+  if(is_finite(cube)){
+    return true;
+  }
+  else{
+    std::vector<int> locations = indef_vector(cube);
+    std::vector<int> loc = cube_to_lla(cube, locations[0]);
+    std::string position = "(" + std::to_string(loc[0]) + "," + std::to_string(loc[1]) + "," + std::to_string(loc[2]) + ")";
+    int size = locations.size();
+    std::string error_message = std::to_string(size) + " Nonfinite values exist in " + name + " on iProc " + cProc + " and iMember " + cMember + " starting at: " + position;
+    report.error(error_message);
+    return false;
+  }
+}
+
+
+std::vector<int> insert_indefinites(arma_cube &cube){
+  int size = cube.n_elem;
+  std::vector<int> locations;
+  while (locations.size() < 6){
+    int random = rand() % size;
+    if (std::find(locations.begin(), locations.end(), random) == locations.end()) {
+      locations.push_back(random);
+    }
+  }
+  std::vector<int> nan_locations(locations.begin(), locations.begin() + 3);
+  std::vector<int> indef_locations(locations.begin() + 3, locations.end());
+  for (int i = 0; i<nan_locations.size(); i++){
+    cube.at(nan_locations.at(i)) = datum::nan;
+    cube.at(indef_locations.at(i)) = datum::inf;
+  }
+  return locations;
+}
+
+
+bool is_finite(arma_cube &cube){
+  for (int i=0; i<cube.n_elem; i++){
+    if (is_nan_inf(cube.at(i))){
+      return false;
+    }
+  }
+  return true;
+}
+
+
+bool is_nan(double value) {
+    uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+    uint64_t expMask = 0x7FF0000000000000ULL;
+    uint64_t fracMask = 0x000FFFFFFFFFFFFFULL;
+
+
+    return ((bits & expMask) == expMask) && ((bits & fracMask) != 0);
+}
+
+
+bool is_inf(double value) {
+    uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+    uint64_t expMask = 0x7FF0000000000000ULL;
+
+
+    return (bits & expMask) == expMask;
+}
+
+
+bool is_nan_inf(double value) {
+    return (is_nan(value) || is_inf(value));
+}
+
+
+std::string print_nan_vector(std::vector<int> input, arma_cube cube){
+  std::string output("nans exist at ");
+  std::vector<int> loc;
+  for (int i = 0; i < 3; i++){
+    loc = cube_to_lla(cube, input.at(i));
+    output += ("(" + std::to_string(loc.at(0)) + "," + std::to_string(loc.at(1)) + ","  + std::to_string(loc.at(2)) + ") ");
+  }
+  output += "infs exist at ";
+  for (int i = 3; i < 6; i++){
+    loc = cube_to_lla(cube, input.at(i));
+    output += ("(" + std::to_string(loc.at(0)) + "," + std::to_string(loc.at(1)) + ","  + std::to_string(loc.at(2)) + ") ");
+  }
+  output += "\n";
+  return output;
+}
+
+
+std::vector<int> indef_vector(arma_cube cube){
+  std::vector<int> locations;
+  for (int i=0; i<cube.n_elem; i++){
+    if (is_nan_inf(cube.at(i))){
+      locations.push_back(i);
+    }
+  }
+  if (locations.size() > 0){
+    return locations;
+  }
+  else{
+    locations.push_back(-1);
+    return locations;
+  }
+}

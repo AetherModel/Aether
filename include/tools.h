@@ -95,4 +95,38 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
                                                   Ions &ions);
 
+//-------------------------------------------------------------------------------------
+//Checks if armacube(s) has all finite values, if not, adds them to errors in report class
+//-------------------------------------------------------------------------------------
+bool all_finite(arma_cube cube, std::string name, Report &report);
+bool all_finite(std::vector<arma_cube> cubes, std::string name, Report &report);
+
+
+//-------------------------------------------------------------------------------------
+//Takes an index of an armacube and converts it to latitude, longitude, and altitude
+//-------------------------------------------------------------------------------------
+std::vector<int> cube_to_lla(arma_cube cube, int index);
+
+
+//-------------------------------------------------------------------------------------
+//Inserts 3 nans and 3 inf into the specified armacube(s)
+//-------------------------------------------------------------------------------------
+std::vector<int> insert_indefinites(arma_cube &cube);
+
+
+//Returns a vector of ints as a string with spaces in between
+std::string print_nan_vector(std::vector<int> input, arma_cube cube);
+
+
+//Returns whether a given arma cube has all finite values
+bool is_finite(arma_cube &cube);
+
+
+//Returns whether the double/float value is a nan or infinity
+bool is_nan_inf(double value);
+
+
+//Returns vector of indefinite values
+std::vector<int> indef_vector(arma_cube cube);
+
 #endif  // INCLUDE_TOOLS_H_

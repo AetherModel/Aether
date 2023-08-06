@@ -14,6 +14,9 @@
 /// This is for generating random numbers:
 #include <random>
 
+//This is to look into bits for flagging nans and infs
+#include <cstdint>
+
 // Types
 // Precision compile-time aliasing
 #ifdef AETHER_USE_PRECISION_DOUBLE
