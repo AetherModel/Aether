@@ -27,7 +27,7 @@ Chemistry::Chemistry(Neutrals neutrals,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (read_chemistry_file(neutrals, ions, args, report) > 0) {
+  if (read_chemistry_file(neutrals, ions) > 0) {
     report.print(0, "Could not read chemistry file!");
     throw std::invalid_argument( "Invalid chemistry file" );
   }
