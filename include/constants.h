@@ -126,7 +126,6 @@ const precision_t pcmtopm = 100.0;  // /cm to /m
 
 const float cNTtoT = 1e-9;  // nT to T
 
-
 // -------------------------------------------------------------------------
 // These are good constants for using words instead of booleans
 // -------------------------------------------------------------------------

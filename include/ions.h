@@ -86,24 +86,21 @@ class Ions {
   // ------------------------------
   // Functions:
 
-  Ions(Grid grid, Planets planet, Inputs input, Report report);
+  Ions(Grid grid, Planets planet);
   species_chars create_species(Grid grid);
-  int read_planet_file(Planets planet, Inputs input, Report report);
-  void init_ion_temperature(Neutrals neutrals, Grid grid, Report &report);
-  void fill_electrons(Report &report);
-  int get_species_id(std::string name, Report &report);
-  void calc_efield(Grid grid, Report &report);
-  void calc_exb_drift(Grid grid, Report &report);
+  int read_planet_file(Planets planet);
+  void init_ion_temperature(Neutrals neutrals, Grid grid);
+  void fill_electrons();
+  int get_species_id(std::string name);
+  void calc_efield(Grid grid);
+  void calc_exb_drift(Grid grid);
   void calc_ion_drift(Neutrals neutrals,
 		      Grid grid,
-		      precision_t dt,
-		      Report &report);
+		      precision_t dt);
   std::vector<arma_cube> calc_ion_electron_pressure_gradient(int64_t iIon,
-							     Grid grid,
-							     Report &report);
-  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time, 
-		            Inputs input, Report &report);
-  void calc_electron_temperature(Neutrals neutrals, Grid grid, Report &report);
+							     Grid grid);
+  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time);
+  void calc_electron_temperature(Neutrals neutrals, Grid grid);
   
   bool restart_file(std::string dir, bool DoRead);
 };

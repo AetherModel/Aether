@@ -13,14 +13,14 @@
 // Constructor (initiaze the class):
 // -----------------------------------------------------------------------------
 
-Planets::Planets(Inputs input, Report report) {
-  IsOk = read_file(input, report);
+Planets::Planets() {
+  IsOk = read_file();
 
   if (IsOk)
-    IsOk = set_planet(input, report);
+    IsOk = set_planet();
 
   if (IsOk)
-    IsOk = read_planet_specific_file(input, report);
+    IsOk = read_planet_specific_file();
 
   IsOk = sync_across_all_procs(IsOk);
 }
@@ -69,8 +69,10 @@ precision_t Planets::get_cos_dec(Times time) {
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_radius(precision_t latitude) {
-  // Should modify this to allow an oblate spheriod, but not now.
-  return planet.radius;
+  if (input.get_do_lat_dependent_radius())
+    return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
+  else
+    return planet.radius;
 }
 
 // -----------------------------------------------------------------------------
@@ -115,6 +117,17 @@ precision_t Planets::get_mu() {
 }
 
 // -----------------------------------------------------------------------------
+// Get the J2 of the planet
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_J2() {
+  if (input.get_do_J2())
+    return planet.J2;
+  else
+    return 0;
+}
+
+// -----------------------------------------------------------------------------
 // Get the distance from the star to the planet (meters)
 // -----------------------------------------------------------------------------
 
@@ -151,6 +164,14 @@ precision_t Planets::get_declination(Times time) {
     std::cout << "Error in setting time!" << '\n';
 
   return planet.declination;;
+}
+
+// -----------------------------------------------------------------------------
+// Get the omega (rotational rate) value of the planet 
+// -----------------------------------------------------------------------------
+
+precision_t Planets::get_omega() {
+  return planet.omega;
 }
 
 // -----------------------------------------------------------------------------
@@ -277,7 +298,7 @@ int Planets::update(Times time) {
 // move the appropriate data over to the planet structure
 // -----------------------------------------------------------------------------
 
-bool Planets::set_planet(Inputs input, Report report) {
+bool Planets::set_planet() {
 
   bool DidWork = true;
   int IsFound = 0;
@@ -334,6 +355,7 @@ bool Planets::set_planet(Inputs input, Report report) {
       planet.mu = planets[i].mass * cG;
       planet.equator_radius = planets[i].equator_radius * 1000.0;  // km -> m
       planet.polar_radius = planets[i].polar_radius * 1000.0;  // km -> m
+      planet.delta_radius = planet.equator_radius - planet.polar_radius;
       // Looking at Earth and Saturn, it seems like the Volumetric
       // mean radius is at roughly 47 deg (cos(47)=0.68) Obviously an
       // approximation...
@@ -370,7 +392,7 @@ bool Planets::set_planet(Inputs input, Report report) {
 // information for all of the different planets.
 // -----------------------------------------------------------------------------
 
-bool Planets::read_file(Inputs input, Report report) {
+bool Planets::read_file() {
 
   planet_chars tmp;
   std::string line, col;
@@ -430,6 +452,7 @@ bool Planets::read_file(Inputs input, Report report) {
             tmp.dipole_strength = stof(csv[iLine][20]);
             tmp.dipole_rotation = stof(csv[iLine][21]) * cDtoR;
             tmp.dipole_tilt = stof(csv[iLine][22]) * cDtoR;
+            tmp.J2 = stof(csv[iLine][23]);
 
             for (int j = 0; j < 3; j++)
               tmp.dipole_center[j] = stof(csv[iLine][23 + j]);
@@ -482,7 +505,7 @@ json Planets::get_ions() {
 // Read in the planet specific file that describes the species
 // -----------------------------------------------------------------------------
 
-bool Planets::read_planet_specific_file(Inputs input, Report report) {
+bool Planets::read_planet_specific_file() {
 
   bool DidWork = true;
   std::string hash;

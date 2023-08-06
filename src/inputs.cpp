@@ -8,12 +8,14 @@
 
 #include "aether.h"
 
+Inputs input;
+
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
 // The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
-Inputs::Inputs(Times &time, Report &report) {
+Inputs::Inputs(Times &time) {
 
   // ------------------------------------------------
   // Set some defaults:
@@ -60,7 +62,7 @@ Inputs::Inputs(Times &time, Report &report) {
   
   // ------------------------------------------------
   // Now read the input file:
-  IsOk = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time);
 
   if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
@@ -367,6 +369,30 @@ bool Inputs::get_do_restart() {
 }
 
 // -----------------------------------------------------------------------
+// Return NO cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_NO_cooling() {
+  return settings["Sources"]["Neutrals"]["NO_cool"];
+}
+
+// -----------------------------------------------------------------------
+// Return O cooling
+// -----------------------------------------------------------------------
+
+bool Inputs::get_O_cooling() {
+  return settings["Sources"]["Neutrals"]["O_cool"];
+}
+
+// -----------------------------------------------------------------------
+// Return centripetal acceleration
+// -----------------------------------------------------------------------
+
+bool Inputs::get_cent_acc() {
+  return settings["Sources"]["Grid"]["Cent_acc"];
+}
+
+// -----------------------------------------------------------------------
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 
@@ -412,6 +438,14 @@ std::string Inputs::get_euv_model() {
 
 precision_t Inputs::get_euv_heating_eff_neutrals() {
   return check_settings_pt("Euv", "HeatingEfficiency");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include the photoelectron ionization
+// -----------------------------------------------------------------------
+
+bool Inputs::get_include_photoelectrons() {
+  return settings["Euv"]["IncludePhotoElectrons"];
 }
 
 // -----------------------------------------------------------------------
@@ -664,6 +698,47 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 }
 
 // -----------------------------------------------------------------------
+// Return Eddy Coefficient
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_eddy_coef() {
+  return settings["Eddy"]["Coefficient"];
+}
+
+// -----------------------------------------------------------------------
+// Return pressure where Eddy Diffusion starts to drop off
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_eddy_bottom() {
+  return settings["Eddy"]["BottomPressure"];
+}
+
+// -----------------------------------------------------------------------
+// Return pressure where Eddy Diffusion becomes zero
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_eddy_top() {
+  return settings["Eddy"]["TopPressure"];
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_eddy_momentum() {
+  return settings["Eddy"]["UseInMomentum"];
+}
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_eddy_energy() {
+  return settings["Eddy"]["UseInEnergy"];
+}
+
+// -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
 
@@ -674,6 +749,22 @@ json Inputs::get_perturb_values() {
     values = settings.at("Perturb");
 
   return values;
+}
+
+// -----------------------------------------------------------------------
+// Flag to have a latitude dependent radius, and by extension gravity
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_lat_dependent_radius() {
+  return settings["Oblate"]["isOblate"];
+}
+
+// -----------------------------------------------------------------------
+// Flag to include J2 term in the gravity calculation
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_J2() {
+  return settings["Oblate"]["isJ2"];
 }
 
 // -----------------------------------------------------------------------

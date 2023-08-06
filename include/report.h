@@ -254,4 +254,6 @@ private:
   std::vector<error_struct> error_list;
 };
 
+extern Report report;
+
 #endif  // INCLUDE_REPORT_H_

@@ -24,9 +24,7 @@ int output(const Neutrals &neutrals,
            const Ions &ions,
            const Grid &grid,
            Times time,
-           const Planets &planet,
-           Inputs args,
-           Report &report) {
+           const Planets &planet) {
 
   std::string function = "output";
   static int iFunction = -1;
@@ -36,7 +34,7 @@ int output(const Neutrals &neutrals,
 
   int iErr = 0;
 
-  int nOutputs = args.get_n_outputs();
+  int nOutputs = input.get_n_outputs();
   static std::vector<OutputContainer> AllOutputContainers;
 
   if (IsFirstTime) {
@@ -53,20 +51,20 @@ int output(const Neutrals &neutrals,
     IsFirstTime = false;
   }
 
-  report.student_checker_function_name(args.get_is_student(),
-                                       args.get_student_name(),
+  report.student_checker_function_name(input.get_is_student(),
+                                       input.get_student_name(),
                                        3, "");
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+    if (time.check_time_gate(input.get_dt_output(iOutput))) {
 
       // ------------------------------------------------------------
       // Store time in all of the files:
 
       AllOutputContainers[iOutput].set_time(time.get_current());
 
-      std::string type_output = args.get_type_output(iOutput);
+      std::string type_output = input.get_type_output(iOutput);
 
       // ------------------------------------------------------------
       // Put Lon, Lat, Alt into all output containers:
@@ -127,7 +125,7 @@ int output(const Neutrals &neutrals,
                        neutrals.temperature_unit,
                        neutrals.temperature_scgc);
 
-      // Neutral Winds:
+      // Bulk Neutral Winds:
       if (type_output == "neutrals" ||
           type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
@@ -135,6 +133,16 @@ int output(const Neutrals &neutrals,
           store_variable(neutrals.velocity_name[iDir],
                          neutrals.velocity_unit,
                          neutrals.velocity_vcgc[iDir]);
+
+      // Neutral Species Winds:
+      if (type_output == "neutrals")
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+	  for (int iDir = 0; iDir < 3; iDir++)
+	    AllOutputContainers[iOutput].
+	      store_variable(neutrals.species[iSpecies].cName + " " +
+			     neutrals.velocity_name[iDir],
+			     neutrals.velocity_unit,
+			     neutrals.species[iSpecies].velocity_vcgc[iDir]);
 
       // Ion Densities:
       if (type_output == "ions" ||
@@ -176,6 +184,36 @@ int output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable(ions.potential_name,
                                                     ions.potential_unit,
                                                     ions.potential_scgc);
+                        
+      if (type_output == "gravity"){
+        AllOutputContainers[iOutput].store_variable("glat",
+                                                    "grav Latitude",
+                                                    "degrees",
+                                                    grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("glon",
+                                                    "grav Longitude",
+                                                    "degrees",
+                                                    grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("lt",
+                                                    "Local Time",
+                                                    "hours",
+                                                    grid.geoLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Geast",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Gnorth",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Gvertical",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gpotential",
+                                                    "m^2/s^2",
+                                                    grid.gravity_potential_scgc);
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "m",
+                                                    grid.radius_scgc);   
+      }
 
       if (type_output == "bfield") {
         AllOutputContainers[iOutput].store_variable("mlat",
@@ -201,6 +239,33 @@ int output(const Neutrals &neutrals,
                                                     grid.bfield_vcgc[2]);
       }
 
+      // Thermal:
+      if (type_output == "therm") {
+        AllOutputContainers[iOutput].store_variable("O Rad Cooling",
+                                                    "[O] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.O_cool_scgc);
+        AllOutputContainers[iOutput].store_variable("NO Rad Cooling",
+                                                    "[NO] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.NO_cool_scgc);
+      }
+
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("Cent Acc East",
+                                                    "Logitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc North",
+                                                    "Latitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Cent Acc Vert",
+                                                    "Radial Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
+      }
+
       // ------------------------------------------------------------
       // Set output file names
 
@@ -218,17 +283,27 @@ int output(const Neutrals &neutrals,
       if (type_output == "bfield")
         filename = "3DBFI_";
 
+      if (type_output == "moment")
+        filename = "3DMMT_";
+
+      if (type_output == "gravity")
+        filename = "3DGRA_";
+
+      if (type_output == "moment")
+        filename = "3DMMT_";
+
       if (type_output == "corners")
         filename = "3DCOR_";
+
+      if (type_output == "therm")
+        filename = "3DTHR_";
 
       filename = filename + time.get_YMD_HMS();
 
       if (nMembers > 1)
         filename = filename + "_" + cMember;
 
-
       filename = filename + "_" + cGrid;
-
 
       report.print(0, "Writing file : " + filename);
       AllOutputContainers[iOutput].set_filename(filename);

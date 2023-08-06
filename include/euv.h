@@ -74,31 +74,58 @@ public:
   /// EUVAC model linear coefficients (2):
   std::vector<float> euvac_afac;
 
+  /// HFG model linear coefficients (1-3):
+  std::vector<float> solomon_hfg_c1;
+  std::vector<float> solomon_hfg_c2;
+  std::vector<float> solomon_hfg_fref;
+  
+  /// NEUVAC model linear coefficients (1-3):
+  std::vector<float> neuvac_s1;
+  std::vector<float> neuvac_s2;
+  std::vector<float> neuvac_s3;
+
+  /// NEUVAC model powers (1-2):
+  std::vector<float> neuvac_p1;
+  std::vector<float> neuvac_p2;
+
+  /// NEUVAC model intercept:
+  std::vector<float> neuvac_int;
+  
   // --------------------------------------------------------------------
   // Functions:
 
   /**********************************************************************
      \brief Initialize the Euv class
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  Euv(Inputs args, Report report);
+  Euv();
 
   /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a
      \param time The times within the model (dt is needed)
      \param indices Need the F107 and F107a
-     \param report allow reporting to occur
    **/
-  int euvac(Times time, Indices indices, Report &report);
+  int euvac(Times time, Indices indices);
+
+ /**********************************************************************
+     \brief Compute the EUV spectrum given F107 and F107a
+     \param time The times within the model (dt is needed)
+     \param indices Need the F107 and F107a
+   **/
+  int solomon_hfg(Times time, Indices indices);
+  
+  /**********************************************************************
+     \brief Compute the EUV spectrum given F107 and F107a (new version)
+     \param time The times within the model (dt is needed)
+     \param indices Need the F107 and F107a
+   **/
+  int neuvac(Times time, Indices indices);
 
   /**********************************************************************
      \brief Scale the EUV spectrum given the star - planet distance
      \param planet needed to compute the star - planet distance
      \param time Needed to compute orbital position around star
-     \param report allow reporting to occur
    **/
-  int scale_from_1au(Planets planet, Times time, Report report);
+  int scale_from_1au(Planets planet, Times time);
 
   /**********************************************************************
      \brief Pairs rows in the EUV CSV file with neutral and ions
@@ -111,9 +138,9 @@ public:
 
      \param neutrals Needs names of the neutrals, stores lines in Neutrals
      \param ions Needs names of the ions
-     \param report allow reporting to occur
    **/
-  bool pair_euv(Neutrals &neutrals, Ions ions, Report report);
+  bool pair_euv(Neutrals &neutrals,
+		Ions ions);
 
   /**********************************************************************
      \brief Check to see if internal state of class is ok
@@ -129,11 +156,8 @@ private:
      Read in the EUV CSV file that describes all of the wavelengths and
      cross sections (and any other EUV - related things that are a 
      function of wavelength)
-
-     \param input info about how user has configured things
-     \param report allow reporting to occur
    **/
-  bool read_file(Inputs args, Report report);
+  bool read_file();
 
   /**********************************************************************
      \brief Interprets the EUV CSV rows and returns the relevant row
@@ -143,13 +167,11 @@ private:
 
      \param item The string value to search for in the first column
      \param item2 If not blank, the string value to search for in the 2nd col.
-     \return values The values in the CSV row that matches the item (and item2) 
-     \param report Allow reporting to occur
+     \return values The values in the CSV row that matches the item (and item2)
    **/
   bool slot_euv(std::string item,
 		std::string item2,
-		std::vector<float> &values,
-		Report report);
+		std::vector<float> &values);
 
   /// An internal variable to hold the state of the class
   bool IsOk;

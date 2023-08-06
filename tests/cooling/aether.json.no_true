@@ -1,0 +1,27 @@
+{
+    "Debug" : {
+        "iVerbose" : 0,
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 16,
+	"nLats" : 16,
+	"nAlts" : 40 },
+	 
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "Outputs" : {
+        "type" : ["states", "therm"],
+        "dt" : [600, 600] },
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : false,
+
+    "Sources" : {
+	    "Neutrals" : {
+	        "NO_cool" : true,
+	        "O_cool": false } }
+}   

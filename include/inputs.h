@@ -11,12 +11,14 @@ class Inputs {
 
 public:
 
-  Inputs(Times &time, Report &report);
-  int read(Times &time, Report &report);
-  bool read_inputs_json(Times &time, Report &report);
+  Inputs() {}
+  Inputs(Times &time);
+  int read(Times &time);
+  bool read_inputs_json(Times &time);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
+  bool get_include_photoelectrons();
   precision_t get_dt_report();
   precision_t get_n_outputs();
   precision_t get_dt_output(int iOutput);
@@ -35,6 +37,11 @@ public:
   std::string get_planet_species_file();
   std::string get_collision_file();
   bool get_do_calc_bulk_ion_temp();
+  precision_t get_eddy_coef();
+  precision_t get_eddy_bottom();
+  precision_t get_eddy_top();
+  bool get_use_eddy_momentum();
+  bool get_use_eddy_energy();
   std::string get_bfield_type();
   std::string get_electrodynamics_file();
   bool get_do_restart();
@@ -45,9 +52,16 @@ public:
   int get_updated_seed();
   void set_seed(int seed);
   bool write_restart();
-  json get_perturb_values();  
+  json get_perturb_values(); 
+  bool get_do_lat_dependent_radius();
+  bool get_do_J2();
 
   bool get_is_cubesphere();
+
+  bool get_NO_cooling();
+  bool get_O_cooling();
+
+  bool get_cent_acc();
 
   std::string get_student_name();
   bool get_is_student();
@@ -157,5 +171,7 @@ private:
 
   std::vector<std::string> missing_settings;
 };
+
+extern Inputs input;
 
 #endif  // INCLUDE_INPUTS_H_

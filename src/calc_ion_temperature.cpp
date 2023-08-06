@@ -12,7 +12,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   int64_t iIon;
 
@@ -37,7 +37,7 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
-                                Times time, Inputs input, Report &report) {
+                                Times time) {
 
   std::string function = "Ions::calc_ion_temperature";
   static int iFunction = -1;
@@ -60,6 +60,14 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Get the time step size
   precision_t dt = time.get_dt();
 
+  for (iIon = 0; iIon < nSpecs; iIon++)
+    species[iIon].temperature_scgc =
+      neutrals.temperature_scgc;
+  temperature_scgc = neutrals.temperature_scgc;
+
+  report.exit(function);
+  return;
+  
   // Loop over all species or assume only bulk calculation
   if (input.get_do_calc_bulk_ion_temp())
     // First ion species only, currently is O+
@@ -74,7 +82,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   // Loop over all species or assume only bulk calculation
   for (iIon = 0; iIon < nSpecs; iIon++) {
-
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
 
@@ -84,7 +91,9 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);
         lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
                    / species[iIon].nu_ion_ion[iIon] / 8.0;
-        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
+        lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
+                   / species[iIon].nu_ion_ion[iIon] / 8.0;
+	front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
                    / cKB / 3.0;
         dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
 
