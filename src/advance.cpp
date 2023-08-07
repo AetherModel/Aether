@@ -96,15 +96,6 @@ int advance(Planets &planet,
     time.restart_file(input.get_restartout_dir(), DoWrite);
   }
 
-  if(input.get_nan_test()){
-      neutrals.nan_test(input.get_nan_test_variable());
-      ions.nan_test(input.get_nan_test_variable());
-  }
-
-  if(input.get_check_for_nans()){
-    neutrals.check_for_nonfinites(report);
-    ions.check_for_nonfinites(report);
-  }
 
   iErr = output(neutrals, ions, gGrid, time, planet);
 

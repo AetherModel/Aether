@@ -90,6 +90,16 @@ int main() {
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
 
+    if(input.get_nan_test()){
+      neutrals.nan_test(input.get_nan_test_variable());
+      ions.nan_test(input.get_nan_test_variable());
+    }
+
+    if(input.get_check_for_nans()){
+      neutrals.check_for_nonfinites(report);
+      ions.check_for_nonfinites(report);
+    }
+
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions);
 
