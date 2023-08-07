@@ -132,7 +132,6 @@ int main() {
     // be made into a library and run externally.
 
     Logfile logfile(indices);
-
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);

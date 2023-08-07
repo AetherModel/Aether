@@ -99,7 +99,7 @@ int advance(Planets &planet,
   if(input.get_nan_test()){
       neutrals.nan_test(input.get_nan_test_variable());
       ions.nan_test(input.get_nan_test_variable());
-    }
+  }
 
   if(input.get_check_for_nans()){
     neutrals.check_for_nonfinites(report);

@@ -311,6 +311,20 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
   return get_min_mean_max(find_species_density(name, neutrals, ions));
 }
 
+//-------------------------------------------------------------------------------------
+//Checks if armacube has all finite values, if not, adds them to errors in report class
+//-------------------------------------------------------------------------------------
+
+std::vector<int> cube_to_lla(arma_cube cube, int index){
+  arma::uword x = cube.n_rows;
+  arma::uword y = cube.n_cols;
+  int altitude = index/(x*y);
+  int remainder = index%(x*y);
+  int lattitude = remainder/y;
+  int longitude = remainder%y;
+  return std::vector<int> {lattitude, longitude, altitude};
+}
+
 bool all_finite(std::vector<arma_cube> cubes, std::string name, Report &report){
   bool no_nans = true;
   for(int i=0; i<cubes.size(); ++i){
