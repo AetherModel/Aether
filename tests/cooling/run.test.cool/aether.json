@@ -22,6 +22,6 @@
 
     "Sources" : {
 	    "Neutrals" : {
-	        "NO_cool" : false,
+	        "NO_cool" : true,
 	        "O_cool": true } }
 }
