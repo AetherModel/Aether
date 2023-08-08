@@ -580,6 +580,29 @@ void output_binary_3d(std::ofstream &binary,
   free(tmp_s3gc);
 }
 
+//----------------------------------------------------------------------
+// Read a binary file into a arma_cube.
+// ----------------------------------------------------------------------
+
+void input_binary_3d(std::ofstream &binary,
+                      arma_cube value) {
+
+  // Read in all the elements?
+
+  int64_t nX = value.n_rows;
+  int64_t nY = value.n_cols;
+  int64_t nZ = value.n_slices;
+  int64_t iX, iY, iZ, index;
+
+  int64_t nPts = nX * nY * nZ;
+  int64_t iTotalSize = nPts * sizeof(float);
+
+  // Create a temporary c-array to store all the elements?
+  float *tmp_s3gc;
+
+
+}
+
 // -----------------------------------------------------------------------------
 // dump the contents of the container out into a binary file
 // -----------------------------------------------------------------------------
@@ -606,6 +629,34 @@ int OutputContainer::write_container_binary() {
   }
 
   return iErr;
+}
+
+// -----------------------------------------------------------------------------
+// dump the contents of the container out into a binary file
+// -----------------------------------------------------------------------------
+
+int OutputContainer::read_container_binary() { //look at netcdf ex?
+
+  // int iErr = 0;
+  // std::ofstream binary;
+  // std::string whole_filename = directory + "/" + filename + ".bin";
+
+  // try {
+  //   binary.open(whole_filename, ios::binary | ios::out);
+
+  //   int64_t nVars = elements.size();
+
+  //   for (int64_t iVar = 0; iVar < nVars; iVar++)
+  //     output_binary_3d(binary, elements[iVar].value);
+
+  //   return iErr;
+  // } catch (...) {
+  //   std::cout << "Error writing header file : "
+  //             << whole_filename << "\n";
+  //   iErr = 1;
+  // }
+
+  // return iErr;
 }
 
 

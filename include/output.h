@@ -133,6 +133,11 @@ class OutputContainer {
      \brief write a binary file with the information in the container
    **/
   int write_container_binary();
+
+  /**********************************************************************
+     \brief read a binary file - put the information in the container
+   **/
+  int read_container_binary();
   
   /**********************************************************************
      \brief write a netcdf file with the information in the container
@@ -233,6 +238,9 @@ int output(const Neutrals &neutrals,
 	   Report &report);
 
 void output_binary_3d(std::ofstream &binary,
+		      arma_cube value);
+
+void read_binary_3d(std::ofstream &binary,
 		      arma_cube value);
 
 #endif  // INCLUDE_OUTPUT_H_
