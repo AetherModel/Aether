@@ -9,9 +9,9 @@
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
     "dt" : 10.0,
-    "check_for_nans" : false,
+    "check_for_nans" : true,
     "nan_test" : {
-        "test" : true,
+        "insert" : false,
         "variable" : "temperature_scgc"}
     },
 

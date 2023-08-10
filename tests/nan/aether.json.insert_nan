@@ -11,7 +11,7 @@
     "dt" : 10.0,
     "check_for_nans" : true,
     "nan_test" : {
-        "test" : true,
+        "insert" : true,
         "variable" : "temperature_scgc"}
     },
 

@@ -770,7 +770,7 @@ bool Inputs::get_check_for_nans() {
 
 
 bool Inputs::get_nan_test() {
-  return settings.at("Debug").at("nan_test").at("test");
+  return settings.at("Debug").at("nan_test").at("insert");
 }
 
 
