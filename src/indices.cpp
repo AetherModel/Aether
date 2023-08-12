@@ -12,7 +12,7 @@
 // Initialize the Indices class
 // ----------------------------------------------------------------------
 
-Indices::Indices(Inputs args) {
+Indices::Indices() {
 
   // Initialize the all_indices_arrays storage structure:
 
@@ -21,7 +21,7 @@ Indices::Indices(Inputs args) {
   single_index.nValues = 0;
   single_index.name = "";
 
-  std::string lookup_file = args.get_indices_lookup_file();
+  std::string lookup_file = input.get_indices_lookup_file();
   indices_lookup = read_json(lookup_file);
 
   // This is a bit wonky, but we are going to assign names to the indices
@@ -56,48 +56,46 @@ Indices::Indices(Inputs args) {
 //   - OMNIWeb files
 // ----------------------------------------------------------------------
 
-bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
+bool read_and_store_indices(Indices &indices) {
 
   bool DidWork = true;
   std::string function = "read_and_store_indices";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
   // ---------------------------------------------------
   // Read F10.7 file (if set):
   // ---------------------------------------------------
 
-  std::string f107_file = args.get_f107_file();
+
+  std::string f107_file = input.get_f107_file();
 
   if (f107_file.length() > 0) {
     report.print(1, "Reading F107 File : " + f107_file);
     index_file_output_struct f107_contents;
-    f107_contents = read_f107_file(f107_file, indices, report);
-
+    f107_contents = read_f107_file(f107_file, indices);
     if (f107_contents.nTimes > 0)
       indices.set_f107(f107_contents);
-
     else {
       DidWork = false;
-      std::cout << "ERROR in reading f107 file!!!\n";
+      report.error("ERROR in reading f107 file!!!\n");
+      return DidWork;
     }
   }
-
   // ---------------------------------------------------
   // Read in OMNIWeb files.
   // The user can enter as many as they would like:
   // ---------------------------------------------------
 
-  int nFiles = args.get_number_of_omniweb_files();
+  int nFiles = input.get_number_of_omniweb_files();
 
   if (nFiles > 0) {
-    std::vector<std::string> omniweb_files = args.get_omniweb_files();
+    std::vector<std::string> omniweb_files = input.get_omniweb_files();
 
     for (int iFile = 0; iFile < nFiles; iFile++) {
       report.print(1, "Reading OMNIWEB File : " + omniweb_files[iFile]);
 
       index_file_output_struct file_contents;
-      file_contents = read_omni_file(omniweb_files[iFile], indices, report);
+      file_contents = read_omni_file(omniweb_files[iFile], indices);
 
       if (report.test_verbose(3))
         print_index_file_output_struct(file_contents);
@@ -110,11 +108,14 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
                                       file_contents.times,
                                       file_contents.values[iVar],
                                       file_contents.missing_values[iVar]);
+          if(!DidWork){
+            report.error("Error setting indices index!!!");
+            return DidWork;
+          }
         }  // if
       }  // for iVar
     }  // for iFile
   }  // if nFiles
-
   report.exit(function);
   return DidWork;
 }
@@ -123,12 +124,12 @@ bool read_and_store_indices(Indices &indices, Inputs args, Report &report) {
 // Perturb the indices that the user requested
 // ----------------------------------------------------------------------
 
-bool Indices::perturb(Inputs args, Report &report) {
+bool Indices::perturb() {
   bool DidWork = true;
   bool DoReport = false;
   int64_t iDebug = 2;
 
-  json perturb_values = args.get_perturb_values();
+  json perturb_values = input.get_perturb_values();
 
   if (!perturb_values.empty()) {
     // User has entered some perturb values
@@ -145,7 +146,7 @@ bool Indices::perturb(Inputs args, Report &report) {
         int iIndex = lookup_index_id(name);
 
         if (iIndex > -1) {
-          int seed = args.get_updated_seed();
+          int seed = input.get_updated_seed();
 
           if (report.test_verbose(iDebug))
             std::cout << "Index found: " << iIndex
@@ -281,7 +282,6 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
             average_time,
             average_f107,
             f107_contents.missing_values[0]);
-
   return;
 }
 

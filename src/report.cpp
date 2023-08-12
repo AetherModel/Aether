@@ -8,6 +8,8 @@
 
 #include "aether.h"
 
+Report report;
+
 // -----------------------------------------------------------------------
 // Initialize class Report
 // -----------------------------------------------------------------------
@@ -138,6 +140,7 @@ void Report::times() {
   if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
     float min_timing = entries[0].timing_total * TimingPercent / 100.0;
+    std::cout << "  --> Setting min timing to : " << min_timing << "\n";
 
     for (int i = 0; i < nEntries; i++) {
       if (entries[i].iLevel <= iTimingDepth &&
@@ -165,6 +168,27 @@ void Report::times() {
 void Report::print(int iLevel, std::string output_string) {
   if (test_verbose(iLevel))
     std::cout << output_string << "\n";
+}
+
+// -----------------------------------------------------------------------
+// Adds function and error to error_list
+// -----------------------------------------------------------------------
+
+void Report::error(std::string error_in) {
+  error_struct new_error;
+  new_error.func = current_entry;
+  new_error.error = error_in;
+  error_list.push_back(new_error);
+}
+
+// -----------------------------------------------------------------------
+// Reports list of errors
+// -----------------------------------------------------------------------
+
+void Report::report_errors() {
+  for (int i = 0; i<error_list.size(); i++){
+    std::cout << error_list[i].func << " : " << error_list[i].error << "\n";
+  }
 }
 
 // -----------------------------------------------------------------------

@@ -33,10 +33,8 @@ extern MPI_Comm aether_comm;
 
 /**********************************************************************
   \brief initialize mpi and figure out ensembles and grid blocks
-  \param input info about how user has configured things
-  \param report allow reporting to occur
 **/
-bool init_parallel(Inputs &input, Quadtree &quadtree, Report &report);
+bool init_parallel(Quadtree &quadtree);
 
 /**********************************************************************
   \brief Pack variables for message passing

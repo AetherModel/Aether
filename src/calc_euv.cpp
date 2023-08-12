@@ -19,9 +19,7 @@ int calc_euv(Planets planet,
              Euv &euv,
              Neutrals &neutrals,
              Ions &ions,
-             Indices indices,
-             Inputs input,
-             Report &report) {
+             Indices indices) {
 
   int iErr = 0;
 
@@ -32,21 +30,21 @@ int calc_euv(Planets planet,
 
     if (input.get_is_student())
       report.print(-1, "(2) What function is this " +
-                   input.get_student_name() + "?");
+		    input.get_student_name() + "?");
 
     // Chapman integrals for EUV energy deposition:
-    neutrals.calc_chapman(grid, report);
+    neutrals.calc_chapman(grid);
 
     if (input.get_euv_model() == "euvac")
-      iErr = euv.euvac(time, indices, report);
+      iErr = euv.euvac(time, indices);
     else if (input.get_euv_model() == "neuvac")
-      iErr = euv.neuvac(time, indices, report);
+      iErr = euv.neuvac(time, indices);
     else if (input.get_euv_model() == "hfg")
-      iErr = euv.solomon_hfg(time, indices, report);
+      iErr = euv.solomon_hfg(time, indices);
     
-    iErr = euv.scale_from_1au(planet, time, report);
+    iErr = euv.scale_from_1au(planet, time);
 
-    calc_ionization_heating(euv, neutrals, ions, report);
+    calc_ionization_heating(euv, neutrals, ions);
 
     report.exit(function);
   }
@@ -60,8 +58,7 @@ int calc_euv(Planets planet,
 
 void calc_ionization_heating(Euv euv,
                              Neutrals &neutrals,
-                             Ions &ions,
-                             Report &report) {
+                             Ions &ions) {
 
   int64_t iAlt, iWave, iSpecies;
   int i_, iIon, iIonization;

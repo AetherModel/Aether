@@ -82,39 +82,38 @@ class Chemistry {
   int64_t nReactions;
 
   Chemistry(Neutrals neutrals,
-            Ions ions,
-            Inputs args,
-            Report &report);
+            Ions ions);
 
   void calc_chemistry(Neutrals &neutrals,
                       Ions &ions,
                       Times time,
-                      Grid grid,
-                      Report &report);
+                      Grid grid);
 
   void calc_chemical_sources(Neutrals &neutrals,
-                             Ions &ions,
-                             Report &report);
+                             Ions &ions);
 
  private:
+  bool search(std::string name, 
+              json &headers, 
+              std::vector<std::string> &error);
+
+  bool check_chemistry_file(json &headers, 
+                            std::vector<std::vector<std::string>> csv, 
+                            Report &report);
 
   int read_chemistry_file(Neutrals neutrals,
-                          Ions ions,
-                          Inputs args,
-                          Report &report);
+                          Ions ions);
 
   reaction_type interpret_reaction_line(Neutrals neutrals,
                                         Ions ions,
                                         std::vector<std::string> line,
-					json headers,
-                                        Report &report);
+					json headers);
 
   void find_species_id(std::string name,
                        Neutrals neutrals,
                        Ions ions,
                        int &id_,
-                       bool &IsNeutral,
-                       Report &report);
+                       bool &IsNeutral);
 
   void display_reaction(reaction_type reaction);
 };

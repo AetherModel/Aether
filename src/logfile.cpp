@@ -219,9 +219,7 @@ void Satellite::print() {
 // Initialize the Logfile
 //-------------------------------------------------------------
 
-Logfile::Logfile(Indices &indices,
-                 Inputs &input,
-                 Report &report) {
+Logfile::Logfile(Indices &indices) {
 
     // Read the settings for general log file and satellites
     // Write the header to the general logfile
@@ -325,8 +323,7 @@ bool Logfile::write_logfile(Indices &indices,
                             Neutrals &neutrals,
                             Ions &ions,
                             Grid &gGrid,
-                            Times &time,
-                            Report &report) {
+                            Times &time) {
 
     std::string function = "Logfile::write_logfile";
     static int iFunction = -1;
@@ -365,6 +362,7 @@ bool Logfile::write_logfile(Indices &indices,
         // Set the interpolation coefficients using the location of satellites
         if (!gGrid.set_interpolation_coefs(lons, lats, alts)) {
             std::cout << "Logfile: Can not set interpolation coefficients!\n";
+	    report.exit(function);
             return false;
         }
 
@@ -376,7 +374,7 @@ bool Logfile::write_logfile(Indices &indices,
 
         // Specified variables
         for (auto &it : species) {
-            const arma_cube &density = find_species_density(it, neutrals, ions, report);
+            const arma_cube &density = find_species_density(it, neutrals, ions);
             interp_result = gGrid.get_interpolation_values(density);
             for (size_t i = 0; i < interp_result.size(); ++i) {
                 values_sat[i].push_back(interp_result[i]);
@@ -403,6 +401,7 @@ bool Logfile::write_logfile(Indices &indices,
         // Report error if the file stream is not open
         if (!logfilestream.is_open()) {
             std::cout << "Logfile: Can not open output file stream!\n";
+	    report.exit(function);
             return false;
         }
 
@@ -419,7 +418,7 @@ bool Logfile::write_logfile(Indices &indices,
                                                        lla[2]));
         // Specified variables
         for (auto it : species) {
-            min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
+            min_mean_max = get_min_mean_max_density(it, neutrals, ions);
             values_log.insert(values_log.end(),
                               min_mean_max.begin(),
                               min_mean_max.end());

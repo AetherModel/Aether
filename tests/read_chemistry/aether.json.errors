@@ -1,0 +1,24 @@
+
+{
+
+    "Ensembles" : {
+	"nMembers" : 1},
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 50},
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+    
+    "EndTime" : [2011, 3, 20, 0, 1, 0],
+    "ChemistryFile" : "./chemistry_check.csv",
+
+    "DoCalcBulkIonTemp" : false
+}

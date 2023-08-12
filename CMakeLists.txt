@@ -12,6 +12,8 @@ else()
    set(MSIS_FILES )
 endif()
 
+set(CMAKE_CXX_STANDARD 11)
+
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)

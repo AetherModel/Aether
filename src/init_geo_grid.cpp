@@ -10,9 +10,7 @@
 // Create connectivity between the nodes for message passing for cubesphere
 // ----------------------------------------------------------------------
 
-void Grid::create_cubesphere_connection(Quadtree quadtree,
-                                        Inputs input,
-                                        Report &report) {
+void Grid::create_cubesphere_connection(Quadtree quadtree) {
 
   std::string function = "Grid::create_cubesphere_connection";
   static int iFunction = -1;
@@ -317,9 +315,7 @@ void transformation_metrics(Quadtree quadtree,
 //    - if not restarting, initialize the grid
 // ----------------------------------------------------------------------
 
-void Grid::create_cubesphere_grid(Quadtree quadtree,
-                                  Inputs input,
-                                  Report &report) {
+void Grid::create_cubesphere_grid(Quadtree quadtree) {
 
   std::string function = "Grid::create_cubesphere_grid";
   static int iFunction = -1;
@@ -511,9 +507,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
 // Create connectivity between the nodes for message passing for sphere
 // ----------------------------------------------------------------------
 
-void Grid::create_sphere_connection(Quadtree quadtree,
-                                    Inputs input,
-                                    Report &report) {
+void Grid::create_sphere_connection(Quadtree quadtree) {
 
   std::string function = "Grid::create_sphere_connection";
   static int iFunction = -1;
@@ -601,9 +595,7 @@ void Grid::create_sphere_connection(Quadtree quadtree,
 // Create a spherical grid with lon/lat/alt coordinates
 // ----------------------------------------------------------------------
 
-void Grid::create_sphere_grid(Quadtree quadtree,
-                              Inputs input,
-                              Report &report) {
+void Grid::create_sphere_grid(Quadtree quadtree) {
 
   std::string function = "Grid::create_simple_lat_lon_alt_grid";
   static int iFunction = -1;
@@ -708,7 +700,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
 // Create a spherical grid with lon/lat/alt coordinates
 // ----------------------------------------------------------------------
 
-void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
+void Grid::create_altitudes(Planets planet) {
 
   std::string function = "Grid::create_altitudes";
   static int iFunction = -1;
@@ -936,9 +928,7 @@ void Grid::correct_xy_grid(Planets planet, Report &report) {
 // ----------------------------------------------------------------------
 
 bool Grid::init_geo_grid(Quadtree quadtree,
-                         Planets planet,
-                         Inputs input,
-                         Report &report) {
+                         Planets planet) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
@@ -950,30 +940,36 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   IsCubeSphereGrid = input.get_is_cubesphere();
 
   if (input.get_is_cubesphere())
-    create_cubesphere_connection(quadtree, input, report);
+    create_cubesphere_connection(quadtree);
   else
-    create_sphere_connection(quadtree, input, report);
+    create_sphere_connection(quadtree);
 
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
     if (input.get_is_cubesphere())
-      create_cubesphere_grid(quadtree, input, report);
+      create_cubesphere_grid(quadtree);
     else
-      create_sphere_grid(quadtree, input, report);
+      create_sphere_grid(quadtree);
 
     MPI_Barrier(aether_comm);
-    create_altitudes(planet, input, report);
+    create_altitudes(planet);
 
     DidWork = write_restart(input.get_restartout_dir());
   }
 
-  // Calculate the radius, etc:
-  fill_grid_radius(planet, report);
+  // Calculate the radius (for spherical or non-spherical)
+  fill_grid_radius(planet);
+  // Calculate grid spacing
+  calc_grid_spacing(planet);
+  //calculate radial unit vector (for spherical or oblate planet)
+  calc_rad_unit(planet);
+  // Calculate gravity (including J2 term, if desired)
+  calc_gravity(planet);
 
   // Calculate magnetic field and magnetic coordinates:
-  fill_grid_bfield(planet, input, report);
+  fill_grid_bfield(planet);
 
   // Correct the reference grid with correct length scale: 
   // (with R = actual radius)
@@ -983,8 +979,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
-                                       input.get_student_name(),
-                                       4, "");
+				       input.get_student_name(),
+				       4, "");
 
   report.exit(function);
   return DidWork;

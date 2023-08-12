@@ -24,6 +24,12 @@ void display_vector(arma_vec vec);
 
 bool sync_across_all_procs(bool value);
 
+// ----------------------------------------------------------------------------
+// Calculate the average value across all processors
+// ----------------------------------------------------------------------------
+
+precision_t sync_mean_across_all_procs(precision_t value);
+
 // -----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // -----------------------------------------------------------------------------
@@ -87,8 +93,7 @@ std::vector<precision_t> get_min_mean_max(const arma_cube &value);
 
 const arma_cube& find_species_density(const std::string &name,
                                       Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report);
+                                      Ions &ions);
 
 //-------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
@@ -96,8 +101,7 @@ const arma_cube& find_species_density(const std::string &name,
 
 std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
-                                                  Ions &ions,
-                                                  Report &report);
+                                                  Ions &ions);
 
 //-------------------------------------------------------------
 // Checks whether two arma vectors are approximately equal

@@ -12,7 +12,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   int64_t iIon;
 
@@ -37,7 +37,7 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
-                                Times time, Inputs input, Report &report) {
+                                Times time) {
 
   std::string function = "Ions::calc_ion_temperature";
   static int iFunction = -1;
@@ -65,6 +65,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       neutrals.temperature_scgc;
   temperature_scgc = neutrals.temperature_scgc;
 
+  report.exit(function);
   return;
   
   // Loop over all species or assume only bulk calculation
@@ -75,8 +76,8 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     nSpecs = nSpecies;
 
   if (report.test_verbose(4)) {
-    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp()
-              << " so 'number of ions' is " << nSpecs << "\n";
+    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp() ? "true" : "false";
+    std::cout << " so 'number of ions' is " << nSpecs << "\n";
   }
 
   // Loop over all species or assume only bulk calculation

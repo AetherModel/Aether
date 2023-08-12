@@ -104,6 +104,13 @@ public:
    **/
   void print(int iLevel, std::string output_string);
 
+
+  //Adds function and error to error_list
+  void error(std::string error_in);
+
+  //Reports list of errors
+  void report_errors();
+
   /**************************************************************
    \brief Returns 1 if iLevel <= verbose level of code, 0 otherwise
    \param iLevel test against verbose level of the code
@@ -234,6 +241,19 @@ private:
 
   /// Report when leaving a function
   bool DoReportOnExit = true;
+
+  /// Information related to each error is in struct
+  struct error_struct {
+    /// name of the function causing the error
+    std::string func;
+    /// error message
+    std::string error;
+  };
+
+  //Vector of error structs
+  std::vector<error_struct> error_list;
 };
+
+extern Report report;
 
 #endif  // INCLUDE_REPORT_H_

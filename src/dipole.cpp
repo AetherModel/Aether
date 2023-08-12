@@ -15,9 +15,7 @@ bfield_info_type get_dipole(precision_t lon,
                             precision_t lat,
                             precision_t alt,
                             bool DoDebug,
-                            Planets planet,
-                            Inputs input,
-                            Report &report) {
+                            Planets planet) {
 
   std::string function = "dipole";
   static int iFunction = -1;

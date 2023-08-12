@@ -16,7 +16,7 @@ class Chemistry {
 
  public:
 
-  Chemistry(Inputs args, Report report);
+  Chemistry();
 
   struct reaction_type {
     // Reactions:

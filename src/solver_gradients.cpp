@@ -108,7 +108,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
     gradient.slice(iAlt) =
       (value.slice(iAlt + 1)
        - one_minus_r2.slice(iAlt) % value.slice(iAlt)
-       - grid.dalt_ratio_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
+       - grid.dalt_ratio_sq_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
       (grid.dalt_lower_scgc.slice(iAlt + 1) % (1.0 + grid.dalt_ratio_scgc.slice(
                                                  iAlt)));
 
