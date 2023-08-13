@@ -1,5 +1,7 @@
+#!/bin/sh 
+#
 # Tests for checking for nan
-# !/bin/sh 
+#
 
 rm -rf ./run.test.insert_nan
 cp -R ../../share/run ./run.test.insert_nan
