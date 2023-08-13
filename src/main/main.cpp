@@ -75,9 +75,10 @@ int main() {
     DidWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
     if (!DidWork)
-      throw std::string("init_geo_grid failed!");
-  
+      throw std::string("init_geo_grid failed!");  
 
+    // Calculate centripetal acceleration, since this is a constant
+    // vector on the grid:
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
@@ -89,6 +90,24 @@ int main() {
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
+
+    // -----------------------------------------------------------------
+    // This is a unit test for checking for nans and infinities.
+    // Is simply adds nans and infinities in a few places, then
+    // checks for them to make sure the checking is working
+    // -----------------------------------------------------------------
+    
+    if (input.get_nan_test()) {
+      neutrals.nan_test(input.get_nan_test_variable());
+      ions.nan_test(input.get_nan_test_variable());
+    }
+
+    if (input.get_check_for_nans()) {
+      DidWork = neutrals.check_for_nonfinites();
+      DidWork = ions.check_for_nonfinites();
+    }
+
+    // -----------------------------------------------------------------
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions);
@@ -108,11 +127,12 @@ int main() {
     if (!electrodynamics.is_ok())
       throw std::string("electrodynamics initialization failed!");
 
+    // If the user wants to restart, then get the time of the restart
     if (input.get_do_restart()) {
       report.print(1, "Restarting! Reading time file!");
       DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
       if (!DidWork)
-	      throw std::string("Reading Restart for time Failed!!!\n");
+	throw std::string("Reading Restart for time Failed!!!\n");
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
@@ -132,7 +152,6 @@ int main() {
     // be made into a library and run externally.
 
     Logfile logfile(indices);
-
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);
