@@ -4,6 +4,17 @@
 #ifndef INCLUDE_TOOLS_H_
 #define INCLUDE_TOOLS_H_
 
+// ----------------------------------------------------------------------------
+// Structure for a 2x2 matrix for a cubesphere:
+// ----------------------------------------------------------------------------
+
+struct mat_2x2{
+    arma_mat A11; 
+    arma_mat A12; 
+    arma_mat A21; 
+    arma_mat A22;
+};
+
 // ----------------------------------------------------------------------
 // Display an armadillo vector
 // ----------------------------------------------------------------------
@@ -138,6 +149,38 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
                                                   Ions &ions);
 
+//-------------------------------------------------------------
+// Checks whether two arma vectors are approximately equal
+//-------------------------------------------------------------
+bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol);
+
+//-------------------------------------------------------------
+// Overload col vector function with row vec
+//-------------------------------------------------------------
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t tol);
+
+//-------------------------------------------------------------
+// Checks whether a vector is constant (all values the same)
+// Method uses variance as a factor
+//-------------------------------------------------------------
+bool is_approx_constant(arma_vec &vec, precision_t tol);
+
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &A_inv_mat);
+
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v, mat_2x2 &A_mat);
+
 //-----------------------------------------------------------------------
 // Checks if armacube(s) has all finite values, if not, adds them to
 // errors in report class
@@ -145,7 +188,6 @@ std::vector<precision_t> get_min_mean_max_density(const std::string &name,
 
 bool all_finite(arma_cube cube, std::string name);
 bool all_finite(std::vector<arma_cube> cubes, std::string name);
-
 
 //-----------------------------------------------------------------------
 // Takes an index of an armacube and converts it to latitude,
