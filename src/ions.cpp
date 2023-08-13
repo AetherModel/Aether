@@ -159,46 +159,40 @@ int Ions::read_planet_file(Planets planet) {
 void Ions::nan_test(std::string variable){
   std::vector<int> locations;
   std::string message = ("For Ions " + variable + " ");
-  if (variable == "temperature_scgc"){
+  if (variable == "temperature_scgc") {
     locations = insert_indefinites(temperature_scgc);
     message += print_nan_vector(locations, temperature_scgc);
   }
-  if (variable == "density_scgc"){
+  if (variable == "density_scgc") {
     locations = insert_indefinites(density_scgc);
     message += print_nan_vector(locations, density_scgc);
   }
-  if (variable == "velocity_vcgc"){
-      locations = insert_indefinites(velocity_vcgc[0]);
-      message += "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
-      locations = insert_indefinites(velocity_vcgc[1]);
-      message += "at the y loc " + print_nan_vector(locations, velocity_vcgc[1]);
-      locations = insert_indefinites(velocity_vcgc[2]);
-      message += "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
+  if (variable == "velocity_vcgc") {
+    locations = insert_indefinites(velocity_vcgc[0]);
+    message +=
+      "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
+    locations = insert_indefinites(velocity_vcgc[1]);
+    message +=
+      "at the y loc " + print_nan_vector(locations, velocity_vcgc[1]);
+    locations = insert_indefinites(velocity_vcgc[2]);
+    message +=
+      "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
   }
   std::cout << message;
 }
-
 
 //----------------------------------------------------------------------
 // Checks for nans and +/- infinities in density, temp, and velocity
 //----------------------------------------------------------------------
 
-
-bool Ions::check_for_nonfinites(Report &report){
-  std::string function = "Ions::check_for_non_finites";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
- 
+bool Ions::check_for_nonfinites() {
   bool non_finites_exist = false;
-  if(!all_finite(density_scgc, "density_scgc", report) ||
-       !all_finite(temperature_scgc, "temperature_scgc", report) ||
-       !all_finite(velocity_vcgc, "velocity_vcgc", report)){
+  if (!all_finite(density_scgc, "density_scgc") ||
+      !all_finite(temperature_scgc, "temperature_scgc") ||
+      !all_finite(velocity_vcgc, "velocity_vcgc"))
     non_finites_exist = true;
-  }
-  report.exit(function);
-  if (non_finites_exist){
+  if (non_finites_exist)
     throw std::string("Check for nonfinites failed!!!\n");
-  }
   return non_finites_exist;
 }
 
