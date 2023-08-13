@@ -56,6 +56,10 @@ public:
   bool get_do_lat_dependent_radius();
   bool get_do_J2();
 
+  bool get_check_for_nans();
+  bool get_nan_test();
+  std::string get_nan_test_variable();
+  
   bool get_is_cubesphere();
 
   bool get_NO_cooling();

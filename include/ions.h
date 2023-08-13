@@ -101,7 +101,8 @@ class Ions {
 							     Grid grid);
   void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time);
   void calc_electron_temperature(Neutrals neutrals, Grid grid);
-  
+  bool check_for_nonfinites();
+  void nan_test(std::string variable);
   bool restart_file(std::string dir, bool DoRead);
 };
 #endif  // INCLUDE_IONS_H_
