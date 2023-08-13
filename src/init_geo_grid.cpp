@@ -210,8 +210,8 @@ void transformation_metrics(Quadtree quadtree,
       latp = lat2d(i, j);
       lonp = lon2d(i, j);
       
-      sqrt_g(i, j) = R*R*a/(rref*rref*rref);
-      g = sqrt_g(i,j) * sqrt_g(i,j);
+      sqrt_g(i, j) = R * R * a / (rref * rref * rref);
+      g = sqrt_g(i, j) * sqrt_g(i, j);
 
       // metric tensor with lower indices
       double front_factor = R * R / (rref * rref * rref * rref);
@@ -406,12 +406,17 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   arma_mat g22_upper_left(nLons + 1, nLats);
   arma_mat sqrt_g_left(nLons + 1, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.5,
-                                     lat2d_left, lon2d_left, refx_left, refy_left);
+                                     lat2d_left, lon2d_left,
+				     refx_left, refy_left);
 
-  transformation_metrics(quadtree, lat2d_left, lon2d_left, refx_left, refy_left,
-                          A11_left, A12_left, A21_left, A22_left, A11_inv_left, 
-                          A12_inv_left, A21_inv_left, A22_inv_left, g11_upper_left, 
-                          g12_upper_left, g21_upper_left, g22_upper_left, sqrt_g_left);
+  transformation_metrics(quadtree,
+			 lat2d_left, lon2d_left, refx_left, refy_left,
+			 A11_left, A12_left, A21_left, A22_left,
+			 A11_inv_left, A12_inv_left,
+			 A21_inv_left, A22_inv_left,
+			 g11_upper_left, g12_upper_left,
+			 g21_upper_left, g22_upper_left,
+			 sqrt_g_left);
 
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Left.slice(iAlt) = lon2d_left;
@@ -455,12 +460,17 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   arma_mat sqrt_g_down(nLons, nLats + 1);
 
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.0,
-                                     lat2d_down, lon2d_down, refx_down, refy_down);
+                                     lat2d_down, lon2d_down,
+				     refx_down, refy_down);
                                      
-  transformation_metrics(quadtree, lat2d_down, lon2d_down, refx_down, refy_down,
-                          A11_down, A12_down, A21_down, A22_down, A11_inv_down, 
-                          A12_inv_down, A21_inv_down, A22_inv_down, g11_upper_down, 
-                          g12_upper_down, g21_upper_down, g22_upper_down, sqrt_g_down);
+  transformation_metrics(quadtree,
+			 lat2d_down, lon2d_down, refx_down, refy_down,
+			 A11_down, A12_down, A21_down, A22_down,
+			 A11_inv_down, A12_inv_down,
+			 A21_inv_down, A22_inv_down,
+			 g11_upper_down, g12_upper_down,
+			 g21_upper_down, g22_upper_down,
+			 sqrt_g_down);
                     
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Down.slice(iAlt) = lon2d_down;
@@ -490,7 +500,8 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   arma_mat refx_corner(nLons + 1, nLats + 1);
   arma_mat refy_corner(nLons + 1, nLats + 1);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.0,
-                                     lat2d_corner, lon2d_corner, refx_corner, refy_corner);
+                                     lat2d_corner, lon2d_corner,
+				     refx_corner, refy_corner);
 
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
     geoLon_Corner.slice(iAlt) = lon2d_corner;
@@ -844,7 +855,7 @@ void Grid::create_altitudes(Planets planet) {
 // Assumes radius of planet and altitude are constant
 // ----------------------------------------------------------------------
 
-void Grid::correct_xy_grid(Planets planet, Report &report) {
+void Grid::correct_xy_grid(Planets planet) {
 
   std::string function = "Grid::correct_xy_grid";
   static int iFunction = -1;
@@ -974,7 +985,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   // Correct the reference grid with correct length scale: 
   // (with R = actual radius)
   if (input.get_is_cubesphere()) {
-    correct_xy_grid(planet, report);
+    correct_xy_grid(planet);
   }
 
   // Throw a little message for students:
