@@ -1,18 +1,14 @@
 
 {
-
     "Ensembles" : {
-		"nMembers" : 1},
+	"nMembers" : 1},
 
-	"Debug" : {
+    "Debug" : {
 	"iVerbose" : 0,
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
-    "dt" : 10.0,
-    "check_for_nans" : false,
-    "nan_test" : {
-        "insert" : true,
-        "variable" : "temperature_scgc"}
+	"dt" : 10.0,
+	"check_for_nans" : false
     },
 
     "EndTime" : [2011, 3, 20, 0, 10, 0],
