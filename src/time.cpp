@@ -108,11 +108,13 @@ void Times::calc_dt(precision_t dtNeutral,
                     precision_t dtIon) {
   dt = end - current;
 
-  if (dtNeutral < dt)
-    dt = 0.75 * dtNeutral;
+  double cfl = 0.5;
+  
+  if (cfl * dtNeutral < dt)
+    dt = cfl * dtNeutral;
 
-  if (dtIon < dt)
-    dt = 0.75 * dtIon;
+  if (cfl * dtIon < dt)
+    dt = cfl * dtIon;
 
   dt = sync_min_across_all_procs(dt);
   return;
