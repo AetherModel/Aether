@@ -35,7 +35,8 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
       if (iSpecies == jSpecies)
         continue;
 
-      // temp_dij holds the dij binary coefficients based upon the formulation by Banks and Kokarts.
+      // temp_dij holds the dij binary coefficients based upon the
+      // formulation by Banks and Kokarts.
       // These coefficients demand that:
       // (1) density be in cm^-3 (hence the 1.0e-06) factor below
       // (2) Additionally, the Dij's are in cm^2/s, thus the 1.0e-04 factor
@@ -57,7 +58,8 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     matrix(iSpecies, iSpecies) = 1 + sum(coefmatrix.row(iSpecies));
 
-  // initialize array of each neutral species' accelerations at (iLon, iLat, iAlt):
+  // initialize array of each neutral species' accelerations at
+  // (iLon, iLat, iAlt):
   arma_vec accs(neutrals.nSpecies, fill::zeros);
 
   // Solve system of equations:
@@ -96,8 +98,8 @@ void calc_neutral_friction(Neutrals &neutrals) {
 
           //Put the old velocities into vels:
           for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-            vels(iSpecies) = neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat,
-                             iAlt);
+            vels(iSpecies) =
+	      neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
 
           acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
 
@@ -108,7 +110,7 @@ void calc_neutral_friction(Neutrals &neutrals) {
       } // for long
     } // for lat
   } // for alt
-
+  
   report.exit(function);
   return;
 } //calc_neutral_friction
