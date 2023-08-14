@@ -162,6 +162,20 @@ int Ions::read_planet_file(Planets planet) {
 
 
 // -----------------------------------------------------------------------------
+// Set a floor for ion densities
+// -----------------------------------------------------------------------------
+
+void Ions::set_floor() {
+
+  int iSpecies;
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].density_scgc.clamp(1.0,1e15);
+
+  return;
+}
+
+// -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
 // -----------------------------------------------------------------------------
 

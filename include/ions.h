@@ -90,6 +90,7 @@ class Ions {
   species_chars create_species(Grid grid);
   int read_planet_file(Planets planet);
   void init_ion_temperature(Neutrals neutrals, Grid grid);
+  void set_floor();
   void fill_electrons();
   int get_species_id(std::string name);
   void calc_efield(Grid grid);
