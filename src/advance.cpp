@@ -44,13 +44,23 @@ int advance(Planets &planet,
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
 
-  gGrid.calc_sza(planet, time);
-  neutrals.calc_mass_density();
-  neutrals.calc_specific_heat();
   neutrals.calc_cMax();
   precision_t dtNeutral = neutrals.calc_dt(gGrid);
   precision_t dtIon = 100.0;
   time.calc_dt(dtNeutral, dtIon);
+
+  // ------------------------------------
+  // Do advection first :
+  
+  // Upper BCs requires the scale height to be calculated, so do that
+  // first
+  
+  neutrals.calc_scale_height(gGrid);
+  neutrals.set_bcs(gGrid, time, indices);
+  neutrals.advect_vertical(gGrid, time);
+  
+  // ------------------------------------
+  // Calculate source terms next:
 
   iErr = calc_euv(planet,
                   gGrid,
@@ -79,8 +89,6 @@ int advance(Planets &planet,
   if (input.get_NO_cooling())
     neutrals.calc_NO_cool();
 
-  neutrals.add_sources(time);
-
   neutrals.calc_conduction(gGrid, time);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid);
 
@@ -88,15 +96,8 @@ int advance(Planets &planet,
   calc_ion_collisions(neutrals, ions);
   calc_neutral_friction(neutrals);
 
-  // Upper BCs requires the scale height to be calculated, so do that
-  // first
-  neutrals.calc_scale_height(gGrid);
-  neutrals.set_bcs(gGrid, time, indices);
-  // Need to add a switch for using the vertical solver vs hydrostatic:
-  //neutrals.fill_with_hydrostatic(1, gGrid.get_nZ(), gGrid);
-  neutrals.solver_vertical_rusanov(gGrid, time);
-
-  neutrals.add_sources(time);
+  neutrals.add_sources(time);  
+  
   ions.calc_ion_temperature(neutrals, gGrid, time);
   ions.calc_electron_temperature(neutrals, gGrid);
 
