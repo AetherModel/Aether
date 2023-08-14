@@ -125,13 +125,12 @@ void Neutrals::calc_bulk_velocity() {
 
   for (int64_t iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
-
-    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      velocity_vcgc[iDir] +=
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      velocity_vcgc[iDir] = velocity_vcgc[iDir] +
         species[iSpecies].mass *
         species[iSpecies].density_scgc %
         species[iSpecies].velocity_vcgc[iDir];
-
+    }
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
   }
 
@@ -270,7 +269,7 @@ void Neutrals::calc_cMax() {
 
   int iDir;
 
-  // simply some things, and just take the bulk value for now:
+  // just take the bulk value for now:
 
   if (report.test_verbose(3)) {
     std::cout << "max sound speed : " << sound_scgc.max() << "\n";
