@@ -454,11 +454,18 @@ class Neutrals {
      \brief Vertical advection solver - Rusanov 
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
-     \param input info about how user has configured things
    **/
 
   void solver_vertical_rusanov(Grid grid,
 			       Times time);
+  
+  /**********************************************************************
+     \brief Call the correct vertical advection scheme
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  bool advect_vertical(Grid grid, Times time);
   
 };
 
