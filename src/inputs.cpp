@@ -696,26 +696,25 @@ json Inputs::get_boundary_condition_types() {
 std::string Inputs::get_advection_neutrals_vertical() {
 
   std::string value = "none";
-  
+
   if (settings.contains("Advection"))
     if (settings["Advection"].contains("Neutrals"))
       if (settings["Advection"]["Neutrals"].contains("Vertical"))
-	value = settings["Advection"]["Neutrals"]["Vertical"];
+        value = settings["Advection"]["Neutrals"]["Vertical"];
       else {
-	std::cout << "Error trying to get inputs:\n";
-	std::cout << "  settings['Advection']['Neutrals']['Vertical']\n";
-      }
-    else {
+        std::cout << "Error trying to get inputs:\n";
+        std::cout << "  settings['Advection']['Neutrals']['Vertical']\n";
+      } else {
       std::cout << "Error trying to get inputs:\n";
       std::cout << "  settings['Advection']['Neutrals']\n";
-    }
-  else {
+    } else {
     std::cout << "Error trying to get inputs:\n";
     std::cout << "  settings['Advection']\n";
   }
+
   return value;
 }
-  
+
 
 // --------------------------------------------------------------------------
 // check to see if class is ok

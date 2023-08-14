@@ -12,7 +12,7 @@
 bool Neutrals::advect_vertical(Grid grid, Times time) {
 
   bool didWork = true;
-  
+
   std::string function = "Neutrals::advance_vertical";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -24,10 +24,11 @@ bool Neutrals::advect_vertical(Grid grid, Times time) {
   else {
     std::cout << "Vertical solver not found!\n";
     std::cout << "  ==> Requested : "
-	      << input.get_advection_neutrals_vertical()
-	      << "\n";
+              << input.get_advection_neutrals_vertical()
+              << "\n";
     didWork = false;
   }
+
   report.exit(function);
   return didWork;
 }

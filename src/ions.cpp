@@ -43,7 +43,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 
   // The collision frequencies need the neutrals, so those are
   // initialized in init_ion_temperature.
-  
+
   return tmp;
 }
 
@@ -87,8 +87,10 @@ Ions::Ions(Grid grid, Planets planet) {
   density_scgc.set_size(nLons, nLats, nAlts);
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
   for (int iDir = 0; iDir < 3; iDir++)
     velocity_vcgc[iDir].zeros();
+
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.fill(200.0);
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
@@ -170,7 +172,7 @@ void Ions::set_floor() {
   int iSpecies;
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    species[iSpecies].density_scgc.clamp(1.0,1e15);
+    species[iSpecies].density_scgc.clamp(1.0, 1e15);
 
   return;
 }

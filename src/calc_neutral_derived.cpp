@@ -125,12 +125,14 @@ void Neutrals::calc_bulk_velocity() {
 
   for (int64_t iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
+
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       velocity_vcgc[iDir] = velocity_vcgc[iDir] +
-        species[iSpecies].mass *
-        species[iSpecies].density_scgc %
-        species[iSpecies].velocity_vcgc[iDir];
+                            species[iSpecies].mass *
+                            species[iSpecies].density_scgc %
+                            species[iSpecies].velocity_vcgc[iDir];
     }
+
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
   }
 

@@ -109,7 +109,7 @@ void Times::calc_dt(precision_t dtNeutral,
   dt = end - current;
 
   double cfl = 0.5;
-  
+
   if (cfl * dtNeutral < dt)
     dt = cfl * dtNeutral;
 

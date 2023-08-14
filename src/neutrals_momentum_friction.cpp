@@ -93,30 +93,30 @@ void calc_neutral_friction(Neutrals &neutrals) {
   for (iDir = 0; iDir < 3; iDir++) {
     if (iDir < 2) {
       for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-	neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
+        neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
     } else {
-    
+
       for (iAlt = 0; iAlt < nZs; iAlt++) {
-	for (iLat = 0; iLat < nYs; iLat++) {
-	  for (iLon = 0; iLon < nXs; iLon++) {
-	    vels.zeros();
+        for (iLat = 0; iLat < nYs; iLat++) {
+          for (iLon = 0; iLon < nXs; iLon++) {
+            vels.zeros();
 
-	    //Put the old velocities into vels:
-	    for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-	      vels(iSpecies) =
-		neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
+            //Put the old velocities into vels:
+            for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+              vels(iSpecies) =
+                neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
 
-	    acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
+            acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
 
-	    for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-	      neutrals.species[iSpecies].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
-		acc(iSpecies);
-	  } // for long
-	} // for lat
+            for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+              neutrals.species[iSpecies].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+                acc(iSpecies);
+          } // for long
+        } // for lat
       } // for alt
     } // if iDir
   } // for direction
-    
+
   report.exit(function);
   return;
 } //calc_neutral_friction

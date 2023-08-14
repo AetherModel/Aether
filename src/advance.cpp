@@ -51,14 +51,14 @@ int advance(Planets &planet,
 
   // ------------------------------------
   // Do advection first :
-  
+
   // Upper BCs requires the scale height to be calculated, so do that
   // first
-  
+
   neutrals.calc_scale_height(gGrid);
   neutrals.set_bcs(gGrid, time, indices);
   neutrals.advect_vertical(gGrid, time);
-  
+
   // ------------------------------------
   // Calculate source terms next:
 
@@ -96,8 +96,8 @@ int advance(Planets &planet,
   calc_ion_collisions(neutrals, ions);
   calc_neutral_friction(neutrals);
 
-  neutrals.add_sources(time);  
-  
+  neutrals.add_sources(time);
+
   ions.calc_ion_temperature(neutrals, gGrid, time);
   ions.calc_electron_temperature(neutrals, gGrid);
 

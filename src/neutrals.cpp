@@ -29,11 +29,12 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.newDensity_scgc.set_size(nLons, nLats, nAlts);
   tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.newVelocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
   for (int iDir = 0; iDir < 3; iDir++) {
     tmp.velocity_vcgc[iDir].zeros();
     tmp.newVelocity_vcgc[iDir].zeros();
   }
-  
+
   tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
@@ -109,8 +110,10 @@ Neutrals::Neutrals(Grid grid,
   rho_scgc.set_size(nLons, nLats, nAlts);
   rho_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
   for (int iDir = 0; iDir < 3; iDir++)
     velocity_vcgc[iDir].zeros();
+
   cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
   mean_major_mass_scgc.ones();
@@ -201,8 +204,8 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
-	temperature_scgc.slice(iAlt - 1) /
-	temperature_scgc.slice(iAlt) %
+        temperature_scgc.slice(iAlt - 1) /
+        temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
             species[iSpecies].scale_height_scgc.slice(iAlt));

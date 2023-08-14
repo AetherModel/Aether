@@ -113,7 +113,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
 
   outDiff.zeros();
   outGrad.zeros();
-  
+
   report.print(3, "before facevalues");
 
   calc_facevalues_alts_rusanov(grid, inVar, varLeft, varRight);
@@ -279,8 +279,8 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         - dt * (species[iSpecies].velocity_vcgc[2] % gradVertVel_s[iSpecies]
                 - v2or
                 + 0.1 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
-			 + gradTemp * cKB / mass
-			 + abs(grid.gravity_vcgc[2])))
+                         + gradTemp * cKB / mass
+                         + abs(grid.gravity_vcgc[2])))
         + dt * diffVertVel_s[iSpecies];
     } else {
       species[iSpecies].newVelocity_vcgc[2].zeros();
@@ -326,13 +326,13 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
           if (species[iSpecies].DoAdvect) {
             species[iSpecies].density_scgc(iX, iY, iZ) =
-	      species[iSpecies].newDensity_scgc(iX, iY, iZ);
+              species[iSpecies].newDensity_scgc(iX, iY, iZ);
             species[iSpecies].velocity_vcgc[2](iX, iY, iZ) =
               species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ);
           } else {
             // assign bulk vertical velocity to the non-advected species:
             species[iSpecies].velocity_vcgc[2](iX, iY, iZ) =
-	      velocity_vcgc[2](iX, iY, iZ);
+              velocity_vcgc[2](iX, iY, iZ);
           }
         }
       }
