@@ -68,7 +68,9 @@ public:
   
   json get_initial_condition_types();
   json get_boundary_condition_types();
-  
+
+  std::string get_advection_neutrals_vertical();
+
   // ------------------------------
   // Grid inputs:
 
