@@ -50,13 +50,15 @@ class Neutrals {
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
+    arma_cube newDensity_scgc;
     
     /// Velocity of each species (m/s). For all below:
     /// Index 0 = longitudinal component of velocity
     /// Index 1 = latitudinal
     /// Index 2 = altitudinal
     std::vector<arma_cube> velocity_vcgc;
-      
+    std::vector<arma_cube> newVelocity_vcgc;
+
     /// Acceleration of each species (m/s^2)
     std::vector<arma_cube> acc_neutral_friction;
       
@@ -135,8 +137,12 @@ class Neutrals {
   /// bulk velocity (m/s)
   std::vector<arma_cube> velocity_vcgc;
 
+  /// sound speed + abs(bulk velocity (m/s))
+  std::vector<arma_cube> cMax_vcgc;
+  
   /// bunk temperature (K)
   arma_cube temperature_scgc;
+  arma_cube newTemperature_scgc;
 
   /// bulk mass density (kg/m3)
   arma_cube rho_scgc;
@@ -170,6 +176,9 @@ class Neutrals {
 
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
+
+  /// when computing dt, derive a dt for neutrals:
+  precision_t dt;
   
   /// Maximum Chapman integral (will give nearly infinite tau in EUV)
   precision_t max_chapman = 1.0e26;
@@ -253,13 +262,18 @@ class Neutrals {
      temperature.  It is temporary until we get a vertical solver.
 
      \param iSpecies The species to fill (optional)
+     \param iStart The starting altitude to work with
+     \param iEnd The ending altitude to work with (NOT INCLUDED!!)
      \param grid The grid to define the neutrals on
    **/
-  void fill_with_hydrostatic(Grid grid);
-
-  void fill_with_hydrostatic(int64_t iSpecies,
+  void fill_with_hydrostatic(int64_t iStart,
+			     int64_t iEnd,
 			     Grid grid);
 
+  void fill_with_hydrostatic(int64_t iSpecies,
+			     int64_t iStart,
+			     int64_t iEnd,
+			     Grid grid);
   
   /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
@@ -302,6 +316,18 @@ class Neutrals {
    **/
   void calc_specific_heat();
 
+  /**********************************************************************
+     \brief Calculate speed of sound + abs(velocity) in all 3 directions
+   **/
+  void calc_cMax();
+
+  /**********************************************************************
+     \brief Calculate dt (cell size / cMax) in each direction, and take min
+     \param dt returns the neutral time-step
+     \param grid The grid to define the neutrals on
+   **/
+  precision_t calc_dt(Grid grid);
+  
   /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
      \param grid The grid to define the neutrals on
@@ -433,6 +459,24 @@ class Neutrals {
 		       bool DoReverseX,
 		       bool DoReverseY,
 		       bool XbecomesY);
+
+  /**********************************************************************
+     \brief Vertical advection solver - Rusanov 
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  void solver_vertical_rusanov(Grid grid,
+			       Times time);
+  
+  /**********************************************************************
+     \brief Call the correct vertical advection scheme
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  bool advect_vertical(Grid grid, Times time);
+  
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

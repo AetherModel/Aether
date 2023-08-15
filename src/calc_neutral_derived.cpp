@@ -15,7 +15,7 @@ void Neutrals::calc_kappa_eddy() {
   std::string function = "Neutrals::calc_kappa_eddy";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   kappa_eddy_scgc.zeros();
 
   precision_t coef = input.get_eddy_coef();
@@ -42,13 +42,23 @@ void Neutrals::calc_mass_density() {
 
   rho_scgc.zeros();
   density_scgc.zeros();
+  velocity_vcgc[2].zeros();
 
-  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+  int64_t iSpecies;
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
-      species[iSpecies].mass * species[iSpecies].density_scgc;
+               species[iSpecies].mass * species[iSpecies].density_scgc;
+    velocity_vcgc[2] +=
+      (species[iSpecies].mass *
+       species[iSpecies].velocity_vcgc[2] %
+       species[iSpecies].density_scgc);
     density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
+
+  velocity_vcgc[2] = velocity_vcgc[2] / rho_scgc;
   report.exit(function);
+  return;
 }
 
 // ----------------------------------------------------------------------
@@ -65,7 +75,9 @@ void Neutrals::calc_concentration() {
   for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     species[iSpecies].concentration_scgc =
       species[iSpecies].density_scgc / density_scgc;
-  report.exit(function);  
+
+  report.exit(function);
+  return;
 }
 
 // ----------------------------------------------------------------------
@@ -79,8 +91,9 @@ void Neutrals::calc_mean_major_mass() {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  mean_major_mass_scgc = rho_scgc / density_scgc;  
+  mean_major_mass_scgc = rho_scgc / density_scgc;
   report.exit(function);
+  return;
 }
 
 // ----------------------------------------------------------------------
@@ -96,6 +109,7 @@ void Neutrals::calc_pressure() {
 
   pressure_scgc = cKB * density_scgc % temperature_scgc;
   report.exit(function);
+  return;
 }
 
 // ----------------------------------------------------------------------
@@ -111,14 +125,19 @@ void Neutrals::calc_bulk_velocity() {
 
   for (int64_t iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
-    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      velocity_vcgc[iDir] +=
-	species[iSpecies].mass *
-	species[iSpecies].density_scgc %
-	species[iSpecies].velocity_vcgc[iDir];
+
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      velocity_vcgc[iDir] = velocity_vcgc[iDir] +
+                            species[iSpecies].mass *
+                            species[iSpecies].density_scgc %
+                            species[iSpecies].velocity_vcgc[iDir];
+    }
+
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
   }
+
   report.exit(function);
+  return;
 }
 
 //----------------------------------------------------------------------
@@ -130,6 +149,7 @@ void Neutrals::calc_scale_height(Grid grid) {
   int64_t nAlts = grid.get_nAlts();
 
   int64_t iSpecies;
+
   // Calculate scale-heights of each species, completely independently:
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
@@ -140,7 +160,7 @@ void Neutrals::calc_scale_height(Grid grid) {
   // If we have eddy diffusion, the scale-heights need to be adjusted,
   // since all of the scale heights should be the same in the region
   // where eddy diffusion is dominant.
-  
+
   if (input.get_use_eddy_momentum()) {
     // We need the mean major mass in the bottom-most cell, which we
     // assume is the region where the atmosphere is well-mixed:
@@ -149,20 +169,22 @@ void Neutrals::calc_scale_height(Grid grid) {
     precision_t mTotal = 0.0, dTotal = 0.0, mmm;
     // Need the mass density and the number density in the bottom slice:
     arma_mat mSlice, dSlice;
+
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       mSlice =
-	species[iSpecies].mass *
-	species[iSpecies].density_scgc.slice(0);
+        species[iSpecies].mass *
+        species[iSpecies].density_scgc.slice(0);
       dSlice =
-	species[iSpecies].density_scgc.slice(0);
+        species[iSpecies].density_scgc.slice(0);
       mTotal = mTotal + accu(mSlice);
       dTotal = dTotal + accu(dSlice);
     }
+
     mmm = mTotal / dTotal;
     mmm = sync_mean_across_all_procs(mmm);
 
     // bulk scale height, assuming well mixed atmosphere:
-    arma_cube bulkH = 
+    arma_cube bulkH =
       cKB * temperature_scgc /
       (mmm * abs(grid.gravity_vcgc[2]));
 
@@ -171,12 +193,14 @@ void Neutrals::calc_scale_height(Grid grid) {
     arma_cube one = percentage;
     one.ones();
     arma_cube omp = one - percentage;
+
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].scale_height_scgc =
-	omp % species[iSpecies].scale_height_scgc +
-	percentage % bulkH;      
+        omp % species[iSpecies].scale_height_scgc +
+        percentage % bulkH;
     }
   }
+
   return;
 }
 
@@ -222,8 +246,81 @@ void Neutrals::calc_specific_heat() {
                     temperature_scgc /
                     mean_major_mass_scgc);
 
+  if (report.test_verbose(2)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+    std::cout << "max gamma : " << gamma_scgc.max() << "\n";
+    std::cout << "max temperature : " << temperature_scgc.max() << "\n";
+    std::cout << "max mean_major_mass speed : "
+              << mean_major_mass_scgc.max() << "\n";
+  }
+
   report.exit(function);
   return;
+}
+
+// ----------------------------------------------------------------------
+// Calculate cMax, which is the sound speed + velocity in each
+// direction
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_cMax() {
+
+  std::string function = "Neutrals::calc_cMax";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  // just take the bulk value for now:
+
+  if (report.test_verbose(3)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+
+    for (iDir = 0; iDir < 3; iDir++) {
+      arma_cube tmp = abs(velocity_vcgc[iDir]);
+      std::cout << "min velocity : " << tmp.min() << "\n";
+    }
+  }
+
+  for (iDir = 0; iDir < 3; iDir++)
+    cMax_vcgc[iDir] = sound_scgc + abs(velocity_vcgc[iDir]);
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Calculate cMax, which is the sound speed + velocity in each
+// direction
+// ----------------------------------------------------------------------
+
+precision_t Neutrals::calc_dt(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  // simply some things, and just take the bulk value for now:
+  arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+  arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+  arma_vec dta(3);
+  dta(0) = dtx.min();
+  dta(1) = dty.min();
+  dta(2) = dtz.min();
+
+  dt = dta.min();
+
+  if (report.test_verbose(3))
+    std::cout << "dt for neutrals : " << dt << "\n";
+
+  if (report.test_verbose(4))
+    std::cout << " derived from dt(x, y, z) : " << dta << "\n";
+
+  report.exit(function);
+  return dt;
 }
 
 //----------------------------------------------------------------------
@@ -415,11 +512,13 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
   arma_cube prandtl3d(nLons, nLats, nAlts);
 
   rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
+
   // Need to make this eddy * rho * cv:
   if (input.get_use_eddy_energy())
     prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
   else
     prandtl3d.zeros();
+
   lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
   arma_vec temp1d(nAlts);

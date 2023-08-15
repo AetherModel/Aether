@@ -137,12 +137,12 @@ int output(const Neutrals &neutrals,
       // Neutral Species Winds:
       if (type_output == "neutrals")
         for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-	  for (int iDir = 0; iDir < 3; iDir++)
-	    AllOutputContainers[iOutput].
-	      store_variable(neutrals.species[iSpecies].cName + " " +
-			     neutrals.velocity_name[iDir],
-			     neutrals.velocity_unit,
-			     neutrals.species[iSpecies].velocity_vcgc[iDir]);
+          for (int iDir = 0; iDir < 3; iDir++)
+            AllOutputContainers[iOutput].
+            store_variable(neutrals.species[iSpecies].cName + " " +
+                           neutrals.velocity_name[iDir],
+                           neutrals.velocity_unit,
+                           neutrals.species[iSpecies].velocity_vcgc[iDir]);
 
       // Ion Densities:
       if (type_output == "ions" ||
@@ -184,8 +184,8 @@ int output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable(ions.potential_name,
                                                     ions.potential_unit,
                                                     ions.potential_scgc);
-                        
-      if (type_output == "gravity"){
+
+      if (type_output == "gravity") {
         AllOutputContainers[iOutput].store_variable("glat",
                                                     "grav Latitude",
                                                     "degrees",
@@ -212,7 +212,7 @@ int output(const Neutrals &neutrals,
                                                     grid.gravity_potential_scgc);
         AllOutputContainers[iOutput].store_variable("radius",
                                                     "m",
-                                                    grid.radius_scgc);   
+                                                    grid.radius_scgc);
       }
 
       if (type_output == "bfield") {

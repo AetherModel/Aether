@@ -26,17 +26,25 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.lower_bc_density = -1.0;
 
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.newDensity_scgc.set_size(nLons, nLats, nAlts);
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.newVelocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++) {
+    tmp.velocity_vcgc[iDir].zeros();
+    tmp.newVelocity_vcgc[iDir].zeros();
+  }
+
   tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
 
-  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_eddy.set_size(nLons, nLats, nAlts);
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
-  
+
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
@@ -90,6 +98,8 @@ Neutrals::Neutrals(Grid grid,
   density_scgc.ones();
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
+  newTemperature_scgc.set_size(nLons, nLats, nAlts);
+  newTemperature_scgc.ones();
   O_cool_scgc.set_size(nLons, nLats, nAlts);
   O_cool_scgc.zeros();
   NO_cool_scgc.set_size(nLons, nLats, nAlts);
@@ -100,6 +110,11 @@ Neutrals::Neutrals(Grid grid,
   rho_scgc.set_size(nLons, nLats, nAlts);
   rho_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++)
+    velocity_vcgc[iDir].zeros();
+
+  cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
   mean_major_mass_scgc.ones();
   pressure_scgc.set_size(nLons, nLats, nAlts);
@@ -134,6 +149,7 @@ Neutrals::Neutrals(Grid grid,
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
+
   return;
 }
 
@@ -177,15 +193,19 @@ int Neutrals::read_planet_file(Planets planet) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (all species)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
-void Neutrals::fill_with_hydrostatic(Grid grid) {
-
-  int64_t nAlts = grid.get_nAlts();
+void Neutrals::fill_with_hydrostatic(int64_t iStart,
+                                     int64_t iEnd,
+                                     Grid grid) {
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+    // Integrate with hydrostatic equilibrium up:
+    for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
+        temperature_scgc.slice(iAlt - 1) /
+        temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
             species[iSpecies].scale_height_scgc.slice(iAlt));
@@ -198,20 +218,24 @@ void Neutrals::fill_with_hydrostatic(Grid grid) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (only one constituent)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
+                                     int64_t iStart,
+                                     int64_t iEnd,
                                      Grid grid) {
 
-  int64_t nAlts = grid.get_nAlts();
-
   // Integrate with hydrostatic equilibrium up:
-  for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+  for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
     species[iSpecies].density_scgc.slice(iAlt) =
+      temperature_scgc.slice(iAlt - 1) /
+      temperature_scgc.slice(iAlt) %
       species[iSpecies].density_scgc.slice(iAlt - 1) %
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density();
   return;
 }
@@ -350,6 +374,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     std::cout << "Error reading in neutral restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -375,6 +400,7 @@ void Neutrals::calc_NO_cool() {
 
     NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
 
@@ -396,6 +422,7 @@ void Neutrals::calc_O_cool() {
 
     O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
 

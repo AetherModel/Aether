@@ -33,6 +33,7 @@ bool Neutrals::set_bcs(Grid grid,
 
   didWork = set_lower_bcs(grid, time, indices);
   didWork = set_upper_bcs(grid);
+  calc_mass_density();
 
   report.exit(function);
   return didWork;
@@ -50,10 +51,43 @@ bool Neutrals::set_upper_bcs(Grid grid) {
 
   bool didWork = true;
 
-  int64_t nAlts = temperature_scgc.n_slices;
+  int64_t nAlts = grid.get_nZ();
+  int64_t nX = grid.get_nX(), iX;
+  int64_t nY = grid.get_nY(), iY;
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iAlt;
+  arma_mat h;
 
-  temperature_scgc.slice(nAlts - 2) = temperature_scgc.slice(nAlts - 3);
-  temperature_scgc.slice(nAlts - 1) = temperature_scgc.slice(nAlts - 2);
+  for (iAlt = nAlts - nGCs; iAlt < nAlts; iAlt++) {
+
+    // Bulk Quantities:
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+    velocity_vcgc[0].slice(iAlt) = velocity_vcgc[0].slice(iAlt - 1);
+    velocity_vcgc[1].slice(iAlt) = velocity_vcgc[1].slice(iAlt - 1);
+
+    // For each species:
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      // Horizontal velocities - zero gradient:
+      species[iSpecies].velocity_vcgc[0].slice(iAlt) =
+        species[iSpecies].velocity_vcgc[0].slice(iAlt - 1);
+      species[iSpecies].velocity_vcgc[1].slice(iAlt) =
+        species[iSpecies].velocity_vcgc[1].slice(iAlt - 1);
+
+      // Allow upflow, but not downflow:
+      for (iX = nGCs; iX < nX - nGCs; iX++)
+        for (iY = nGCs; iY < nY - nGCs; iY++)
+          if (species[iSpecies].velocity_vcgc[2](iX, iY, iAlt - 1) > 0)
+            species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) =
+              species[iSpecies].velocity_vcgc[2](iX, iY, iAlt - 1);
+          else
+            species[iSpecies].velocity_vcgc[2](iX, iY, iAlt) = 0.0;
+
+      h = species[iSpecies].scale_height_scgc.slice(iAlt);
+      species[iSpecies].density_scgc.slice(iAlt) =
+        species[iSpecies].density_scgc.slice(iAlt - 1) %
+        exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
+    }
+  }
 
   report.exit(function);
   return didWork;
@@ -74,6 +108,8 @@ bool Neutrals::set_lower_bcs(Grid grid,
   bool didWork = true;
 
   json bcs = input.get_boundary_condition_types();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iSpecies, iAlt, iDir;
 
   //-----------------------------------------------
   // MSIS BCs - only works if FORTRAN is enabled!
@@ -111,7 +147,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
       // if it is not, then fill with a value:
       temperature_scgc.slice(0).fill(initial_temperatures[0]);
 
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       if (report.test_verbose(3))
         std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
 
@@ -142,16 +178,34 @@ bool Neutrals::set_lower_bcs(Grid grid,
     report.print(2, "setting lower bcs to planet");
 
     // Set the lower boundary condition:
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].density_scgc.slice(0).
       fill(species[iSpecies].lower_bc_density);
     }
 
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
-    // Don't need to set the temperature or winds, since they are
-    // uniform fixed values that don't change...
+  }
 
-  } // type == Planet
+  // fill the second+ grid cells with the bottom temperature:
+  for (iAlt = 1; iAlt < nGCs; iAlt++)
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+
+  // fill the second+ grid cells with a hydrostatic solution:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    fill_with_hydrostatic(iSpecies, 1, nGCs, grid);
+
+  // Force vertical velocities to be zero in the ghost cells:
+  for (iDir = 0; iDir < 3; iDir++) {
+    for (iAlt = 0; iAlt < nGCs; iAlt++) {
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        // species velocity:
+        species[iSpecies].velocity_vcgc[iDir].slice(iAlt).zeros();
+      }
+
+      // bulk velocity:
+      velocity_vcgc[iDir].slice(iAlt).zeros();
+    }
+  }
 
   report.exit(function);
   return didWork;

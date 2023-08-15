@@ -27,6 +27,7 @@ int Neutrals::initial_conditions(Grid grid,
   int iErr = 0;
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
+  int64_t nAlts = grid.get_nZ();
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -88,7 +89,7 @@ int Neutrals::initial_conditions(Grid grid,
 
           species[iSpecies].density_scgc.slice(0).
           fill(species[iSpecies].lower_bc_density);
-          fill_with_hydrostatic(iSpecies, grid);
+          fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
         }
 
       }
@@ -158,8 +159,9 @@ int Neutrals::initial_conditions(Grid grid,
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
+
       calc_scale_height(grid);
-      fill_with_hydrostatic(grid);
+      fill_with_hydrostatic(1, nAlts, grid);
     } // type = planet
   }
 

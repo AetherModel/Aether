@@ -77,6 +77,8 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   int64_t nY = grid.get_nY();
   int64_t nZ = grid.get_nZ();
 
+  set_floor();
+
   report.print(5, "going into calc_efield");
   calc_efield(grid);
 
@@ -92,6 +94,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   std::vector<arma_cube> grad_Pi_plus_Pe;
   arma_cube rho, rho_nuin, nuin_sum, Nie, sum_rho;
+  arma_cube top, bottom;
 
   nuin_sum.set_size(nX, nY, nZ);
   nuin_sum.zeros();
@@ -124,7 +127,8 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
       for (iDim = 0; iDim < 3; iDim ++)
-	gravity_vcgc[iDim] = grid.gravity_vcgc[iDim] % rho;
+        gravity_vcgc[iDim] = species[iIon].mass *
+                             grid.gravity_vcgc[iDim] % species[iIon].density_scgc;
 
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
@@ -166,11 +170,17 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
         a_x_b = cross_product(a_perp, grid.bfield_vcgc);
 
-        for (int64_t iComp = 0; iComp < 3; iComp++)
-          species[iIon].perp_velocity_vcgc[iComp] =
-            (rho_nuin % a_perp[iComp] + Nie % a_x_b[iComp]) /
-            (rho_nuin % rho_nuin +
-             Nie % Nie % grid.bfield_mag_scgc % grid.bfield_mag_scgc);
+        // With floats, this can become 0, which then makes the
+        // velocity a nan, so the clamp ensures that the bottom is not 0
+        bottom =
+          rho_nuin % rho_nuin +
+          Nie % Nie % grid.bfield_mag_scgc % grid.bfield_mag_scgc;
+        bottom.clamp(1e-32, 1e32);
+
+        for (int64_t iComp = 0; iComp < 3; iComp++) {
+          top = rho_nuin % a_perp[iComp] + Nie % a_x_b[iComp];
+          species[iIon].perp_velocity_vcgc[iComp] = top / bottom;
+        }
       } else {
         // No Planetary Magnetic field
         for (int64_t iComp = 0; iComp < 3; iComp++) {

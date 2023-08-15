@@ -21,6 +21,14 @@
     "BoundaryConditions" : {
 	"type" : "Planet"},
 
+    "Advection" : {
+	"Neutrals" : {
+	    "Vertical" : "rusanov",
+	    "Horizontal" : "default"},
+	"Ions" : {
+	    "Along" : "rusanov",
+	    "Across" : "default"} },
+    
     "Student" : {
 	"name" : "",
 	"is" : false },
@@ -36,11 +44,6 @@
 	"HeatingEfficiency" : 0.05,
 	"dt" : 60.0},
 
-    "Sources": {
-	"Neutrals" : {
-	    "NO_cool" : false,
-	    "O_cool" : false } },
-    
     "DoCalcBulkIonTemp" : false,
     
     "Eddy" : {

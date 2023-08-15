@@ -26,6 +26,32 @@ bool sync_across_all_procs(bool value) {
 }
 
 // ----------------------------------------------------------------------------
+// Find min across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_min_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MIN, aether_comm);
+  global_value = vReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
+// Find max across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_max_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MAX, aether_comm);
+  global_value = vReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
 // Calculate the average value across all processors
 // ----------------------------------------------------------------------------
 
@@ -37,7 +63,7 @@ precision_t sync_mean_across_all_procs(precision_t value) {
   nSend = 1.0;
   MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
   MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
-  global_value = vReceive/nReceive;
+  global_value = vReceive / nReceive;
   return global_value;
 }
 
@@ -285,15 +311,14 @@ const arma_cube& find_species_density(const std::string &name,
                                       Ions &ions) {
   // Try to find the name in neutrals
   int id = neutrals.get_species_id(name);
-  if (id > -1) {
-    return neutrals.species[id].density_scgc;
-  }
 
-  // Try to find the name in ions
+  if (id > -1)
+    return neutrals.species[id].density_scgc;
+
   id = ions.get_species_id(name);
-  if (id > -1) {
+
+  if (id > -1)
     return ions.species[id].density_scgc;
-  }
 
   // Throw an exception if the species is not found
   throw std::string("Can not find species named " + name);

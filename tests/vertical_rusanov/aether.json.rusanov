@@ -1,0 +1,36 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+        "iFunctionVerbose" : {
+            "Neutrals::calc_dt" : 0,
+            "Neutrals::calc_specific_heat" : 0,
+            "Neutrals::calc_grad_and_diff_alts_rusanov" : 0},	
+	"dt" : 0.1},
+
+    "EndTime" : [2011, 3, 20, 0, 15, 0],
+
+    "Advection" : {
+	"Neutrals" : {
+	    "Vertical" : "rusanov"} },
+
+    "GeoGrid" : {
+	"dAlt"   : 0.3,
+	"IsUniformAlt" : false},
+    
+    "GeoBlockSize" : {
+	"nLons" : 20,
+	"nLats" : 18,
+	"nAlts" : 50},
+
+    "Outputs" : {
+	"type" : ["neutrals"],
+	"dt" : [300]},
+    
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : false
+}

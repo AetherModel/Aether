@@ -47,32 +47,40 @@ Euv::Euv() {
       IsOk = slot_euv("AFAC", "", euvac_afac);
     }
 
-    // Slot the EUVAC model coefficients:
+    // Slot the NEUVAC model coefficients:
     if (input.get_euv_model() == "neuvac") {
       IsOk = slot_euv("NEUV_S1", "", neuvac_s1);
+
       if (IsOk)
-	IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
+        IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
+
       if (IsOk)
-	IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
+        IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
+
       if (IsOk)
-	IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
+        IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
+
       if (IsOk)
-	IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
+        IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
+
       if (IsOk)
-	IsOk = slot_euv("NEUV_I1", "", neuvac_int);
+        IsOk = slot_euv("NEUV_I1", "", neuvac_int);
     }
 
+    // Slot the HFG model coefficients:
     if (input.get_euv_model() == "hfg") {
       IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
+
       if (IsOk)
-	IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
+        IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
+
       if (IsOk)
-	IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
+        IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
     }
-    
   }
 
   IsOk = sync_across_all_procs(IsOk);
+  return;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,7 +113,7 @@ bool Euv::read_file() {
 
       while (getline(infile_ptr, line)) {
         report.print(5, line);
-	line = strip_spaces(line);
+        line = strip_spaces(line);
         std::stringstream ss(line);
 
         // This is just to count the number of wavelengths.
@@ -214,7 +222,7 @@ bool Euv::slot_euv(std::string item,
 // ---------------------------------------------------------------------
 
 bool Euv::pair_euv(Neutrals &neutrals,
-		   Ions ions) {
+                   Ions ions) {
 
   std::string function = "Euv::pair_euv";
   static int iFunction = -1;
@@ -223,7 +231,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
   bool DidWork = true;
 
   bool includePhotoelectrons = input.get_include_photoelectrons();
-  
+
   for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
     if (report.test_verbose(5))
@@ -271,7 +279,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
         // Next see if we can find ionizations:
         if (waveinfo[iEuv].type == "pei" &&
-	    includePhotoelectrons) {
+            includePhotoelectrons) {
 
           // Loop through the ions to see if names match:
           for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
@@ -365,7 +373,7 @@ int Euv::euvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::neuvac(Times time,
-		Indices indices) {
+                Indices indices) {
 
   int iErr = 0;
   precision_t slope;
@@ -379,13 +387,13 @@ int Euv::neuvac(Times time,
   precision_t f107_diff = f107a - f107;
 
   precision_t f107p, f107ap;
-  
+
   for (int iWave = 0; iWave < nWavelengths; iWave++)
-    wavelengths_intensity_1au[iWave] = (
-      neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
-      neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
-      neuvac_s2[iWave] * (f107_diff) +
-      neuvac_int[iWave]) / wavelengths_energy[iWave];
+    wavelengths_intensity_1au[iWave] =
+      (neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
+       neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
+       neuvac_s2[iWave] * (f107_diff) +
+       neuvac_int[iWave]) / wavelengths_energy[iWave];
 
   if (report.test_verbose(4)) {
     std::cout << "NEUVAC output : "
@@ -410,7 +418,7 @@ int Euv::neuvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::solomon_hfg(Times time,
-               Indices indices) {
+                     Indices indices) {
 
   std::string function = "Euv::solomon_hfg";
   static int iFunction = -1;
@@ -419,7 +427,7 @@ int Euv::solomon_hfg(Times time,
   int iErr = 0;
   precision_t r1;
   precision_t r2;
-  
+
   precision_t f107 = indices.get_f107(time.get_current());
   precision_t f107a = indices.get_f107a(time.get_current());
 
@@ -429,7 +437,7 @@ int Euv::solomon_hfg(Times time,
     wavelengths_intensity_1au[iWave] =
       (solomon_hfg_fref[iWave] +
        (r1 * solomon_hfg_c1[iWave]) +
-       (r2 * solomon_hfg_c2[iWave])) * pcm2topm2; 
+       (r2 * solomon_hfg_c2[iWave])) * pcm2topm2;
   }
 
   if (report.test_verbose(4)) {

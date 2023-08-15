@@ -121,9 +121,8 @@ std::vector<std::string> Inputs::get_species_vector() {
   std::vector<std::string> species;
   const json &json_species = settings.at("Logfile").at("species");
 
-  for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++) {
+  for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++)
     species.push_back(json_species.at(iOutput));
-  }
 
   return species;
 }
@@ -133,14 +132,13 @@ std::vector<std::string> Inputs::get_species_vector() {
 // -----------------------------------------------------------------------
 
 std::vector<std::string> Inputs::get_satellite_files() {
-    std::vector<std::string> files;
-    const json &json_files = settings["Satellites"]["files"];
+  std::vector<std::string> files;
+  const json &json_files = settings["Satellites"]["files"];
 
-    for (size_t i = 0; i < json_files.size(); ++i) {
-        files.push_back(json_files.at(i));
-    }
+  for (size_t i = 0; i < json_files.size(); ++i)
+    files.push_back(json_files.at(i));
 
-    return files;
+  return files;
 }
 
 // -----------------------------------------------------------------------
@@ -148,14 +146,13 @@ std::vector<std::string> Inputs::get_satellite_files() {
 // -----------------------------------------------------------------------
 
 std::vector<std::string> Inputs::get_satellite_names() {
-    std::vector<std::string> names;
-    const json &json_names = settings["Satellites"]["names"];
+  std::vector<std::string> names;
+  const json &json_names = settings["Satellites"]["names"];
 
-    for (size_t i = 0; i < json_names.size(); ++i) {
-        names.push_back(json_names.at(i));
-    }
+  for (size_t i = 0; i < json_names.size(); ++i)
+    names.push_back(json_names.at(i));
 
-    return names;
+  return names;
 }
 
 // -----------------------------------------------------------------------
@@ -163,14 +160,13 @@ std::vector<std::string> Inputs::get_satellite_names() {
 // -----------------------------------------------------------------------
 
 std::vector<precision_t> Inputs::get_satellite_dts() {
-    std::vector<precision_t> dts;
-    const json &json_dts = settings["Satellites"]["dts"];
+  std::vector<precision_t> dts;
+  const json &json_dts = settings["Satellites"]["dts"];
 
-    for (size_t i = 0; i < json_dts.size(); ++i) {
-        dts.push_back(json_dts.at(i));
-    }
+  for (size_t i = 0; i < json_dts.size(); ++i)
+    dts.push_back(json_dts.at(i));
 
-    return dts;
+  return dts;
 }
 
 
@@ -824,6 +820,30 @@ json Inputs::get_boundary_condition_types() {
 
   return values;
 }
+
+
+std::string Inputs::get_advection_neutrals_vertical() {
+
+  std::string value = "none";
+
+  if (settings.contains("Advection"))
+    if (settings["Advection"].contains("Neutrals"))
+      if (settings["Advection"]["Neutrals"].contains("Vertical"))
+        value = settings["Advection"]["Neutrals"]["Vertical"];
+      else {
+        std::cout << "Error trying to get inputs:\n";
+        std::cout << "  settings['Advection']['Neutrals']['Vertical']\n";
+      } else {
+      std::cout << "Error trying to get inputs:\n";
+      std::cout << "  settings['Advection']['Neutrals']\n";
+    } else {
+    std::cout << "Error trying to get inputs:\n";
+    std::cout << "  settings['Advection']\n";
+  }
+
+  return value;
+}
+
 
 // --------------------------------------------------------------------------
 // check to see if class is ok
