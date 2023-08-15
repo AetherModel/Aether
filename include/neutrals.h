@@ -398,6 +398,16 @@ class Neutrals {
    **/
   int get_species_id(std::string name);
 
+  /*****************************************************************************
+      \brief  Checks for nans and +/- infinities in density, temp, and velocity
+    **/
+  bool check_for_nonfinites();
+
+  /**********************************************************************
+      \brief Checks for nans in the specified variable
+    **/
+  void nan_test(std::string variable);
+
   /**********************************************************************
      \brief Read / Write restart files for the neutral variables
      \param dir directory to write restart files

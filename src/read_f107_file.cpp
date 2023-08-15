@@ -51,11 +51,9 @@ index_file_output_struct read_f107_file(std::string f107_file,
     // in the data!
 
     if (IsFound) {
-
-      if (IsAdjusted && report.test_verbose(0))
-        std::cout << "Need to NOT adjust F10.7, but that isn't included yet!!!"
-                  << '\n';
-
+      if (IsAdjusted && report.test_verbose(0)){
+        std::cout << "Need to NOT adjust F10.7, but that isn't included yet!!! \n";
+      }
       f107_contents.nVars = 1;
       f107_contents.var_names.push_back("F10.7");
       f107_contents.index_id.push_back(indices.get_f107_index_id());

@@ -22,7 +22,6 @@ int main() {
   report.enter(function, iFunction);
 
   try {
-  
     // Create inputs (reading the input file):
     input = Inputs(time);
     if (!input.is_ok())
@@ -31,7 +30,7 @@ int main() {
     if (input.get_is_student())
       report.print(-1, "Hello " +
 		   input.get_student_name() + " - welcome to Aether!");
-    
+
     Quadtree quadtree;
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -40,17 +39,17 @@ int main() {
     DidWork = init_parallel(quadtree);
     if (!DidWork)
       throw std::string("init_parallel failed!");
-  
+
     // Everything should be set for the inputs now, so write a restart file:
     DidWork = input.write_restart();
     if (!DidWork)
       throw std::string("input.write_restart failed!");
-    
+
     // Initialize the EUV system:
     Euv euv;
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
-    
+
     // Initialize the planet:
     Planets planet;
     MPI_Barrier(aether_comm);
@@ -63,7 +62,7 @@ int main() {
     MPI_Barrier(aether_comm);
     if (!DidWork)
       throw std::string("read_and_store_indices failed!");
-
+    
     // Perturb the inputs if user has asked for this
     indices.perturb();
     MPI_Barrier(aether_comm);
@@ -76,9 +75,10 @@ int main() {
     DidWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
     if (!DidWork)
-      throw std::string("init_geo_grid failed!");
-  
+      throw std::string("init_geo_grid failed!");  
 
+    // Calculate centripetal acceleration, since this is a constant
+    // vector on the grid:
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
@@ -90,6 +90,24 @@ int main() {
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
+
+    // -----------------------------------------------------------------
+    // This is a unit test for checking for nans and infinities.
+    // Is simply adds nans and infinities in a few places, then
+    // checks for them to make sure the checking is working
+    // -----------------------------------------------------------------
+    
+    if (input.get_nan_test()) {
+      neutrals.nan_test(input.get_nan_test_variable());
+      ions.nan_test(input.get_nan_test_variable());
+    }
+
+    if (input.get_check_for_nans()) {
+      DidWork = neutrals.check_for_nonfinites();
+      DidWork = ions.check_for_nonfinites();
+    }
+
+    // -----------------------------------------------------------------
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions);
@@ -109,6 +127,7 @@ int main() {
     if (!electrodynamics.is_ok())
       throw std::string("electrodynamics initialization failed!");
 
+    // If the user wants to restart, then get the time of the restart
     if (input.get_do_restart()) {
       report.print(1, "Restarting! Reading time file!");
       DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
@@ -133,7 +152,6 @@ int main() {
     // be made into a library and run externally.
 
     Logfile logfile(indices);
-
     while (time.get_current() < time.get_end()) {
 
       time.increment_intermediate(dt_couple);
@@ -185,6 +203,7 @@ int main() {
     report.times();
 
   } catch (std::string error) {
+    report.report_errors();
     if (iProc == 0) {
       std::cout << error << "\n";
       std::cout << "---- Must Exit! ----\n";

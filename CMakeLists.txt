@@ -24,6 +24,8 @@ set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
 if(TEST_INTERPOLATION)
   add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_interpolation.cpp)
+elseif(TEST_COORD)
+  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_coord.cpp)
 else()
   add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main.cpp)
 endif()
