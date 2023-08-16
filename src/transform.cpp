@@ -40,6 +40,27 @@ void copy_cube_to_array(arma_cube cube_in,
   }
 }
 
+// -----------------------------------------------------------------------
+// copy from armidillo cube to 3d c-native array
+// -----------------------------------------------------------------------
+
+void copy_array_to_cube(float *array_in, 
+                        arma_cube cube_out,
+                        int64_t nX, int64_t nY, int64_t nZ) {
+
+  cube_out.set_size(nX, nY, nZ);
+  int64_t iX, iY, iZ, index = 0;
+
+  for (iX = 0; iX < nX; iX++) {
+    for (iY = 0; iY < nY; iY++) {
+      for (iZ = 0; iZ < nZ; iZ++) {
+        //index = iX * nY * nZ + iY * nZ + iZ;
+        cube_out(iX, iY, iZ) = array_in[index++];
+      }
+    }
+  }
+}
+
 
 
 // -----------------------------------------------------------------------

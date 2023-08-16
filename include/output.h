@@ -133,11 +133,6 @@ class OutputContainer {
      \brief write a binary file with the information in the container
    **/
   int write_container_binary();
-
-  /**********************************************************************
-     \brief read a binary file - put the information in the container
-   **/
-  int read_container_binary();
   
   /**********************************************************************
      \brief write a netcdf file with the information in the container
@@ -145,7 +140,7 @@ class OutputContainer {
   int write_container_netcdf();
   
   /**********************************************************************
-     \brief read from a file an load into the container
+     \brief read from a file and load into the container
    **/
   void read();
   
@@ -153,6 +148,16 @@ class OutputContainer {
      \brief display information contained in the container
    **/
   void display();
+
+  /**********************************************************************
+     \brief read a json header file - put the information in the container
+   **/
+  int read_container_header();
+
+  /**********************************************************************
+     \brief read a binary file - put the information in the container
+   **/
+  int read_container_binary();
   
   /**********************************************************************
      \brief read a netcdf file - put the information in the container
@@ -240,7 +245,7 @@ int output(const Neutrals &neutrals,
 void output_binary_3d(std::ofstream &binary,
 		      arma_cube value);
 
-void read_binary_3d(std::ofstream &binary,
+void input_binary_3d(std::ifstream &binary,
 		      arma_cube value);
 
 #endif  // INCLUDE_OUTPUT_H_

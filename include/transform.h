@@ -13,6 +13,11 @@ using namespace arma;
 void copy_cube_to_array(arma_cube cube_in,
                         float *array_out);
 
+void copy_array_to_cube(float *array_in, 
+                        arma_cube cube_out,
+                        int64_t nX, 
+                        int64_t nY, int64_t nZ);
+
 void copy_vector_to_array(std::vector<float> vector_in,
 			  int64_t nElements,
 			  float *array_out);

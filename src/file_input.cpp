@@ -232,7 +232,7 @@ std::vector<std::string> parse_csv_row_into_vector(std::string line) {
 // This is somewhat generic in that it can read from the current
 // position to the first line that is blank, so it can be used
 // multiple times per file.
-// Returns a 2D array of strings.
+// Returns a 2D  of strings.
 // -------------------------------------------------------------------
 
 std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr) {

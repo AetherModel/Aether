@@ -455,7 +455,7 @@ void OutputContainer::write() {
   int iErr = 0;
 
   if (output_type == binary_type) {
-    iErr = write_container_header();
+    iErr = write_container_header(); 
 
     if (iErr == 0)
       iErr = write_container_binary();
@@ -463,6 +463,26 @@ void OutputContainer::write() {
 
   if (output_type == netcdf_type)
     iErr = write_container_netcdf();
+}
+
+// -----------------------------------------------------------------------------
+// This is the read method. Here we look at which type of file output
+// the user wants, and then reads that type. 
+// -----------------------------------------------------------------------------
+
+void OutputContainer::read() {
+
+  int iErr = 0;
+
+  if (output_type == binary_type) {
+    iErr = read_container_header(); 
+
+    if (iErr == 0)
+      iErr = read_container_binary();
+  }
+
+  if (output_type == netcdf_type)
+    iErr = read_container_netcdf();
 }
 
 // -----------------------------------------------------------------------------
@@ -541,6 +561,50 @@ int OutputContainer::write_container_header() {
   return iErr;
 }
 
+// -----------------------------------------------------------------------------
+// Reads a header file for the container.  This reads a json
+// formatted file.
+// -----------------------------------------------------------------------------
+
+ int OutputContainer::read_container_header() {
+
+   int iErr = 0;
+   std::string whole_filename = directory + "/" + filename + ".json";
+
+   try {
+   std::ifstream file(whole_filename);
+   json header;
+   file >> header;
+   file.close();
+  
+   int64_t nVars = header["nVars"];
+   int64_t nX = header["nX"];
+   int64_t nY = header["nY"];
+   int64_t nZ = header["nZ"];
+
+   version = header["version"];
+   itime = header["itime"];
+   nLons = header["nLons"];
+   nLats = header["nLats"];
+   nAlts = header["nAlts"];
+
+   for (int64_t iVar = 0; iVar < nVars; iVar++) {
+    std::vector<std::string> variables = header["variables"];
+    std::vector<std::string> units = header["units"];
+    elements[iVar].cName.push_back(variables);
+    elements[iVar].cUnit.push_back(units);
+   }
+  
+   } 
+   catch (...) {
+     std::cout << "Error writing header file : "
+               << whole_filename << "\n";
+     iErr = 1;
+   }
+
+   return iErr;
+ }
+
 //----------------------------------------------------------------------
 // Output a given arma_cube to the binary file.
 // ----------------------------------------------------------------------
@@ -584,11 +648,9 @@ void output_binary_3d(std::ofstream &binary,
 // Read a binary file into a arma_cube.
 // ----------------------------------------------------------------------
 
-void input_binary_3d(std::ofstream &binary,
+void input_binary_3d(std::ifstream &binary,
                       arma_cube value) {
-
-  // Read in all the elements?
-
+  // Get the size of cube
   int64_t nX = value.n_rows;
   int64_t nY = value.n_cols;
   int64_t nZ = value.n_slices;
@@ -597,10 +659,20 @@ void input_binary_3d(std::ofstream &binary,
   int64_t nPts = nX * nY * nZ;
   int64_t iTotalSize = nPts * sizeof(float);
 
-  // Create a temporary c-array to store all the elements?
-  float *tmp_s3gc;
+  // Create an empty c-array 
+  float *tmp_s3gc = new float[nPts];
 
+  // Read in the data from the binary file - ???
+  binary.read((char *)tmp_s3gc, iTotalSize); // then create an arma cube with the size of nX, nY, nZ and then look at tools.cpp and find the function that converts a array to an arma_cube 
 
+  // Create an empty arma_cube 
+  arma_cube temp;
+ 
+  // Transfer data from c-array to the arma_cube
+  copy_array_to_cube(tmp_s3gc, temp, nX, nY, nZ);
+
+  // Delete the c-array
+  free(tmp_s3gc);
 }
 
 // -----------------------------------------------------------------------------
@@ -632,31 +704,31 @@ int OutputContainer::write_container_binary() {
 }
 
 // -----------------------------------------------------------------------------
-// dump the contents of the container out into a binary file
+// reads the contents of binary file into a container
 // -----------------------------------------------------------------------------
 
-int OutputContainer::read_container_binary() { //look at netcdf ex?
+int OutputContainer::read_container_binary() { 
 
-  // int iErr = 0;
-  // std::ofstream binary;
-  // std::string whole_filename = directory + "/" + filename + ".bin";
+  int iErr = 0;
+  std::ifstream binary;
+  std::string whole_filename = directory + "/" + filename + ".bin";
 
-  // try {
-  //   binary.open(whole_filename, ios::binary | ios::out);
+  try {
+    binary.open(whole_filename, ios::binary | ios::out); 
 
-  //   int64_t nVars = elements.size();
+    int64_t nVars = elements.size();
 
-  //   for (int64_t iVar = 0; iVar < nVars; iVar++)
-  //     output_binary_3d(binary, elements[iVar].value);
+    for (int64_t iVar = 0; iVar < nVars; iVar++)
+      input_binary_3d(binary, elements[iVar].value);
 
-  //   return iErr;
-  // } catch (...) {
-  //   std::cout << "Error writing header file : "
-  //             << whole_filename << "\n";
-  //   iErr = 1;
-  // }
+    return iErr;
+  } catch (...) {
+    std::cout << "Error writing header file : "
+              << whole_filename << "\n";
+    iErr = 1;
+  }
 
-  // return iErr;
+  return iErr;
 }
 
 
