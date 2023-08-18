@@ -26,6 +26,8 @@
 	"type" : ["states"],
 	"dt" : [900] },
     
-    "DoCalcBulkIonTemp" : false
+    "DoCalcBulkIonTemp" : false,
+    
+    "PlanetFile" : "UA/inputs/n2advect_earth.in"
     
 }

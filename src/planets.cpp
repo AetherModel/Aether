@@ -299,7 +299,7 @@ int Planets::update(Times time) {
 // -----------------------------------------------------------------------------
 
 bool Planets::set_planet(Inputs input, Report report) {
-
+    
   bool DidWork = true;
   int IsFound = 0;
 
@@ -402,13 +402,12 @@ bool Planets::read_file(Inputs input, Report report) {
   report.print(1, "Reading planetary file : " + input.get_planetary_file());
 
   myFile.open(input.get_planetary_file());
-
+    
   if (!myFile.is_open()) {
-    if (iProc == 0)
-      std::cout << "Could not open planetary file : "
-                << input.get_planetary_file() << "\n";
-
-    DidWork = false;
+      if (iProc == 0)
+          std::cout << "Could not open planetary file : "
+          << input.get_planetary_file() << "\n";
+      DidWork = false;
   } else {
 
     if (myFile.good()) {
@@ -467,6 +466,7 @@ bool Planets::read_file(Inputs input, Report report) {
   }  // else open file
 
   return DidWork;
+
 }
 
 // --------------------------------------------------------------------------

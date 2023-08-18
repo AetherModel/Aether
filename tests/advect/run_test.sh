@@ -1,18 +1,42 @@
 #!/bin/sh
 
-rm -rf run.test1 run.test2 run.test3
+rm -rf run.no_advect run.some_advect run.n2_advect
 
-cp -R ../../share/run ./run.test1
-cd run.test1
-cp ../aether1.json ./aether.json
+# Run with no advection:
+cp -R ../../share/run ./run.no_advect
+cd run.no_advect
+cp ../no_advect.json ./aether.json
 ./aether
+cd UA/output
+../../../../../srcPython/postAether.py -rm
 
-cp -R ../../share/run ./run.test2
-cd run.test2
-cp ../aether2.json ./aether.json
-./aether
+../../../../../aetherpy/bin/aether_plot_simple.py -var=Temperature -alt=10 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var=O -alt=20 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var="O Vertical Wind" -alt=5 3DNEU_20110320_001000.nc
+cd ../../..
 
-cp -R ../../share/run ./run.test3
-cd run.test3
-cp ../aether3.json ./aether.json
+# Run with n2 as the only advected neutral:
+cp -R ../../share/run ./run.n2_advect
+cd run.n2_advect
+cp ../n2_advect.json ./aether.json
 ./aether
+cd UA/output
+../../../../../srcPython/postAether.py -rm
+
+../../../../../aetherpy/bin/aether_plot_simple.py -var=Temperature -alt=10 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var=O -alt=20 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var="O Vertical Wind" -alt=5 3DNEU_20110320_001000.nc
+cd ../../..
+
+# Run with more advected species (specified in earth.in)
+cp -R ../../share/run ./run.some_advect
+cd run.some_advect
+cp ../some_advect.json ./aether.json
+./aether
+cd UA/output
+../../../../../srcPython/postAether.py -rm
+
+../../../../../aetherpy/bin/aether_plot_simple.py -var=Temperature -alt=10 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var=O -alt=20 3DNEU_20110320_001000.nc
+../../../../../aetherpy/bin/aether_plot_simple.py -var="O Vertical Wind" -alt=5 3DNEU_20110320_001000.nc
+cd ../../..

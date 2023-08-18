@@ -23,9 +23,11 @@
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
     
     "Outputs" : {
-	"type" : ["states"],
+	"type" : ["neutrals"],
 	"dt" : [900] },
     
-    "DoCalcBulkIonTemp" : false
+    "DoCalcBulkIonTemp" : false,
+    
+    "PlanetFile" : "UA/inputs/n2advect_earth.in"
     
 }

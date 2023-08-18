@@ -547,7 +547,7 @@ std::string Inputs::get_f107_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
-  return settings["Planet"];
+  return settings["Planet"]["name"];
 }
 
 // -----------------------------------------------------------------------
@@ -675,6 +675,8 @@ json Inputs::get_boundary_condition_types() {
 
   return values;
 }
+
+
 
 // --------------------------------------------------------------------------
 // check to see if class is ok

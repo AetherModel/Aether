@@ -1,0 +1,25 @@
+{
+    "nAlts": 55,
+    "nLats": 22,
+    "nLons": 22,
+    "nVars": 1,
+    "nX": 22,
+    "nY": 22,
+    "nZ": 55,
+    "time": [
+        1965,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+    ],
+    "units": [
+        "meters"
+    ],
+    "variables": [
+        "Altitude Below"
+    ],
+    "version": 0.10000000149011612
+}
