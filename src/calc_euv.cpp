@@ -33,18 +33,21 @@ int calc_euv(Planets planet,
                    input.get_student_name() + "?");
 
     // Chapman integrals for EUV energy deposition:
+    // Need chapman integrals for aurora too!
     neutrals.calc_chapman(grid);
 
-    if (input.get_euv_model() == "euvac")
-      iErr = euv.euvac(time, indices);
-    else if (input.get_euv_model() == "neuvac")
-      iErr = euv.neuvac(time, indices);
-    else if (input.get_euv_model() == "hfg")
-      iErr = euv.solomon_hfg(time, indices);
+    if (euv.doUse) {
+      if (input.get_euv_model() == "euvac")
+	iErr = euv.euvac(time, indices);
+      else if (input.get_euv_model() == "neuvac")
+	iErr = euv.neuvac(time, indices);
+      else if (input.get_euv_model() == "hfg")
+	iErr = euv.solomon_hfg(time, indices);
 
-    iErr = euv.scale_from_1au(planet, time);
+      iErr = euv.scale_from_1au(planet, time);
 
-    calc_ionization_heating(euv, neutrals, ions);
+      calc_ionization_heating(euv, neutrals, ions);
+    }
 
     report.exit(function);
   }
