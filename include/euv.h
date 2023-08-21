@@ -29,6 +29,9 @@ class Euv {
 
 public:
 
+  /// whether to actuall use euv at all:
+  bool doUse;
+  
   /// number of wavelengths in spectrum: 
   int nWavelengths;
 
