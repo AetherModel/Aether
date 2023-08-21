@@ -26,6 +26,7 @@ public:
   precision_t get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
+  bool get_euv_douse();
   std::string get_aurora_file();
   std::string get_chemistry_file();
   std::string get_indices_lookup_file();
