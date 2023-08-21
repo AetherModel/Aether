@@ -133,7 +133,7 @@ private:
   bool doAppend;
 
   // A randomly chosen point for test
-  std::vector<precision_t> lla {5,4,40};
+  std::vector<precision_t> lla {2,2,2};
 };
 
 #endif  // INCLUDE_LOGFILE_H_
