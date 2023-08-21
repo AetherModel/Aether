@@ -302,15 +302,23 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   int iDir;
 
+  arma_vec dta(4);
+
   // simply some things, and just take the bulk value for now:
   arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
-  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
-  arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
-  arma_vec dta(3);
   dta(0) = dtx.min();
+  
+  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
   dta(1) = dty.min();
-  dta(2) = dtz.min();
-
+  
+  if (input.get_nAltsGeo() > 1) {
+    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    dta(2) = dtz.min();
+  } else {
+    dta(2) = 1e32;
+  }
+  dta(3) = 10.0;
+  
   dt = dta.min();
 
   if (report.test_verbose(3))
