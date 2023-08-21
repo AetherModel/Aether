@@ -57,7 +57,8 @@ int advance(Planets &planet,
 
   neutrals.calc_scale_height(gGrid);
   neutrals.set_bcs(gGrid, time, indices);
-  neutrals.advect_vertical(gGrid, time);
+  if (input.get_nAltsGeo() > 1)
+    neutrals.advect_vertical(gGrid, time);
 
   // ------------------------------------
   // Calculate source terms next:
