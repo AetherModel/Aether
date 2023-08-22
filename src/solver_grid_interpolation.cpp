@@ -24,39 +24,6 @@ int64_t first_diff_index(const arma_vec &a, const arma_vec &b) {
 }
 
 // --------------------------------------------------------------------------
-// Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
-// --------------------------------------------------------------------------
-
-arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in) {
-  // See init_geo_grid.cpp:126. The offset for lon is subtracted
-  lon_in = lon_in - 3 * cPI / 4;
-
-  // Transfer polar coordinate to cartesian coordinate
-  precision_t xy_temp;
-  arma_vec ans(3);
-  ans[2] = sin(lat_in);
-  xy_temp = cos(lat_in);
-  ans[1] = xy_temp * sin(lon_in);
-  ans[0] = xy_temp * cos(lon_in);
-
-  // Project this point onto the surface of cube
-  precision_t coef = 1.0 / std::max({std::abs(ans[0]), std::abs(ans[1]), std::abs(ans[2])});
-  ans *= coef;
-
-  // Round the number if it is close to 1 or -1, otherwise the == and != operator
-  // won't behave as expected because of the accuracy problem of floating point numbers
-  for (int64_t i = 0; i < 3; ++i) {
-    if (std::abs(ans[i] + 1) < cSmall)
-      ans[i] = -1;
-
-    else if (std::abs(ans[i] - 1) < cSmall)
-      ans[i] = 1;
-  }
-
-  return ans;
-}
-
-// --------------------------------------------------------------------------
 // Assign any point on the surface of a cube a number within [0,5]
 // --------------------------------------------------------------------------
 
@@ -204,10 +171,12 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) const {
   } else if (cr.surface_number == 5) {
     // The top surface includes all of its 4 edges, so when the max
     // equals 1 for row or -1 for col, we need to turn exclusive to be false
-    if (cr.row_min + cr.drow * (nLons - 2 * nGCs) == 1)
+    corner = sphere_to_cube(geoLon_Corner(nLons - nGCs, nLats - nGCs, nGCs),
+                            geoLat_Corner(nLons - nGCs, nLats - nGCs, nGCs));
+    if (corner[cr.row_direction] == 1)
       cr.row_max_exclusive = false;
 
-    if (cr.col_min + cr.dcol * (nLons - 2 * nGCs) == -1)
+    if (corner[cr.col_direction] == -1)
       cr.col_max_exclusive = false;
   }
 }
@@ -307,6 +276,16 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
   int64_t row_index_max, col_index_max;
   row_index_max = nLons - 2 * nGCs;
   col_index_max = nLats - 2 * nGCs;
+
+  arma_vec corner;
+  corner = sphere_to_cube(geoLon_Corner(nLons - nGCs, nLats - nGCs, nGCs),
+                          geoLat_Corner(nLons - nGCs, nLats - nGCs, nGCs));
+  if (point_in(cr.row_direction) == corner(cr.row_direction)) {
+    row_frac_index = row_index_max;
+  }
+  if (point_in(cr.col_direction) == corner(cr.col_direction)) {
+    col_frac_index = col_index_max;
+  }
 
   if (row_frac_index < 0 || (row_frac_index == 0 && cr.row_min_exclusive)
       || col_frac_index < 0 || (col_frac_index == 0 && cr.col_min_exclusive)

@@ -967,6 +967,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     MPI_Barrier(aether_comm);
     create_altitudes(planet);
 
+    init_connection();
+
     DidWork = write_restart(input.get_restartout_dir());
   }
 

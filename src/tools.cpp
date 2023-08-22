@@ -613,3 +613,36 @@ std::vector<int> indef_vector(arma_cube cube){
     return locations;
   }
 }
+
+// --------------------------------------------------------------------------
+// Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
+// --------------------------------------------------------------------------
+
+arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in) {
+  // See init_geo_grid.cpp:126. The offset for lon is subtracted
+  lon_in = lon_in - 3 * cPI / 4;
+
+  // Transfer polar coordinate to cartesian coordinate
+  precision_t xy_temp;
+  arma_vec ans(3);
+  ans[2] = sin(lat_in);
+  xy_temp = cos(lat_in);
+  ans[1] = xy_temp * sin(lon_in);
+  ans[0] = xy_temp * cos(lon_in);
+
+  // Project this point onto the surface of cube
+  precision_t coef = 1.0 / std::max({std::abs(ans[0]), std::abs(ans[1]), std::abs(ans[2])});
+  ans *= coef;
+
+  // Round the number if it is close to 1 or -1, otherwise the == and != operator
+  // won't behave as expected because of the accuracy problem of floating point numbers
+  for (int64_t i = 0; i < 3; ++i) {
+    if (std::abs(ans[i] + 1) < cSmall)
+      ans[i] = -1;
+
+    else if (std::abs(ans[i] - 1) < cSmall)
+      ans[i] = 1;
+  }
+
+  return ans;
+}

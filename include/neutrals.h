@@ -420,6 +420,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   bool exchange(Grid &grid);
+  bool exchange_old(Grid &grid);
 
   /**********************************************************************
    \brief add eddy contributions to vertical acceleration
