@@ -37,9 +37,10 @@ int advance(Planets &planet,
 
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
+  neutrals.calc_mean_major_mass();
+  
   neutrals.calc_specific_heat();
   neutrals.calc_concentration();
-  neutrals.calc_mean_major_mass();
   neutrals.calc_pressure();
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
