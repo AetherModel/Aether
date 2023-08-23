@@ -96,6 +96,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
   int64_t iAlt;
 
   arma_cube gradient(nLons, nLats, nAlts);
@@ -109,8 +110,8 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
       (value.slice(iAlt + 1)
        - one_minus_r2.slice(iAlt) % value.slice(iAlt)
        - grid.dalt_ratio_sq_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
-      (grid.dalt_lower_scgc.slice(iAlt + 1) % (1.0 + grid.dalt_ratio_scgc.slice(
-                                                 iAlt)));
+      (grid.dalt_lower_scgc.slice(iAlt + 1) %
+       (1.0 + grid.dalt_ratio_scgc.slice(iAlt)));
 
   // lower boundary
   iAlt = 0;
@@ -123,7 +124,6 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
   gradient.slice(iAlt) =
     (value.slice(iAlt) - value.slice(iAlt - 1)) /
     grid.dalt_lower_scgc.slice(iAlt);
-
   return gradient;
 }
 
