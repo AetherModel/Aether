@@ -47,6 +47,8 @@ int calc_euv(Planets planet,
       iErr = euv.scale_from_1au(planet, time);
 
       calc_ionization_heating(euv, neutrals, ions);
+    } else {
+      neutrals.heating_euv_scgc.zeros();
     }
 
     report.exit(function);
