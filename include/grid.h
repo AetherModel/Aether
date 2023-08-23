@@ -168,8 +168,6 @@ public:
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
 
-  // Initialize connections between processors
-  void init_connection();
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
 
@@ -341,6 +339,8 @@ public:
   // Processed interpolation coefficients
   std::vector<struct interp_coef_t> interp_coefs;
 
+  // Initialize connections between processors
+  void init_connection();
   // Used for message exchange
   struct idx2d_t {
     // Index of row and column

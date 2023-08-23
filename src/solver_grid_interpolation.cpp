@@ -171,12 +171,10 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) const {
   } else if (cr.surface_number == 5) {
     // The top surface includes all of its 4 edges, so when the max
     // equals 1 for row or -1 for col, we need to turn exclusive to be false
-    corner = sphere_to_cube(geoLon_Corner(nLons - nGCs, nLats - nGCs, nGCs),
-                            geoLat_Corner(nLons - nGCs, nLats - nGCs, nGCs));
-    if (corner[cr.row_direction] == 1)
+    if (cr.row_min + cr.drow * (nLons - 2 * nGCs) == 1)
       cr.row_max_exclusive = false;
 
-    if (corner[cr.col_direction] == -1)
+    if (cr.col_min + cr.dcol * (nLons - 2 * nGCs) == -1)
       cr.col_max_exclusive = false;
   }
 }
@@ -276,16 +274,6 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
   int64_t row_index_max, col_index_max;
   row_index_max = nLons - 2 * nGCs;
   col_index_max = nLats - 2 * nGCs;
-
-  arma_vec corner;
-  corner = sphere_to_cube(geoLon_Corner(nLons - nGCs, nLats - nGCs, nGCs),
-                          geoLat_Corner(nLons - nGCs, nLats - nGCs, nGCs));
-  if (point_in(cr.row_direction) == corner(cr.row_direction)) {
-    row_frac_index = row_index_max;
-  }
-  if (point_in(cr.col_direction) == corner(cr.col_direction)) {
-    col_frac_index = col_index_max;
-  }
 
   if (row_frac_index < 0 || (row_frac_index == 0 && cr.row_min_exclusive)
       || col_frac_index < 0 || (col_frac_index == 0 && cr.col_min_exclusive)

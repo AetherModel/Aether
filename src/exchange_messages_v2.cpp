@@ -510,9 +510,6 @@ void Grid::init_connection() {
 
         // Fix precision issues
         for (auto& it : interp_coefs) {
-            if (!it.in_grid) {
-                exit(1);
-            }
             if (it.rRow < 0.0001) {
                 it.rRow = 0;
             } else if (it.rRow > 0.9999) {
