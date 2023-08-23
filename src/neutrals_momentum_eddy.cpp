@@ -11,7 +11,8 @@ void Neutrals::vertical_momentum_eddy(Grid &gGrid) {
 
   int64_t iSpecies;
 
-  if (input.get_use_eddy_momentum()) {
+  if (input.get_use_eddy_momentum() &&
+      gGrid.get_nZ() > 1 + 2 * gGrid.get_nGCs()) {
 
     arma_cube log_cons;
     arma_cube grad_cons;
