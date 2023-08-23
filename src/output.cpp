@@ -584,15 +584,16 @@ int OutputContainer::write_container_header() {
 
    version = header["version"];
    itime = header["itime"];
-   nLons = header["nLons"];
-   nLats = header["nLats"];
-   nAlts = header["nAlts"];
+   int64_t nLons = header["nLons"];
+   int64_t nLats = header["nLats"];
+   int64_t nAlts = header["nAlts"];
+   
+   std::vector<std::string> variables = header["variables"];
+   std::vector<std::string> units = header["units"];
 
    for (int64_t iVar = 0; iVar < nVars; iVar++) {
-    std::vector<std::string> variables = header["variables"];
-    std::vector<std::string> units = header["units"];
-    elements[iVar].cName.push_back(variables);
-    elements[iVar].cUnit.push_back(units);
+    elements[iVar].cName = variables[iVar];
+    elements[iVar].cUnit = units[iVar];
    }
   
    } 
