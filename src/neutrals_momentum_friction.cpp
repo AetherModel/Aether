@@ -83,46 +83,48 @@ void calc_neutral_friction(Neutrals &neutrals) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  arma_vec vels(neutrals.nSpecies, fill::zeros);
-  arma_vec acc(neutrals.nSpecies, fill::zeros);
-  int64_t iAlt, iLat, iLon, iDir, iSpecies;
-  int64_t nXs = neutrals.temperature_scgc.n_rows;
-  int64_t nYs = neutrals.temperature_scgc.n_cols;
-  int64_t nZs = neutrals.temperature_scgc.n_slices;
+  if (input.get_advection_neutrals_vertical() != "hydro") {
+  
+    arma_vec vels(neutrals.nSpecies, fill::zeros);
+    arma_vec acc(neutrals.nSpecies, fill::zeros);
+    int64_t iAlt, iLat, iLon, iDir, iSpecies;
+    int64_t nXs = neutrals.temperature_scgc.n_rows;
+    int64_t nYs = neutrals.temperature_scgc.n_cols;
+    int64_t nZs = neutrals.temperature_scgc.n_slices;
 
-  for (iDir = 0; iDir < 3; iDir++) {
-    if (iDir < 2) {
-      for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-        neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
-    } else {
-
-      if (nZs > 1 + 2 * 2) {
-      
-	for (iAlt = 0; iAlt < nZs; iAlt++) {
-	  for (iLat = 0; iLat < nYs; iLat++) {
-	    for (iLon = 0; iLon < nXs; iLon++) {
-	      vels.zeros();
-
-	      //Put the old velocities into vels:
-	      for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-		vels(iSpecies) =
-		  neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
-
-	      acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
-
-	      for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
-		neutrals.species[iSpecies].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
-		  acc(iSpecies);
-	    } // for long
-	  } // for lat
-	} // for alt
-      } else {
+    for (iDir = 0; iDir < 3; iDir++) {
+      if (iDir < 2) {
 	for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
 	  neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
-      } // else nZs
-    } // if iDir
-  } // for direction
+      } else {
 
+	if (nZs > 1 + 2 * 2) {
+      
+	  for (iAlt = 0; iAlt < nZs; iAlt++) {
+	    for (iLat = 0; iLat < nYs; iLat++) {
+	      for (iLon = 0; iLon < nXs; iLon++) {
+		vels.zeros();
+
+		//Put the old velocities into vels:
+		for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+		  vels(iSpecies) =
+		    neutrals.species[iSpecies].velocity_vcgc[iDir](iLon, iLat, iAlt);
+
+		acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
+
+		for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+		  neutrals.species[iSpecies].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+		    acc(iSpecies);
+	      } // for long
+	    } // for lat
+	  } // for alt
+	} else {
+	  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+	    neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
+	} // else nZs
+      } // if iDir
+    } // for direction
+  } // if not hydrostatic
   report.exit(function);
   return;
 } //calc_neutral_friction
