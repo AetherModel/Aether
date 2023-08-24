@@ -1,6 +1,6 @@
 
 {
-    "Planet" : "earth",
+    "Planet" : "acheron",
     "AuroraFile" : "UA/inputs/aurora_acheron.csv",
 
     "Advection" : {
