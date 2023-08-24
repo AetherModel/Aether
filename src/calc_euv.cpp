@@ -38,18 +38,17 @@ int calc_euv(Planets planet,
 
     if (euv.doUse) {
       if (input.get_euv_model() == "euvac")
-	iErr = euv.euvac(time, indices);
+        iErr = euv.euvac(time, indices);
       else if (input.get_euv_model() == "neuvac")
-	iErr = euv.neuvac(time, indices);
+        iErr = euv.neuvac(time, indices);
       else if (input.get_euv_model() == "hfg")
-	iErr = euv.solomon_hfg(time, indices);
+        iErr = euv.solomon_hfg(time, indices);
 
       iErr = euv.scale_from_1au(planet, time);
 
       calc_ionization_heating(euv, neutrals, ions);
-    } else {
+    } else
       neutrals.heating_euv_scgc.zeros();
-    }
 
     report.exit(function);
   }

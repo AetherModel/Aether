@@ -21,7 +21,7 @@ Euv::Euv() {
 
   if (input.get_euv_douse()) {
     doUse = true;
-  
+
     // Read in the EUV file:
     IsOk = read_file();
 
@@ -30,55 +30,55 @@ Euv::Euv() {
       IsOk = slot_euv("Long", "", wavelengths_long);
 
       if (IsOk)
-	IsOk = slot_euv("Short", "", wavelengths_short);
+        IsOk = slot_euv("Short", "", wavelengths_short);
 
       // This means we found both long and short wavelengths:
       if (IsOk) {
-	for (int iWave = 0; iWave < nWavelengths; iWave++) {
-	  ave = (wavelengths_short[iWave] + wavelengths_long[iWave]) / 2.0 * cAtoM;
-	  wavelengths_energy.push_back(cH * cC / ave);
-	  // We simply want to initialize these vectors to make them the
-	  // correct lenght:
-	  wavelengths_intensity_1au.push_back(0.0);
-	  wavelengths_intensity_top.push_back(0.0);
-	}
+        for (int iWave = 0; iWave < nWavelengths; iWave++) {
+          ave = (wavelengths_short[iWave] + wavelengths_long[iWave]) / 2.0 * cAtoM;
+          wavelengths_energy.push_back(cH * cC / ave);
+          // We simply want to initialize these vectors to make them the
+          // correct lenght:
+          wavelengths_intensity_1au.push_back(0.0);
+          wavelengths_intensity_top.push_back(0.0);
+        }
       }
 
       // Slot the EUVAC model coefficients:
       if (input.get_euv_model() == "euvac") {
-	IsOk = slot_euv("F74113", "", euvac_f74113);
-	IsOk = slot_euv("AFAC", "", euvac_afac);
+        IsOk = slot_euv("F74113", "", euvac_f74113);
+        IsOk = slot_euv("AFAC", "", euvac_afac);
       }
 
       // Slot the NEUVAC model coefficients:
       if (input.get_euv_model() == "neuvac") {
-	IsOk = slot_euv("NEUV_S1", "", neuvac_s1);
-	
-	if (IsOk)
-	  IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
+        IsOk = slot_euv("NEUV_S1", "", neuvac_s1);
 
-	if (IsOk)
-	  IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
+        if (IsOk)
+          IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
 
-	if (IsOk)
-	  IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
+        if (IsOk)
+          IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
 
-	if (IsOk)
-	  IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
+        if (IsOk)
+          IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
 
-	if (IsOk)
-	  IsOk = slot_euv("NEUV_I1", "", neuvac_int);
+        if (IsOk)
+          IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
+
+        if (IsOk)
+          IsOk = slot_euv("NEUV_I1", "", neuvac_int);
       }
 
       // Slot the HFG model coefficients:
       if (input.get_euv_model() == "hfg") {
-	IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
+        IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
 
-	if (IsOk)
-	  IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
+        if (IsOk)
+          IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
 
-	if (IsOk)
-	  IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
+        if (IsOk)
+          IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
       }
     }
   } else

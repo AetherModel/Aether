@@ -141,8 +141,10 @@ void Report::times() {
   if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
     float min_timing = entries[0].timing_total * TimingPercent / 100.0;
+
     if (min_timing < 0.01)
       min_timing = 0.01;
+
     for (int i = 0; i < nEntries; i++) {
       if (entries[i].iLevel <= iTimingDepth &&
           entries[i].timing_total >= min_timing) {
@@ -187,9 +189,8 @@ void Report::error(std::string error_in) {
 // -----------------------------------------------------------------------
 
 void Report::report_errors() {
-  for (int i = 0; i<error_list.size(); i++){
+  for (int i = 0; i < error_list.size(); i++)
     std::cout << error_list[i].func << " : " << error_list[i].error << "\n";
-  }
 }
 
 // -----------------------------------------------------------------------

@@ -242,18 +242,21 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
 //----------------------------------------------------------------------
 // Reports location of nans inserted into specified variable
 //----------------------------------------------------------------------
-void Neutrals::nan_test(std::string variable){
+void Neutrals::nan_test(std::string variable) {
   std::vector<int> locations;
   std::string message = ("For Neutrals " + variable + " ");
-  if (variable == "temperature_scgc"){
+
+  if (variable == "temperature_scgc") {
     locations = insert_indefinites(temperature_scgc);
     message += print_nan_vector(locations, temperature_scgc);
   }
-  if (variable == "density_scgc"){
+
+  if (variable == "density_scgc") {
     locations = insert_indefinites(density_scgc);
     message += print_nan_vector(locations, density_scgc);
   }
-  if (variable == "velocity_vcgc"){
+
+  if (variable == "velocity_vcgc") {
     locations = insert_indefinites(velocity_vcgc[0]);
     message +=
       "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
@@ -264,6 +267,7 @@ void Neutrals::nan_test(std::string variable){
     message +=
       "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
   }
+
   std::cout << message;
 }
 
@@ -274,12 +278,15 @@ void Neutrals::nan_test(std::string variable){
 
 bool Neutrals::check_for_nonfinites() {
   bool non_finites_exist = false;
+
   if (!all_finite(density_scgc, "density_scgc") ||
       !all_finite(temperature_scgc, "temperature_scgc") ||
       !all_finite(velocity_vcgc, "velocity_vcgc"))
     non_finites_exist = true;
+
   if (non_finites_exist)
     throw std::string("Check for nonfinites failed!!!\n");
+
   return non_finites_exist;
 }
 

@@ -77,7 +77,8 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     nSpecs = nSpecies;
 
   if (report.test_verbose(4)) {
-    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp() ? "true" : "false";
+    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp() ?
+              "true" : "false";
     std::cout << " so 'number of ions' is " << nSpecs << "\n";
   }
 

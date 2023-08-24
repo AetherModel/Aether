@@ -355,6 +355,7 @@ bool Chemistry::check_chemistry_file(json &headers,
         error_message =
           error_message + err + ": " + csv[iLine][headers[err]] + "\n";
       }
+
       std::cout << "check chem file error : " << error_message;
       report.error(error_message);
       report.print(0, error_message);

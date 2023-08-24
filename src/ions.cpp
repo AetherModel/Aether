@@ -166,17 +166,20 @@ int Ions::read_planet_file(Planets planet) {
 //----------------------------------------------------------------------
 // Reports location of nans inserted into specified variable
 //----------------------------------------------------------------------
-void Ions::nan_test(std::string variable){
+void Ions::nan_test(std::string variable) {
   std::vector<int> locations;
   std::string message = ("For Ions " + variable + " ");
+
   if (variable == "temperature_scgc") {
     locations = insert_indefinites(temperature_scgc);
     message += print_nan_vector(locations, temperature_scgc);
   }
+
   if (variable == "density_scgc") {
     locations = insert_indefinites(density_scgc);
     message += print_nan_vector(locations, density_scgc);
   }
+
   if (variable == "velocity_vcgc") {
     locations = insert_indefinites(velocity_vcgc[0]);
     message +=
@@ -188,6 +191,7 @@ void Ions::nan_test(std::string variable){
     message +=
       "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
   }
+
   std::cout << message;
 }
 
@@ -197,12 +201,15 @@ void Ions::nan_test(std::string variable){
 
 bool Ions::check_for_nonfinites() {
   bool non_finites_exist = false;
+
   if (!all_finite(density_scgc, "density_scgc") ||
       !all_finite(temperature_scgc, "temperature_scgc") ||
       !all_finite(velocity_vcgc, "velocity_vcgc"))
     non_finites_exist = true;
+
   if (non_finites_exist)
     throw std::string("Check for nonfinites failed!!!\n");
+
   return non_finites_exist;
 }
 

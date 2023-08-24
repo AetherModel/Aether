@@ -246,10 +246,12 @@ void Neutrals::calc_specific_heat() {
     std::cout << "max temperature : " << temperature_scgc.max() << "\n";
     std::cout << "max mean_major_mass : "
               << mean_major_mass_scgc.max() << "\n";
+
     if (!all_finite(rho_scgc, "rho")) {
       std::cout << "rho has nans!\n";
       report.report_errors();
     }
+
     if (!all_finite(sound_scgc, "sound speed")) {
       std::cout << "sound speed has nans!\n";
       report.report_errors();
@@ -310,18 +312,18 @@ precision_t Neutrals::calc_dt(Grid grid) {
   // simply some things, and just take the bulk value for now:
   arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
   dta(0) = dtx.min();
-  
+
   arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
   dta(1) = dty.min();
-  
+
   if (input.get_nAltsGeo() > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
-  } else {
+  } else
     dta(2) = 1e32;
-  }
+
   dta(3) = 10.0;
-  
+
   dt = dta.min();
 
   if (report.test_verbose(3))
@@ -519,9 +521,10 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
   int64_t nAlts = grid.get_nAlts();
   int64_t nGCs = grid.get_nGCs();
 
-  if (nAlts == 2 * nGCs + 1) {
+  if (nAlts == 2 * nGCs + 1)
     conduction_scgc.zeros();
-  } else {
+
+  else {
 
     arma_cube rhocvr23d(nLons, nLats, nAlts);
     arma_cube lambda3d(nLons, nLats, nAlts);
@@ -546,24 +549,25 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
 
-	temp1d = temperature_scgc.tube(iLon, iLat);
-	lambda1d = lambda3d.tube(iLon, iLat);
-	rhocvr21d = rhocvr23d.tube(iLon, iLat);
-	dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
-	conduction1d.zeros();
+        temp1d = temperature_scgc.tube(iLon, iLat);
+        lambda1d = lambda3d.tube(iLon, iLat);
+        rhocvr21d = rhocvr23d.tube(iLon, iLat);
+        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        conduction1d.zeros();
 
-	dt = time.get_dt();
+        dt = time.get_dt();
 
-	conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
+        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
 
-	// We want the sources to be in terms of dT/dt, while the
-	// conduction actually solves for Tnew-Told, so divide by dt
+        // We want the sources to be in terms of dT/dt, while the
+        // conduction actually solves for Tnew-Told, so divide by dt
 
-	conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
+        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
       }  // lat
     }  // lon
 
   } // if nAlts == 1 + 2*GCs
+
   report.exit(function);
   return;
 }
