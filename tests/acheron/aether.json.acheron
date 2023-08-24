@@ -27,6 +27,7 @@
 	"nAlts" : 40},
 
     "GeoGrid" : {
+	"MinAlt" : 1000.0,
 	"dAlt"   : 0.25,
 	"IsUniformAlt" : false},    
 
