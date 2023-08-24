@@ -444,6 +444,8 @@ def parse_args():
     parser.add_argument('-rm', \
                         help='removes processed files', \
                         action="store_true")
+    parser.add_argument('-alt', default = 2, type = int, \
+                        help='altitude to plot (-1 for no plot!)')
     parser.add_argument('-v', \
                         help='turn on verbose mode', \
                         action="store_true")
@@ -932,9 +934,10 @@ def write_and_plot_data(dataToWrite,
         print('  --> Outputting hdf5 file : ', hdf5File)
         write_hdf5(dataToWrite, hdf5File, isVerbose = isVerbose)
 
-    plotFile = fileStart + fileAddon + '.png'
-    var = dataToWrite[0]['vars'][iVar]
-    plot_all_blocks(dataToWrite, var, iAlt, plotFile)
+    if (iAlt > -1):
+        plotFile = fileStart + fileAddon + '.png'
+        var = dataToWrite[0]['vars'][iVar]
+        plot_all_blocks(dataToWrite, var, iAlt, plotFile)
 
     return
 
@@ -951,7 +954,7 @@ if __name__ == '__main__':  # main code block
     filesInfo = get_base_files()
 
     iVar = 3
-    iAlt = 10
+    iAlt = args.alt
 
     output_netcdf = False if args.hdf5 else True
 
