@@ -62,7 +62,6 @@ bool read_and_store_indices(Indices &indices) {
   std::string function = "read_and_store_indices";
   static int iFunction = -1;
   report.enter(function, iFunction);
-
   // ---------------------------------------------------
   // Read F10.7 file (if set):
   // ---------------------------------------------------
@@ -76,10 +75,10 @@ bool read_and_store_indices(Indices &indices) {
 
     if (f107_contents.nTimes > 0)
       indices.set_f107(f107_contents);
-
     else {
       DidWork = false;
-      std::cout << "ERROR in reading f107 file!!!\n";
+      report.error("ERROR in reading f107 file!!!\n");
+      return DidWork;
     }
   }
 
@@ -110,6 +109,11 @@ bool read_and_store_indices(Indices &indices) {
                                       file_contents.times,
                                       file_contents.values[iVar],
                                       file_contents.missing_values[iVar]);
+
+          if (!DidWork) {
+            report.error("Error setting indices index!!!");
+            return DidWork;
+          }
         }  // if
       }  // for iVar
     }  // for iFile
@@ -217,7 +221,6 @@ void Indices::perturb_index(int iIndex, int seed,
   }
 }
 
-
 // ----------------------------------------------------------------------
 // For f10.7 - need to set the 81-day average also.
 // ----------------------------------------------------------------------
@@ -281,7 +284,6 @@ void Indices::set_f107(index_file_output_struct f107_contents) {
             average_time,
             average_f107,
             f107_contents.missing_values[0]);
-
   return;
 }
 

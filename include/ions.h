@@ -96,6 +96,7 @@ class Ions {
   species_chars create_species(Grid grid);
   int read_planet_file(Planets planet);
   void init_ion_temperature(Neutrals neutrals, Grid grid);
+  void set_floor();
   void fill_electrons();
   int get_species_id(std::string name);
   void calc_efield(Grid grid);
@@ -107,7 +108,8 @@ class Ions {
 							     Grid grid);
   void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time);
   void calc_electron_temperature(Neutrals neutrals, Grid grid);
-  
+  bool check_for_nonfinites();
+  void nan_test(std::string variable);
   bool restart_file(std::string dir, bool DoRead);
 };
 #endif  // INCLUDE_IONS_H_

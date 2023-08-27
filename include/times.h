@@ -135,12 +135,13 @@ public:
 
   /**************************************************************
      \brief Calculates the delta time in the code.
-
+     \param dtNeutral dt from the neutrals
+     \param dtIon dt from the ions
      This calculates the delta-time in Aether for the current state.
    At this moment, this is a stand-in code. In reality, we need to pass
    in the grid, neutrals, ions, and inputs for calculation.
    **/
-  void calc_dt();
+  void calc_dt(precision_t dtNeutral, precision_t dtIon);
 
   /**************************************************************
      \brief Get the current time as an array

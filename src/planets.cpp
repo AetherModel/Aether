@@ -70,7 +70,7 @@ precision_t Planets::get_cos_dec(Times time) {
 
 precision_t Planets::get_radius(precision_t latitude) {
   if (input.get_do_lat_dependent_radius())
-    return planet.polar_radius + (planet.delta_radius * cos(latitude)); 
+    return planet.polar_radius + (planet.delta_radius * cos(latitude));
   else
     return planet.radius;
 }
@@ -167,7 +167,7 @@ precision_t Planets::get_declination(Times time) {
 }
 
 // -----------------------------------------------------------------------------
-// Get the omega (rotational rate) value of the planet 
+// Get the omega (rotational rate) value of the planet
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_omega() {
@@ -402,12 +402,13 @@ bool Planets::read_file() {
   report.print(1, "Reading planetary file : " + input.get_planetary_file());
 
   myFile.open(input.get_planetary_file());
-    
+
   if (!myFile.is_open()) {
-      if (iProc == 0)
-          std::cout << "Could not open planetary file : "
-          << input.get_planetary_file() << "\n";
-      DidWork = false;
+    if (iProc == 0)
+      std::cout << "Could not open planetary file : "
+                << input.get_planetary_file() << "\n";
+
+    DidWork = false;
   } else {
 
     if (myFile.good()) {
@@ -571,4 +572,3 @@ bool Planets::read_planet_specific_file() {
   report.exit(function);
   return DidWork;
 }
-

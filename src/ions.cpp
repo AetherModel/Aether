@@ -36,7 +36,13 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
-  //tmp.nu_ion_neutral_vcgc = make_cube_vector(nLons, nLats, nAlts, nSpecies);
+  for (int iDir = 0; iDir < 3; iDir++) {
+    tmp.par_velocity_vcgc[iDir].zeros();
+    tmp.perp_velocity_vcgc[iDir].zeros();
+  }
+
+  // The collision frequencies need the neutrals, so those are
+  // initialized in init_ion_temperature.
 
   return tmp;
 }
@@ -81,6 +87,10 @@ Ions::Ions(Grid grid, Planets planet) {
   density_scgc.set_size(nLons, nLats, nAlts);
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++)
+    velocity_vcgc[iDir].zeros();
+
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.fill(200.0);
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
@@ -143,14 +153,14 @@ int Ions::read_planet_file(Planets planet) {
     species[iSpecies].charge = ions["charge"][iSpecies];
     species[iSpecies].DoAdvect = ions["advect"][iSpecies];
   }
-    
-    // account for advected ions:
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        if (species[iSpecies].DoAdvect == 1) {
-            nSpeciesAdvect++;
-            species_to_advect.push_back(iSpecies);
-        }
+
+  // account for advected ions:
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect == 1) {
+      nSpeciesAdvect++;
+      species_to_advect.push_back(iSpecies);
     }
+  }
 
   species[nSpecies].cName = "e-";
   species[nSpecies].mass = cME;
@@ -160,6 +170,69 @@ int Ions::read_planet_file(Planets planet) {
   return iErr;
 }
 
+//----------------------------------------------------------------------
+// Reports location of nans inserted into specified variable
+//----------------------------------------------------------------------
+void Ions::nan_test(std::string variable) {
+  std::vector<int> locations;
+  std::string message = ("For Ions " + variable + " ");
+
+  if (variable == "temperature_scgc") {
+    locations = insert_indefinites(temperature_scgc);
+    message += print_nan_vector(locations, temperature_scgc);
+  }
+
+  if (variable == "density_scgc") {
+    locations = insert_indefinites(density_scgc);
+    message += print_nan_vector(locations, density_scgc);
+  }
+
+  if (variable == "velocity_vcgc") {
+    locations = insert_indefinites(velocity_vcgc[0]);
+    message +=
+      "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
+    locations = insert_indefinites(velocity_vcgc[1]);
+    message +=
+      "at the y loc " + print_nan_vector(locations, velocity_vcgc[1]);
+    locations = insert_indefinites(velocity_vcgc[2]);
+    message +=
+      "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
+  }
+
+  std::cout << message;
+}
+
+//----------------------------------------------------------------------
+// Checks for nans and +/- infinities in density, temp, and velocity
+//----------------------------------------------------------------------
+
+bool Ions::check_for_nonfinites() {
+  bool non_finites_exist = false;
+
+  if (!all_finite(density_scgc, "density_scgc") ||
+      !all_finite(temperature_scgc, "temperature_scgc") ||
+      !all_finite(velocity_vcgc, "velocity_vcgc"))
+    non_finites_exist = true;
+
+  if (non_finites_exist)
+    throw std::string("Check for nonfinites failed!!!\n");
+
+  return non_finites_exist;
+}
+
+// -----------------------------------------------------------------------------
+// Set a floor for ion densities
+// -----------------------------------------------------------------------------
+
+void Ions::set_floor() {
+
+  int iSpecies;
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].density_scgc.clamp(1.0, 1e15);
+
+  return;
+}
 
 // -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
@@ -325,4 +398,3 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
   return DidWork;
 }
-

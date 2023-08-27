@@ -76,7 +76,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // ---------------------------------------------------------
   // Recalculate electrons
   // ---------------------------------------------------------
-
+  ions.set_floor();
   ions.fill_electrons();
 
   report.exit(function);

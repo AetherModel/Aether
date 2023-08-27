@@ -41,7 +41,8 @@ bool Inputs::read_inputs_json(Times &time) {
     //   - This is BEFORE the user inputs are merged!!!
 
     if (user_inputs.contains("Restart")) {
-        cout << "Contains restart" << endl;
+      cout << "Contains restart" << endl;
+
       if (user_inputs["Restart"].contains("do")) {
         if (user_inputs["Restart"]["do"]) {
           std::string restart_file = settings["Restart"]["InDir"];
@@ -55,13 +56,13 @@ bool Inputs::read_inputs_json(Times &time) {
 
     // Merge the defaults/restart settings with the user provided
     // settings, with the default/restart settings being the default:
-      settings.merge_patch(user_inputs);
-      
-      //change planet file to the one specified on aether.json:
-      settings["PlanetSpeciesFile"] = settings["PlanetFile"];
-      
-      std::string planet_filename = settings["PlanetSpeciesFile"];
-      report.print(1, "Using planet file : " + planet_filename);
+    settings.merge_patch(user_inputs);
+
+    //change planet file to the one specified on aether.json:
+    settings["PlanetSpeciesFile"] = settings["PlanetFile"];
+
+    std::string planet_filename = settings["PlanetSpeciesFile"];
+    report.print(1, "Using planet file : " + planet_filename);
 
     // Debug Stuff:
     report.set_verbose(settings["Debug"]["iVerbose"]);
@@ -84,7 +85,6 @@ bool Inputs::read_inputs_json(Times &time) {
     DidWork = false;
   }
 
-    cout << "Entering read_inputs_json" << endl;
+  cout << "Entering read_inputs_json" << endl;
   return DidWork;
 }
-

@@ -3,28 +3,50 @@
 
 #include "../include/aether.h"
 
-
 // ----------------------------------------------------------------------------
-//
+// Neatly display an armadillo vector
 // ----------------------------------------------------------------------------
 
 void display_vector(arma_vec vec) {
-
   for (int64_t i = 0; i < vec.n_rows; i++)
     std::cout << vec(i) << " ";
 
   std::cout << "\n";
-
 }
 
-
 // ----------------------------------------------------------------------------
-//
+// synchronize a (boolean) variable across all processors
 // ----------------------------------------------------------------------------
 
 bool sync_across_all_procs(bool value) {
   bool global_value;
   MPI_Allreduce(&value, &global_value, 1, MPI_C_BOOL, MPI_LAND, aether_comm);
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
+// Find min across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_min_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MIN, aether_comm);
+  global_value = vReceive;
+  return global_value;
+}
+
+// ----------------------------------------------------------------------------
+// Find max across all processors and return value to everyone
+// ----------------------------------------------------------------------------
+
+precision_t sync_max_across_all_procs(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  vSend = value;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_MAX, aether_comm);
+  global_value = vReceive;
   return global_value;
 }
 
@@ -40,7 +62,7 @@ precision_t sync_mean_across_all_procs(precision_t value) {
   nSend = 1.0;
   MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
   MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_comm);
-  global_value = vReceive/nReceive;
+  global_value = vReceive / nReceive;
   return global_value;
 }
 
@@ -250,9 +272,9 @@ precision_t mean(std::vector<precision_t> values) {
   return m;
 }
 
-// -----------------------------------------------------------------------------
+// --------------------------------------------------------------------
 // calculate standard deviation of vector
-// -----------------------------------------------------------------------------
+// --------------------------------------------------------------------
 
 precision_t standard_deviation(std::vector<precision_t> values) {
   int64_t nValues = values.size();
@@ -266,9 +288,9 @@ precision_t standard_deviation(std::vector<precision_t> values) {
   return s;
 }
 
-//-------------------------------------------------------------
+//----------------------------------------------------------------------
 // Get min, mean, and max of an arma_cube
-//-------------------------------------------------------------
+//----------------------------------------------------------------------
 
 std::vector<precision_t> get_min_mean_max(const arma_cube &value) {
   std::vector<precision_t> mmm(3);
@@ -278,35 +300,324 @@ std::vector<precision_t> get_min_mean_max(const arma_cube &value) {
   return mmm;
 }
 
-//-------------------------------------------------------------
-// Find the name of given species in neutrals and ions. Throw exception if not found
-//-------------------------------------------------------------
+//----------------------------------------------------------------------
+// Find the name of given species in neutrals and ions.
+// Throw exception if not found
+//----------------------------------------------------------------------
 
 const arma_cube& find_species_density(const std::string &name,
                                       Neutrals &neutrals,
                                       Ions &ions) {
   // Try to find the name in neutrals
   int id = neutrals.get_species_id(name);
-  if (id > -1) {
-    return neutrals.species[id].density_scgc;
-  }
 
-  // Try to find the name in ions
+  if (id > -1)
+    return neutrals.species[id].density_scgc;
+
   id = ions.get_species_id(name);
-  if (id > -1) {
+
+  if (id > -1)
     return ions.species[id].density_scgc;
-  }
 
   // Throw an exception if the species is not found
   throw std::string("Can not find species named " + name);
 }
 
-//-------------------------------------------------------------
+//----------------------------------------------------------------------
 // Get min, mean, and max of either a neutral or ion species
-//-------------------------------------------------------------
+//----------------------------------------------------------------------
 
 std::vector<precision_t> get_min_mean_max_density(const std::string &name,
                                                   Neutrals &neutrals,
                                                   Ions &ions) {
   return get_min_mean_max(find_species_density(name, neutrals, ions));
+}
+
+//-------------------------------------------------------------
+// Checks whether two arma vectors are approximately equal
+//-------------------------------------------------------------
+bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol) {
+  // Check for absolute largest relative difference
+  // if max diff is beyond tol, return false
+  precision_t max_diff = 0.;
+
+  // Find maximum value
+  precision_t vec1_max = abs(vec1).max();
+  precision_t vec2_max = abs(vec2).max();
+  precision_t vec_max = std::max(vec1_max, vec2_max);
+
+  // Check whether vectors are the same size
+  // if not, return false
+  if (vec1.size() != vec2.size())
+    return false;
+
+  // Loop through every member of vector
+  for (int64_t i = 0; i < vec1.size(); i++) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i)) / vec_max;
+
+    if (curr_diff > max_diff)
+      max_diff = curr_diff;
+  }
+
+  if (max_diff > tol)
+    return false;
+
+  return true;
+}
+
+//-------------------------------------------------------------
+// Overload col vector function with row vec
+//-------------------------------------------------------------
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2,
+                     precision_t tol) {
+  // Check for absolute largest relative difference
+  // if max diff is beyond tol, return false
+  precision_t max_diff = 0.;
+
+  // Find maximum value
+  precision_t vec1_max = abs(vec1).max();
+  precision_t vec2_max = abs(vec2).max();
+  precision_t vec_max = std::max(vec1_max, vec2_max);
+
+  // Check whether vectors are the same size
+  // if not, return false
+  if (vec1.size() != vec2.size())
+    return false;
+
+  // Loop through every member of vector
+  for (int64_t i = 0; i < vec1.size(); i++) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i)) / vec_max;
+
+    if (curr_diff > max_diff)
+      max_diff = curr_diff;
+  }
+
+  if (max_diff > tol)
+    return false;
+
+  return true;
+}
+
+//-------------------------------------------------------------
+// Checks whether a vector is constant (all values the same)
+// Method uses variance as evaluating factor
+//-------------------------------------------------------------
+bool is_approx_constant(arma_vec &vec, precision_t tol) {
+  // Find variance (normalize with vector 2-norm)
+  precision_t vec_norm = arma::norm(vec, 2);
+
+  precision_t vec_var = arma::var(vec) / vec_norm;
+
+  if (vec_var > tol)
+    return false;
+
+  return true;
+}
+
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2,
+                 mat_2x2 &A_inv_mat) {
+  u1 = u % A_inv_mat.A11 + v % A_inv_mat.A12;
+  u2 = u % A_inv_mat.A21 + v % A_inv_mat.A22;
+}
+
+// --------------------------------------------------------------------------
+// Convert spherical vector (velocities) to reference (contravariant) vector
+// Units of the velocities and transformation laws must be the same
+// u and v are spherical velocities
+// u1 and u2 are contravariant velocities
+// --------------------------------------------------------------------------
+void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v,
+                 mat_2x2 &A_mat) {
+  u = u1 % A_mat.A11 + u2 % A_mat.A12;
+  v = u1 % A_mat.A21 + u2 % A_mat.A22;
+}
+
+//----------------------------------------------------------------------
+// Takes a single index and finds the i, j, k position in an arma_cube
+//----------------------------------------------------------------------
+
+std::vector<int> index_to_ijk(arma_cube cube, int index) {
+  arma::uword x = cube.n_rows;
+  arma::uword y = cube.n_cols;
+  int altitude = index / (x * y);
+  int remainder = index % (x * y);
+  int lattitude = remainder / y;
+  int longitude = remainder % y;
+  return std::vector<int> {lattitude, longitude, altitude};
+}
+
+//----------------------------------------------------------------------
+// This will find NaNs or Inf in an arma_cube and will return
+// and error message if found. To be used for scalar values
+//----------------------------------------------------------------------
+
+bool all_finite(arma_cube cube, std::string name) {
+  // if cube has not inf or nans, then do nothing
+  if (is_finite(cube))
+    return true;
+  else {
+    // Report where NaNs and Infs were found:
+    std::vector<int> locations = indef_vector(cube);
+    std::vector<int> loc = index_to_ijk(cube, locations[0]);
+    std::string position =
+      "(" + std::to_string(loc[0]) +
+      "," + std::to_string(loc[1]) +
+      "," + std::to_string(loc[2]) + ")";
+    int size = locations.size();
+    std::string error_message =
+      std::to_string(size) +
+      " Nonfinite values exist in " + name +
+      " on iProc " + cProc +
+      " and iMember " + cMember +
+      " starting at: " + position;
+    report.error(error_message);
+    return false;
+  }
+}
+
+//----------------------------------------------------------------------
+// This will find NaNs or Inf in a VECTOR of arma_cubes and will return
+// and error message if found. To be used for things like velocities.
+//----------------------------------------------------------------------
+
+bool all_finite(std::vector<arma_cube> cubes, std::string name) {
+  bool no_nans = true;
+
+  for (int i = 0; i < cubes.size(); ++i) {
+    std::string new_name = name + "[" + std::to_string(i) + "] ";
+
+    if (!all_finite(cubes.at(i), new_name))
+      no_nans = false;
+  }
+
+  return no_nans;
+}
+
+//----------------------------------------------------------------------
+// Insert a bunch of nans and inf in random places for testing
+//----------------------------------------------------------------------
+
+std::vector<int> insert_indefinites(arma_cube &cube) {
+  int size = cube.n_elem;
+  std::vector<int> locations;
+
+  while (locations.size() < 6) {
+    int random = rand() % size;
+
+    if (std::find(locations.begin(),
+                  locations.end(),
+                  random) == locations.end())
+      locations.push_back(random);
+  }
+
+  std::vector<int> nan_locations(locations.begin(), locations.begin() + 3);
+  std::vector<int> indef_locations(locations.begin() + 3, locations.end());
+
+  for (int i = 0; i < nan_locations.size(); i++) {
+    cube.at(nan_locations.at(i)) = datum::nan;
+    cube.at(indef_locations.at(i)) = datum::inf;
+  }
+
+  return locations;
+}
+
+//----------------------------------------------------------------------
+// Loop through arma_cube and check individual cells to see if they
+// are valid.  Needed this, since the included function doesn't work
+// all of the time.
+//----------------------------------------------------------------------
+
+bool is_finite(arma_cube &cube) {
+  for (int i = 0; i < cube.n_elem; i++) {
+    if (is_nan_inf(cube.at(i)))
+      return false;
+  }
+
+  return true;
+}
+
+//----------------------------------------------------------------------
+// Check to see if a quantity is a NaN.  This is an explicit check
+// for the bits!
+//----------------------------------------------------------------------
+
+bool is_nan(double value) {
+  uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+  uint64_t expMask = 0x7FF0000000000000ULL;
+  uint64_t fracMask = 0x000FFFFFFFFFFFFFULL;
+
+  return ((bits & expMask) == expMask) && ((bits & fracMask) != 0);
+}
+
+//----------------------------------------------------------------------
+// Check to see if a quantity is a Inf.  This is an explicit check
+// for the bits!
+//----------------------------------------------------------------------
+
+bool is_inf(double value) {
+  uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+  uint64_t expMask = 0x7FF0000000000000ULL;
+  return (bits & expMask) == expMask;
+}
+
+//----------------------------------------------------------------------
+// Check whether a value is NaN or Inf
+//----------------------------------------------------------------------
+
+bool is_nan_inf(double value) {
+  return (is_nan(value) || is_inf(value));
+}
+
+//----------------------------------------------------------------------
+// If the value is NaN or Inf, report its position
+//----------------------------------------------------------------------
+
+std::string print_nan_vector(std::vector<int> input, arma_cube cube) {
+  std::string output("nans exist at ");
+  std::vector<int> loc;
+
+  for (int i = 0; i < 3; i++) {
+    loc = index_to_ijk(cube, input.at(i));
+    output += ("(" + std::to_string(loc.at(0)) +
+               "," + std::to_string(loc.at(1)) +
+               ","  + std::to_string(loc.at(2)) + ") ");
+  }
+
+  output += "infs exist at ";
+
+  for (int i = 3; i < 6; i++) {
+    loc = index_to_ijk(cube, input.at(i));
+    output += ("(" + std::to_string(loc.at(0)) +
+               "," + std::to_string(loc.at(1)) +
+               ","  + std::to_string(loc.at(2)) + ") ");
+  }
+
+  output += "\n";
+  return output;
+}
+
+//----------------------------------------------------------------------
+//
+//----------------------------------------------------------------------
+
+std::vector<int> indef_vector(arma_cube cube) {
+  std::vector<int> locations;
+
+  for (int i = 0; i < cube.n_elem; i++) {
+    if (is_nan_inf(cube.at(i)))
+      locations.push_back(i);
+  }
+
+  if (locations.size() > 0)
+    return locations;
+  else {
+    locations.push_back(-1);
+    return locations;
+  }
 }

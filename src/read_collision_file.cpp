@@ -119,6 +119,7 @@ void read_collision_file(Neutrals &neutrals,
     infile_ptr.close();
     check_collision_frequncies(ions, neutrals);
   }
+
   report.exit(function);
   return;
 }
@@ -185,6 +186,7 @@ void check_collision_frequncies(Ions ions,
 
     std::cout << "Done with check_collision_frequncies\n";
   }
+
   return;
 }
 
@@ -269,6 +271,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
+
   report.exit(function);
   return;
 }
@@ -334,18 +337,19 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
                     << neutrals.species[iNeutral].cName << "\n";
 
         ions.species[iIon].nu_in_res_temp_min[iNeutral] =
-	  str_to_num(csv[iLine][2]);
+          str_to_num(csv[iLine][2]);
         ions.species[iIon].nu_in_res_coef1[iNeutral] =
-	  str_to_num(csv[iLine][3]);
+          str_to_num(csv[iLine][3]);
         ions.species[iIon].nu_in_res_tn_frac[iNeutral] =
-	  str_to_num(csv[iLine][4]);
+          str_to_num(csv[iLine][4]);
         ions.species[iIon].nu_in_res_ti_frac[iNeutral] =
-	  str_to_num(csv[iLine][5]);
+          str_to_num(csv[iLine][5]);
         ions.species[iIon].nu_in_res_coef2[iNeutral] =
-	  str_to_num(csv[iLine][6]);
+          str_to_num(csv[iLine][6]);
       }
     }
   }
+
   report.exit(function);
   return;
 }
@@ -396,14 +400,14 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
         // If a matching specie exists extract Bst from table
         if (iIonSIds_[iCol - 1] > -1) {
           ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] =
-	    str_to_num(csv[iLine][iCol]) * coef;
+            str_to_num(csv[iLine][iCol]) * coef;
 
           if (report.test_verbose(4)) {
             std::cout << "Species s vs t : "
                       << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
             std::cout << "nu_ion_ion     : "
                       << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]]
-		      << "\n";
+                      << "\n";
           }
         }  // End iIonSIds_
       }  // End iCol
@@ -419,13 +423,14 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
+
   report.exit(function);
   return;
 } // parse_bst_in_table
 
 void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
                           Neutrals &neutrals) {
-  
+
   std::string function = "parse_diff0_in_table";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -439,7 +444,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   float coef = str_to_num(csv[nLines - 1][0]);
 
   int64_t iSpecies, jSpecies, iLine, iCol;
-  
+
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
     iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
@@ -454,7 +459,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   // minimum diffusion coeffient and exp and assign that to the 0s.
   precision_t minDiff0 = 1e32;
   precision_t value;
-  
+
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
@@ -464,22 +469,23 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
       for (iCol = 1; iCol < nCol; iCol++) {
 
         if (iNeutralSIds_[iCol - 1] > -1) {
-	  value = str_to_num(csv[iLine][iCol]) * coef;
+          value = str_to_num(csv[iLine][iCol]) * coef;
 
-	  if (value > 0.0 and value < minDiff0)
-	    minDiff0 = value;
+          if (value > 0.0 and value < minDiff0)
+            minDiff0 = value;
+
           neutrals.species[neutral_id].diff0[iNeutralSIds_[iCol - 1]] =
-	    value;
+            value;
 
-	  if (neutrals.species[neutral_id].diff0[iNeutralSIds_[iCol - 1]] > 0)
-	    if (report.test_verbose(4)) {
-	      std::cout << "Two diffusion species: "
-			<< csv[iLine][0] << " and " << csv[0][iCol] << "\n";
-	      std::cout << "diff0     : "
-			<< neutrals.species[neutral_id].diff0[iNeutralSIds_[iCol - 1]] << "\n";
-	    } //verbose
+          if (neutrals.species[neutral_id].diff0[iNeutralSIds_[iCol - 1]] > 0)
+            if (report.test_verbose(4)) {
+              std::cout << "Two diffusion species: "
+                        << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+              std::cout << "diff0     : "
+                        << neutrals.species[neutral_id].diff0[iNeutralSIds_[iCol - 1]] << "\n";
+            } //verbose
 
-	} // if matching specie exist
+        } // if matching specie exist
       } // for iCol
     } // if neutral_id > -1
   } // for iLine
@@ -489,22 +495,25 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     for (jSpecies = 0; jSpecies < neutrals.nSpecies; jSpecies++)
       if (neutrals.species[iSpecies].diff0[jSpecies] <= 0.0)
-	neutrals.species[iSpecies].diff0[jSpecies] = minDiff0;
-  
+        neutrals.species[iSpecies].diff0[jSpecies] = minDiff0;
+
   if (report.test_verbose(4)) {
     for (int i = 0; i < neutrals.nSpecies; i++) {
       cout << "Current species: " << neutrals.species[i].cName << endl;
+
       for (int j = 0; j < neutrals.species[i].diff0.size(); j++)
         cout << neutrals.species[i].diff0[j] << ", ";
+
       cout << endl;
     }
   }
+
   report.exit(function);
   return;
 } // parse_diff0_in_table
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
-                          Neutrals &neutrals) {
+                            Neutrals &neutrals) {
 
   std::string function = "parse_diffexp_in_table";
   static int iFunction = -1;
@@ -516,7 +525,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   std::vector<int> iNeutralSIds_; //lists every Neutrals ID
 
   int64_t iSpecies, jSpecies, iLine, iCol;
-  
+
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
     iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
@@ -531,7 +540,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   // minimum diffusion coeffient and exp and assign that to the 0s.
   precision_t minDiffexp = 1e32;
   precision_t value;
-  
+
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
@@ -541,22 +550,23 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
       for (iCol = 1; iCol < nCol; iCol++) {
 
         if (iNeutralSIds_[iCol - 1] > -1) {
-	  value = str_to_num(csv[iLine][iCol]);
+          value = str_to_num(csv[iLine][iCol]);
 
-	  if (value > 0.0 and value < minDiffexp)
-	    minDiffexp = value;
+          if (value > 0.0 and value < minDiffexp)
+            minDiffexp = value;
+
           neutrals.species[neutral_id].diff_exp[iNeutralSIds_[iCol - 1]] =
-	    value;
+            value;
 
-	  if (neutrals.species[neutral_id].diff_exp[iNeutralSIds_[iCol - 1]] > 0)
-	    if (report.test_verbose(4)) {
-	      std::cout << "Two diffusion species: "
-			<< csv[iLine][0] << " and " << csv[0][iCol] << "\n";
-	      std::cout << "diff_exp     : "
-			<< neutrals.species[neutral_id].diff_exp[iNeutralSIds_[iCol - 1]] << "\n";
-	    } //verbose
+          if (neutrals.species[neutral_id].diff_exp[iNeutralSIds_[iCol - 1]] > 0)
+            if (report.test_verbose(4)) {
+              std::cout << "Two diffusion species: "
+                        << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
+              std::cout << "diff_exp     : "
+                        << neutrals.species[neutral_id].diff_exp[iNeutralSIds_[iCol - 1]] << "\n";
+            } //verbose
 
-	} // if matching specie exist
+        } // if matching specie exist
       } // for iCol
     } // if neutral_id > -1
   } // for iLine
@@ -566,16 +576,19 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     for (jSpecies = 0; jSpecies < neutrals.nSpecies; jSpecies++)
       if (neutrals.species[iSpecies].diff_exp[jSpecies] <= 0.0)
-	neutrals.species[iSpecies].diff_exp[jSpecies] = minDiffexp;
-  
+        neutrals.species[iSpecies].diff_exp[jSpecies] = minDiffexp;
+
   if (report.test_verbose(4)) {
     for (int i = 0; i < neutrals.nSpecies; i++) {
       cout << "Current species: " << neutrals.species[i].cName << endl;
+
       for (int j = 0; j < neutrals.species[i].diff_exp.size(); j++)
         cout << neutrals.species[i].diff_exp[j] << ", ";
+
       cout << endl;
     }
   }
+
   report.exit(function);
   return;
 } // parse_diffexp_in_table

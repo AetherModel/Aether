@@ -127,4 +127,29 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
   return gradient;
 }
 
+// --------------------------------------------------------------------------
+// Calculate the 4th order gradient in the altitudinal direction
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
+
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
+  int64_t iAlt;
+
+  arma_cube gradient(nLons, nLats, nAlts);
+  gradient.zeros();
+
+  for (iAlt = 2; iAlt < nAlts - 2; iAlt++) {
+    gradient.slice(iAlt) =
+      grid.MeshCoefm2.slice(iAlt) * value.slice(iAlt - 2) +
+      grid.MeshCoefm1.slice(iAlt) * value.slice(iAlt - 1) +
+      grid.MeshCoefp0.slice(iAlt) * value.slice(iAlt) +
+      grid.MeshCoefp1.slice(iAlt) * value.slice(iAlt + 1) +
+      grid.MeshCoefp2.slice(iAlt) * value.slice(iAlt + 2);
+  }
+
+  return gradient;
+}
 

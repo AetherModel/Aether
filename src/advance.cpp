@@ -33,7 +33,7 @@ int advance(Planets &planet,
 
   if (input.get_is_student())
     report.print(-1, "(1) What function is this " +
-		  input.get_student_name() + "?");
+                 input.get_student_name() + "?");
 
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
@@ -44,7 +44,23 @@ int advance(Planets &planet,
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
 
-  time.calc_dt();
+  neutrals.calc_cMax();
+  precision_t dtNeutral = neutrals.calc_dt(gGrid);
+  precision_t dtIon = 100.0;
+  time.calc_dt(dtNeutral, dtIon);
+
+  // ------------------------------------
+  // Do advection first :
+
+  // Upper BCs requires the scale height to be calculated, so do that
+  // first
+
+  neutrals.calc_scale_height(gGrid);
+  neutrals.set_bcs(gGrid, time, indices);
+  neutrals.advect_vertical(gGrid, time);
+
+  // ------------------------------------
+  // Calculate source terms next:
 
   iErr = calc_euv(planet,
                   gGrid,
@@ -66,11 +82,12 @@ int advance(Planets &planet,
   // Calculate some neutral source terms:
   neutrals.calc_conduction(gGrid, time);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid);
+
   if (input.get_O_cooling())
     neutrals.calc_O_cool();
+
   if (input.get_NO_cooling())
     neutrals.calc_NO_cool();
-  neutrals.add_sources(time);
 
   neutrals.calc_conduction(gGrid, time);
   chemistry.calc_chemistry(neutrals, ions, time, gGrid);
@@ -80,12 +97,10 @@ int advance(Planets &planet,
   calc_neutral_friction(neutrals);
 
   neutrals.add_sources(time);
+
   ions.calc_ion_temperature(neutrals, gGrid, time);
   ions.calc_electron_temperature(neutrals, gGrid);
 
-  neutrals.set_bcs(gGrid, time, indices);
-  neutrals.calc_scale_height(gGrid);
-  neutrals.fill_with_hydrostatic(gGrid);
   neutrals.exchange(gGrid);
 
   time.increment_time();

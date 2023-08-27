@@ -105,7 +105,6 @@ std::string read_in_string(FILE *infile) {
   return value;
 }
 
-
 // -----------------------------------------------------------------------------
 // Read in an amie-type of electrodynamics file. There is code in the
 // aetherpy distribution that will produce these types of files, with

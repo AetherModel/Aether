@@ -7,7 +7,6 @@
 
 #include "aether.h"
 
-
 // --------------------------------------------------------------------------
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
@@ -30,7 +29,6 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   return;
 }
-
 
 // --------------------------------------------------------------------------
 // Calculate the ion temperature
@@ -63,11 +61,12 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   for (iIon = 0; iIon < nSpecs; iIon++)
     species[iIon].temperature_scgc =
       neutrals.temperature_scgc;
+
   temperature_scgc = neutrals.temperature_scgc;
 
   report.exit(function);
   return;
-  
+
   // Loop over all species or assume only bulk calculation
   if (input.get_do_calc_bulk_ion_temp())
     // First ion species only, currently is O+
@@ -76,8 +75,9 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     nSpecs = nSpecies;
 
   if (report.test_verbose(4)) {
-    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp()
-              << " so 'number of ions' is " << nSpecs << "\n";
+    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp() ?
+              "true" : "false";
+    std::cout << " so 'number of ions' is " << nSpecs << "\n";
   }
 
   // Loop over all species or assume only bulk calculation
@@ -93,7 +93,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
                    / species[iIon].nu_ion_ion[iIon] / 8.0;
         lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
                    / species[iIon].nu_ion_ion[iIon] / 8.0;
-	front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
+        front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
                    / cKB / 3.0;
         dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
 

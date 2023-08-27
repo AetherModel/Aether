@@ -26,17 +26,25 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.lower_bc_density = -1.0;
 
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.newDensity_scgc.set_size(nLons, nLats, nAlts);
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.newVelocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++) {
+    tmp.velocity_vcgc[iDir].zeros();
+    tmp.newVelocity_vcgc[iDir].zeros();
+  }
+
   tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
   tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
   tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
 
-  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_eddy.set_size(nLons, nLats, nAlts);
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
-  
+
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
@@ -90,6 +98,8 @@ Neutrals::Neutrals(Grid grid,
   density_scgc.ones();
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.ones();
+  newTemperature_scgc.set_size(nLons, nLats, nAlts);
+  newTemperature_scgc.ones();
   O_cool_scgc.set_size(nLons, nLats, nAlts);
   O_cool_scgc.zeros();
   NO_cool_scgc.set_size(nLons, nLats, nAlts);
@@ -100,6 +110,11 @@ Neutrals::Neutrals(Grid grid,
   rho_scgc.set_size(nLons, nLats, nAlts);
   rho_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++)
+    velocity_vcgc[iDir].zeros();
+
+  cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
   mean_major_mass_scgc.ones();
   pressure_scgc.set_size(nLons, nLats, nAlts);
@@ -134,6 +149,7 @@ Neutrals::Neutrals(Grid grid,
 
   if (iErr > 0)
     std::cout << "Error in setting neutral initial conditions!" << '\n';
+
   return;
 }
 
@@ -154,24 +170,24 @@ int Neutrals::read_planet_file(Planets planet) {
   nSpecies = neutrals["name"].size();
   nSpeciesAdvect = 0;
 
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        species[iSpecies].cName = neutrals["name"][iSpecies];
-        double mass = neutrals["mass"][iSpecies];
-        species[iSpecies].mass = mass * cAMU;
-        species[iSpecies].vibe = neutrals["vibration"][iSpecies];
-        species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
-        species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
-        species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
-        species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].cName = neutrals["name"][iSpecies];
+    double mass = neutrals["mass"][iSpecies];
+    species[iSpecies].mass = mass * cAMU;
+    species[iSpecies].vibe = neutrals["vibration"][iSpecies];
+    species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
+    species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
+    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
+  }
+
+  // account for advected neutrals:
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect == 1) {
+      nSpeciesAdvect++;
+      species_to_advect.push_back(iSpecies);
     }
-    
-    // account for advected neutrals:
-    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        if (species[iSpecies].DoAdvect == 1) {
-            nSpeciesAdvect++;
-            species_to_advect.push_back(iSpecies);
-        }
-    }
+  }
 
   json temperatures = planet.get_temperatures();
   nInitial_temps = temperatures["alt"].size();
@@ -186,15 +202,19 @@ int Neutrals::read_planet_file(Planets planet) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (all species)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
-void Neutrals::fill_with_hydrostatic(Grid grid) {
-
-  int64_t nAlts = grid.get_nAlts();
+void Neutrals::fill_with_hydrostatic(int64_t iStart,
+                                     int64_t iEnd,
+                                     Grid grid) {
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+    // Integrate with hydrostatic equilibrium up:
+    for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
+        temperature_scgc.slice(iAlt - 1) /
+        temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) /
             species[iSpecies].scale_height_scgc.slice(iAlt));
@@ -207,22 +227,76 @@ void Neutrals::fill_with_hydrostatic(Grid grid) {
 
 //----------------------------------------------------------------------
 // Fill With Hydrostatic Solution (only one constituent)
+//   - iEnd is NOT included (python style)!
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
+                                     int64_t iStart,
+                                     int64_t iEnd,
                                      Grid grid) {
 
-  int64_t nAlts = grid.get_nAlts();
-
   // Integrate with hydrostatic equilibrium up:
-  for (int iAlt = 1; iAlt < nAlts; iAlt++) {
+  for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
     species[iSpecies].density_scgc.slice(iAlt) =
+      temperature_scgc.slice(iAlt - 1) /
+      temperature_scgc.slice(iAlt) %
       species[iSpecies].density_scgc.slice(iAlt - 1) %
       exp(-grid.dalt_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density();
   return;
+}
+
+//----------------------------------------------------------------------
+// Reports location of nans inserted into specified variable
+//----------------------------------------------------------------------
+void Neutrals::nan_test(std::string variable) {
+  std::vector<int> locations;
+  std::string message = ("For Neutrals " + variable + " ");
+
+  if (variable == "temperature_scgc") {
+    locations = insert_indefinites(temperature_scgc);
+    message += print_nan_vector(locations, temperature_scgc);
+  }
+
+  if (variable == "density_scgc") {
+    locations = insert_indefinites(density_scgc);
+    message += print_nan_vector(locations, density_scgc);
+  }
+
+  if (variable == "velocity_vcgc") {
+    locations = insert_indefinites(velocity_vcgc[0]);
+    message +=
+      "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
+    locations = insert_indefinites(velocity_vcgc[1]);
+    message +=
+      "at the y loc " + print_nan_vector(locations, velocity_vcgc[1]);
+    locations = insert_indefinites(velocity_vcgc[2]);
+    message +=
+      "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
+  }
+
+  std::cout << message;
+}
+
+//----------------------------------------------------------------------
+// Checks for nans and +/- infinities in density, temp, and velocity
+//----------------------------------------------------------------------
+
+bool Neutrals::check_for_nonfinites() {
+  bool non_finites_exist = false;
+
+  if (!all_finite(density_scgc, "density_scgc") ||
+      !all_finite(temperature_scgc, "temperature_scgc") ||
+      !all_finite(velocity_vcgc, "velocity_vcgc"))
+    non_finites_exist = true;
+
+  if (non_finites_exist)
+    throw std::string("Check for nonfinites failed!!!\n");
+
+  return non_finites_exist;
 }
 
 //----------------------------------------------------------------------
@@ -314,6 +388,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     std::cout << "Error reading in neutral restart file!\n";
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -339,6 +414,7 @@ void Neutrals::calc_NO_cool() {
 
     NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
 
@@ -360,6 +436,6 @@ void Neutrals::calc_O_cool() {
 
     O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
   }
+
   return;
 }
-

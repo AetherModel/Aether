@@ -88,7 +88,9 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
                                         precision_t left_off,
                                         precision_t down_off,
                                         arma_mat &lat2d,
-                                        arma_mat &lon2d) {
+                                        arma_mat &lon2d,
+                                        arma_mat &refx,
+                                        arma_mat &refy) {
 
   int64_t nX = lat2d.n_rows;
   int64_t nY = lat2d.n_cols;
@@ -111,7 +113,8 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
       // This is the normalized coordinate:
       xyz = ll + dr * iL + du * iD;
       // Ghost cells could be off the edge, so wrap to other face:
-      xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      //xyz_wrapped = quadtree.wrap_point_cubesphere(xyz) * a;
+      xyz_wrapped = xyz * a;
       // Normalize the coordinate to a unit vector:
       xyzn = normalise(xyz_wrapped);
       xp = xyzn(0);
@@ -131,10 +134,178 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
 
       lat2d(iLR, iDU) = latp;
       lon2d(iLR, iDU) = lonp;
+
+      // Identify sides, then apply correct transformation law
+      // Face 1 to 4, equator faces with face 1 starting at the meridian
+      // Face 5, North Pole (different from book def)
+      // Face 6, South Pole (different from book def)
+      // Note face number are subtracted by one to comply with
+      // computer indexing
+      // Lon are displaced by cPI/4 as coordinates are generated
+      // with a right displacement of cPI/4
+      if (quadtree.iSide == 1 - 1) {
+        refx(iLR, iDU) = sqrt(3) / 3 * tan(lonp - cPI / 4.);
+        refy(iLR, iDU) = sqrt(3) / 3 * tan(latp) / cos(lonp - cPI / 4.);
+      } else if (quadtree.iSide == 2 - 1) {
+        refx(iLR, iDU) = sqrt(3) / 3 * tan(lonp - cPI / 4. - cPI / 2.);
+        refy(iLR, iDU) = sqrt(3) / 3 * tan(latp) / cos(lonp - cPI / 4. - cPI / 2.);
+      } else if (quadtree.iSide == 3 - 1) {
+        refx(iLR, iDU) = sqrt(3) / 3 * tan(lonp - cPI / 4. - cPI);
+        refy(iLR, iDU) = sqrt(3) / 3 * tan(latp) / cos(lonp - cPI / 4. - cPI);
+      } else if (quadtree.iSide == 4 - 1) {
+        refx(iLR, iDU) = sqrt(3) / 3 * tan(lonp - cPI / 4 - 3 * cPI / 2.);
+        refy(iLR, iDU) = sqrt(3) / 3 * tan(latp) / cos(lonp - cPI / 4. - 3 * cPI / 2.);
+      } else if (quadtree.iSide == 5 - 1) {
+        refx(iLR, iDU) = -sqrt(3) / 3 * sin(lonp - 3 * cPI / 4.) / tan(latp);
+        refy(iLR, iDU) = -sqrt(3) / 3 * cos(lonp - 3 * cPI / 4.) / tan(latp);
+      } else if (quadtree.iSide == 6 - 1) {
+        refx(iLR, iDU) = sqrt(3) / 3 * sin(lonp - 3 * cPI / 4.) / tan(latp);
+        refy(iLR, iDU) = -sqrt(3) / 3 * cos(lonp - 3 * cPI / 4.) / tan(latp);
+      }
     }
   }
 
   return;
+}
+
+// ----------------------------------------------------------------------
+// This function takes in lat-lon and reference xy coordinates to
+// generate transformation and metric tensors
+// ----------------------------------------------------------------------
+void transformation_metrics(Quadtree quadtree,
+                            arma_mat &lat2d,
+                            arma_mat &lon2d,
+                            arma_mat &refx,
+                            arma_mat &refy,
+                            arma_mat &A11,
+                            arma_mat &A12,
+                            arma_mat &A21,
+                            arma_mat &A22,
+                            arma_mat &A11_inv,
+                            arma_mat &A12_inv,
+                            arma_mat &A21_inv,
+                            arma_mat &A22_inv,
+                            arma_mat &g11_upper,
+                            arma_mat &g12_upper,
+                            arma_mat &g21_upper,
+                            arma_mat &g22_upper,
+                            arma_mat &sqrt_g) {
+  int64_t nX = lat2d.n_rows;
+  int64_t nY = lat2d.n_cols;
+  // Assume R = 1 (since lat-lon/ xy generation assumes unit vect)
+  double R = 1;
+  double a = 1 / sqrt(3);
+  double xref, yref, rref;
+  double latp, lonp;
+  double g;
+
+  // Loop through each point and derive the coordinate
+  for (int j = 0; j < nY; j++) {
+    for (int i = 0; i < nX; i++) {
+      xref = refx(i, j);
+      yref = refy(i, j);
+      rref = std::sqrt(xref * xref + yref * yref + a * a);
+
+      latp = lat2d(i, j);
+      lonp = lon2d(i, j);
+
+      sqrt_g(i, j) = R * R * a / (rref * rref * rref);
+      g = sqrt_g(i, j) * sqrt_g(i, j);
+
+      // metric tensor with lower indices
+      double front_factor = R * R / (rref * rref * rref * rref);
+      double g11 = front_factor * (a * a + yref * yref);
+      double g12 = -front_factor * xref * yref;
+      double g21 = -front_factor * xref * yref;
+      double g22 = front_factor * (a * a + xref * xref);
+
+      // metric tensor with upper indices
+      g11_upper(i, j) = g22 / g;
+      g12_upper(i, j) = -g12 / g;
+      g21_upper(i, j) = -g21 / g;
+      g22_upper(i, j) = g11 / g;
+
+      // Identify sides, then apply correct transformation law
+      // Face 1 to 4, equator faces with face 1 starting at the meridian
+      // Face 5, North Pole (different from book def)
+      // Face 6, South Pole (different from book def)
+      // Note face number are subtracted by one to comply with
+      // computer indexing
+      if (quadtree.iSide == 1 - 1) {
+        double p1 = R * cos(latp) * cos(lonp - cPI / 4.) / a;
+        A11(i, j) = p1 * cos(lonp - cPI / 4.);
+        A12(i, j) = 0;
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - cPI / 4.);
+        A22(i, j) = p1 * cos(latp);
+
+        double p2 = a / cos(latp) / cos(lonp - cPI / 4.) / R;
+        A11_inv(i, j) = p2 / cos(lonp - cPI / 4.);
+        A12_inv(i, j) = 0;
+        A21_inv(i, j) = p2 * tan(latp) * tan(lonp - cPI / 4.);
+        A22_inv(i, j) = p2 / cos(latp);
+      } else if (quadtree.iSide == 2 - 1) {
+        double p1 = R * cos(latp) * cos(lonp - cPI / 4. - cPI / 2.) / a;
+        A11(i, j) = p1 * cos(lonp - cPI / 4. - cPI / 2.);
+        A12(i, j) = 0;
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - cPI / 4. - cPI / 2.);
+        A22(i, j) = p1 * cos(latp);
+
+        double p2 = a / cos(latp) / cos(lonp - cPI / 4. - cPI / 2.) / R;
+        A11_inv(i, j) = p2 / cos(lonp - cPI / 4. - cPI / 2.);
+        A12_inv(i, j) = 0;
+        A21_inv(i, j) = p2 * tan(latp) * tan(lonp - cPI / 4. - cPI / 2.);
+        A22_inv(i, j) = p2 / cos(latp);
+      } else if (quadtree.iSide == 3 - 1) {
+        double p1 = R * cos(latp) * cos(lonp - cPI / 4. - cPI) / a;
+        A11(i, j) = p1 * cos(lonp - cPI / 4. - cPI);
+        A12(i, j) = 0;
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - cPI / 4. - cPI);
+        A22(i, j) = p1 * cos(latp);
+
+        double p2 = a / cos(latp) / cos(lonp - cPI / 4. - cPI) / R;
+        A11_inv(i, j) = p2 / cos(lonp - cPI / 4. - cPI);
+        A12_inv(i, j) = 0;
+        A21_inv(i, j) = p2 * tan(latp) * tan(lonp - cPI / 4. - cPI);
+        A22_inv(i, j) = p2 / cos(latp);
+      } else if (quadtree.iSide == 4 - 1) {
+        double p1 = R * cos(latp) * cos(lonp - cPI / 4. - 3 * cPI / 2.) / a;
+        A11(i, j) = p1 * cos(lonp - cPI / 4. - 3 * cPI / 2.);
+        A12(i, j) = 0;
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - cPI / 4. - 3 * cPI / 2.);
+        A22(i, j) = p1 * cos(latp);
+
+        double p2 = a / cos(latp) / cos(lonp - cPI / 4. - 3 * cPI / 2.) / R;
+        A11_inv(i, j) = p2 / cos(lonp - cPI / 4. - 3 * cPI / 2.);
+        A12_inv(i, j) = 0;
+        A21_inv(i, j) = p2 * tan(latp) * tan(lonp - cPI / 4. - 3 * cPI / 2.);
+        A22_inv(i, j) = p2 / cos(latp);
+      } else if (quadtree.iSide == 5 - 1) {
+        double p1 = R * sin(latp) / a;
+        A11(i, j) = p1 * cos(lonp - 3 * cPI / 4.);
+        A12(i, j) = p1 * sin(lonp - 3 * cPI / 4.);
+        A21(i, j) = -p1 * sin(latp) * sin(lonp - 3 * cPI / 4.);
+        A22(i, j) = p1 * sin(latp) * cos(lonp - 3 * cPI / 4.);
+
+        double p2 = a / R / sin(latp) / sin(latp);
+        A11_inv(i, j) = p2 * sin(latp) * cos(lonp - 3 * cPI / 4.);
+        A12_inv(i, j) = -p2 * sin(lonp - 3 * cPI / 4.);
+        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - 3 * cPI / 4.);
+        A22_inv(i, j) = p2 * cos(lonp - 3 * cPI / 4.);
+      } else if (quadtree.iSide == 6 - 1) {
+        double p1 = R * sin(latp) / a;
+        A11(i, j) = -p1 * cos(lonp - 3 * cPI / 4.);
+        A12(i, j) = p1 * sin(lonp - 3 * cPI / 4.);
+        A21(i, j) = p1 * sin(latp) * sin(lonp - 3 * cPI / 4.);
+        A22(i, j) = p1 * sin(latp) * cos(lonp - 3 * cPI / 4.);
+
+        double p2 = a / R / sin(latp) / sin(latp);
+        A11_inv(i, j) = -p2 * sin(latp) * cos(lonp - 3 * cPI / 4.);
+        A12_inv(i, j) = p2 * sin(lonp - 3 * cPI / 4.);
+        A21_inv(i, j) = p2 * sin(latp) * sin(lonp - 3 * cPI / 4.);
+        A22_inv(i, j) = p2 * cos(lonp - 3 * cPI / 4.);
+      }
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -170,12 +341,47 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   // ---------------------------------------------
   arma_mat lat2d(nLons, nLats);
   arma_mat lon2d(nLons, nLats);
+  arma_mat refx(nLons, nLats);
+  arma_mat refy(nLons, nLats);
+  arma_mat A11(nLons, nLats);
+  arma_mat A12(nLons, nLats);
+  arma_mat A21(nLons, nLats);
+  arma_mat A22(nLons, nLats);
+  arma_mat A11_inv(nLons, nLats);
+  arma_mat A12_inv(nLons, nLats);
+  arma_mat A21_inv(nLons, nLats);
+  arma_mat A22_inv(nLons, nLats);
+  arma_mat g11_upper(nLons, nLats);
+  arma_mat g12_upper(nLons, nLats);
+  arma_mat g21_upper(nLons, nLats);
+  arma_mat g22_upper(nLons, nLats);
+  arma_mat sqrt_g(nLons, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.5,
-                                     lat2d, lon2d);
+                                     lat2d, lon2d, refx, refy);
+
+  transformation_metrics(quadtree, lat2d, lon2d, refx, refy,
+                         A11, A12, A21, A22, A11_inv, A12_inv,
+                         A21_inv, A22_inv, g11_upper, g12_upper,
+                         g21_upper, g22_upper, sqrt_g);
 
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_scgc.slice(iAlt) = lon2d;
     geoLat_scgc.slice(iAlt) = lat2d;
+    refx_scgc.slice(iAlt) = refx;
+    refy_scgc.slice(iAlt) = refy;
+    A11_scgc.slice(iAlt) = A11;
+    A12_scgc.slice(iAlt) = A12;
+    A21_scgc.slice(iAlt) = A21;
+    A22_scgc.slice(iAlt) = A22;
+    A11_inv_scgc.slice(iAlt) = A11_inv;
+    A12_inv_scgc.slice(iAlt) = A12_inv;
+    A21_inv_scgc.slice(iAlt) = A21_inv;
+    A22_inv_scgc.slice(iAlt) = A22_inv;
+    g11_upper_scgc.slice(iAlt) = g11_upper;
+    g12_upper_scgc.slice(iAlt) = g12_upper;
+    g21_upper_scgc.slice(iAlt) = g21_upper;
+    g22_upper_scgc.slice(iAlt) = g22_upper;
+    sqrt_g_scgc.slice(iAlt) = sqrt_g;
   }
 
   // ---------------------------------------------
@@ -183,12 +389,52 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   // ---------------------------------------------
   arma_mat lat2d_left(nLons + 1, nLats);
   arma_mat lon2d_left(nLons + 1, nLats);
+  arma_mat refx_left(nLons + 1, nLats);
+  arma_mat refy_left(nLons + 1, nLats);
+  arma_mat A11_left(nLons + 1, nLats);
+  arma_mat A12_left(nLons + 1, nLats);
+  arma_mat A21_left(nLons + 1, nLats);
+  arma_mat A22_left(nLons + 1, nLats);
+  arma_mat A11_inv_left(nLons + 1, nLats);
+  arma_mat A12_inv_left(nLons + 1, nLats);
+  arma_mat A21_inv_left(nLons + 1, nLats);
+  arma_mat A22_inv_left(nLons + 1, nLats);
+  arma_mat g11_upper_left(nLons + 1, nLats);
+  arma_mat g12_upper_left(nLons + 1, nLats);
+  arma_mat g21_upper_left(nLons + 1, nLats);
+  arma_mat g22_upper_left(nLons + 1, nLats);
+  arma_mat sqrt_g_left(nLons + 1, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.5,
-                                     lat2d_left, lon2d_left);
+                                     lat2d_left, lon2d_left,
+                                     refx_left, refy_left);
+
+  transformation_metrics(quadtree,
+                         lat2d_left, lon2d_left, refx_left, refy_left,
+                         A11_left, A12_left, A21_left, A22_left,
+                         A11_inv_left, A12_inv_left,
+                         A21_inv_left, A22_inv_left,
+                         g11_upper_left, g12_upper_left,
+                         g21_upper_left, g22_upper_left,
+                         sqrt_g_left);
 
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Left.slice(iAlt) = lon2d_left;
     geoLat_Left.slice(iAlt) = lat2d_left;
+    refx_Left.slice(iAlt) = refx_left;
+    refy_Left.slice(iAlt) = refy_left;
+    A11_Left.slice(iAlt) = A11_left;
+    A12_Left.slice(iAlt) = A12_left;
+    A21_Left.slice(iAlt) = A21_left;
+    A22_Left.slice(iAlt) = A22_left;
+    A11_inv_Left.slice(iAlt) = A11_inv_left;
+    A12_inv_Left.slice(iAlt) = A12_inv_left;
+    A21_inv_Left.slice(iAlt) = A21_inv_left;
+    A22_inv_Left.slice(iAlt) = A22_inv_left;
+    g11_upper_Left.slice(iAlt) = g11_upper_left;
+    g12_upper_Left.slice(iAlt) = g12_upper_left;
+    g21_upper_Left.slice(iAlt) = g21_upper_left;
+    g22_upper_Left.slice(iAlt) = g22_upper_left;
+    sqrt_g_Left.slice(iAlt) = sqrt_g_left;
   }
 
   // ---------------------------------------------
@@ -196,12 +442,53 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   // ---------------------------------------------
   arma_mat lat2d_down(nLons, nLats + 1);
   arma_mat lon2d_down(nLons, nLats + 1);
+  arma_mat refx_down(nLons, nLats + 1);
+  arma_mat refy_down(nLons, nLats + 1);
+  arma_mat A11_down(nLons, nLats + 1);
+  arma_mat A12_down(nLons, nLats + 1);
+  arma_mat A21_down(nLons, nLats + 1);
+  arma_mat A22_down(nLons, nLats + 1);
+  arma_mat A11_inv_down(nLons, nLats + 1);
+  arma_mat A12_inv_down(nLons, nLats + 1);
+  arma_mat A21_inv_down(nLons, nLats + 1);
+  arma_mat A22_inv_down(nLons, nLats + 1);
+  arma_mat g11_upper_down(nLons, nLats + 1);
+  arma_mat g12_upper_down(nLons, nLats + 1);
+  arma_mat g21_upper_down(nLons, nLats + 1);
+  arma_mat g22_upper_down(nLons, nLats + 1);
+  arma_mat sqrt_g_down(nLons, nLats + 1);
+
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.0,
-                                     lat2d_down, lon2d_down);
+                                     lat2d_down, lon2d_down,
+                                     refx_down, refy_down);
+
+  transformation_metrics(quadtree,
+                         lat2d_down, lon2d_down, refx_down, refy_down,
+                         A11_down, A12_down, A21_down, A22_down,
+                         A11_inv_down, A12_inv_down,
+                         A21_inv_down, A22_inv_down,
+                         g11_upper_down, g12_upper_down,
+                         g21_upper_down, g22_upper_down,
+                         sqrt_g_down);
 
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     geoLon_Down.slice(iAlt) = lon2d_down;
     geoLat_Down.slice(iAlt) = lat2d_down;
+    refx_Down.slice(iAlt) = refx_down;
+    refy_Down.slice(iAlt) = refy_down;
+    A11_Down.slice(iAlt) = A11_down;
+    A12_Down.slice(iAlt) = A12_down;
+    A21_Down.slice(iAlt) = A21_down;
+    A22_Down.slice(iAlt) = A22_down;
+    A11_inv_Down.slice(iAlt) = A11_inv_down;
+    A12_inv_Down.slice(iAlt) = A12_inv_down;
+    A21_inv_Down.slice(iAlt) = A21_inv_down;
+    A22_inv_Down.slice(iAlt) = A22_inv_down;
+    g11_upper_Down.slice(iAlt) = g11_upper_down;
+    g12_upper_Down.slice(iAlt) = g12_upper_down;
+    g21_upper_Down.slice(iAlt) = g21_upper_down;
+    g22_upper_Down.slice(iAlt) = g22_upper_down;
+    sqrt_g_Down.slice(iAlt) = sqrt_g_down;
   }
 
   // ---------------------------------------------
@@ -209,12 +496,17 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   // ---------------------------------------------
   arma_mat lat2d_corner(nLons + 1, nLats + 1);
   arma_mat lon2d_corner(nLons + 1, nLats + 1);
+  arma_mat refx_corner(nLons + 1, nLats + 1);
+  arma_mat refy_corner(nLons + 1, nLats + 1);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.0, 0.0,
-                                     lat2d_corner, lon2d_corner);
+                                     lat2d_corner, lon2d_corner,
+                                     refx_corner, refy_corner);
 
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
     geoLon_Corner.slice(iAlt) = lon2d_corner;
     geoLat_Corner.slice(iAlt) = lat2d_corner;
+    refx_Corner.slice(iAlt) = refx_corner;
+    refy_Corner.slice(iAlt) = refy_corner;
   }
 
   report.exit(function);
@@ -556,6 +848,89 @@ void Grid::create_altitudes(Planets planet) {
 }
 
 // ----------------------------------------------------------------------
+// Corrects xy grid by scaling the R used in xy coordinate generation
+// and transformation laws, as in previous generation R = 1.
+// This function should only be used when cubesphere is used.
+// Assumes radius of planet and altitude are constant
+// ----------------------------------------------------------------------
+
+void Grid::correct_xy_grid(Planets planet) {
+
+  std::string function = "Grid::correct_xy_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iAlt;
+
+  // Planet.get_radius() takes in latitude
+  // but at current stage is unimplemented
+  // Anyway, we use equator radius as assumption for CubeSphere
+  // CubeSphere must be a perfect sphere!!
+  precision_t planet_R = planet.get_radius(0);
+
+  // radius of planet + altitude
+  // just pick alt at (0,0) loction
+  arma_vec R_Alts = geoAlt_scgc.tube(0, 0) + planet_R;
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+    precision_t R = R_Alts(iAlt);
+    refx_scgc.slice(iAlt) *= R;
+    refy_scgc.slice(iAlt) *= R;
+    A11_scgc.slice(iAlt) *= R;
+    A12_scgc.slice(iAlt) *= R;
+    A21_scgc.slice(iAlt) *= R;
+    A22_scgc.slice(iAlt) *= R;
+    A11_inv_scgc.slice(iAlt) /= R;
+    A12_inv_scgc.slice(iAlt) /= R;
+    A21_inv_scgc.slice(iAlt) /= R;
+    A22_inv_scgc.slice(iAlt) /= R;
+    g11_upper_scgc.slice(iAlt) /= R * R;
+    g12_upper_scgc.slice(iAlt) /= R * R;
+    g21_upper_scgc.slice(iAlt) /= R * R;
+    g22_upper_scgc.slice(iAlt) /= R * R;
+    sqrt_g_scgc.slice(iAlt) *= R * R;
+
+    refx_Left.slice(iAlt) *= R;
+    refy_Left.slice(iAlt) *= R;
+    A11_Left.slice(iAlt) *= R;
+    A12_Left.slice(iAlt) *= R;
+    A21_Left.slice(iAlt) *= R;
+    A22_Left.slice(iAlt) *= R;
+    A11_inv_Left.slice(iAlt) /= R;
+    A12_inv_Left.slice(iAlt) /= R;
+    A21_inv_Left.slice(iAlt) /= R;
+    A22_inv_Left.slice(iAlt) /= R;
+    g11_upper_Left.slice(iAlt) /= R * R;
+    g12_upper_Left.slice(iAlt) /= R * R;
+    g21_upper_Left.slice(iAlt) /= R * R;
+    g22_upper_Left.slice(iAlt) /= R * R;
+    sqrt_g_Left.slice(iAlt) *= R * R;
+
+    refx_Down.slice(iAlt) *= R;
+    refy_Down.slice(iAlt) *= R;
+    A11_Down.slice(iAlt) *= R;
+    A12_Down.slice(iAlt) *= R;
+    A21_Down.slice(iAlt) *= R;
+    A22_Down.slice(iAlt) *= R;
+    A11_inv_Down.slice(iAlt) /= R;
+    A12_inv_Down.slice(iAlt) /= R;
+    A21_inv_Down.slice(iAlt) /= R;
+    A22_inv_Down.slice(iAlt) /= R;
+    g11_upper_Down.slice(iAlt) /= R * R;
+    g12_upper_Down.slice(iAlt) /= R * R;
+    g21_upper_Down.slice(iAlt) /= R * R;
+    g22_upper_Down.slice(iAlt) /= R * R;
+    sqrt_g_Down.slice(iAlt) *= R * R;
+
+    refx_Corner.slice(iAlt) *= R;
+    refy_Corner.slice(iAlt) *= R;
+  }
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
 // Initialize the geographic grid.  At the moment, this is a simple
 // Lon/Lat/Alt grid.  The grid structure is general enough that each
 // of the lon, lat, and alt can be a function of the other variables.
@@ -605,10 +980,15 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
 
+  // Correct the reference grid with correct length scale:
+  // (with R = actual radius)
+  if (input.get_is_cubesphere())
+    correct_xy_grid(planet);
+
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
-				       input.get_student_name(),
-				       4, "");
+                                       input.get_student_name(),
+                                       4, "");
 
   report.exit(function);
   return DidWork;
