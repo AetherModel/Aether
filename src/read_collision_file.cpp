@@ -14,9 +14,7 @@
 // -----------------------------------------------------------------------------
 
 void read_collision_file(Neutrals &neutrals,
-                         Ions &ions,
-                         Inputs input,
-                         Report &report) {
+                         Ions &ions) {
 
   std::string function = "read_collision_file";
   static int iFunction = -1;
@@ -54,7 +52,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_nu_in_table(csv, neutrals, ions, report);
+          parse_nu_in_table(csv, neutrals, ions);
 
         else
           std::cout << "Nu_in table is empty!!! Yikes!!!\n";
@@ -68,7 +66,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_resonant_nu_in_table(csv, neutrals, ions, report);
+          parse_resonant_nu_in_table(csv, neutrals, ions);
 
         else
           std::cout << "Resonant_nu_in table is empty!!! Yikes!!!\n";
@@ -82,7 +80,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_bst_in_table(csv, neutrals, ions, report);
+          parse_bst_in_table(csv, neutrals, ions);
 
         else
           std::cout << "Bst table is empty!!! Yikes!!!\n";
@@ -96,7 +94,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_diff0_in_table(csv, neutrals, report);
+          parse_diff0_in_table(csv, neutrals);
 
         else
           std::cout << "diff0 table is empty!!! Yikes!!!\n";
@@ -110,7 +108,7 @@ void read_collision_file(Neutrals &neutrals,
         std::vector<std::vector<std::string>> csv = read_csv(infile_ptr);
 
         if (csv.size() > 1)
-          parse_diffexp_in_table(csv, neutrals, report);
+          parse_diffexp_in_table(csv, neutrals);
 
         else
           std::cout << "diffexp table is empty!!! Yikes!!!\n";
@@ -119,9 +117,8 @@ void read_collision_file(Neutrals &neutrals,
     }
 
     infile_ptr.close();
-    check_collision_frequncies(ions, neutrals, report);
+    check_collision_frequncies(ions, neutrals);
   }
-
   report.exit(function);
   return;
 }
@@ -131,8 +128,7 @@ void read_collision_file(Neutrals &neutrals,
 // -----------------------------------------------------------------------------
 
 void check_collision_frequncies(Ions ions,
-                                Neutrals neutrals,
-                                Report &report) {
+                                Neutrals neutrals) {
 
   // Report out the table, if verbose is high enough:
 
@@ -189,7 +185,6 @@ void check_collision_frequncies(Ions ions,
 
     std::cout << "Done with check_collision_frequncies\n";
   }
-
   return;
 }
 
@@ -199,8 +194,7 @@ void check_collision_frequncies(Ions ions,
 
 void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
                        Neutrals &neutrals,
-                       Ions &ions,
-                       Report &report) {
+                       Ions &ions) {
 
   std::string function = "parse_nu_in_table";
   static int iFunction = -1;
@@ -220,8 +214,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
     if (report.test_verbose(4))
       std::cout << "neutral : " << csv[0][iCol] << "\n";
 
-    iNeutralIds_.push_back(neutrals.get_species_id(csv[0][iCol],
-                                                   report));
+    iNeutralIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
 
     if (report.test_verbose(4))
       std::cout << "iCol : " << iCol << " "
@@ -233,7 +226,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
   int iIon;
 
   for (int iLine = 1; iLine < nLines - 1; iLine++) {
-    iIon = ions.get_species_id(csv[iLine][0], report);
+    iIon = ions.get_species_id(csv[iLine][0]);
 
     if (report.test_verbose(4))
       std::cout << "iLine : " << iLine
@@ -276,7 +269,6 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
-
   report.exit(function);
   return;
 }
@@ -287,8 +279,7 @@ void parse_nu_in_table(std::vector<std::vector<std::string>> csv,
 
 void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
                                 Neutrals &neutrals,
-                                Ions &ions,
-                                Report &report) {
+                                Ions &ions) {
 
   std::string function = "parse_resonant_nu_in_table";
   static int iFunction = -1;
@@ -307,7 +298,7 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
   int iIon, iNeutral;
 
   for (int iLine = 1; iLine < nLines - 1; iLine++) {
-    iIon = ions.get_species_id(csv[iLine][0], report);
+    iIon = ions.get_species_id(csv[iLine][0]);
 
     if (report.test_verbose(4))
       std::cout << "iLine : " << iLine
@@ -335,26 +326,29 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
         }
       }
 
-      iNeutral = neutrals.get_species_id(csv[iLine][1], report);
+      iNeutral = neutrals.get_species_id(csv[iLine][1]);
 
       if (iNeutral > -1) {
         if (report.test_verbose(4))
           std::cout << "Found Neutral : " << iNeutral << " "
                     << neutrals.species[iNeutral].cName << "\n";
 
-        ions.species[iIon].nu_in_res_temp_min[iNeutral] = str_to_num(csv[iLine][2]);
-        ions.species[iIon].nu_in_res_coef1[iNeutral] = str_to_num(csv[iLine][3]);
-        ions.species[iIon].nu_in_res_tn_frac[iNeutral] = str_to_num(csv[iLine][4]);
-        ions.species[iIon].nu_in_res_ti_frac[iNeutral] = str_to_num(csv[iLine][5]);
-        ions.species[iIon].nu_in_res_coef2[iNeutral] = str_to_num(csv[iLine][6]);
+        ions.species[iIon].nu_in_res_temp_min[iNeutral] =
+	  str_to_num(csv[iLine][2]);
+        ions.species[iIon].nu_in_res_coef1[iNeutral] =
+	  str_to_num(csv[iLine][3]);
+        ions.species[iIon].nu_in_res_tn_frac[iNeutral] =
+	  str_to_num(csv[iLine][4]);
+        ions.species[iIon].nu_in_res_ti_frac[iNeutral] =
+	  str_to_num(csv[iLine][5]);
+        ions.species[iIon].nu_in_res_coef2[iNeutral] =
+	  str_to_num(csv[iLine][6]);
       }
     }
   }
-
   report.exit(function);
   return;
 }
-
 
 // -----------------------------------------------------------------------------
 // parse Bst table - Coulomb collision frequency coefficients
@@ -363,8 +357,7 @@ void parse_resonant_nu_in_table(std::vector<std::vector<std::string>> csv,
 
 void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
                         Neutrals &neutrals,
-                        Ions &ions,
-                        Report &report) {
+                        Ions &ions) {
 
   std::string function = "parse_bst_in_table";
   static int iFunction = -1;
@@ -382,7 +375,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   // Read ion specie names across first row of table, cell[0][0] is empty
   for (iCol = 1; iCol < nCol; iCol++)
-    iIonSIds_.push_back(ions.get_species_id(csv[0][iCol], report));
+    iIonSIds_.push_back(ions.get_species_id(csv[0][iCol]));
 
   // Set the array size and fill with zeros
   for (iIon = 0; iIon < ions.nSpecies; iIon++) {
@@ -392,7 +385,7 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
 
   //  Read ion specie names down first column of table
   for (iLine = 1; iLine < nLines - 1; iLine++) {
-    iIonT = ions.get_species_id(csv[iLine][0], report);
+    iIonT = ions.get_species_id(csv[iLine][0]);
 
     // Found a used specie, time to extract Bst table data
     if (iIonT > -1) {
@@ -409,37 +402,13 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
             std::cout << "Species s vs t : "
                       << csv[iLine][0] << " and " << csv[0][iCol] << "\n";
             std::cout << "nu_ion_ion     : "
-                      << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]] << "\n";
+                      << ions.species[iIonT].nu_ion_ion[iIonSIds_[iCol - 1]]
+		      << "\n";
           }
         }  // End iIonSIds_
       }  // End iCol
     }  // End iIonT
   }  // End iLine
-
-  // Copy Bst from O+ to O+2P and O+2D since the sub-flavors of O+ don't exist in table
-  iIonT = ions.get_species_id("O+", report);
-  iIonD = ions.get_species_id("O+2D", report);
-  iIonP = ions.get_species_id("O+2P", report);
-
-  if (iIonT > -1 && iIonD > -1) {
-    for (iIon = 0; iIon < ions.nSpecies; iIon++) {
-      // Fill for each specie the O+2D Bst value with the O+ Bst value
-      ions.species[iIon].nu_ion_ion[iIonD] = ions.species[iIon].nu_ion_ion[iIonT];
-
-      // Fill O+2D Bst table values with O+ Bst table values for each specie
-      ions.species[iIonD].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
-    }
-  }
-
-  if (iIonT > -1 && iIonP > -1) {
-    for (iIon = 0; iIon < ions.nSpecies; iIon++) {
-      // Fill for each specie the O+2P Bst value with the O+ Bst value
-      ions.species[iIon].nu_ion_ion[iIonP] = ions.species[iIon].nu_ion_ion[iIonT];
-
-      // Fill O+2P Bst table values with O+ Bst table values for each specie
-      ions.species[iIonP].nu_ion_ion[iIon] = ions.species[iIonT].nu_ion_ion[iIon];
-    }
-  }
 
   if (report.test_verbose(4)) {
     for (iIon = 0; iIon < ions.nSpecies; iIon++) {
@@ -450,14 +419,13 @@ void parse_bst_in_table(std::vector<std::vector<std::string>> csv,
       }
     }
   }
-
   report.exit(function);
   return;
 } // parse_bst_in_table
 
 void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
-                          Neutrals &neutrals,
-                          Report &report) {
+                          Neutrals &neutrals) {
+  
   std::string function = "parse_diff0_in_table";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -474,7 +442,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
-    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
 
   // set array size and fill with zeros
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
@@ -490,7 +458,7 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
-    int neutral_id = neutrals.get_species_id(csv[iLine][0], report);
+    int neutral_id = neutrals.get_species_id(csv[iLine][0]);
 
     if (neutral_id > -1) {
       for (iCol = 1; iCol < nCol; iCol++) {
@@ -531,13 +499,13 @@ void parse_diff0_in_table(std::vector<std::vector<std::string>> csv,
       cout << endl;
     }
   }
-
   report.exit(function);
+  return;
 } // parse_diff0_in_table
 
 void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
-                          Neutrals &neutrals,
-                          Report &report) {
+                          Neutrals &neutrals) {
+
   std::string function = "parse_diffexp_in_table";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -551,7 +519,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   
   // Read neutral species across first row of the table:
   for (iCol = 1; iCol < nCol; iCol++)
-    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol], report));
+    iNeutralSIds_.push_back(neutrals.get_species_id(csv[0][iCol]));
 
   // set array size and fill with zeros
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
@@ -567,7 +535,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
   for (iLine = 1; iLine < nLines - 1; iLine++) {
 
     // Get species id of neutral on line:
-    int neutral_id = neutrals.get_species_id(csv[iLine][0], report);
+    int neutral_id = neutrals.get_species_id(csv[iLine][0]);
 
     if (neutral_id > -1) {
       for (iCol = 1; iCol < nCol; iCol++) {
@@ -608,7 +576,7 @@ void parse_diffexp_in_table(std::vector<std::vector<std::string>> csv,
       cout << endl;
     }
   }
-
   report.exit(function);
+  return;
 } // parse_diffexp_in_table
 

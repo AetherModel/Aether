@@ -6,12 +6,9 @@
 
 arma_vec neutral_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
 				   arma_vec &vels,
-				   Neutrals &neutrals,
-                                   Report &report);
+				   Neutrals &neutrals);
 
-void calc_neutral_friction(Neutrals &neutrals,
-                           Report &report);
-
+void calc_neutral_friction(Neutrals &neutrals);
 
 /**********************************************************************
   \brief Calculate acceleration due to ion drag
@@ -21,8 +18,6 @@ void calc_neutral_friction(Neutrals &neutrals,
   \param report allow reporting to occur
 **/
 void calc_ion_collisions(Neutrals &neutrals,
-			 Ions &ions,
-			 Report &report);
-
+			 Ions &ions);
 
 #endif  // INCLUDE_CALC_MOMENTUM_FRICTION_H_

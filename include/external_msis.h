@@ -22,7 +22,7 @@ class Msis {
 
  public:
 
-  Msis(Inputs args);
+  Msis();
   bool set_time(Times time);
   bool set_f107(precision_t f107in, precision_t f107ain);
   bool set_ap(precision_t apin);

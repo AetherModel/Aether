@@ -10,17 +10,17 @@
 //  Calculate eddy diffusion coefficient
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
-    
+void Neutrals::calc_kappa_eddy() {
+
   std::string function = "Neutrals::calc_kappa_eddy";
   static int iFunction = -1;
   report.enter(function, iFunction);
     
   kappa_eddy_scgc.zeros();
 
-  precision_t coef = inputs.get_eddy_coef();
-  precision_t bottom = inputs.get_eddy_bottom();
-  precision_t top = inputs.get_eddy_top();
+  precision_t coef = input.get_eddy_coef();
+  precision_t bottom = input.get_eddy_bottom();
+  precision_t top = input.get_eddy_top();
 
   kappa_eddy_scgc = coef * (pressure_scgc - top) / (bottom - top);
   kappa_eddy_scgc.elem( find(kappa_eddy_scgc > coef)).fill(coef);
@@ -34,15 +34,15 @@ void Neutrals::calc_kappa_eddy(Inputs inputs, Report &report) {
 //  Calculate mass density and number density:
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density(Report &report) {
-    
+void Neutrals::calc_mass_density() {
+
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   rho_scgc.zeros();
   density_scgc.zeros();
-    
+
   for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
       species[iSpecies].mass * species[iSpecies].density_scgc;
@@ -56,12 +56,12 @@ void Neutrals::calc_mass_density(Report &report) {
 //    Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_concentration(Report &report) {
-    
+void Neutrals::calc_concentration() {
+
   std::string function = "Neutrals::calc_concentration";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     species[iSpecies].concentration_scgc =
       species[iSpecies].density_scgc / density_scgc;
@@ -73,8 +73,8 @@ void Neutrals::calc_concentration(Report &report) {
 //     Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mean_major_mass(Report &report) {
-    
+void Neutrals::calc_mean_major_mass() {
+
   std::string function = "Neutrals::calc_mean_major_mass";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -88,8 +88,8 @@ void Neutrals::calc_mean_major_mass(Report &report) {
 //     Must call calc_mass_density first!!!
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_pressure(Report &report) {
-    
+void Neutrals::calc_pressure() {
+
   std::string function = "Neutrals::calc_pressure";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -103,12 +103,12 @@ void Neutrals::calc_pressure(Report &report) {
 // ((sum of species mass * density * velocity) / bulk mass density)
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_bulk_velocity(Report &report) {
-    
+void Neutrals::calc_bulk_velocity() {
+
   std::string function = "Neutrals::calc_bulk_velocity";
   static int iFunction = -1;
   report.enter(function, iFunction);
-    
+
   for (int64_t iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
     for (int64_t iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++)
@@ -119,7 +119,6 @@ void Neutrals::calc_bulk_velocity(Report &report) {
       species[species_to_advect[iSpecies]].velocity_vcgc[iDir];
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
   }
-
   report.exit(function);
 }
 
@@ -127,44 +126,56 @@ void Neutrals::calc_bulk_velocity(Report &report) {
 // Calculate scale heights of different species
 //----------------------------------------------------------------------
 
-void Neutrals::calc_scale_height(Grid grid, Inputs inputs, Report &report) {
+void Neutrals::calc_scale_height(Grid grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
   int64_t iSpecies;
+  // Calculate scale-heights of each species, completely independently:
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
       (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
   }
 
-  // adjust scale heights if eddy diffusion is used:
-  if (inputs.get_use_eddy_momentum()) {
-    // find the density-weighted average scale height in the bottom cell:
-    precision_t Htotal = 0.0, Rtotal = 0.0, H;
-    arma_mat Hslice, Rslice;
+  // If we have eddy diffusion, the scale-heights need to be adjusted,
+  // since all of the scale heights should be the same in the region
+  // where eddy diffusion is dominant.
+  
+  if (input.get_use_eddy_momentum()) {
+    // We need the mean major mass in the bottom-most cell, which we
+    // assume is the region where the atmosphere is well-mixed:
+
+    // sum mass densities and densities to calculate mean major mass:
+    precision_t mTotal = 0.0, dTotal = 0.0, mmm;
+    // Need the mass density and the number density in the bottom slice:
+    arma_mat mSlice, dSlice;
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      Hslice =
-	species[iSpecies].mass *
-	species[iSpecies].density_scgc.slice(0) %
-	species[iSpecies].scale_height_scgc.slice(0);
-      Rslice =
+      mSlice =
 	species[iSpecies].mass *
 	species[iSpecies].density_scgc.slice(0);
-      Htotal = Htotal + accu(Hslice);
-      Rtotal = Rtotal + accu(Rslice);
+      dSlice =
+	species[iSpecies].density_scgc.slice(0);
+      mTotal = mTotal + accu(mSlice);
+      dTotal = dTotal + accu(dSlice);
     }
-    H = Htotal / Rtotal;
-    H = sync_mean_across_all_procs(H);
+    mmm = mTotal / dTotal;
+    mmm = sync_mean_across_all_procs(mmm);
+
+    // bulk scale height, assuming well mixed atmosphere:
+    arma_cube bulkH = 
+      cKB * temperature_scgc /
+      (mmm * abs(grid.gravity_vcgc[2]));
+
     // percentage will go from 1 = use bulk scale, to 0 = use individual
-    arma_cube percentage = kappa_eddy_scgc / inputs.get_eddy_coef();
+    arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
     arma_cube one = percentage;
     one.ones();
     arma_cube omp = one - percentage;
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       species[iSpecies].scale_height_scgc =
 	omp % species[iSpecies].scale_height_scgc +
-	percentage * H;
+	percentage % bulkH;      
     }
   }
   return;
@@ -178,7 +189,7 @@ void Neutrals::calc_scale_height(Grid grid, Inputs inputs, Report &report) {
 //   - Speed of sound
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat(Report &report) {
+void Neutrals::calc_specific_heat() {
 
   int64_t iSpecies;
 
@@ -223,7 +234,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid, Report &report) {
+void Neutrals::calc_chapman(Grid grid) {
 
   int64_t iAlt, iLon, iLat;
 
@@ -387,16 +398,15 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Inputs input, Report &report) {
 
-  precision_t dt;
-
-  int64_t iLon, iLat;
+void Neutrals::calc_conduction(Grid grid, Times time) {
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  precision_t dt;
+  int64_t iLon, iLat;
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
@@ -440,4 +450,5 @@ void Neutrals::calc_conduction(Grid grid, Times time, Inputs input, Report &repo
   }  // lon
 
   report.exit(function);
+  return;
 }

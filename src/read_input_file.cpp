@@ -19,7 +19,7 @@
 //     asked for.
 // -----------------------------------------------------------------------
 
-bool Inputs::read_inputs_json(Times &time, Report &report) {
+bool Inputs::read_inputs_json(Times &time) {
 
   bool DidWork = true;
 

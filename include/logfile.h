@@ -100,9 +100,7 @@ public:
    *    The logfile will output all indicies and specified neutrals and ions
    *    every dt time.
    */
-  Logfile(Indices &indices,
-          Inputs &input,
-          Report &report);
+  Logfile(Indices &indices);
   
   /**
    * \brief Close the file stream if not append
@@ -117,8 +115,7 @@ public:
                      Neutrals &neutrals,
                      Ions &ions,
                      Grid &gGrid,
-                     Times &time,
-                     Report &report);
+                     Times &time);
 
 private:
 

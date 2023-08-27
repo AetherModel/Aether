@@ -3,7 +3,7 @@
 
 #include "aether.h"
 
-void Neutrals::vertical_momentum_eddy(Grid &gGrid, Inputs inputs, Report &report) {
+void Neutrals::vertical_momentum_eddy(Grid &gGrid) {
 
   std::string function = "Neutrals::vertical_momentum_eddy";
   static int iFunction = -1;
@@ -11,7 +11,7 @@ void Neutrals::vertical_momentum_eddy(Grid &gGrid, Inputs inputs, Report &report
 
   int64_t iSpecies;
 
-  if (inputs.get_use_eddy_momentum()) {
+  if (input.get_use_eddy_momentum()) {
 
     arma_cube log_cons;
     arma_cube grad_cons;

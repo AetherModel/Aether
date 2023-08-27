@@ -10,7 +10,7 @@
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
 // ---------------------------------------------------------------------------
 
-void Grid::calc_sza(Planets planet, Times time, Report &report) {
+void Grid::calc_sza(Planets planet, Times time) {
 
   std::string function = "Grid::calc_sza";
   static int iFunction = -1;
@@ -36,7 +36,7 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
 //  Fill in GSE Coordinates
 // ---------------------------------------------------------------------------
 
-void Grid::calc_gse(Planets planet, Times time, Report &report) {
+void Grid::calc_gse(Planets planet, Times time) {
 
   std::string function = "Grid::calc_sza";
   static int iFunction = -1;
@@ -94,7 +94,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
 //      and filled in!
 // ---------------------------------------------------------------------------
 
-void Grid::calc_mlt(Report &report) {
+void Grid::calc_mlt() {
 
   std::string function = "Grid::calc_mlt";
   static int iFunction = -1;
@@ -144,7 +144,7 @@ void Grid::calc_mlt(Report &report) {
 //  fill grid with magnetic field values
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
+void Grid::fill_grid_bfield(Planets planet) {
 
   std::string function = "Grid::fill_grid_bfield";
   static int iFunction = -1;
@@ -169,7 +169,7 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
           alt = geoAlt_scgc(iLon, iLat, iAlt);
 
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
-                                   planet, input, report);
+                                   planet);
 
           magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
           magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
@@ -193,8 +193,8 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
       bfield_unit_vcgc[iDim] = bfield_vcgc[iDim] / (bfield_mag_scgc + 1e-32);
 
     int IsNorth = 1, IsSouth = 0;
-    mag_pole_north_ll = get_magnetic_pole(IsNorth, planet, input, report);
-    mag_pole_south_ll = get_magnetic_pole(IsSouth, planet, input, report);
+    mag_pole_north_ll = get_magnetic_pole(IsNorth, planet);
+    mag_pole_south_ll = get_magnetic_pole(IsSouth, planet);
   }
 
   report.exit(function);
@@ -205,7 +205,7 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
 //  Fill in radius, radius^2, and 1/radius^2
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
+void Grid::fill_grid_radius(Planets planet) {
 
   std::string function = "Grid::fill_grid_radius";
   static int iFunction = -1;
@@ -220,7 +220,7 @@ void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
     for (iLat = 0; iLat < nLats; iLat++)
       for (iAlt = 0; iAlt < nAlts; iAlt++)
 	radius_scgc(iLon, iLat, iAlt) =
-	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat), input);
+	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat));
 
   radius_scgc = radius_scgc + geoAlt_scgc;
   radius2_scgc = radius_scgc % radius_scgc;
@@ -237,7 +237,7 @@ void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
 // will be a latitudinal component.
 // -----------------------------------------------------------------------------
 
-void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
+void Grid::calc_rad_unit(Planets planet) {
 
   std::string function = "Grid::calc_rad_unit";
   static int iFunction = -1;
@@ -267,7 +267,7 @@ void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
 //  Calculates gravity, including J2 perturbation
 // -----------------------------------------------------------------------------
 
-void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
+void Grid::calc_gravity(Planets planet) {
 
   std::string function = "Grid::calc_gravity";
   static int iFunction = -1;
@@ -277,7 +277,7 @@ void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
 
   gravity_potential_scgc =
     - (mu / radius_scgc)
-    + ((3 * (planet.get_J2(input) * mu)) /
+    + ((3 * (planet.get_J2() * mu)) /
        (2 * pow(radius_scgc, 3)) %
        ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
 
@@ -296,7 +296,7 @@ void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
 //  Fill in XYZ in geo and mag coordinates
 // -----------------------------------------------------------------------------
 
-void Grid::calc_grid_spacing(Planets planet, Report &report) {
+void Grid::calc_grid_spacing(Planets planet) {
 
   int64_t iLon, iLat, iAlt;
 
@@ -324,7 +324,7 @@ void Grid::calc_grid_spacing(Planets planet, Report &report) {
 // Grid spacing for altitude:
 // ---------------------------------------
 
-void Grid::calc_alt_grid_spacing(){
+void Grid::calc_alt_grid_spacing() {
 
   int64_t iAlt;
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
@@ -361,7 +361,7 @@ void Grid::calc_alt_grid_spacing(){
 // Grid spacing for latitude:
 // ---------------------------------------
 
-void Grid::calc_lat_grid_spacing(){
+void Grid::calc_lat_grid_spacing() {
 
   int64_t iLat;
   for (iLat = 1; iLat < nLats - 1; iLat++) {
@@ -386,7 +386,7 @@ void Grid::calc_lat_grid_spacing(){
 // Grid spacing for longitude:
 // ---------------------------------------
 
-void Grid::calc_long_grid_spacing(){
+void Grid::calc_long_grid_spacing() {
 
   int64_t iLon;
   for (iLon = 1; iLon < nLons - 1; iLon++)

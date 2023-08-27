@@ -11,9 +11,10 @@ class Inputs {
 
 public:
 
-  Inputs(Times &time, Report &report);
-  int read(Times &time, Report &report);
-  bool read_inputs_json(Times &time, Report &report);
+  Inputs() {}
+  Inputs(Times &time);
+  int read(Times &time);
+  bool read_inputs_json(Times &time);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();
@@ -56,6 +57,10 @@ public:
   bool get_do_J2();
 
   bool get_is_cubesphere();
+
+  bool get_NO_cooling();
+  bool get_O_cooling();
+
   bool get_cent_acc();
 
   std::string get_student_name();
@@ -159,5 +164,7 @@ private:
   /// An internal variable to hold the state of the class
   bool IsOk;
 };
+
+extern Inputs input;
 
 #endif  // INCLUDE_INPUTS_H_

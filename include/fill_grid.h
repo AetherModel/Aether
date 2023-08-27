@@ -9,6 +9,6 @@
 #include "grid.h"
 #include "times.h"
 
-void fill_grid_radius(Grid &gGrid, Planets planet, Inputs input);
+void fill_grid_radius(Grid &gGrid, Planets planet);
 
 #endif  // INCLUDE_FILL_GRID_H_

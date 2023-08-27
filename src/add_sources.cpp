@@ -10,7 +10,7 @@
 // Adds all of the sources to the states. Needs time to get dt.
 // -----------------------------------------------------------------------------
 
-void Neutrals::add_sources(Times time, Report &report) {
+void Neutrals::add_sources(Times time) {
 
   std::string function = "add_sources";
   static int iFunction = -1;
@@ -18,11 +18,12 @@ void Neutrals::add_sources(Times time, Report &report) {
 
   precision_t dt = time.get_dt();
 
-  temperature_scgc =
-    temperature_scgc +
-    dt * (heating_euv_scgc +
-	  heating_chemical_scgc +
-	  conduction_scgc);
+  temperature_scgc = temperature_scgc +
+    dt * (heating_euv_scgc
+          + heating_chemical_scgc
+          + conduction_scgc
+          - O_cool_scgc
+          - NO_cool_scgc);
 
   for (int64_t iSpec = 0; iSpec < nSpeciesAdvect; iSpec++) {
     species_chars & advected_neutral = species[species_to_advect[iSpec]];
@@ -40,7 +41,7 @@ void Neutrals::add_sources(Times time, Report &report) {
 	  dt * advected_neutral.acc_eddy;
     }
   }
-  calc_bulk_velocity(report);
+  calc_bulk_velocity();
 
   report.exit(function);
   return;

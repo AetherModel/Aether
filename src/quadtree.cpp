@@ -3,7 +3,7 @@
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree(Inputs input, Report report) {
+Quadtree::Quadtree() {
   if (input.get_is_cubesphere())
     nRootNodes = 6;
   else
@@ -22,7 +22,7 @@ bool Quadtree::is_ok() {
 // build quadtree
 // --------------------------------------------------------------------------
 
-void Quadtree::build(Inputs input, Report report) {
+void Quadtree::build() {
 
   arma_mat origins;
   arma_mat rights;

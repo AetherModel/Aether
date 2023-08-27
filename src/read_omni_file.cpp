@@ -15,8 +15,7 @@
 // -----------------------------------------------------------------------------
 
 index_file_output_struct read_omni_file(std::string omni_file,
-                                        Indices indices,
-                                        Report &report) {
+                                        Indices indices) {
 
   std::ifstream myFile;
 
