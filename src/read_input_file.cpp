@@ -85,6 +85,5 @@ bool Inputs::read_inputs_json(Times &time) {
     DidWork = false;
   }
 
-  cout << "Entering read_inputs_json" << endl;
   return DidWork;
 }
