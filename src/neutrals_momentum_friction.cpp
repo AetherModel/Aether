@@ -17,7 +17,7 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
   static int iFunction = -1;
   report.enter(function, iFunction);
   precision_t ktom, temp_dij;
-  int64_t iSpecies, jSpecies;
+  int64_t iSpecies, jSpecies, iSpecies_, jSpecies_;
 
   static arma_mat matrix(neutrals.nSpeciesAdvect, neutrals.nSpeciesAdvect,
                          fill::zeros);
@@ -25,9 +25,10 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
                              fill::zeros);
 
   for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
-
+    iSpecies_ = neutrals.species_to_advect[iSpecies];
+    
     Neutrals::species_chars & advected_neutral =
-      neutrals.species[neutrals.species_to_advect[iSpecies]];
+      neutrals.species[iSpecies_];
 
     // ktom = boltzmann's constant * temperature / mass
     ktom =
@@ -36,8 +37,9 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
       advected_neutral.mass;
 
     for (jSpecies = 0; jSpecies < neutrals.nSpeciesAdvect; jSpecies++) {
-      //cout << "JSPECIES: " << iSpecies << endl;
-      if (iSpecies == jSpecies)
+      jSpecies_ = neutrals.species_to_advect[jSpecies];
+
+      if (iSpecies_ == jSpecies_)
         continue;
 
       // temp_dij holds the dij binary coefficients based upon the formulation by Banks and Kokarts.
@@ -45,9 +47,9 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
       // (1) density be in cm^-3 (hence the 1.0e-06) factor below
       // (2) Additionally, the Dij's are in cm^2/s, thus the 1.0e-04 factor
       temp_dij =
-        1e-4 * advected_neutral.diff0[jSpecies] *
+        1e-4 * advected_neutral.diff0[jSpecies_] *
         pow(neutrals.temperature_scgc(iLon, iLat, iAlt),
-            advected_neutral.diff_exp[jSpecies]) /
+            advected_neutral.diff_exp[jSpecies_]) /
         (neutrals.density_scgc(iLon, iLat, iAlt) * 1e-6);
 
       coefmatrix(iSpecies, jSpecies) =
@@ -93,30 +95,38 @@ void calc_neutral_friction(Neutrals &neutrals) {
   int64_t nYs = neutrals.temperature_scgc.n_cols;
   int64_t nZs = neutrals.temperature_scgc.n_slices;
 
-  for (iAlt = 0; iAlt < nZs; iAlt++) {
-    for (iLat = 0; iLat < nYs; iLat++) {
-      for (iLon = 0; iLon < nXs; iLon++) {
-        for (iDir = 0; iDir < 3; iDir++) {
-          vels.zeros();
+  // Initialize all of the accelerations to zero:
+  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+    for (iDir = 0; iDir < 3; iDir++)
+      neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
 
-          //Put the old velocities into vels:
-          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
-	    iSpecies_ = neutrals.species_to_advect[iSpecies];
-            vels(iSpecies) =
-              neutrals.species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
-	  }
-          acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
+  // Calculate friction terms for only species that advect.
+  //   - If only 1 species is advected, then it will have no friction
+  if (neutrals.nSpeciesAdvect > 1) {  
+    for (iAlt = 0; iAlt < nZs; iAlt++) {
+      for (iLat = 0; iLat < nYs; iLat++) {
+	for (iLon = 0; iLon < nXs; iLon++) {
+	  for (iDir = 0; iDir < 3; iDir++) {
+	    vels.zeros();
 
-          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
-	    iSpecies_ = neutrals.species_to_advect[iSpecies];
-            neutrals.species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
-	      acc(iSpecies);
-	  } // iSpeciesAdvect
-        } // for direction
-      } // for long
-    } // for lat
-  } // for alt
+	    //Put the old velocities into vels:
+	    for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+	      iSpecies_ = neutrals.species_to_advect[iSpecies];
+	      vels(iSpecies) =
+		neutrals.species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
+	    }
+	    acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
 
+	    for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+	      iSpecies_ = neutrals.species_to_advect[iSpecies];
+	      neutrals.species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+		acc(iSpecies);
+	    } // iSpeciesAdvect
+	  } // for direction
+	} // for long
+      } // for lat
+    } // for alt
+  } // if nSpecies > 1
   report.exit(function);
   return;
 } //calc_neutral_friction
