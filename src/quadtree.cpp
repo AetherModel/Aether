@@ -315,7 +315,6 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
   return iNode;
 }
 
-
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
@@ -368,7 +367,6 @@ arma_vec Quadtree::wrap_point_sphere(arma_vec point) {
   return wrap_point;
 
 }
-
 
 // --------------------------------------------------------------------------
 //
@@ -454,8 +452,6 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 
   return wrap_point;
 }
-
-
 
 // --------------------------------------------------------------------------
 //

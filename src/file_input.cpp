@@ -341,7 +341,6 @@ std::vector<int> read_itime(std::ifstream &file_ptr, std::string hash) {
   return itime;
 }
 
-
 // -----------------------------------------------------------------------------
 // Move CSV to json format (with name as first column)
 // -----------------------------------------------------------------------------
@@ -400,4 +399,3 @@ json put_csv_in_json_wo_name(std::vector<std::vector<std::string>>
 
   return output;
 }
-

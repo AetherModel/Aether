@@ -317,7 +317,6 @@ bool Neutrals::unpack_one_face(int iSender,
   return DidWork;
 }
 
-
 // -----------------------------------------------------------------------------
 // Send for asynchronous communication. Don't touch buffer until mpi
 // says that it has been received.
@@ -361,7 +360,6 @@ bool Grid::receive_one_face(int64_t iFace) {
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-
 
 Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
                                                      int64_t nVars,
@@ -621,4 +619,3 @@ bool Neutrals::exchange(Grid &grid) {
 
   return DidWork;
 }
-

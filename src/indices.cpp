@@ -66,13 +66,13 @@ bool read_and_store_indices(Indices &indices) {
   // Read F10.7 file (if set):
   // ---------------------------------------------------
 
-
   std::string f107_file = input.get_f107_file();
 
   if (f107_file.length() > 0) {
     report.print(1, "Reading F107 File : " + f107_file);
     index_file_output_struct f107_contents;
     f107_contents = read_f107_file(f107_file, indices);
+
     if (f107_contents.nTimes > 0)
       indices.set_f107(f107_contents);
     else {
@@ -81,6 +81,7 @@ bool read_and_store_indices(Indices &indices) {
       return DidWork;
     }
   }
+
   // ---------------------------------------------------
   // Read in OMNIWeb files.
   // The user can enter as many as they would like:
@@ -108,7 +109,8 @@ bool read_and_store_indices(Indices &indices) {
                                       file_contents.times,
                                       file_contents.values[iVar],
                                       file_contents.missing_values[iVar]);
-          if(!DidWork){
+
+          if (!DidWork) {
             report.error("Error setting indices index!!!");
             return DidWork;
           }
@@ -116,6 +118,7 @@ bool read_and_store_indices(Indices &indices) {
       }  // for iVar
     }  // for iFile
   }  // if nFiles
+
   report.exit(function);
   return DidWork;
 }
@@ -217,7 +220,6 @@ void Indices::perturb_index(int iIndex, int seed,
     }
   }
 }
-
 
 // ----------------------------------------------------------------------
 // For f10.7 - need to set the 81-day average also.

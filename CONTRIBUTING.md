@@ -21,6 +21,10 @@ of Aether, called .astylerc.  To run this, do:
 
 AStyle --project=.astylerc src/*.cpp
 
+on WSL with Ubuntu, the command seems to be:
+
+astyle --options=.astylerc src/*.cpp
+
 
 #### Linting
 

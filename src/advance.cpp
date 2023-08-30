@@ -102,7 +102,7 @@ int advance(Planets &planet,
   ions.calc_electron_temperature(neutrals, gGrid);
 
   neutrals.exchange(gGrid);
-  
+
   time.increment_time();
 
   if (time.check_time_gate(input.get_dt_write_restarts())) {
@@ -111,7 +111,6 @@ int advance(Planets &planet,
     ions.restart_file(input.get_restartout_dir(), DoWrite);
     time.restart_file(input.get_restartout_dir(), DoWrite);
   }
-
 
   iErr = output(neutrals, ions, gGrid, time, planet);
 

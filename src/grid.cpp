@@ -90,7 +90,6 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
   geoAlt_Below.set_size(nX, nY, nZ + 1);
 
-
   geoX_scgc.set_size(nX, nY, nZ);
   geoY_scgc.set_size(nX, nY, nZ);
   geoZ_scgc.set_size(nX, nY, nZ);

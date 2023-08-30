@@ -9,24 +9,27 @@ void Neutrals::vertical_momentum_eddy(Grid &gGrid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int64_t iSpecies;
+  int64_t iSpecies, iSpecies_;
+
+  // Initialize all of the accelerations to zero:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].acc_eddy.zeros();
 
   if (input.get_use_eddy_momentum()) {
 
     arma_cube log_cons;
     arma_cube grad_cons;
 
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // Only consider the advected species:
+    for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++) {
+      iSpecies_ = species_to_advect[iSpecies];
       // Take the natural log of each concentration cube:
-      log_cons = log(species[iSpecies].concentration_scgc);
+      log_cons = log(species[iSpecies_].concentration_scgc);
 
       // calculate gradient:
       grad_cons = calc_gradient_alt(log_cons, gGrid);
-      species[iSpecies].acc_eddy = - grad_cons % kappa_eddy_scgc;
+      species[iSpecies_].acc_eddy = - grad_cons % kappa_eddy_scgc;
     }
-  } else {
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-      species[iSpecies].acc_eddy.zeros();
   }
 
   report.exit(function);

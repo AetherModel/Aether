@@ -186,9 +186,8 @@ void Report::error(std::string error_in) {
 // -----------------------------------------------------------------------
 
 void Report::report_errors() {
-  for (int i = 0; i<error_list.size(); i++){
+  for (int i = 0; i < error_list.size(); i++)
     std::cout << error_list[i].func << " : " << error_list[i].error << "\n";
-  }
 }
 
 // -----------------------------------------------------------------------

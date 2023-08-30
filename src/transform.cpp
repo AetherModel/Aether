@@ -40,8 +40,6 @@ void copy_cube_to_array(arma_cube cube_in,
   }
 }
 
-
-
 // -----------------------------------------------------------------------
 // Transform Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2]) to
 // X, Y, Z
