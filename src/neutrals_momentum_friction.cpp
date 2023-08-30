@@ -26,7 +26,6 @@ arma_vec neutral_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iAlt,
 
   for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
 
-    //cout << "ISPECIES: " << iSpecies << endl;
     Neutrals::species_chars & advected_neutral =
       neutrals.species[neutrals.species_to_advect[iSpecies]];
 
@@ -89,7 +88,7 @@ void calc_neutral_friction(Neutrals &neutrals) {
 
   arma_vec vels(neutrals.nSpeciesAdvect, fill::zeros);
   arma_vec acc(neutrals.nSpeciesAdvect, fill::zeros);
-  int64_t iAlt, iLat, iLon, iDir, iSpecies;
+  int64_t iAlt, iLat, iLon, iDir, iSpecies, iSpecies_;
   int64_t nXs = neutrals.temperature_scgc.n_rows;
   int64_t nYs = neutrals.temperature_scgc.n_cols;
   int64_t nZs = neutrals.temperature_scgc.n_slices;
@@ -101,16 +100,18 @@ void calc_neutral_friction(Neutrals &neutrals) {
           vels.zeros();
 
           //Put the old velocities into vels:
-          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++)
+          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+	    iSpecies_ = neutrals.species_to_advect[iSpecies];
             vels(iSpecies) =
-              neutrals.species[neutrals.species_to_advect[iSpecies]].velocity_vcgc[iDir](iLon,
-                  iLat, iAlt);
-
+              neutrals.species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
+	  }
           acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
 
-          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++)
-            neutrals.species[neutrals.species_to_advect[iSpecies]].acc_neutral_friction[iDir](
-              iLon, iLat, iAlt) = acc(iSpecies);
+          for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+	    iSpecies_ = neutrals.species_to_advect[iSpecies];
+            neutrals.species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+	      acc(iSpecies);
+	  } // iSpeciesAdvect
         } // for direction
       } // for long
     } // for lat
