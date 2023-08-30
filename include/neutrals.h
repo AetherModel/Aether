@@ -319,6 +319,11 @@ class Neutrals {
   void calc_bulk_velocity();
 
   /**********************************************************************
+     \brief Assigns bulk velocity to all non-advected species
+   **/
+  void assign_bulk_velocity();
+
+  /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
    **/
   void calc_specific_heat();

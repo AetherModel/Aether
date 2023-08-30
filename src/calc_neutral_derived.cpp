@@ -149,6 +149,28 @@ void Neutrals::calc_bulk_velocity() {
 }
 
 //----------------------------------------------------------------------
+// Assign bulk velocity to non-advected species
+//----------------------------------------------------------------------
+
+void Neutrals::assign_bulk_velocity() {
+
+  std::string function = "Neutrals::assign_bulk_velocity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  static int64_t iSpecies, iDir;
+
+  // If you don't advect a species, then fill with bulk velocity:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    if (!species[iSpecies].DoAdvect)
+      for (iDir = 0; iDir < 3; iDir++)
+	species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+  
+  report.exit(function);
+  return;
+}
+
+//----------------------------------------------------------------------
 // Calculate scale heights of different species
 //----------------------------------------------------------------------
 
