@@ -28,6 +28,6 @@
     
     "DoCalcBulkIonTemp" : false,
     
-    "PlanetFile" : "UA/inputs/n2advect_earth.in"
+    "PlanetFile" : "../n2_advect_earth.in"
     
 }
