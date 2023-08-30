@@ -46,7 +46,7 @@ void Neutrals::add_sources(Times time) {
 
   calc_bulk_velocity();
   assign_bulk_velocity();
-  
+
   report.exit(function);
   return;
 }

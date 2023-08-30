@@ -126,21 +126,24 @@ void Neutrals::calc_bulk_velocity() {
   // Get rho to be the correct size by assigning it to a variable:
   arma_cube rho_advected = rho_scgc;
   static int64_t iSpecies, iSpecies_, iDir;
-  
+
   for (iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
+
     if (iDir == 0)
       rho_advected.zeros();
-    
+
     for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++) {
       iSpecies_ = species_to_advect[iSpecies];
       velocity_vcgc[iDir] +=
         species[iSpecies_].mass *
         species[iSpecies_].density_scgc %
         species[iSpecies_].velocity_vcgc[iDir];
+
       if (iDir == 0)
-	rho_advected += species[iSpecies_].mass * species[iSpecies_].density_scgc;
+        rho_advected += species[iSpecies_].mass * species[iSpecies_].density_scgc;
     }
+
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_advected;
   }
 
@@ -164,8 +167,8 @@ void Neutrals::assign_bulk_velocity() {
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     if (!species[iSpecies].DoAdvect)
       for (iDir = 0; iDir < 3; iDir++)
-	species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
-  
+        species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+
   report.exit(function);
   return;
 }

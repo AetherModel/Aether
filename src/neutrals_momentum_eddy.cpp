@@ -14,7 +14,7 @@ void Neutrals::vertical_momentum_eddy(Grid &gGrid) {
   // Initialize all of the accelerations to zero:
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     species[iSpecies].acc_eddy.zeros();
-  
+
   if (input.get_use_eddy_momentum()) {
 
     arma_cube log_cons;
