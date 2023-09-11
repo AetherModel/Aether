@@ -411,7 +411,7 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
 //   5. Unpack variables from all sides
 // -----------------------------------------------------------------------------
 
-bool Neutrals::exchange(Grid &grid) {
+bool Neutrals::exchange_old(Grid &grid) {
 
   std::string function = "Neutrals::exchange";
   static int iFunction = -1;
