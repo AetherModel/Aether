@@ -170,11 +170,9 @@ std::vector<precision_t> Inputs::get_satellite_dts() {
   return dts;
 }
 
-
 // -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
 // -----------------------------------------------------------------------
-
 
 //set up dummy values for settings that aren't set
 
@@ -675,7 +673,7 @@ std::string Inputs::get_f107_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
-  return check_settings_str("Planet");
+  return settings["Planet"]["name"];
 }
 
 // -----------------------------------------------------------------------
@@ -768,33 +766,25 @@ json Inputs::get_perturb_values() {
   return values;
 }
 
-
 // -----------------------------------------------------------------------
 // Flag to check neutral and ions for nans and infinites
 // -----------------------------------------------------------------------
-
 
 bool Inputs::get_check_for_nans() {
   return settings.at("Debug").at("check_for_nans");;
 }
 
-
-
-
 // -----------------------------------------------------------------------
 // Checks to see if nan_test is needed
 // -----------------------------------------------------------------------
-
 
 bool Inputs::get_nan_test() {
   return settings.at("Debug").at("nan_test").at("insert");
 }
 
-
 // -----------------------------------------------------------------------
 // Returns which variable is being tested for nans
 // -----------------------------------------------------------------------
-
 
 std::string Inputs::get_nan_test_variable() {
   return settings.at("Debug").at("nan_test").at("variable");
@@ -842,7 +832,6 @@ json Inputs::get_boundary_condition_types() {
   return values;
 }
 
-
 std::string Inputs::get_advection_neutrals_vertical() {
 
   std::string value = "none";
@@ -864,7 +853,6 @@ std::string Inputs::get_advection_neutrals_vertical() {
 
   return value;
 }
-
 
 // --------------------------------------------------------------------------
 // check to see if class is ok

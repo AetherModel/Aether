@@ -237,4 +237,10 @@ bool is_nan_inf(double value);
 
 std::vector<int> indef_vector(arma_cube cube);
 
+// --------------------------------------------------------------------------
+// Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
+// --------------------------------------------------------------------------
+
+arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in);
+
 #endif  // INCLUDE_TOOLS_H_

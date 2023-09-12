@@ -13,8 +13,6 @@ double interpolate_1d(double outX,
   return outValue;
 }
 
-
-
 // ----------------------------------------------------------------------
 // This is the general function for getting an index within an ordered
 // vector:

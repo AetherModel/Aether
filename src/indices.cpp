@@ -66,7 +66,6 @@ bool read_and_store_indices(Indices &indices) {
   // Read F10.7 file (if set):
   // ---------------------------------------------------
 
-
   std::string f107_file = input.get_f107_file();
 
   if (f107_file.length() > 0) {
@@ -221,7 +220,6 @@ void Indices::perturb_index(int iIndex, int seed,
     }
   }
 }
-
 
 // ----------------------------------------------------------------------
 // For f10.7 - need to set the 81-day average also.

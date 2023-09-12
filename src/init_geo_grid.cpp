@@ -940,7 +940,6 @@ void Grid::correct_xy_grid(Planets planet) {
   return;
 }
 
-
 // ----------------------------------------------------------------------
 // Initialize the geographic grid.  At the moment, this is a simple
 // Lon/Lat/Alt grid.  The grid structure is general enough that each
@@ -975,6 +974,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
     MPI_Barrier(aether_comm);
     create_altitudes(planet);
+
+    init_connection();
 
     DidWork = write_restart(input.get_restartout_dir());
   }

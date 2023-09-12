@@ -115,7 +115,6 @@ int advance(Planets &planet,
     time.restart_file(input.get_restartout_dir(), DoWrite);
   }
 
-
   iErr = output(neutrals, ions, gGrid, time, planet);
 
   logfile.write_logfile(indices, neutrals, ions, gGrid, time);

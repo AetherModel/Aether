@@ -300,7 +300,6 @@ bool Euv::pair_euv(Neutrals &neutrals,
           }  // iIon loop
         }  // if ionization
 
-
       }  // if species is name
     }  // for iEuv
   }  // for iSpecies
@@ -308,7 +307,6 @@ bool Euv::pair_euv(Neutrals &neutrals,
   report.exit(function);
   return DidWork;
 }
-
 
 // --------------------------------------------------------------------------
 // Scale flux (intensity) at 1 AU to distance from the sun:
@@ -416,7 +414,6 @@ int Euv::neuvac(Times time,
   report.exit(function);
   return iErr;
 }
-
 
 // --------------------------------------------------------------------------
 // Calculate HFG

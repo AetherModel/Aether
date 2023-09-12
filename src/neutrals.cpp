@@ -167,6 +167,7 @@ int Neutrals::read_planet_file(Planets planet) {
   json neutrals = planet.get_neutrals();
 
   nSpecies = neutrals["name"].size();
+  nSpeciesAdvect = 0;
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].cName = neutrals["name"][iSpecies];
@@ -177,6 +178,14 @@ int Neutrals::read_planet_file(Planets planet) {
     species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
     species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
     species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
+  }
+
+  // account for advected neutrals:
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect == 1) {
+      nSpeciesAdvect++;
+      species_to_advect.push_back(iSpecies);
+    }
   }
 
   json temperatures = planet.get_temperatures();
@@ -271,7 +280,6 @@ void Neutrals::nan_test(std::string variable) {
   std::cout << message;
 }
 
-
 //----------------------------------------------------------------------
 // Checks for nans and +/- infinities in density, temp, and velocity
 //----------------------------------------------------------------------
@@ -289,7 +297,6 @@ bool Neutrals::check_for_nonfinites() {
 
   return non_finites_exist;
 }
-
 
 //----------------------------------------------------------------------
 // return the index of the requested species
@@ -431,4 +438,3 @@ void Neutrals::calc_O_cool() {
 
   return;
 }
-

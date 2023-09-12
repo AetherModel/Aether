@@ -7,7 +7,6 @@
 
 #include "aether.h"
 
-
 // --------------------------------------------------------------------------
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
@@ -30,7 +29,6 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   return;
 }
-
 
 // --------------------------------------------------------------------------
 // Calculate the ion temperature

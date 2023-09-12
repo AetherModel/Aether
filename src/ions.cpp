@@ -154,6 +154,14 @@ int Ions::read_planet_file(Planets planet) {
     species[iSpecies].DoAdvect = ions["advect"][iSpecies];
   }
 
+  // account for advected ions:
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect == 1) {
+      nSpeciesAdvect++;
+      species_to_advect.push_back(iSpecies);
+    }
+  }
+
   species[nSpecies].cName = "e-";
   species[nSpecies].mass = cME;
   species[nSpecies].charge = -1;
@@ -161,7 +169,6 @@ int Ions::read_planet_file(Planets planet) {
 
   return iErr;
 }
-
 
 //----------------------------------------------------------------------
 // Reports location of nans inserted into specified variable
@@ -391,4 +398,3 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
   return DidWork;
 }
-

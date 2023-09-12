@@ -18,6 +18,9 @@
 	"nLats" : 18,
 	"nAlts" : 50},
 
+    "CubeSphere" : {
+	"is" : true},
+
     "GeoGrid" : {
 	"dAlt"   : 0.25,
 	"IsUniformAlt" : false},    
@@ -30,8 +33,6 @@
 	"type" : ["states"],
 	"dt" : [900] },
     
-    "DoCalcBulkIonTemp" : false,
-    
-    "PlanetFile" : "UA/inputs/n2advect_earth.in"
+    "DoCalcBulkIonTemp" : false
     
 }

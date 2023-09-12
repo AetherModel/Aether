@@ -10,10 +10,10 @@ cd run.no_perturb
 cp ../aether.json.no_perturb ./aether.json
 mpirun -np 1 ./aether
 cd UA/output
-../../../../../srcPython/postAether.py -rm
+~/bin/postAether.py -rm
 # This assumes aetherpy is installed and the plotter is in the bin directory:
-~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
+~/bin/aether_plot_simple.py -var=Temperature -alt=20 3DALL_20110320_003000.nc
+~/bin/aether_plot_simple.py -var=O2+ -alt=10 3DALL_20110320_003000.nc
 # into test directory
 cd ../../.. 
 
@@ -24,12 +24,12 @@ cd run.w_perturb
 cp ../aether.json.w_perturb ./aether.json
 mpirun -np 4 ./aether
 cd UA/output
-../../../../../srcPython/postAether.py
+~/bin/postAether.py
 # This assumes aetherpy is installed and the plotter is in the bin directory:
-~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000_std.nc
-~/bin/run_plot_block_model_results.py -var=Temperature -alt=20 3DALL_20110320_003000_mean.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000_std.nc
-~/bin/run_plot_block_model_results.py -var=O2+ -alt=10 3DALL_20110320_003000_mean.nc
+~/bin/aether_plot_simple.py -var=Temperature -alt=20 3DALL_20110320_003000_std.nc
+~/bin/aether_plot_simple.py -var=Temperature -alt=20 3DALL_20110320_003000_mean.nc
+~/bin/aether_plot_simple.py -var=O2+ -alt=10 3DALL_20110320_003000_std.nc
+~/bin/aether_plot_simple.py -var=O2+ -alt=10 3DALL_20110320_003000_mean.nc
 # into test directory
 cd ../../..
 

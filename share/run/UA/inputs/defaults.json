@@ -33,7 +33,9 @@
 	"name" : "",
 	"is" : false },
 
-    "Planet" : "earth",
+    "Planet" : {
+        "name" : "earth",
+        "file": "UA/inputs/earth.in"},
 
     "BField" : "dipole",
 
@@ -108,7 +110,7 @@
 	"species" : ["O2", "O2+"]},
 
     "Outputs" : {
-	"type" : ["states", "bfield"],
+	"type" : ["neutrals"],
 	"dt" : [900, 0.0]},
 
     "Restart" : {
