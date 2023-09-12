@@ -15,6 +15,7 @@ public:
   Inputs(Times &time);
   int read(Times &time);
   bool read_inputs_json(Times &time);
+  bool set_verbose(json in);
   int get_verbose();
   int get_verbose_proc();
   precision_t get_dt_euv();

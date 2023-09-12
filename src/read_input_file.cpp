@@ -28,6 +28,8 @@ bool Inputs::read_inputs_json(Times &time) {
 
   // Set the default values first:
   settings = read_json("UA/inputs/defaults.json");
+  DidWork = set_verbose(settings);
+    
   // Set the planet-specific file (user can change this in aether.in file!):
   settings["PlanetSpeciesFile"] = settings["Planet"]["file"];
 
@@ -35,6 +37,7 @@ bool Inputs::read_inputs_json(Times &time) {
 
     // Then read in user perturbations on those defaults:
     user_inputs = read_json("aether.json");
+    DidWork = set_verbose(user_inputs);
 
     // Read in a restart file also if user specified it.
     //   - Here we merge the restart inputs with the defaults inputs
