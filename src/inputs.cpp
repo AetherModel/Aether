@@ -59,7 +59,7 @@ Inputs::Inputs(Times &time) {
   type_output.push_back("states");
   dt_euv = 60.0;
   dt_report = 60.0;
-  
+
   // ------------------------------------------------
   // Now read the input file:
   IsOk = read_inputs_json(time);
@@ -99,9 +99,10 @@ std::string Inputs::get_logfile() {
 
 precision_t Inputs::get_logfile_dt() {
   precision_t setting = -1;
-  if(check_settings("Logfile", "dt")){
-      setting = settings.at("Logfile").at("dt");
-  }
+
+  if (check_settings("Logfile", "dt"))
+    setting = settings.at("Logfile").at("dt");
+
   return setting;
 }
 
@@ -169,11 +170,9 @@ std::vector<precision_t> Inputs::get_satellite_dts() {
   return dts;
 }
 
-
 // -----------------------------------------------------------------------
 // Return value of a key in the json formatted inputs
 // -----------------------------------------------------------------------
-
 
 //set up dummy values for settings that aren't set
 
@@ -185,9 +184,8 @@ std::vector<int> Inputs::get_settings_intarr(std::string key1) {
 
     for (int i = 0; i < nPts; i++)
       value.push_back(settings.at(key1).at(i));
-  } else {
+  } else
     IsOk = false;
-  }
 
   return value;
 }
@@ -234,7 +232,7 @@ std::string Inputs::get_settings_str(std::string key1,
 
 //dummy values, to use if the settings are not set
 int dummy_int = -1;
-float dummy_float = -1; 
+float dummy_float = -1;
 std::string dummy_string = "unknown";
 
 //check settings and throw invalid_argument error if the setting doesn't exist
@@ -242,53 +240,56 @@ bool Inputs::check_settings(std::string key1,
                             std::string key2) {
   //try to find the keys first
   if (settings.find(key1) != settings.end()) {
-    if (settings.at(key1).find(key2) != settings.at(key1).end()) {
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
       return true;
-    }
   }
 
   //if we haven't found the keys print a message & set IsOk to false
   IsOk = false;
-  if(!IsOk) {
+
+  if (!IsOk)
     std::cout << "Missing setting called! [" << key1 << ", " << key2 << "]\n";
-  }
+
   return false;
 }
 
 bool Inputs::check_settings(std::string key1) {
   //try to find the keys first
-  if (settings.find(key1) != settings.end()) 
-      return true;
+  if (settings.find(key1) != settings.end())
+    return true;
 
   //if we haven't found the key print a message & set IsOk to false
   IsOk = false;
+
   //perturb is non-essential, otherwise print error message
-  if(!IsOk && key1 != "Perturb") {
+  if (!IsOk && key1 != "Perturb")
     std::cout << "Missing setting called! [" << key1 << "]\n";
-  }
+
   return false;
 }
 
 std::string Inputs::check_settings_str(std::string key1,
                                        std::string key2) {
-  if(check_settings(key1, key2))
+  if (check_settings(key1, key2))
     return settings.at(key1).at(key2);
+
   return dummy_string;
 }
 
 std::string Inputs::check_settings_str(std::string key) {
-  if(get_settings_str(key) == dummy_string){
+  if (get_settings_str(key) == dummy_string) {
     IsOk = false;
     return dummy_string;
   }
+
   return settings[key];
 }
 
 precision_t Inputs::check_settings_pt(std::string key1,
                                       std::string key2) {
-  if(check_settings(key1, key2)){
+  if (check_settings(key1, key2))
     return settings.at(key1).at(key2);
-  }
+
   return dummy_float;
 }
 
@@ -299,11 +300,13 @@ precision_t Inputs::check_settings_pt(std::string key1,
 Inputs::grid_input_struct Inputs::get_grid_inputs() {
   // First Get Values:
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
-  if(check_settings("GeoGrid", "IsUniformAlt")){
+
+  if (check_settings("GeoGrid", "IsUniformAlt")) {
     bool reality = settings.at("GeoGrid").at("IsUniformAlt");
     geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
-  }else
+  } else
     geo_grid_input.IsUniformAlt = true;
+
   geo_grid_input.alt_min = check_settings_pt("GeoGrid", "MinAlt");
   geo_grid_input.dalt = check_settings_pt("GeoGrid", "dAlt");
   geo_grid_input.lat_min = check_settings_pt("GeoGrid", "MinLat");
@@ -331,8 +334,9 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_is_student() {
-  if(check_settings("Student", "is"))
+  if (check_settings("Student", "is"))
     return settings.at("Student").at("is");
+
   return false;
 }
 
@@ -349,8 +353,9 @@ std::string Inputs::get_student_name() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_is_cubesphere() {
-  if(check_settings("CubeSphere", "is"))
+  if (check_settings("CubeSphere", "is"))
     return settings.at("CubeSphere").at("is");
+
   return false;
 }
 
@@ -359,8 +364,9 @@ bool Inputs::get_is_cubesphere() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_restart() {
-  if(check_settings("Restart", "do"))
+  if (check_settings("Restart", "do"))
     return settings.at("Restart").at("do");
+
   return false;
 }
 
@@ -481,11 +487,12 @@ precision_t Inputs::get_n_outputs() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_original_seed() {
-  if(settings.find("Seed") == settings.end()){
+  if (settings.find("Seed") == settings.end()) {
     IsOk = false;
     std::cout << "Error in getting seed!\n";
     return dummy_int;
   }
+
   return settings.at("Seed");
 }
 
@@ -549,12 +556,13 @@ int Inputs::get_nMembers() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_verbose() {
-  return check_settings_pt("Debug","iVerbose");
+  return check_settings_pt("Debug", "iVerbose");
 }
 
 int Inputs::get_verbose_proc() {
-  if(check_settings("Debug", "iProc"))
+  if (check_settings("Debug", "iProc"))
     return settings.at("Debug").at("iProc");
+
   return dummy_int;
 }
 
@@ -631,8 +639,9 @@ std::string Inputs::get_indices_lookup_file() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_number_of_omniweb_files() {
-  if(settings.find("OmniwebFiles") != settings.end())
+  if (settings.find("OmniwebFiles") != settings.end())
     return settings.at("OmniwebFiles").size();
+
   IsOk = false;
   return dummy_int;
 }
@@ -664,7 +673,7 @@ std::string Inputs::get_f107_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
-  return check_settings_str("Planet");
+  return settings["Planet"]["name"];
 }
 
 // -----------------------------------------------------------------------
@@ -695,8 +704,10 @@ std::string Inputs::get_electrodynamics_file() {
 
 bool Inputs::get_do_calc_bulk_ion_temp() {
   bool value = false;
-  if(check_settings("DoCalcBulkIonTemp"))
+
+  if (check_settings("DoCalcBulkIonTemp"))
     return settings.at("DoCalcBulkIonTemp");
+
   IsOk = false;
   return false;
 }
@@ -755,33 +766,25 @@ json Inputs::get_perturb_values() {
   return values;
 }
 
-
 // -----------------------------------------------------------------------
 // Flag to check neutral and ions for nans and infinites
 // -----------------------------------------------------------------------
-
 
 bool Inputs::get_check_for_nans() {
   return settings.at("Debug").at("check_for_nans");;
 }
 
-
-
-
 // -----------------------------------------------------------------------
 // Checks to see if nan_test is needed
 // -----------------------------------------------------------------------
-
 
 bool Inputs::get_nan_test() {
   return settings.at("Debug").at("nan_test").at("insert");
 }
 
-
 // -----------------------------------------------------------------------
 // Returns which variable is being tested for nans
 // -----------------------------------------------------------------------
-
 
 std::string Inputs::get_nan_test_variable() {
   return settings.at("Debug").at("nan_test").at("variable");
@@ -829,7 +832,6 @@ json Inputs::get_boundary_condition_types() {
   return values;
 }
 
-
 std::string Inputs::get_advection_neutrals_vertical() {
 
   std::string value = "none";
@@ -851,7 +853,6 @@ std::string Inputs::get_advection_neutrals_vertical() {
 
   return value;
 }
-
 
 // --------------------------------------------------------------------------
 // check to see if class is ok

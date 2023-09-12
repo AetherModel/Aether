@@ -1,15 +1,11 @@
 
 {
-    "Ensembles" : {
-	"nMembers" : 1},
 
     "Debug" : {
 	"iVerbose" : 0,
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
-	"dt" : 10.0,
-	"check_for_nans" : false
-    },
+	"dt" : 10.0},
 
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
@@ -27,11 +23,11 @@
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
     
     "Outputs" : {
-	"type" : ["states"],
+	"type" : ["neutrals"],
 	"dt" : [900] },
     
     "DoCalcBulkIonTemp" : false,
     
-    "PlanetFile" : "UA/inputs/n2advect_earth.in"
+    "PlanetFile" : "UA/inputs/earth.in"
     
 }

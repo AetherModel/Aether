@@ -467,6 +467,7 @@ bool Planets::read_file() {
   }  // else open file
 
   return DidWork;
+
 }
 
 // --------------------------------------------------------------------------
@@ -571,4 +572,3 @@ bool Planets::read_planet_specific_file() {
   report.exit(function);
   return DidWork;
 }
-

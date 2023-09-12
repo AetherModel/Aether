@@ -38,7 +38,7 @@ int advance(Planets &planet,
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
   neutrals.calc_mean_major_mass();
-  
+
   neutrals.calc_specific_heat();
   neutrals.calc_concentration();
   neutrals.calc_pressure();
@@ -58,6 +58,7 @@ int advance(Planets &planet,
 
   neutrals.calc_scale_height(gGrid);
   neutrals.set_bcs(gGrid, time, indices);
+
   if (input.get_nAltsGeo() > 1)
     neutrals.advect_vertical(gGrid, time);
 
@@ -104,7 +105,7 @@ int advance(Planets &planet,
   ions.calc_electron_temperature(neutrals, gGrid);
 
   neutrals.exchange(gGrid);
-  
+
   time.increment_time();
 
   if (time.check_time_gate(input.get_dt_write_restarts())) {
@@ -113,7 +114,6 @@ int advance(Planets &planet,
     ions.restart_file(input.get_restartout_dir(), DoWrite);
     time.restart_file(input.get_restartout_dir(), DoWrite);
   }
-
 
   iErr = output(neutrals, ions, gGrid, time, planet);
 

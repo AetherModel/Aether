@@ -4,6 +4,7 @@
 #ifndef INCLUDE_GRID_H_
 #define INCLUDE_GRID_H_
 
+#include <unordered_map>
 #include "mpi.h"
 
 // ----------------------------------------------------------------------------
@@ -119,6 +120,10 @@ public:
   arma_cube dlat_center_scgc;
   arma_cube dlat_center_dist_scgc;
 
+  // dx dy for reference grid system
+  // Vector of dx dy of different altitudes
+  arma_vec drefx, drefy;
+
   std::vector<arma_cube> bfield_vcgc;
   arma_cube bfield_mag_scgc;
   std::vector<arma_cube> bfield_unit_vcgc;
@@ -166,6 +171,9 @@ public:
   bool write_restart(std::string dir);
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
+
+  // Update ghost cells with values from other processors
+  void exchange(arma_cube &data, const bool pole_inverse);
 
   // Need to move these to private at some point:
 
@@ -334,6 +342,23 @@ public:
 
   // Processed interpolation coefficients
   std::vector<struct interp_coef_t> interp_coefs;
+
+  // Initialize connections between processors
+  void init_connection();
+  // Used for message exchange
+  struct idx2d_t {
+    // Index of row and column
+    int64_t ilon;
+    int64_t ilat;
+    // -1 if message crosses the north/south pole, 1 otherwise
+    int inverse;
+  };
+  // Store which processor needs its value
+  std::unordered_map<int, std::vector<struct interp_coef_t>> exch_send;
+  // Store which processor it gets value from
+  std::unordered_map<int, std::vector<struct idx2d_t>> exch_recv;
+  // The communicator for set of processors whose iMembers are equal
+  MPI_Comm grid_comm;
 };
 
 #endif  // INCLUDE_GRID_H_

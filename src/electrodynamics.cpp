@@ -63,7 +63,6 @@ int Electrodynamics::update(Planets planet,
   return 0;
 }
 
-
 // -----------------------------------------------------------------------------
 // Gets potential with generic interpolation scheme
 // -----------------------------------------------------------------------------
@@ -317,7 +316,6 @@ void Electrodynamics::set_grid(arma_mat lats, arma_mat mlts) {
   // This is a bit more complicated, since we need to loop through
   // all of the points in lats and use the 1d interpolation scheme to find
   // the index, store, and move to next point; then repeat with mlts.
-
 
   report.exit(function);
 }

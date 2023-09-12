@@ -226,12 +226,10 @@ int OutputContainer::read_container_netcdf() {
   return iErr;
 }
 
-
 int OutputContainer::write_container_netcdf() {
   int iErr = 1;
   std::cout << "write_container_netcdf is not working!\n";
   return iErr;
 }
-
 
 #endif

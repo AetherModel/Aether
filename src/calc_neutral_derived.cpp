@@ -117,18 +117,51 @@ void Neutrals::calc_bulk_velocity() {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  for (int64_t iDir = 0; iDir < 3; iDir++) {
+  // Get rho to be the correct size by assigning it to a variable:
+  arma_cube rho_advected = rho_scgc;
+  static int64_t iSpecies, iSpecies_, iDir;
+
+  for (iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
 
-    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      velocity_vcgc[iDir] = velocity_vcgc[iDir] +
-                            species[iSpecies].mass *
-                            species[iSpecies].density_scgc %
-                            species[iSpecies].velocity_vcgc[iDir];
+    if (iDir == 0)
+      rho_advected.zeros();
+
+    for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++) {
+      iSpecies_ = species_to_advect[iSpecies];
+      velocity_vcgc[iDir] +=
+        species[iSpecies_].mass *
+        species[iSpecies_].density_scgc %
+        species[iSpecies_].velocity_vcgc[iDir];
+
+      if (iDir == 0)
+        rho_advected += species[iSpecies_].mass * species[iSpecies_].density_scgc;
     }
 
-    velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_scgc;
+    velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_advected;
   }
+
+  report.exit(function);
+  return;
+}
+
+//----------------------------------------------------------------------
+// Assign bulk velocity to non-advected species
+//----------------------------------------------------------------------
+
+void Neutrals::assign_bulk_velocity() {
+
+  std::string function = "Neutrals::assign_bulk_velocity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  static int64_t iSpecies, iDir;
+
+  // If you don't advect a species, then fill with bulk velocity:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    if (!species[iSpecies].DoAdvect)
+      for (iDir = 0; iDir < 3; iDir++)
+        species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
 
   report.exit(function);
   return;
@@ -246,10 +279,12 @@ void Neutrals::calc_specific_heat() {
     std::cout << "max temperature : " << temperature_scgc.max() << "\n";
     std::cout << "max mean_major_mass : "
               << mean_major_mass_scgc.max() << "\n";
+
     if (!all_finite(rho_scgc, "rho")) {
       std::cout << "rho has nans!\n";
       report.report_errors();
     }
+
     if (!all_finite(sound_scgc, "sound speed")) {
       std::cout << "sound speed has nans!\n";
       report.report_errors();
@@ -310,18 +345,74 @@ precision_t Neutrals::calc_dt(Grid grid) {
   // simply some things, and just take the bulk value for now:
   arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
   dta(0) = dtx.min();
-  
+
   arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
   dta(1) = dty.min();
-  
+
   if (input.get_nAltsGeo() > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
-  } else {
+  } else
     dta(2) = 1e32;
-  }
+
   dta(3) = 10.0;
+
+  dt = dta.min();
+
+  if (report.test_verbose(3))
+    std::cout << "dt for neutrals : " << dt << "\n";
+
+  if (report.test_verbose(4))
+    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+
+  report.exit(function);
+  return dt;
+}
+
+precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt_cubesphere";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  arma_vec dta(4);
+
+  // Get some dimensions
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nXs = grid.get_nLons();
+  int64_t nYs = grid.get_nLats();
   
+  // dtx dty for reference coordinate system
+  arma_cube dtx(size(cMax_vcgc[0]));
+  arma_cube dty(size(cMax_vcgc[0]));
+
+  // A dummy constant one matrix
+  arma_mat dummy_1(nXs, nYs, fill::ones);
+
+  // Loop through altitudes
+  for (int iAlt = 0; iAlt < nAlts; iAlt++) {
+    // Conver cMax to contravariant velocity first
+    arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
+    arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
+
+    dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
+    dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+  }
+
+  // simply some things, and just take the bulk value for now:
+  dta(0) = dtx.min();
+  dta(1) = dty.min();
+
+  if (input.get_nAltsGeo() > 1) {
+    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    dta(2) = dtz.min();
+  } else
+    dta(2) = 1e32;
+
+  dta(3) = 10.0;
+
   dt = dta.min();
 
   if (report.test_verbose(3))
@@ -505,7 +596,6 @@ void Neutrals::calc_chapman(Grid grid) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-
 void Neutrals::calc_conduction(Grid grid, Times time) {
 
   std::string function = "Neutrals::calc_conduction";
@@ -519,9 +609,10 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
   int64_t nAlts = grid.get_nAlts();
   int64_t nGCs = grid.get_nGCs();
 
-  if (nAlts == 2 * nGCs + 1) {
+  if (nAlts == 2 * nGCs + 1)
     conduction_scgc.zeros();
-  } else {
+
+  else {
 
     arma_cube rhocvr23d(nLons, nLats, nAlts);
     arma_cube lambda3d(nLons, nLats, nAlts);
@@ -546,24 +637,25 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
     for (iLon = 0; iLon < nLons; iLon++) {
       for (iLat = 0; iLat < nLats; iLat++) {
 
-	temp1d = temperature_scgc.tube(iLon, iLat);
-	lambda1d = lambda3d.tube(iLon, iLat);
-	rhocvr21d = rhocvr23d.tube(iLon, iLat);
-	dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
-	conduction1d.zeros();
+        temp1d = temperature_scgc.tube(iLon, iLat);
+        lambda1d = lambda3d.tube(iLon, iLat);
+        rhocvr21d = rhocvr23d.tube(iLon, iLat);
+        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        conduction1d.zeros();
 
-	dt = time.get_dt();
+        dt = time.get_dt();
 
-	conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
+        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
 
-	// We want the sources to be in terms of dT/dt, while the
-	// conduction actually solves for Tnew-Told, so divide by dt
+        // We want the sources to be in terms of dT/dt, while the
+        // conduction actually solves for Tnew-Told, so divide by dt
 
-	conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
+        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
       }  // lat
     }  // lon
 
   } // if nAlts == 1 + 2*GCs
+
   report.exit(function);
   return;
 }

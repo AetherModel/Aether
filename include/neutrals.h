@@ -1,4 +1,5 @@
 // Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #ifndef INCLUDE_NEUTRALS_H_
@@ -201,6 +202,12 @@ class Neutrals {
   std::vector<double> initial_altitudes;
   std::vector<double> initial_temperatures;
   int64_t nInitial_temps = 0;
+    
+  /// Number of species to advect:
+  int nSpeciesAdvect;
+    
+  /// IDs of species to advect:
+  std::vector<int> species_to_advect;
 
   /// names and units
   std::string density_name = "Neutral Bulk Density";
@@ -312,6 +319,11 @@ class Neutrals {
   void calc_bulk_velocity();
 
   /**********************************************************************
+     \brief Assigns bulk velocity to all non-advected species
+   **/
+  void assign_bulk_velocity();
+
+  /**********************************************************************
      \brief Calculate the bulk specific heat from individual species
    **/
   void calc_specific_heat();
@@ -327,6 +339,14 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   precision_t calc_dt(Grid grid);
+
+  /**********************************************************************
+     \brief Calculate dt (cell size / cMax) in each direction, and take min
+     \param dt returns the neutral time-step
+     \param grid The grid to define the neutrals on
+     This function is for cubesphere dt calculation only
+   **/
+  precision_t calc_dt_cubesphere(Grid grid);
   
   /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
@@ -420,6 +440,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   bool exchange(Grid &grid);
+  bool exchange_old(Grid &grid);
 
   /**********************************************************************
    \brief add eddy contributions to vertical acceleration

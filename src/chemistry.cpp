@@ -355,6 +355,7 @@ bool Chemistry::check_chemistry_file(json &headers,
         error_message =
           error_message + err + ": " + csv[iLine][headers[err]] + "\n";
       }
+
       std::cout << "check chem file error : " << error_message;
       report.error(error_message);
       report.print(0, error_message);
@@ -366,7 +367,6 @@ bool Chemistry::check_chemistry_file(json &headers,
   report.exit(function);
   return IsOk;
 }
-
 
 int Chemistry::read_chemistry_file(Neutrals neutrals,
                                    Ions ions) {
@@ -383,7 +383,6 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
   report.print(1, "Reading Chemistry File : " + input.get_chemistry_file());
   infile_ptr.open(input.get_chemistry_file());
-
 
   if (!infile_ptr.is_open()) {
     report.print(0, "Could not open chemistry file!");
@@ -589,7 +588,6 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   else
     reaction.branching_ratio = 1;
 
-
   // energy released as exo-thermic reaction:
   if (line[headers["heat"]].length() > 0)
     reaction.energy = str_to_num(line[headers["heat"]]);
@@ -702,7 +700,6 @@ void Chemistry::display_reaction(Chemistry::reaction_type reaction) {
               << reaction.denominator
               << ")^"
               << reaction.exponent << "\n";
-
 
   }
 

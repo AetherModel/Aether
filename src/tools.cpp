@@ -3,7 +3,6 @@
 
 #include "../include/aether.h"
 
-
 // ----------------------------------------------------------------------------
 // Neatly display an armadillo vector
 // ----------------------------------------------------------------------------
@@ -11,9 +10,9 @@
 void display_vector(arma_vec vec) {
   for (int64_t i = 0; i < vec.n_rows; i++)
     std::cout << vec(i) << " ";
+
   std::cout << "\n";
 }
-
 
 // ----------------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
@@ -341,7 +340,7 @@ bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol) {
   // Check for absolute largest relative difference
   // if max diff is beyond tol, return false
   precision_t max_diff = 0.;
-  
+
   // Find maximum value
   precision_t vec1_max = abs(vec1).max();
   precision_t vec2_max = abs(vec2).max();
@@ -349,33 +348,32 @@ bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol) {
 
   // Check whether vectors are the same size
   // if not, return false
-  if (vec1.size() != vec2.size()) {
+  if (vec1.size() != vec2.size())
     return false;
-  }
 
   // Loop through every member of vector
   for (int64_t i = 0; i < vec1.size(); i++) {
-    precision_t curr_diff = abs(vec1(i) - vec2(i))/vec_max;
-    if (curr_diff > max_diff) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i)) / vec_max;
+
+    if (curr_diff > max_diff)
       max_diff = curr_diff;
-    }
   }
 
-  if (max_diff > tol) {
+  if (max_diff > tol)
     return false;
-  }
 
-  return true; 
+  return true;
 }
 
 //-------------------------------------------------------------
 // Overload col vector function with row vec
 //-------------------------------------------------------------
-bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t tol) {
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2,
+                     precision_t tol) {
   // Check for absolute largest relative difference
   // if max diff is beyond tol, return false
   precision_t max_diff = 0.;
-  
+
   // Find maximum value
   precision_t vec1_max = abs(vec1).max();
   precision_t vec2_max = abs(vec2).max();
@@ -383,23 +381,21 @@ bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t
 
   // Check whether vectors are the same size
   // if not, return false
-  if (vec1.size() != vec2.size()) {
+  if (vec1.size() != vec2.size())
     return false;
-  }
 
   // Loop through every member of vector
   for (int64_t i = 0; i < vec1.size(); i++) {
-    precision_t curr_diff = abs(vec1(i) - vec2(i))/vec_max;
-    if (curr_diff > max_diff) {
+    precision_t curr_diff = abs(vec1(i) - vec2(i)) / vec_max;
+
+    if (curr_diff > max_diff)
       max_diff = curr_diff;
-    }
   }
 
-  if (max_diff > tol) {
+  if (max_diff > tol)
     return false;
-  }
 
-  return true; 
+  return true;
 }
 
 //-------------------------------------------------------------
@@ -410,11 +406,10 @@ bool is_approx_constant(arma_vec &vec, precision_t tol) {
   // Find variance (normalize with vector 2-norm)
   precision_t vec_norm = arma::norm(vec, 2);
 
-  precision_t vec_var = arma::var(vec)/vec_norm;
+  precision_t vec_var = arma::var(vec) / vec_norm;
 
-  if (vec_var > tol) {
+  if (vec_var > tol)
     return false;
-  }
 
   return true;
 }
@@ -425,9 +420,10 @@ bool is_approx_constant(arma_vec &vec, precision_t tol) {
 // u and v are spherical velocities
 // u1 and u2 are contravariant velocities
 // --------------------------------------------------------------------------
-void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &A_inv_mat) {
-    u1 = u % A_inv_mat.A11 + v % A_inv_mat.A12;
-    u2 = u % A_inv_mat.A21 + v % A_inv_mat.A22;
+void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2,
+                 mat_2x2 &A_inv_mat) {
+  u1 = u % A_inv_mat.A11 + v % A_inv_mat.A12;
+  u2 = u % A_inv_mat.A21 + v % A_inv_mat.A22;
 }
 
 // --------------------------------------------------------------------------
@@ -436,22 +432,23 @@ void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &
 // u and v are spherical velocities
 // u1 and u2 are contravariant velocities
 // --------------------------------------------------------------------------
-void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v, mat_2x2 &A_mat) {
-    u = u1 % A_mat.A11 + u2 % A_mat.A12;
-    v = u1 % A_mat.A21 + u2 % A_mat.A22;
+void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v,
+                 mat_2x2 &A_mat) {
+  u = u1 % A_mat.A11 + u2 % A_mat.A12;
+  v = u1 % A_mat.A21 + u2 % A_mat.A22;
 }
 
 //----------------------------------------------------------------------
 // Takes a single index and finds the i, j, k position in an arma_cube
 //----------------------------------------------------------------------
 
-std::vector<int> index_to_ijk(arma_cube cube, int index){
+std::vector<int> index_to_ijk(arma_cube cube, int index) {
   arma::uword x = cube.n_rows;
   arma::uword y = cube.n_cols;
-  int altitude = index/(x*y);
-  int remainder = index%(x*y);
-  int lattitude = remainder/y;
-  int longitude = remainder%y;
+  int altitude = index / (x * y);
+  int remainder = index % (x * y);
+  int lattitude = remainder / y;
+  int longitude = remainder % y;
   return std::vector<int> {lattitude, longitude, altitude};
 }
 
@@ -491,12 +488,14 @@ bool all_finite(arma_cube cube, std::string name) {
 
 bool all_finite(std::vector<arma_cube> cubes, std::string name) {
   bool no_nans = true;
-  for(int i=0; i<cubes.size(); ++i){
+
+  for (int i = 0; i < cubes.size(); ++i) {
     std::string new_name = name + "[" + std::to_string(i) + "] ";
-    if (!all_finite(cubes.at(i), new_name)){
+
+    if (!all_finite(cubes.at(i), new_name))
       no_nans = false;
-    }
   }
+
   return no_nans;
 }
 
@@ -507,19 +506,24 @@ bool all_finite(std::vector<arma_cube> cubes, std::string name) {
 std::vector<int> insert_indefinites(arma_cube &cube) {
   int size = cube.n_elem;
   std::vector<int> locations;
-  while (locations.size() < 6){
+
+  while (locations.size() < 6) {
     int random = rand() % size;
+
     if (std::find(locations.begin(),
-		  locations.end(),
-		  random) == locations.end())
+                  locations.end(),
+                  random) == locations.end())
       locations.push_back(random);
   }
+
   std::vector<int> nan_locations(locations.begin(), locations.begin() + 3);
   std::vector<int> indef_locations(locations.begin() + 3, locations.end());
-  for (int i = 0; i < nan_locations.size(); i++){
+
+  for (int i = 0; i < nan_locations.size(); i++) {
     cube.at(nan_locations.at(i)) = datum::nan;
     cube.at(indef_locations.at(i)) = datum::inf;
   }
+
   return locations;
 }
 
@@ -530,11 +534,11 @@ std::vector<int> insert_indefinites(arma_cube &cube) {
 //----------------------------------------------------------------------
 
 bool is_finite(arma_cube &cube) {
-  for (int i=0; i<cube.n_elem; i++){
-    if (is_nan_inf(cube.at(i))){
+  for (int i = 0; i < cube.n_elem; i++) {
+    if (is_nan_inf(cube.at(i)))
       return false;
-    }
   }
+
   return true;
 }
 
@@ -544,11 +548,11 @@ bool is_finite(arma_cube &cube) {
 //----------------------------------------------------------------------
 
 bool is_nan(double value) {
-    uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
-    uint64_t expMask = 0x7FF0000000000000ULL;
-    uint64_t fracMask = 0x000FFFFFFFFFFFFFULL;
+  uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+  uint64_t expMask = 0x7FF0000000000000ULL;
+  uint64_t fracMask = 0x000FFFFFFFFFFFFFULL;
 
-    return ((bits & expMask) == expMask) && ((bits & fracMask) != 0);
+  return ((bits & expMask) == expMask) && ((bits & fracMask) != 0);
 }
 
 //----------------------------------------------------------------------
@@ -557,9 +561,9 @@ bool is_nan(double value) {
 //----------------------------------------------------------------------
 
 bool is_inf(double value) {
-    uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
-    uint64_t expMask = 0x7FF0000000000000ULL;
-    return (bits & expMask) == expMask;
+  uint64_t bits = *reinterpret_cast<uint64_t*>(&value);
+  uint64_t expMask = 0x7FF0000000000000ULL;
+  return (bits & expMask) == expMask;
 }
 
 //----------------------------------------------------------------------
@@ -567,49 +571,86 @@ bool is_inf(double value) {
 //----------------------------------------------------------------------
 
 bool is_nan_inf(double value) {
-    return (is_nan(value) || is_inf(value));
+  return (is_nan(value) || is_inf(value));
 }
 
 //----------------------------------------------------------------------
 // If the value is NaN or Inf, report its position
 //----------------------------------------------------------------------
 
-std::string print_nan_vector(std::vector<int> input, arma_cube cube){
+std::string print_nan_vector(std::vector<int> input, arma_cube cube) {
   std::string output("nans exist at ");
   std::vector<int> loc;
-  for (int i = 0; i < 3; i++){
+
+  for (int i = 0; i < 3; i++) {
     loc = index_to_ijk(cube, input.at(i));
     output += ("(" + std::to_string(loc.at(0)) +
-	       "," + std::to_string(loc.at(1)) +
-	       ","  + std::to_string(loc.at(2)) + ") ");
+               "," + std::to_string(loc.at(1)) +
+               ","  + std::to_string(loc.at(2)) + ") ");
   }
+
   output += "infs exist at ";
-  for (int i = 3; i < 6; i++){
+
+  for (int i = 3; i < 6; i++) {
     loc = index_to_ijk(cube, input.at(i));
     output += ("(" + std::to_string(loc.at(0)) +
-	       "," + std::to_string(loc.at(1)) +
-	       ","  + std::to_string(loc.at(2)) + ") ");
+               "," + std::to_string(loc.at(1)) +
+               ","  + std::to_string(loc.at(2)) + ") ");
   }
+
   output += "\n";
   return output;
 }
 
 //----------------------------------------------------------------------
-// 
+//
 //----------------------------------------------------------------------
 
-std::vector<int> indef_vector(arma_cube cube){
+std::vector<int> indef_vector(arma_cube cube) {
   std::vector<int> locations;
-  for (int i=0; i<cube.n_elem; i++){
-    if (is_nan_inf(cube.at(i))){
+
+  for (int i = 0; i < cube.n_elem; i++) {
+    if (is_nan_inf(cube.at(i)))
       locations.push_back(i);
-    }
   }
-  if (locations.size() > 0){
+
+  if (locations.size() > 0)
     return locations;
-  }
-  else{
+  else {
     locations.push_back(-1);
     return locations;
   }
+}
+
+// --------------------------------------------------------------------------
+// Project a point described by lon and lat to a point on a surface of the 2-2-2 cube
+// --------------------------------------------------------------------------
+
+arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in) {
+  // See init_geo_grid.cpp:126. The offset for lon is subtracted
+  lon_in = lon_in - 3 * cPI / 4;
+
+  // Transfer polar coordinate to cartesian coordinate
+  precision_t xy_temp;
+  arma_vec ans(3);
+  ans[2] = sin(lat_in);
+  xy_temp = cos(lat_in);
+  ans[1] = xy_temp * sin(lon_in);
+  ans[0] = xy_temp * cos(lon_in);
+
+  // Project this point onto the surface of cube
+  precision_t coef = 1.0 / std::max({std::abs(ans[0]), std::abs(ans[1]), std::abs(ans[2])});
+  ans *= coef;
+
+  // Round the number if it is close to 1 or -1, otherwise the == and != operator
+  // won't behave as expected because of the accuracy problem of floating point numbers
+  for (int64_t i = 0; i < 3; ++i) {
+    if (std::abs(ans[i] + 1) < cSmall)
+      ans[i] = -1;
+
+    else if (std::abs(ans[i] - 1) < cSmall)
+      ans[i] = 1;
+  }
+
+  return ans;
 }
