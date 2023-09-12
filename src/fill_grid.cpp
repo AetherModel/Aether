@@ -220,7 +220,7 @@ void Grid::fill_grid_radius(Planets planet) {
     for (iLat = 0; iLat < nLats; iLat++)
       for (iAlt = 0; iAlt < nAlts; iAlt++)
         radius_scgc(iLon, iLat, iAlt) =
-          planet.get_radius(geoLat_scgc(iLon, iLat, iLat));
+          planet.get_radius(geoLat_scgc(iLon, iLat, iAlt));
 
   radius_scgc = radius_scgc + geoAlt_scgc;
   radius2_scgc = radius_scgc % radius_scgc;

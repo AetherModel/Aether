@@ -42,21 +42,15 @@ void Neutrals::calc_mass_density() {
 
   rho_scgc.zeros();
   density_scgc.zeros();
-  velocity_vcgc[2].zeros();
 
   int64_t iSpecies;
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rho_scgc = rho_scgc +
                species[iSpecies].mass * species[iSpecies].density_scgc;
-    velocity_vcgc[2] +=
-      (species[iSpecies].mass *
-       species[iSpecies].velocity_vcgc[2] %
-       species[iSpecies].density_scgc);
     density_scgc = density_scgc + species[iSpecies].density_scgc;
   }
 
-  velocity_vcgc[2] = velocity_vcgc[2] / rho_scgc;
   report.exit(function);
   return;
 }
@@ -283,8 +277,18 @@ void Neutrals::calc_specific_heat() {
     std::cout << "max sound speed : " << sound_scgc.max() << "\n";
     std::cout << "max gamma : " << gamma_scgc.max() << "\n";
     std::cout << "max temperature : " << temperature_scgc.max() << "\n";
-    std::cout << "max mean_major_mass speed : "
+    std::cout << "max mean_major_mass : "
               << mean_major_mass_scgc.max() << "\n";
+
+    if (!all_finite(rho_scgc, "rho")) {
+      std::cout << "rho has nans!\n";
+      report.report_errors();
+    }
+
+    if (!all_finite(sound_scgc, "sound speed")) {
+      std::cout << "sound speed has nans!\n";
+      report.report_errors();
+    }
   }
 
   report.exit(function);
@@ -312,6 +316,7 @@ void Neutrals::calc_cMax() {
     for (iDir = 0; iDir < 3; iDir++) {
       arma_cube tmp = abs(velocity_vcgc[iDir]);
       std::cout << "min velocity : " << tmp.min() << "\n";
+      std::cout << "max velocity : " << tmp.max() << "\n";
     }
   }
 
@@ -335,14 +340,22 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   int iDir;
 
+  arma_vec dta(4);
+
   // simply some things, and just take the bulk value for now:
   arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
-  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
-  arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
-  arma_vec dta(3);
   dta(0) = dtx.min();
+
+  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
   dta(1) = dty.min();
-  dta(2) = dtz.min();
+
+  if (input.get_nAltsGeo() > 1) {
+    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    dta(2) = dtz.min();
+  } else
+    dta(2) = 1e32;
+
+  dta(3) = 10.0;
 
   dt = dta.min();
 
@@ -350,7 +363,63 @@ precision_t Neutrals::calc_dt(Grid grid) {
     std::cout << "dt for neutrals : " << dt << "\n";
 
   if (report.test_verbose(4))
-    std::cout << " derived from dt(x, y, z) : " << dta << "\n";
+    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+
+  report.exit(function);
+  return dt;
+}
+
+precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt_cubesphere";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  arma_vec dta(4);
+
+  // Get some dimensions
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nXs = grid.get_nLons();
+  int64_t nYs = grid.get_nLats();
+  
+  // dtx dty for reference coordinate system
+  arma_cube dtx(size(cMax_vcgc[0]));
+  arma_cube dty(size(cMax_vcgc[0]));
+
+  // A dummy constant one matrix
+  arma_mat dummy_1(nXs, nYs, fill::ones);
+
+  // Loop through altitudes
+  for (int iAlt = 0; iAlt < nAlts; iAlt++) {
+    // Conver cMax to contravariant velocity first
+    arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
+    arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
+
+    dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
+    dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+  }
+
+  // simply some things, and just take the bulk value for now:
+  dta(0) = dtx.min();
+  dta(1) = dty.min();
+
+  if (input.get_nAltsGeo() > 1) {
+    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    dta(2) = dtz.min();
+  } else
+    dta(2) = 1e32;
+
+  dta(3) = 10.0;
+
+  dt = dta.min();
+
+  if (report.test_verbose(3))
+    std::cout << "dt for neutrals : " << dt << "\n";
+
+  if (report.test_verbose(4))
+    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
 
   report.exit(function);
   return dt;
@@ -538,46 +607,54 @@ void Neutrals::calc_conduction(Grid grid, Times time) {
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
 
-  arma_cube rhocvr23d(nLons, nLats, nAlts);
-  arma_cube lambda3d(nLons, nLats, nAlts);
-  arma_cube prandtl3d(nLons, nLats, nAlts);
+  if (nAlts == 2 * nGCs + 1)
+    conduction_scgc.zeros();
 
-  rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
+  else {
 
-  // Need to make this eddy * rho * cv:
-  if (input.get_use_eddy_energy())
-    prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
-  else
-    prandtl3d.zeros();
+    arma_cube rhocvr23d(nLons, nLats, nAlts);
+    arma_cube lambda3d(nLons, nLats, nAlts);
+    arma_cube prandtl3d(nLons, nLats, nAlts);
 
-  lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
+    rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
 
-  arma_vec temp1d(nAlts);
-  arma_vec lambda1d(nAlts);
-  arma_vec rhocvr21d(nAlts);
-  arma_vec dalt1d(nAlts);
-  arma_vec conduction1d(nAlts);
+    // Need to make this eddy * rho * cv:
+    if (input.get_use_eddy_energy())
+      prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
+    else
+      prandtl3d.zeros();
 
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
+    lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
-      temp1d = temperature_scgc.tube(iLon, iLat);
-      lambda1d = lambda3d.tube(iLon, iLat);
-      rhocvr21d = rhocvr23d.tube(iLon, iLat);
-      dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
-      conduction1d.zeros();
+    arma_vec temp1d(nAlts);
+    arma_vec lambda1d(nAlts);
+    arma_vec rhocvr21d(nAlts);
+    arma_vec dalt1d(nAlts);
+    arma_vec conduction1d(nAlts);
 
-      dt = time.get_dt();
+    for (iLon = 0; iLon < nLons; iLon++) {
+      for (iLat = 0; iLat < nLats; iLat++) {
 
-      conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
+        temp1d = temperature_scgc.tube(iLon, iLat);
+        lambda1d = lambda3d.tube(iLon, iLat);
+        rhocvr21d = rhocvr23d.tube(iLon, iLat);
+        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        conduction1d.zeros();
 
-      // We want the sources to be in terms of dT/dt, while the
-      // conduction actually solves for Tnew-Told, so divide by dt
+        dt = time.get_dt();
 
-      conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
-    }  // lat
-  }  // lon
+        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
+
+        // We want the sources to be in terms of dT/dt, while the
+        // conduction actually solves for Tnew-Told, so divide by dt
+
+        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
+      }  // lat
+    }  // lon
+
+  } // if nAlts == 1 + 2*GCs
 
   report.exit(function);
   return;

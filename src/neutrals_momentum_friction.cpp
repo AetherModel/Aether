@@ -88,46 +88,50 @@ void calc_neutral_friction(Neutrals &neutrals) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  arma_vec vels(neutrals.nSpeciesAdvect, fill::zeros);
-  arma_vec acc(neutrals.nSpeciesAdvect, fill::zeros);
   int64_t iAlt, iLat, iLon, iDir, iSpecies, iSpecies_;
-  int64_t nXs = neutrals.temperature_scgc.n_rows;
-  int64_t nYs = neutrals.temperature_scgc.n_cols;
-  int64_t nZs = neutrals.temperature_scgc.n_slices;
 
   // Initialize all of the accelerations to zero:
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     for (iDir = 0; iDir < 3; iDir++)
       neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
+  
+  if (input.get_advection_neutrals_vertical() != "hydro") {
 
-  // Calculate friction terms for only species that advect.
-  //   - If only 1 species is advected, then it will have no friction
-  if (neutrals.nSpeciesAdvect > 1) {
-    for (iAlt = 0; iAlt < nZs; iAlt++) {
-      for (iLat = 0; iLat < nYs; iLat++) {
-        for (iLon = 0; iLon < nXs; iLon++) {
-          for (iDir = 0; iDir < 3; iDir++) {
-            vels.zeros();
+    arma_vec vels(neutrals.nSpeciesAdvect, fill::zeros);
+    arma_vec acc(neutrals.nSpeciesAdvect, fill::zeros);
+    int64_t nXs = neutrals.temperature_scgc.n_rows;
+    int64_t nYs = neutrals.temperature_scgc.n_cols;
+    int64_t nZs = neutrals.temperature_scgc.n_slices;
 
-            //Put the old velocities into vels:
-            for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
-              iSpecies_ = neutrals.species_to_advect[iSpecies];
-              vels(iSpecies) =
-                neutrals.species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
-            }
+    // Calculate friction terms for only species that advect.
+    //   - If only 1 species is advected, then it will have no friction
+    if (neutrals.nSpeciesAdvect > 1) {
+      for (iAlt = 0; iAlt < nZs; iAlt++) {
+        for (iLat = 0; iLat < nYs; iLat++) {
+          for (iLon = 0; iLon < nXs; iLon++) {
+            for (iDir = 0; iDir < 3; iDir++) {
+              vels.zeros();
 
-            acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
+              //Put the old velocities into vels:
+              for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+                iSpecies_ = neutrals.species_to_advect[iSpecies];
+                vels(iSpecies) =
+                  neutrals.species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
+              }
 
-            for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
-              iSpecies_ = neutrals.species_to_advect[iSpecies];
-              neutrals.species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
-                acc(iSpecies);
-            } // iSpeciesAdvect
-          } // for direction
-        } // for long
-      } // for lat
-    } // for alt
-  } // if nSpecies > 1
+              acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels, neutrals);
+
+              for (iSpecies = 0; iSpecies < neutrals.nSpeciesAdvect; iSpecies++) {
+                iSpecies_ = neutrals.species_to_advect[iSpecies];
+                neutrals.species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+                  acc(iSpecies);
+              } // iSpeciesAdvect
+            } // for direction
+          } // for long
+        } // for lat
+      } // for alt
+    } // if nSpecies > 1
+  } // if !hydro
 
   report.exit(function);
   return;

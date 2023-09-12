@@ -238,6 +238,12 @@ std::string dummy_string = "unknown";
 //check settings and throw invalid_argument error if the setting doesn't exist
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
+
+  if (report.test_verbose(1))
+    std::cout << "checking setting : "
+	      << key1 << " and "
+	      << key2 << "\n";
+
   //try to find the keys first
   if (settings.find(key1) != settings.end()) {
     if (settings.at(key1).find(key2) != settings.at(key1).end())
@@ -254,7 +260,11 @@ bool Inputs::check_settings(std::string key1,
 }
 
 bool Inputs::check_settings(std::string key1) {
-  //try to find the keys first
+
+  if (report.test_verbose(1))
+    std::cout << "checking setting : " << key1 << "\n";
+
+  // try to find the keys first
   if (settings.find(key1) != settings.end())
     return true;
 
@@ -427,6 +437,14 @@ std::string Inputs::get_bfield_type() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to use EUV at all
+// -----------------------------------------------------------------------
+
+bool Inputs::get_euv_douse() {
+  return settings.at("Euv").at("doUse");
+}
+
+// -----------------------------------------------------------------------
 // Return the EUV model used (EUVAC only option now)
 // -----------------------------------------------------------------------
 
@@ -546,6 +564,27 @@ int Inputs::get_nMembers() {
 // -----------------------------------------------------------------------
 // Return verbose variables
 // -----------------------------------------------------------------------
+
+bool Inputs::set_verbose(json in) {
+  bool DidWork = true;
+
+  int iVerbose = -1;
+  // Want to set verbose level ASAP:
+  if (in.contains("Debug")) {
+    if (in.at("Debug").contains("iVerbose")) {
+      iVerbose = in.at("Debug").at("iVerbose");
+      if (in.at("Debug").contains("iProc")) {
+	if (iProc != in.at("Debug").at("iProc"))
+	  iVerbose = -1;
+      }
+    }	
+  }
+  if (iVerbose > 0) {
+    std::cout << "Setting iVerbose : " << iVerbose << "\n";
+    report.set_verbose(iVerbose);
+  }
+  return DidWork;
+}
 
 int Inputs::get_verbose() {
   return check_settings_pt("Debug", "iVerbose");

@@ -1,8 +1,5 @@
 
 {
-    "Ensembles" : {
-	"nMembers" : 1},
-
     "Debug" : {
 	"iVerbose" : 0,
         "iFunctionVerbose" : {
@@ -11,14 +8,29 @@
 	"check_for_nans" : false
     },
 
+    "Planet" : "acheron",
+    "AuroraFile" : "UA/inputs/aurora_acheron.csv",
+
+    "Advection" : {
+	"Neutrals" : {
+	    "Vertical" : "hydro",
+	    "Horizontal" : "default"}},
+
+    "Ensembles" : {
+	"nMembers" : 1},
+
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
+    "CubeSphere" : {
+	"is" : true},
+
     "GeoBlockSize" : {
-	"nLons" : 18,
-	"nLats" : 18,
-	"nAlts" : 50},
+	"nLons" : 36,
+	"nLats" : 36,
+	"nAlts" : 1},
 
     "GeoGrid" : {
+	"MinAlt" : 1000.0,
 	"dAlt"   : 0.25,
 	"IsUniformAlt" : false},    
 
@@ -30,8 +42,6 @@
 	"type" : ["states"],
 	"dt" : [900] },
     
-    "DoCalcBulkIonTemp" : false,
-    
-    "PlanetFile" : "UA/inputs/earth.in"
+    "DoCalcBulkIonTemp" : false
     
 }

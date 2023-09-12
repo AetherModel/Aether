@@ -42,6 +42,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.acc_eddy.set_size(nLons, nLats, nAlts);
+  tmp.ionization_scgc.zeros();
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
 
@@ -49,8 +50,6 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.chapman_scgc.ones();
   tmp.scale_height_scgc.ones();
   tmp.rho_alt_int_scgc.zeros();
-
-  tmp.ionization_scgc.zeros();
 
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();

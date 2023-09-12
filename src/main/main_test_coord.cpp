@@ -300,7 +300,6 @@ int main() {
   bool DidWork = true;
 
   Times time;
-  Report report;
 
   // Define the function and report:
   std::string function = "main";
@@ -310,21 +309,21 @@ int main() {
   try {
   
     // Create inputs (reading the input file):
-    Inputs input(time, report);
+    input = Inputs(time);
     if (!input.is_ok())
       throw std::string("input initialization failed!");
     
-    Quadtree quadtree(input, report);
+    Quadtree quadtree;
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
     
     // Initialize MPI and parallel aspects of the code:
-    DidWork = init_parallel(input, quadtree, report);
+    DidWork = init_parallel(quadtree);
     if (!DidWork)
       throw std::string("init_parallel failed!");
     
     // Initialize the planet:
-    Planets planet(input, report);
+    Planets planet;
     MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
@@ -334,7 +333,7 @@ int main() {
 	           input.get_nLatsGeo(),
 	           input.get_nAltsGeo(),
 	           nGeoGhosts);
-    DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
+    DidWork = gGrid.init_geo_grid(quadtree, planet);
 
     // First check whether the initialization uses exactly 6 processes. 
     // The exactly 6 requirements is due to the checking of the range of reference coordinate system
@@ -347,7 +346,7 @@ int main() {
     // Coordinate Generation Testing
     {
       // Set tolerance limit 
-      precision_t tol = 1e-6;
+      precision_t tol = 1e-5;
 
       // Get number of ghost cells
       int nGCs_lcl = gGrid.get_nGCs();

@@ -28,11 +28,13 @@ bool Neutrals::set_bcs(Grid grid,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  bool didWork;
+  bool didWork = true;
 
-  didWork = set_lower_bcs(grid, time, indices);
-  didWork = set_upper_bcs(grid);
-  calc_mass_density();
+  if (input.get_nAltsGeo() > 1) {
+    didWork = set_lower_bcs(grid, time, indices);
+    didWork = set_upper_bcs(grid);
+    calc_mass_density();
+  }
 
   report.exit(function);
   return didWork;

@@ -107,7 +107,6 @@ int Times::check_time_gate(precision_t dt_check) {
 void Times::calc_dt(precision_t dtNeutral,
                     precision_t dtIon) {
   dt = end - current;
-
   double cfl = 0.5;
 
   if (cfl * dtNeutral < dt)

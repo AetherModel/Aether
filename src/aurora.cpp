@@ -190,6 +190,9 @@ void calc_aurora(Grid grid,
     IsFirstTime = 0;
   }
 
+  if (report.test_verbose(4))
+    std::cout << "aurora - done with init!\n";
+
   arma_vec rhoH1d;
   arma_cube scale_height;
   arma_vec ionization1d;
@@ -215,6 +218,9 @@ void calc_aurora(Grid grid,
   arma_vec diff_num_flux;
   arma_vec diff_energy_flux;
   bool DoDebug = false;
+
+  if (report.test_verbose(4))
+    std::cout << "aurora - starting main loop!\n";
 
   // loop through each altitude and calculate ionization
   for (iLon = 0; iLon < nLons ; iLon++) {
@@ -315,6 +321,7 @@ void calc_aurora(Grid grid,
   }  // nLons
 
   report.exit(function);
+  return;
 }
 
 

@@ -855,12 +855,15 @@ void Grid::create_altitudes(Planets planet) {
 // ----------------------------------------------------------------------
 
 void Grid::correct_xy_grid(Planets planet) {
-
   std::string function = "Grid::correct_xy_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   int64_t iAlt;
+
+  // initialize grid drefx drefy
+  drefx = arma_vec(nAlts); 
+  drefy = arma_vec(nAlts);
 
   // Planet.get_radius() takes in latitude
   // but at current stage is unimplemented
@@ -889,6 +892,13 @@ void Grid::correct_xy_grid(Planets planet) {
     g21_upper_scgc.slice(iAlt) /= R * R;
     g22_upper_scgc.slice(iAlt) /= R * R;
     sqrt_g_scgc.slice(iAlt) *= R * R;
+
+    // Addition: Get a copy of dx dy
+    arma_mat curr_refx = refx_scgc.slice(iAlt);
+    arma_mat curr_refy = refy_scgc.slice(iAlt);
+
+    drefx(iAlt) = curr_refx(1, 0) - curr_refx(0, 0);
+    drefy(iAlt) = curr_refy(0, 1) - curr_refy(0, 0);
 
     refx_Left.slice(iAlt) *= R;
     refy_Left.slice(iAlt) *= R;

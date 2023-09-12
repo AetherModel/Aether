@@ -111,6 +111,7 @@ bool Chemistry::check_chemistry_file(json &headers,
 
     report.print(0, "are missing from the Chemistry file header.");
     report.error(error_message);
+    report.exit(function);
     return false;
   }
 
@@ -124,6 +125,7 @@ bool Chemistry::check_chemistry_file(json &headers,
       std::cout << "There are " << headers.size()
                 << " headers but " << csv[iLine].size()
                 << " columns in line " << iLine << ".\n";
+      report.exit(function);
       return false;
     }
 
@@ -354,6 +356,7 @@ bool Chemistry::check_chemistry_file(json &headers,
           error_message + err + ": " + csv[iLine][headers[err]] + "\n";
       }
 
+      std::cout << "check chem file error : " << error_message;
       report.error(error_message);
       report.print(0, error_message);
       IsOk = false;
@@ -361,6 +364,7 @@ bool Chemistry::check_chemistry_file(json &headers,
     }
   }
 
+  report.exit(function);
   return IsOk;
 }
 

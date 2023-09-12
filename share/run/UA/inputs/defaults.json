@@ -40,6 +40,7 @@
     "BField" : "dipole",
 
     "Euv" : {
+	"doUse" : true,
 	"Model" : "euvac",
 	"File" : "UA/inputs/euv.csv",
 	"IncludePhotoElectrons" : true,

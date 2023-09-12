@@ -120,6 +120,10 @@ public:
   arma_cube dlat_center_scgc;
   arma_cube dlat_center_dist_scgc;
 
+  // dx dy for reference grid system
+  // Vector of dx dy of different altitudes
+  arma_vec drefx, drefy;
+
   std::vector<arma_cube> bfield_vcgc;
   arma_cube bfield_mag_scgc;
   std::vector<arma_cube> bfield_unit_vcgc;
