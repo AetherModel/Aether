@@ -31,7 +31,7 @@ bool Inputs::read_inputs_json(Times &time) {
   DidWork = set_verbose(settings);
     
   // Set the planet-specific file (user can change this in aether.in file!):
-  settings["PlanetSpeciesFile"] = settings["Planet"]["file"];
+  //settings["PlanetSpeciesFile"] = get_settings_str("Planet", "file");
 
   try {
 
@@ -43,6 +43,7 @@ bool Inputs::read_inputs_json(Times &time) {
     //   - Here we merge the restart inputs with the defaults inputs
     //   - This is BEFORE the user inputs are merged!!!
 
+    report.print(2, "Checking for restart");
     if (user_inputs.contains("Restart")) {
       cout << "Contains restart" << endl;
 
@@ -59,15 +60,18 @@ bool Inputs::read_inputs_json(Times &time) {
 
     // Merge the defaults/restart settings with the user provided
     // settings, with the default/restart settings being the default:
+    report.print(2, "Merging inputs");
     settings.merge_patch(user_inputs);
 
     //change planet file to the one specified on aether.json:
-    settings["PlanetSpeciesFile"] = settings["PlanetFile"];
+    report.print(2, "Getting Planet File");
+    settings["PlanetSpeciesFile"] = get_settings_str("Planet", "file");
 
     std::string planet_filename = settings["PlanetSpeciesFile"];
     report.print(1, "Using planet file : " + planet_filename);
 
     // Debug Stuff:
+    report.print(2, "Setting Verbose Stuff");
     report.set_verbose(settings["Debug"]["iVerbose"]);
     report.set_DefaultVerbose(settings["Debug"]["iVerbose"]);
     report.set_doInheritVerbose(settings["Debug"]["doInheritVerbose"]);
@@ -79,14 +83,20 @@ bool Inputs::read_inputs_json(Times &time) {
       report.set_FunctionVerbose(item.key(), item.value());
 
     // Capture time information:
+    report.print(2, "Setting Time Stuff");
     std::vector<int> istart = get_settings_timearr("StartTime");
     time.set_times(istart);
 
     std::vector<int> iend = get_settings_timearr("EndTime");
     time.set_end_time(iend);
   } catch (...) {
+    if (report.test_verbose(2)) {
+      std::cout << "read_inputs_json (in catch!)\n";
+    }    
     DidWork = false;
   }
-
+  if (report.test_verbose(2)) {
+    std::cout << "read_inputs_json (DidWork) : " << DidWork << "\n";
+  }
   return DidWork;
 }
