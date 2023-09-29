@@ -8,7 +8,6 @@
 *#
 
 # Run and build directories
-run/
 run.test/
 build/
 
