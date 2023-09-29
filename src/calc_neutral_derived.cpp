@@ -359,6 +359,10 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   dt = dta.min();
 
+  // This is a stop gap for the cubesphere grid:
+  if (dt < 0.0)
+    dt = 2.0;
+
   if (report.test_verbose(3))
     std::cout << "dt for neutrals : " << dt << "\n";
 
