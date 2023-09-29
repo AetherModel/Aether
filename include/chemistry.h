@@ -72,7 +72,10 @@ class Chemistry {
     /// type of formula to use for reaction rate:
     int type;
     /// name of the reaction
-    std::string name;    
+    std::string name;
+
+    /// When reading the chemistry file, we could run into invalid reactions:
+    bool isValid;
 
   };
 

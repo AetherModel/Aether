@@ -50,6 +50,10 @@ bool Chemistry::search(std::string name,
   return true;
 }
 
+// -----------------------------------------------------------------------------
+// Read chemistry CSV file
+// -----------------------------------------------------------------------------
+
 bool Chemistry::check_chemistry_file(json &headers,
                                      std::vector<std::vector<std::string>> csv,
                                      Report &report) {
@@ -368,6 +372,10 @@ bool Chemistry::check_chemistry_file(json &headers,
   return IsOk;
 }
 
+// -----------------------------------------------------------------------------
+// Read chemistry CSV file
+// -----------------------------------------------------------------------------
+
 int Chemistry::read_chemistry_file(Neutrals neutrals,
                                    Ions ions) {
 
@@ -423,6 +431,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
         }
 
         nReactions = 0;
+        // Need a variable to say whether the last reaction we
+        // read in was valid or not.  This is specifically for reactions
+        // with multiple temperature ranges, and the user didn't
+        // include the sources and losses on the second row.
+        bool lastIsValid = false;
 
         // Skip 2 lines of headers!
         for (int iLine = 2; iLine < nLines; iLine++) {
@@ -435,83 +448,108 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
             reaction = interpret_reaction_line(neutrals, ions,
                                                csv[iLine], headers);
+            // We can have an invalid reaction if this is actually
+            // the last reaction, and that reaction was bad                                   
+            if (reaction.nLosses == 0 && reaction.nSources == 0)
+              if (!lastIsValid)
+                reaction.isValid = false;
 
-            // This section perturbs the reaction rates
-            // (1) if the user specifies a value in the "uncertainty" column of the
-            //     chemistry.csv file;
-            // (2) if the user asks for it in the ["Perturb"]["Chemistry"] part
-            //     of the aether.json file
-            if (headers.contains("uncertainty")) {
-              if (csv[iLine][headers["uncertainty"]].length() > 0) {
-                // uncertainty column exists!
-                json values = input.get_perturb_values();
+            if (reaction.isValid) {
+              lastIsValid = true;
 
-                if (values.contains("Chemistry")) {
-                  json chemistryList = values["Chemistry"];
+              // Report out that a valid reaction was found:
+              if (report.test_verbose(3)) {
+                std::cout << "Found good reaction :\n";
+                display_reaction(reaction);
+              }
 
-                  if (chemistryList.size() > 0) {
+              // This section perturbs the reaction rates
+              // (1) if the user specifies a value in the "uncertainty" column of the
+              //     chemistry.csv file;
+              // (2) if the user asks for it in the ["Perturb"]["Chemistry"] part
+              //     of the aether.json file
+              if (headers.contains("uncertainty")) {
+                if (csv[iLine][headers["uncertainty"]].length() > 0) {
+                  // uncertainty column exists!
+                  json values = input.get_perturb_values();
 
-                    // loop through requested pertubations:
-                    for (auto& react : chemistryList) {
-                      if (react == "all" || react == reaction.name) {
-                        precision_t perturb_rate =
-                          str_to_num(csv[iLine][headers["uncertainty"]]);
+                  if (values.contains("Chemistry")) {
+                    json chemistryList = values["Chemistry"];
 
-                        int seed = input.get_updated_seed();
-                        std::vector<double> perturbation;
-                        precision_t mean = 1.0;
-                        precision_t std = perturb_rate;
-                        int nV = 1;
+                    if (chemistryList.size() > 0) {
 
-                        perturbation = get_normal_random_vect(mean,
-                                                              std,
-                                                              nV,
-                                                              seed);
+                      // loop through requested pertubations:
+                      for (auto& react : chemistryList) {
+                        if (react == "all" || react == reaction.name) {
+                          precision_t perturb_rate =
+                            str_to_num(csv[iLine][headers["uncertainty"]]);
 
-                        if (report.test_verbose(2))
-                          std::cout << "Perturbing reaction "
-                                    << reaction.name << " by multiplier : "
-                                    << perturbation[0] << "\n";
+                          int seed = input.get_updated_seed();
+                          std::vector<double> perturbation;
+                          precision_t mean = 1.0;
+                          precision_t std = perturb_rate;
+                          int nV = 1;
 
-                        reaction.rate *= perturbation[0];
-                        break;
-                      } // check for react
-                    } // chemistry list
-                  } // if there were any reactions listed
-                } // if user requested perturbs of chemistry
-              } // if there was a value in the uncertainty column for the reaction
-            } // if there is an uncertainty column in the chemisty csv file
+                          perturbation = get_normal_random_vect(mean,
+                                                                std,
+                                                                nV,
+                                                                seed);
+
+                          if (report.test_verbose(2))
+                            std::cout << "Perturbing reaction "
+                                      << reaction.name << " by multiplier : "
+                                      << perturbation[0] << "\n";
+
+                          reaction.rate *= perturbation[0];
+                          break;
+                        } // check for react
+                      } // chemistry list
+                    } // if there were any reactions listed
+                  } // if user requested perturbs of chemistry
+                } // if there was a value in the uncertainty column for the reaction
+              } // if there is an uncertainty column in the chemisty csv file
+
+              // check if it is part of a piecewise function,
+              //   if so use sources/losses for last reaction
+              if (reaction.nLosses == 0 && reaction.nSources == 0) {
+                reaction.sources_names = reactions.back().sources_names;
+                reaction.losses_names = reactions.back().losses_names;
+
+                reaction.sources_ids = reactions.back().sources_ids;
+                reaction.losses_ids = reactions.back().losses_ids;
+
+                reaction.sources_IsNeutral = reactions.back().sources_IsNeutral;
+                reaction.losses_IsNeutral = reactions.back().losses_IsNeutral;
+
+                reaction.nLosses = reactions.back().nLosses;
+                reaction.nSources = reactions.back().nSources;
+
+                reaction.branching_ratio = reactions.back().branching_ratio;
+
+                reaction.energy = reactions.back().energy;
+
+                reaction.piecewiseVar = reactions.back().piecewiseVar;
+              }
+
+              if (reaction.nLosses > 0 && reaction.nSources > 0) {
+                if (report.test_verbose(3))
+                  display_reaction(reaction);
+
+                reactions.push_back(reaction);
+                nReactions++;
+              }
+
+            } else {
+              lastIsValid = false;
+              // If the reaction is not valid, skip it!
+              if (report.test_verbose(3)) {
+                std::cout << "skipping reaction :\n";
+                display_reaction(reaction);
+              }
+            }
+
           } // if there is actually a reaction rate
 
-          // check if it is part of a piecewise function,
-          //   if so use sources/losses for last reaction
-          if (reaction.nLosses == 0 && reaction.nSources == 0) {
-            reaction.sources_names = reactions.back().sources_names;
-            reaction.losses_names = reactions.back().losses_names;
-
-            reaction.sources_ids = reactions.back().sources_ids;
-            reaction.losses_ids = reactions.back().losses_ids;
-
-            reaction.sources_IsNeutral = reactions.back().sources_IsNeutral;
-            reaction.losses_IsNeutral = reactions.back().losses_IsNeutral;
-
-            reaction.nLosses = reactions.back().nLosses;
-            reaction.nSources = reactions.back().nSources;
-
-            reaction.branching_ratio = reactions.back().branching_ratio;
-
-            reaction.energy = reactions.back().energy;
-
-            reaction.piecewiseVar = reactions.back().piecewiseVar;
-          }
-
-          if (reaction.nLosses > 0 && reaction.nSources > 0) {
-            if (report.test_verbose(3))
-              display_reaction(reaction);
-
-            reactions.push_back(reaction);
-            nReactions++;
-          }
         }
       }
     } else {
@@ -547,6 +585,9 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   // Losses (left side) first:
   reaction.nLosses = 0;
 
+  // Let's assume that it is a valid reaction to begin with:
+  reaction.isValid = true;
+
   for (i = headers["loss1"]; i < headers["loss3"]; i++) {
     find_species_id(line[i], neutrals, ions, id_, IsNeutral);
 
@@ -555,6 +596,12 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
       reaction.losses_ids.push_back(id_);
       reaction.losses_IsNeutral.push_back(IsNeutral);
       reaction.nLosses++;
+    } else {
+      if (line[i].length() > 0) {
+        // We found a species that we don't understand, so this is
+        // not a valid reaction:
+        reaction.isValid = false;
+      }
     }
   }
 
@@ -569,6 +616,12 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
       reaction.sources_ids.push_back(id_);
       reaction.sources_IsNeutral.push_back(IsNeutral);
       reaction.nSources++;
+    } else {
+      if (line[i].length() > 0) {
+        // We found a species that we don't understand, so this is
+        // not a valid reaction:
+        reaction.isValid = false;
+      }
     }
   }
 
