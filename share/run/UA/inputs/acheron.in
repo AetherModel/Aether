@@ -1,0 +1,55 @@
+
+This is the input file for the planet Acheron.  It is basically
+meant to be an experimental planet.  As a starting point,
+Acheron will be a single neutral species (O) and
+a single ion species (O+) planet.
+
+The base altitude of Acheron is 1000 km.
+
+name is the character string that identifies the species
+
+O(3P) is the base state of neutral atomic oxygen and is called O.
+
+Vibration is the degrees of freedom for the atom/molecule
+
+thermal conduction is typically:
+Lambda = (N1 * A1 * T^c1 + N2 * A2 * T^c2 + ... ) / (N1+N2+...)
+thermal_cond is the A for the particular species
+thermal_exp is the c for the particular species
+
+mass is in amu
+
+advect is whether the species is advected or not
+
+BC is a density that is used in the lowest boundary cell if you
+  want a constant boundary condition.
+  Set to a real value to use this.
+  Set to a negative number if you want to use a different BC.
+  In this example file, the values are from 96.87 km Jan 1, 2013
+  O_1D is made up.
+
+
+#NEUTRALS
+name, mass, vibration, thermal_cond, thermal_exp, advect, BC
+O, 16, 5, 5.6e-4, 0.69, 1, 5.0e17
+
+
+Here we can input a temperature profile for the initial condition:
+  - below the lowest altitude, it will use the lowest alt
+  - above the highest alt, it will use the highest alt
+  - in between, linear interpolation
+  - altitudes in km
+
+#TEMPERATURE
+alt, temp
+1000.0, 200.0
+1500.0, 1000.0
+2000.0, 1000.0
+
+O+ is O+(4S) is the base state of O+, but is just called O+
+O+ has excited states of O+(2D) and O+(2P).
+
+#IONS
+name, mass, charge, advect
+O+, 16, 1, 1
+
