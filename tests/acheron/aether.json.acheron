@@ -8,7 +8,13 @@
 	"check_for_nans" : false
     },
 
-    "Planet" : "acheron",
+    "Planet" : {
+        "name" : "acheron",
+        "file": "UA/inputs/acheron.in"},
+
+    "Logfile" : {
+	"species" : ["O", "O+"]},
+    
     "AuroraFile" : "UA/inputs/aurora_acheron.csv",
 
     "Advection" : {
