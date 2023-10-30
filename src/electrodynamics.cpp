@@ -3,6 +3,14 @@
 
 #include "../include/aether.h"
 
+
+// -----------------------------------------------------------------------------
+// Call (fortran) ionospheric electrodynamics if we enable this 
+// in the cmake file
+// -----------------------------------------------------------------------------
+
+
+
 // -----------------------------------------------------------------------------
 // Initialize the electrodynamics by reading the electrodynamics
 // netCDF file.
@@ -12,22 +20,111 @@ Electrodynamics::Electrodynamics(Times time) {
 
   IsOk = true;
 
-  HaveElectrodynamics = false;
-  read_netcdf_electrodynamics_file(input.get_electrodynamics_file());
+  bool isCompiled, isSet;
+  int iError = 0;
 
-  bool times_are_aligned = check_times(time.get_current(), time.get_end());
+  HaveElectrodynamicsFile = false;
+  HaveFortranIe = false;
+  isSet = false;
 
-  if (!times_are_aligned) {
-    IsOk = false;
+  #ifdef FORTRAN
+    // Initialize IE components (reading in the data files):
+    std::string ieDir = input.get_electrodynamics_dir();
+    int* ieDir_iArray = copy_string_to_int(ieDir);
+    std::string efield = input.get_potential_model();
+    std::string aurora = input.get_diffuse_auroral_model();
 
-    if (iProc == 0) {
-      std::cout << "Times don't align with electrodynamics file! ";
-      std::cout << "Please check this!\n";
+    if (efield.length() == 0 & aurora.length() == 0) {
+      HaveFortranIe = false;
+    } else {
+      int* efield_iArray = copy_string_to_int(efield);
+      int* aurora_iArray = copy_string_to_int(aurora);
+      ie_init_library(ieDir_iArray, efield_iArray, aurora_iArray, &iError);
+      if (iError > 0) {
+        report.print(0,"Error in setting fortran IE!");
+        IsOk = false;
+      } else {
+        HaveFortranIe = true;
+        isSet = true;
+      }
+    }
+    isCompiled = true;
+  #else
+    isCompiled = false;
+  #endif
+
+  // If we don't set IE through Fortran, then try to set it through a file:
+
+  if (!HaveFortranIe) {
+    std::string electrodynamics_file = input.get_electrodynamics_file();
+    if (electrodynamics_file.length() > 0 &
+        electrodynamics_file != "none") {
+      // This function sets HaveElectrodynamicsFile = true.
+      read_netcdf_electrodynamics_file(electrodynamics_file);
+
+      bool times_are_aligned = check_times(time.get_current(), time.get_end());
+
+      if (!times_are_aligned) {
+        IsOk = false;
+
+        if (iProc == 0) {
+          std::cout << "Times don't align with electrodynamics file! ";
+          std::cout << "Please check this!\n";
+        }
+      }
     }
   }
 
   IsOk = sync_across_all_procs(IsOk);
 }
+
+// -----------------------------------------------------------------------------
+// Update a bunch of indices and sent them to Fortran code.
+// -----------------------------------------------------------------------------
+
+void Electrodynamics::set_all_indices_for_ie(Times time,
+                                              Indices &indices) {
+  std::string function = "Electrodynamics::set_all_indices_for_ie";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  double time_now = time.get_current();
+  ie_set_time(&time_now);
+  int64_t iBy_ = indices.lookup_index_id("imfby");
+  int64_t iBz_ = indices.lookup_index_id("imfbz");
+  int64_t iVx_ = indices.lookup_index_id("swvx");
+  int64_t iN_ = indices.lookup_index_id("swn");
+  int64_t iAE_ = indices.lookup_index_id("ae");
+  int64_t iAU_ = indices.lookup_index_id("au");
+  int64_t iAL_ = indices.lookup_index_id("al");
+
+  float imfby = indices.get_index(time_now, iBy_);
+  float imfbz = indices.get_index(time_now, iBz_);
+  float swv = indices.get_index(time_now, iVx_);
+  float swn = indices.get_index(time_now, iN_);
+  float ae = indices.get_index(time_now, iAE_);
+  float au = indices.get_index(time_now, iAU_);
+  float al = indices.get_index(time_now, iAL_);
+
+  if (report.test_verbose(3)) {
+    std::cout << "imf by : " << iBz_ << " " << imfby << "\n";
+    std::cout << "imf bz : " << iBz_ << " " << imfbz << "\n";
+    std::cout << "sw v : " << iVx_ << " " << swv << "\n";
+    std::cout << "sw n : " << iN_ << " " << swn << "\n";
+  }
+  ie_set_imfby(&imfby);
+  ie_set_imfbz(&imfbz);
+  ie_set_swv(&swv);
+  ie_set_swn(&swn);
+  ie_set_ae(&ae);
+  ie_set_au(&au);
+  ie_set_al(&al);
+  ie_set_hp_from_ae(&ae);
+
+  report.exit(function);
+  return;
+}
+
 
 // -----------------------------------------------------------------------------
 // Update Electrodynamics
@@ -36,28 +133,78 @@ Electrodynamics::Electrodynamics(Times time) {
 int Electrodynamics::update(Planets planet,
                             Grid gGrid,
                             Times time,
+                            Indices &indices,
                             Ions &ions) {
 
   std::string function = "Electrodynamics::update";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (HaveElectrodynamics) {
+  if (HaveElectrodynamicsFile  || HaveFortranIe) {
     set_time(time.get_current());
     gGrid.calc_sza(planet, time);
     gGrid.calc_gse(planet, time);
     gGrid.calc_mlt();
-    auto electrodynamics_values =
-      get_electrodynamics(gGrid.magLat_scgc,
-                          gGrid.magLocalTime_scgc);
-    ions.potential_scgc = std::get<0>(electrodynamics_values);
-    ions.eflux = std::get<1>(electrodynamics_values);
-    ions.avee = std::get<2>(electrodynamics_values);
-  } else {
+
+    // Default is to set everything to zero:
     ions.potential_scgc.zeros();
     ions.eflux.zeros();
-    ions.avee.zeros();
-  }
+    ions.avee.ones();
+
+    #ifdef FORTRAN
+      if (HaveFortranIe) {
+        report.print(3, "Using Fortran Electrodynamics!");
+        set_all_indices_for_ie(time, indices);
+
+        if (!IsAllocated) {
+          int nXs = gGrid.get_nX();
+          ie_set_nxs(&nXs);
+          int nYs = gGrid.get_nY();
+          ie_set_nys(&nYs);
+          int64_t iTotal = nXs * nYs;
+          mlt2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
+          lat2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
+          pot2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
+          eflux2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
+          avee2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
+          IsAllocated = true;
+        }
+
+        int64_t nZs = gGrid.get_nZ();
+        int64_t iZ;
+
+        int iError;
+
+        for (iZ = 0; iZ < nZs; iZ++) {
+          copy_mat_to_array(gGrid.magLocalTime_scgc.slice(iZ), mlt2d, true);
+          copy_mat_to_array(gGrid.magLat_scgc.slice(iZ), lat2d, true);
+
+          ie_set_mlts(mlt2d, &iError);
+          ie_set_lats(lat2d, &iError);
+          ie_update_grid(&iError);
+
+          ie_get_potential(pot2d, &iError);
+          copy_array_to_mat(pot2d, ions.potential_scgc.slice(iZ), true);
+
+          if (iZ == nZs-1) {
+            ie_get_electron_diffuse_aurora(eflux2d, avee2d, &iError);
+            copy_array_to_mat(avee2d, ions.avee, true);
+            copy_array_to_mat(eflux2d, ions.eflux, true);
+          }
+        }
+      }
+    #endif
+
+    if (HaveElectrodynamicsFile) {
+      report.print(3, "Setting electrodynamics from file!");
+      auto electrodynamics_values =
+        get_electrodynamics(gGrid.magLat_scgc,
+                             gGrid.magLocalTime_scgc);
+      ions.potential_scgc = std::get<0>(electrodynamics_values);
+      ions.eflux = std::get<1>(electrodynamics_values);
+      ions.avee = std::get<2>(electrodynamics_values);
+    }
+  } 
 
   report.exit(function);
   return 0;
@@ -72,7 +219,7 @@ arma_cube Electrodynamics::get_potential(arma_cube magLat,
   arma_cube pot(magLat.n_rows, magLat.n_cols, magLat.n_slices);
   pot.zeros();
 
-  if (HaveElectrodynamics) {
+  if (HaveElectrodynamicsFile) {
     int time_pos = static_cast<int>(time_index);
     arma_mat e_potentials = input_electrodynamics[0].potential[time_pos];
 
@@ -95,7 +242,7 @@ arma_mat Electrodynamics::get_eflux(arma_cube magLat,
   arma_mat eflux(magLat.n_rows, magLat.n_cols);
   eflux.zeros();
 
-  if (HaveElectrodynamics) {
+  if (HaveElectrodynamicsFile) {
     int i = magLat.n_slices - 1;
     set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i));
     int time_pos = static_cast<int>(time_index);
@@ -115,7 +262,7 @@ arma_mat Electrodynamics::get_avee(arma_cube magLat,
   arma_mat avee(magLat.n_rows, magLat.n_cols);
   avee.zeros();
 
-  if (HaveElectrodynamics) {
+  if (HaveElectrodynamicsFile) {
     int i = magLat.n_slices - 1;
     set_grid(magLat.slice(i) * cRtoD, magLocalTime.slice(i));
     int time_pos = static_cast<int>(time_index);
@@ -214,7 +361,7 @@ arma_cube magLocalTime) {
 
 bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
 
-  if (HaveElectrodynamics) {
+  if (HaveElectrodynamicsFile) {
     std::vector<double> e_times = input_electrodynamics[0].times;
     int iLow = 0;
     int iHigh = e_times.size() - 1;
@@ -231,13 +378,23 @@ bool Electrodynamics::check_times(double inputStartTime, double inputEndTime) {
 void Electrodynamics::set_time(double time) {
   std::string function = "Electrodynamics::set_time";
   static int iFunction = -1;
-  //report.enter(function, iFunction);
+  report.enter(function, iFunction);
 
   time_needed = time;
+
+  std::cout << "have electrodynamics : " << HaveElectrodynamicsFile << "\n";
+
+  if (!HaveElectrodynamicsFile) {
+    time_index = -1;
+    std::cout << "exiting!\n";
+    report.exit(function);
+    return;
+  }
 
   int64_t iLow, iMid, iHigh, N;
   double interpolation_index, x, dt;
   double intime = time;
+
   std::vector<double> times = input_electrodynamics[0].times;
   // Check to see if the time is below the bottom time in the vector:
   iLow = 0;
@@ -286,7 +443,7 @@ void Electrodynamics::set_time(double time) {
   }
 
   time_index = interpolation_index;
-  //report.exit(function);
+  report.exit(function);
 }
 
 // -----------------------------------------------------------------------------
