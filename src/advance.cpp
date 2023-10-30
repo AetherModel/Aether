@@ -76,6 +76,7 @@ int advance(Planets &planet,
   iErr = electrodynamics.update(planet,
                                 gGrid,
                                 time,
+                                indices,
                                 ions);
   calc_ion_neutral_coll_freq(neutrals, ions);
   ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
