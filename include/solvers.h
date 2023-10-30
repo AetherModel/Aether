@@ -56,6 +56,7 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid);
 arma_cube calc_gradient_lat(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt(arma_cube value, Grid grid);
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
+std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid);
 
 // interpolation in 1D

@@ -167,13 +167,14 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
   arma_cube grad_lon(nXs, nYs, nAlts);
   arma_cube grad_lat(nXs, nYs, nAlts);
 
-  for (precision_t iAlt = 0; iAlt < nAlts; iAlt++) {
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
     /** Extract Grid Features **/
-    arma_mat x = grid.refx_scgc.slice(iAlt);
+    // Addition: Get a copy of dx dy
+    arma_mat curr_refx = grid.refx_scgc.slice(iAlt);
+    arma_mat curr_refy = grid.refy_scgc.slice(iAlt);
 
-    // Get reference grid dimensions (Assume dx = dy and equidistant)
-    arma_vec x_vec = x.col(0);
-    precision_t dx = x_vec(1)-x_vec(0);
+    precision_t dx = curr_refx(1, 0) - curr_refx(0, 0);
+    precision_t dy = curr_refy(0, 1) - curr_refy(0, 0);
 
     // Get values of current level
     arma_mat curr_value = value.slice(iAlt);
@@ -190,21 +191,21 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
     // May vectorize for future improvements
 
     if (nGCs >=2) { // if more than 1 nGCs, we do fourth order, some foolproofing in case we go into debug hell
-      for (int j = nGCs; j < nYs + nGCs; j++)
+      for (int j = nGCs; j < nYs - nGCs; j++)
       {
-        for (int i = nGCs; i < nXs + nGCs; i++)
+        for (int i = nGCs; i < nXs - nGCs; i++)
         {
           grad_x_curr(i, j) = (-curr_value(i+2,j) + 8*curr_value(i+1,j) - 8*curr_value(i-1,j) + curr_value(i-2,j))*(1./12./dx);
-          grad_y_curr(i, j) = (-curr_value(i,j+2) + 8*curr_value(i,j+1) - 8*curr_value(i,j-1) + curr_value(i,j-2))*(1./12./dx);
+          grad_y_curr(i, j) = (-curr_value(i,j+2) + 8*curr_value(i,j+1) - 8*curr_value(i,j-1) + curr_value(i,j-2))*(1./12./dy);
         }
       }
     } else { // otherwise we do second order
-      for (int j = nGCs; j < nYs + nGCs; j++)
+      for (int j = nGCs; j < nYs - nGCs; j++)
       {
-        for (int i = nGCs; i < nXs + nGCs; i++)
+        for (int i = nGCs; i < nXs - nGCs; i++)
         {
           grad_x_curr(i, j) = (curr_value(i+1,j)-curr_value(i-1,j))*(1./2./dx);
-          grad_y_curr(i, j) = (curr_value(i,j+1)-curr_value(i,j-1))*(1./2./dx);
+          grad_y_curr(i, j) = (curr_value(i,j+1)-curr_value(i,j-1))*(1./2./dy);
         }
       }
     }
