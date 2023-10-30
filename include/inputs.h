@@ -24,6 +24,12 @@ public:
   precision_t get_n_outputs();
   precision_t get_dt_output(int iOutput);
   std::string get_type_output(int iOutput);
+  std::string get_diffuse_auroral_model();
+  std::string get_potential_model();
+  std::string get_electrodynamics_dir();
+  std::string get_electrodynamics_file();
+  std::string get_electrodynamics_north_file();
+  std::string get_electrodynamics_south_file();
   precision_t get_euv_heating_eff_neutrals();
   std::string get_euv_model();
   std::string get_euv_file();
@@ -45,7 +51,6 @@ public:
   bool get_use_eddy_momentum();
   bool get_use_eddy_energy();
   std::string get_bfield_type();
-  std::string get_electrodynamics_file();
   bool get_do_restart();
   std::string get_restartout_dir();
   std::string get_restartin_dir();

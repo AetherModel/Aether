@@ -413,7 +413,7 @@ std::string Inputs::get_restartout_dir() {
 }
 
 // -----------------------------------------------------------------------
-// Return restart OUT directory
+// Return restart In directory
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_restartin_dir() {
@@ -442,6 +442,58 @@ std::string Inputs::get_bfield_type() {
 
 bool Inputs::get_euv_douse() {
   return settings.at("Euv").at("doUse");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Dir - this is where all of the 
+//   files that are for the empirical models reside
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_electrodynamics_north_file() {
+  return check_settings_str("Electrodynamics", "NorthFile");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Dir - this is where all of the 
+//   files that are for the empirical models reside
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_electrodynamics_south_file() {
+  return check_settings_str("Electrodynamics", "SouthFile");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Dir - this is where all of the 
+//   files that are for the empirical models reside
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_electrodynamics_file() {
+  return check_settings_str("Electrodynamics", "File");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Dir - this is where all of the 
+//   files that are for the empirical models reside
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_electrodynamics_dir() {
+  return check_settings_str("Electrodynamics", "Dir");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Potential Model
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_potential_model() {
+  return check_settings_str("Electrodynamics", "Potential");
+}
+
+// -----------------------------------------------------------------------
+// Return the Electrodynamics Diffuse Auroral Model
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_diffuse_auroral_model() {
+  return check_settings_str("Electrodynamics", "DiffuseAurora");
 }
 
 // -----------------------------------------------------------------------
@@ -722,10 +774,6 @@ std::string Inputs::get_planetary_file() {
 
 std::string Inputs::get_planet_species_file() {
   return check_settings_str("PlanetSpeciesFile");
-}
-
-std::string Inputs::get_electrodynamics_file() {
-  return check_settings_str("ElectrodynamicsFile");
 }
 
 // -----------------------------------------------------------------------
