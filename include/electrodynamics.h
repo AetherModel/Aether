@@ -4,6 +4,28 @@
 #ifndef INCLUDE_ELECTRODYNAMICS_H_
 #define INCLUDE_ELECTRODYNAMICS_H_
 
+extern "C" void ie_init_library(int[], int[], int[], int* iError);
+extern "C" void ie_set_nxs(int *nXsIn);
+extern "C" void ie_set_nys(int *nYsIn);
+extern "C" void ie_set_time(double *TimeIn);
+extern "C" void ie_set_imfbz(float *IMFBzIn);
+extern "C" void ie_set_imfby(float *IMFByIn);
+extern "C" void ie_set_swv(float *SWVIn);
+extern "C" void ie_set_swn(float *SWNIn);
+extern "C" void ie_set_au(float *AUIn);
+extern "C" void ie_set_al(float *ALIn);
+extern "C" void ie_set_ae(float *AEIn);
+extern "C" void ie_set_hp_from_ae(float *AEIn);
+extern "C" void ie_set_north();
+extern "C" void ie_set_south();
+extern "C" void ie_set_mlts(float[], int *iError);
+extern "C" void ie_set_lats(float[], int *iError);
+extern "C" void ie_update_grid(int *iError);
+extern "C" void ie_get_potential(float[], int *iError);
+extern "C" void ie_get_eflux(float[], int *iError);
+extern "C" void ie_get_avee(float[], int *iError);
+extern "C" void ie_get_electron_diffuse_aurora(float[], float[], int *iError);
+
 /**************************************************************
  * This is the electrodynamics class for Aether.
 
@@ -48,6 +70,7 @@ class Electrodynamics {
   int update(Planets planet,
 	     Grid gGrid,
 	     Times time,
+       Indices &indices,
 	     Ions &ions);
 
   /**************************************************************
@@ -268,7 +291,8 @@ class Electrodynamics {
   std::string input_file;
 
   ///
-  bool HaveElectrodynamics;
+  bool HaveElectrodynamicsFile;
+  bool HaveFortranIe;
 
   /// Variables needed by user - all set by set_ functions:
 
@@ -294,6 +318,15 @@ class Electrodynamics {
   precision_t al_needed;
   precision_t ae_needed;
   precision_t kp_needed;
+
+  // In the coupling to the Fortran IE routines, we need some variables
+  // that are allocatable:
+  float *mlt2d;
+  float *lat2d;
+  float *pot2d;
+  float *eflux2d;
+  float *avee2d;
+  bool IsAllocated = false;
 
   /// If we read in an electrodyanmics file, set this to 1. Otherwise,
   /// set it to 0:
@@ -452,6 +485,9 @@ class Electrodynamics {
   **/  
   
   arma_mat get_values(arma_mat matToInterpolateOn, int rows, int cols);
+
+  void set_all_indices_for_ie(Times time, Indices &indices);
+
 };
 
 #endif // INCLUDE_ELECTRODYNAMICS_H_
