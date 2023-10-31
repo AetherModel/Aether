@@ -24,6 +24,10 @@
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
+    "Electrodynamics" : {
+	"Potential" : "Weimer05",
+	"DiffuseAurora" : "fta"},
+
     "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
     
     "Outputs" : {
