@@ -12,8 +12,7 @@
 	"check_for_nans" : false,
 	"nan_test" : {
             "insert" : false,
-            "variable" : "temperature_scgc"}
-    },
+            "variable" : "temperature_scgc"} },
 
     "InitialConditions" : {
 	"type" : "Planet"},    
@@ -38,6 +37,11 @@
         "file": "UA/inputs/earth.in"},
 
     "BField" : "dipole",
+
+    "Electrodynamics" : {
+	"Potential" : "weimer",
+	"DiffuseAurora" : "fta",
+	"File" : ""},
 
     "Euv" : {
 	"doUse" : true,
