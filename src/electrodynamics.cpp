@@ -89,7 +89,6 @@ void Electrodynamics::set_all_indices_for_ie(Times time,
   report.enter(function, iFunction);
 
   double time_now = time.get_current();
-  ie_set_time(&time_now);
   int64_t iBy_ = indices.lookup_index_id("imfby");
   int64_t iBz_ = indices.lookup_index_id("imfbz");
   int64_t iVx_ = indices.lookup_index_id("swvx");
@@ -112,14 +111,17 @@ void Electrodynamics::set_all_indices_for_ie(Times time,
     std::cout << "sw v : " << iVx_ << " " << swv << "\n";
     std::cout << "sw n : " << iN_ << " " << swn << "\n";
   }
-  ie_set_imfby(&imfby);
-  ie_set_imfbz(&imfbz);
-  ie_set_swv(&swv);
-  ie_set_swn(&swn);
-  ie_set_ae(&ae);
-  ie_set_au(&au);
-  ie_set_al(&al);
-  ie_set_hp_from_ae(&ae);
+  #ifdef FORTRAN
+    ie_set_time(&time_now);
+    ie_set_imfby(&imfby);
+    ie_set_imfbz(&imfbz);
+    ie_set_swv(&swv);
+    ie_set_swn(&swn);
+    ie_set_ae(&ae);
+    ie_set_au(&au);
+    ie_set_al(&al);
+    ie_set_hp_from_ae(&ae);
+  #endif
 
   report.exit(function);
   return;
