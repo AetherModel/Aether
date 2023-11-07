@@ -41,6 +41,7 @@
     "Electrodynamics" : {
 	"Potential" : "weimer",
 	"DiffuseAurora" : "fta",
+	"Dir" : "UA/inputs/ext/ie/",
 	"File" : ""},
 
     "Euv" : {
