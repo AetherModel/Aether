@@ -384,11 +384,8 @@ void Electrodynamics::set_time(double time) {
 
   time_needed = time;
 
-  std::cout << "have electrodynamics : " << HaveElectrodynamicsFile << "\n";
-
   if (!HaveElectrodynamicsFile) {
     time_index = -1;
-    std::cout << "exiting!\n";
     report.exit(function);
     return;
   }
