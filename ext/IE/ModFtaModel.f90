@@ -4,7 +4,7 @@ module ModFTAModel
 
   integer, parameter :: iCharLenFta_ = 100
   integer, parameter :: iCharLenLong_ = 1500
-  character (len = iCharLenFta_) :: dir = "UA/inputs/ext/FTA/"
+  character (len = iCharLenFta_) :: dir = "UA/inputs/ext/ie/FTA/"
   logical :: isInitialized = .false.
 
   integer, parameter :: nMltsFta = 96
