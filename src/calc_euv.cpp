@@ -21,45 +21,44 @@ bool calc_euv(Planets planet,
 	      Ions &ions,
 	      Indices indices) {
 
-  bool didWork;
+  bool didWork = true;
 
-  if (time.check_time_gate(input.get_dt_euv())) {
-    std::string function = "Euv::calc_euv";
-    static int iFunction = -1;
-    report.enter(function, iFunction);
+  if (!time.check_time_gate(input.get_dt_euv()))
+    return true;
+      
+  std::string function = "Euv::calc_euv";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
-    if (input.get_is_student())
-      report.print(-1, "(2) What function is this " +
-                   input.get_student_name() + "?");
+  if (input.get_is_student())
+    report.print(-1, "(2) What function is this " +
+		 input.get_student_name() + "?");
 
-    // Chapman integrals for EUV energy deposition:
-    // Need chapman integrals for aurora too!
-    neutrals.calc_chapman(grid);
+  // Chapman integrals for EUV energy deposition:
+  // Need chapman integrals for aurora too!
+  neutrals.calc_chapman(grid);
 
-    if (euv.doUse) {
-      // set didWork to false in order to catch bad euv models:
-      didWork = false;
-      std::string euvModel = mklower(input.get_euv_model());
-      if (euvModel == "euvac")
-        didWork = euv.euvac(time, indices);
-      else if (euvModel == "neuvac")
-        didWork = euv.neuvac(time, indices);
-      else if (euvModel == "hfg")
-        didWork = euv.solomon_hfg(time, indices);
+  if (euv.doUse) {
+    // set didWork to false in order to catch bad euv models:
+    didWork = false;
+    std::string euvModel = mklower(input.get_euv_model());
+    if (euvModel == "euvac")
+      didWork = euv.euvac(time, indices);
+    else if (euvModel == "neuvac")
+      didWork = euv.neuvac(time, indices);
+    else if (euvModel == "hfg")
+      didWork = euv.solomon_hfg(time, indices);
 
-      if (didWork)
-	euv.scale_from_1au(planet, time);
-
-      calc_ionization_heating(euv, neutrals, ions);
-    } else
-      neutrals.heating_euv_scgc.zeros();
-
-    report.exit(function);
-  }
+    if (didWork)
+      euv.scale_from_1au(planet, time);
+    
+    calc_ionization_heating(euv, neutrals, ions);
+  } else
+    neutrals.heating_euv_scgc.zeros();
 
   if (!didWork)
-    report.error("Error in calc_euv!  Check euv models.");
-  
+    report.error("Error in calc_euv!  Check euv models.");  
+  report.exit(function);
   return didWork;
 }
 
