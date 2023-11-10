@@ -44,14 +44,15 @@ bool Inputs::read_inputs_json(Times &time) {
     //   - This is BEFORE the user inputs are merged!!!
 
     if (user_inputs.contains("Restart")) {
-      cout << "Contains restart" << endl;
-
       if (user_inputs["Restart"].contains("do")) {
         if (user_inputs["Restart"]["do"]) {
           std::string restart_file = settings["Restart"]["InDir"];
           restart_file = restart_file + "/settings.json";
           json restart_inputs;
           restart_inputs = read_json(restart_file);
+	  // This forces the logfile to append.  User can override
+	  // if they really want:
+	  restart_inputs["Logfile"]["append"] = true;
           settings.merge_patch(restart_inputs);
         }
       }
