@@ -257,9 +257,9 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  int initial_conditions(Grid grid,
-			 Times time,
-			 Indices indices);
+  bool initial_conditions(Grid grid,
+			  Times time,
+			  Indices indices);
 
   /**********************************************************************
      \brief temporary function to set neutral densities with in the model
