@@ -122,22 +122,22 @@ class OutputContainer {
   /**********************************************************************
      \brief write a file with the information in the container
    **/
-  void write();
+  bool write();
   
   /**********************************************************************
      \brief write a json header file with the information in the container
    **/
-  int write_container_header();
+  bool write_container_header();
   
   /**********************************************************************
      \brief write a binary file with the information in the container
    **/
-  int write_container_binary();
+  bool write_container_binary();
   
   /**********************************************************************
      \brief write a netcdf file with the information in the container
    **/
-  int write_container_netcdf();
+  bool write_container_netcdf();
   
   /**********************************************************************
      \brief read from a file an load into the container
@@ -222,11 +222,11 @@ class OutputContainer {
    \param planet information about the planet
 **/
 
-int output(const Neutrals &neutrals,
-	   const Ions &ions,
-	   const Grid &grid,
-	   Times time,
-	   const Planets &planet);
+bool output(const Neutrals &neutrals,
+	    const Ions &ions,
+	    const Grid &grid,
+	    Times time,
+	    const Planets &planet);
 
 void output_binary_3d(std::ofstream &binary,
 		      arma_cube value);
