@@ -68,12 +68,12 @@ bool Inputs::read_inputs_json(Times &time) {
     report.print(1, "Using planet file : " + planet_filename);
 
     // Debug Stuff:
-    report.set_verbose(settings["Debug"]["iVerbose"]);
-    report.set_DefaultVerbose(settings["Debug"]["iVerbose"]);
+    report.set_verbose(get_settings("Debug", "iVerbose"));
+    report.set_DefaultVerbose(get_settings("Debug", "iVerbose"));
     report.set_doInheritVerbose(settings["Debug"]["doInheritVerbose"]);
-    report.set_timing_depth(settings["Debug"]["iTimingDepth"]);
+    report.set_timing_depth(get_settings("Debug", "iTimingDepth"));
     report.set_timing_percent(settings["Debug"]["TimingPercent"]);
-    report.set_iProc(settings["Debug"]["iProc"]);
+    report.set_iProc(get_settings("Debug", "iProc"));
 
     for (auto &item : settings["Debug"]["iFunctionVerbose"].items())
       report.set_FunctionVerbose(item.key(), item.value());
