@@ -173,8 +173,9 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
     arma_mat curr_refx = grid.refx_scgc.slice(iAlt);
     arma_mat curr_refy = grid.refy_scgc.slice(iAlt);
 
-    precision_t dx = curr_refx(1, 0) - curr_refx(0, 0);
-    precision_t dy = curr_refy(0, 1) - curr_refy(0, 0);
+    // Get some dx dy metrics from the grid
+    precision_t dx = grid.drefx(iAlt);
+    precision_t dy = grid.drefy(iAlt);
 
     // Get values of current level
     arma_mat curr_value = value.slice(iAlt);
@@ -185,7 +186,7 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
 
     arma_mat grad_x_curr(nXs, nYs);
     arma_mat grad_y_curr(nXs, nYs);
-
+    
     // Calc gradient on x and y direction (since reference grid)
     // Only update interior cells
     // May vectorize for future improvements
@@ -212,8 +213,8 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
     
     // We then use A transformation matrices to convert grad_xy to grad_latlon
     // Ref -> Physical, we use A matrix
-    grad_lon.slice(iAlt) = grad_x_curr%grid.A11_scgc.slice(iAlt)+grad_y_curr%grid.A12_scgc.slice(iAlt);
-    grad_lat.slice(iAlt) = grad_x_curr%grid.A21_scgc.slice(iAlt)+grad_y_curr%grid.A22_scgc.slice(iAlt);
+    grad_lon.slice(iAlt) = grad_x_curr%grid.A11_inv_scgc.slice(iAlt)+grad_y_curr%grid.A21_inv_scgc.slice(iAlt);
+    grad_lat.slice(iAlt) = grad_x_curr%grid.A12_inv_scgc.slice(iAlt)+grad_y_curr%grid.A22_inv_scgc.slice(iAlt);
   }
 
   // Not initializing with array like procedure in case I get bugs
