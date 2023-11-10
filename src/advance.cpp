@@ -107,8 +107,11 @@ bool advance(Planets &planet,
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
 
-    neutrals.exchange(gGrid);
-
+    if (input.get_is_cubesphere())
+      neutrals.exchange(gGrid);
+    else
+      neutrals.exchange_old(gGrid);
+      
     time.increment_time();
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
