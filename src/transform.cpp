@@ -7,6 +7,19 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
+// transform string to lower case
+// -----------------------------------------------------------------------
+
+std::string mklower(std::string inString) {
+  std::string outString = inString;
+  int64_t nChars = outString.length();
+  for (int64_t iChar = 0; iChar < nChars; iChar++)
+    outString[iChar] = tolower(outString[iChar]);
+  return outString;
+}
+
+
+// -----------------------------------------------------------------------
 // copy from c++ vector to c-native array
 // -----------------------------------------------------------------------
 
