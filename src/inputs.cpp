@@ -90,7 +90,10 @@ bool Inputs::write_restart() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_logfile() {
-  return check_settings_str("Logfile", "name");
+  std::string logfile = check_settings_str("Logfile", "name");
+  if (nMembers > 1)
+    logfile = add_cmember(logfile);
+  return logfile;
 }
 
 // -----------------------------------------------------------------------
@@ -218,6 +221,17 @@ std::string Inputs::get_settings_str(std::string key1) {
 std::string Inputs::get_settings_str(std::string key1,
                                      std::string key2) {
   std::string value = "unknown";
+
+  if (settings.find(key1) != settings.end())
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
+      value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+int Inputs::get_settings(std::string key1,
+			 std::string key2) {
+  int value = -1;
 
   if (settings.find(key1) != settings.end())
     if (settings.at(key1).find(key2) != settings.at(key1).end())
