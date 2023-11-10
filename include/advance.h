@@ -32,15 +32,15 @@
  **/
 
 
-int advance(Planets &planet,
-            Grid &gGrid,
-            Times &time,
-            Euv &euv,
-            Neutrals &neutrals,
-            Ions &ions,
-            Chemistry &chemistry,
-            Electrodynamics &electrodynamics,
-            Indices &indices,
-            Logfile &logfile);
+bool advance(Planets &planet,
+	     Grid &gGrid,
+	     Times &time,
+	     Euv &euv,
+	     Neutrals &neutrals,
+	     Ions &ions,
+	     Chemistry &chemistry,
+	     Electrodynamics &electrodynamics,
+	     Indices &indices,
+	     Logfile &logfile);
 
 #endif // INCLUDE_ADVANCE_H_
