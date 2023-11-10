@@ -514,9 +514,8 @@ int Inputs::get_original_seed() {
   if (settings.find("Seed") == settings.end()) {
     IsOk = false;
     std::cout << "Error in getting seed!\n";
-    return dummy_int;
+    return 0;
   }
-
   return settings.at("Seed");
 }
 
