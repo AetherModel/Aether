@@ -359,6 +359,8 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   dt = dta.min();
 
+  if (dt < 0.0) dt = 2.0;
+
   if (report.test_verbose(3))
     std::cout << "dt for neutrals : " << dt << "\n";
 
