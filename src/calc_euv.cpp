@@ -13,15 +13,15 @@
 //   - calculate ionization and heating
 // -----------------------------------------------------------------------------
 
-int calc_euv(Planets planet,
-             Grid grid,
-             Times time,
-             Euv &euv,
-             Neutrals &neutrals,
-             Ions &ions,
-             Indices indices) {
+bool calc_euv(Planets planet,
+	      Grid grid,
+	      Times time,
+	      Euv &euv,
+	      Neutrals &neutrals,
+	      Ions &ions,
+	      Indices indices) {
 
-  int iErr = 0;
+  bool didWork;
 
   if (time.check_time_gate(input.get_dt_euv())) {
     std::string function = "Euv::calc_euv";
@@ -37,14 +37,18 @@ int calc_euv(Planets planet,
     neutrals.calc_chapman(grid);
 
     if (euv.doUse) {
-      if (input.get_euv_model() == "euvac")
-        iErr = euv.euvac(time, indices);
-      else if (input.get_euv_model() == "neuvac")
-        iErr = euv.neuvac(time, indices);
-      else if (input.get_euv_model() == "hfg")
-        iErr = euv.solomon_hfg(time, indices);
+      // set didWork to false in order to catch bad euv models:
+      didWork = false;
+      std::string euvModel = mklower(input.get_euv_model());
+      if (euvModel == "euvac")
+        didWork = euv.euvac(time, indices);
+      else if (euvModel == "neuvac")
+        didWork = euv.neuvac(time, indices);
+      else if (euvModel == "hfg")
+        didWork = euv.solomon_hfg(time, indices);
 
-      iErr = euv.scale_from_1au(planet, time);
+      if (didWork)
+	euv.scale_from_1au(planet, time);
 
       calc_ionization_heating(euv, neutrals, ions);
     } else
@@ -53,7 +57,10 @@ int calc_euv(Planets planet,
     report.exit(function);
   }
 
-  return iErr;
+  if (!didWork)
+    report.error("Error in calc_euv!  Check euv models.");
+  
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------
