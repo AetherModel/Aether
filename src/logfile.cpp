@@ -252,6 +252,8 @@ Logfile::Logfile(Indices &indices) {
   std::vector<std::string> sat_names = input.get_satellite_names();
   std::vector<precision_t> sat_dts = input.get_satellite_dts();
 
+  bool isRestart = input.get_do_restart();
+  
   // Only the 0th processor in each member needs to open the logfile
 
   if (iGrid == 0) {
@@ -263,7 +265,7 @@ Logfile::Logfile(Indices &indices) {
       logfilestream.precision(4);
     }
     // Report error if can not open the log file stream
-    if (!logfilestream.is_open()) {
+    if (!logfilestream.is_open() & !isRestart) {
       // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD
       // NOT BE EXECUTED
       throw std::string("Can not open log file");
@@ -291,9 +293,10 @@ Logfile::Logfile(Indices &indices) {
     header_log += ' ' + indices.get_name(i);
 
   // only the 0th processor writes to the logfile
-  if (iGrid == 0) {
+  if (logfilestream.is_open()) {
     // Write the header to log
-    logfilestream << header_time << header_log << '\n';
+    if (!isRestart)
+      logfilestream << header_time << header_log << '\n';
     // Close the file stream if append
     if (doAppend)
       logfilestream.close();
