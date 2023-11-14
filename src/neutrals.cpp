@@ -140,6 +140,7 @@ Neutrals::Neutrals(Grid grid,
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(planet);
+
   if (iErr > 0)
     report.error("Error reading planet file!");
 

@@ -253,7 +253,7 @@ Logfile::Logfile(Indices &indices) {
   std::vector<precision_t> sat_dts = input.get_satellite_dts();
 
   bool isRestart = input.get_do_restart();
-  
+
   // Only the 0th processor in each member needs to open the logfile
 
   if (iGrid == 0) {
@@ -264,6 +264,7 @@ Logfile::Logfile(Indices &indices) {
       logfilestream.open(logfileName, std::ofstream::trunc);
       logfilestream.precision(4);
     }
+
     // Report error if can not open the log file stream
     if (!logfilestream.is_open() & !isRestart) {
       // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD
@@ -297,6 +298,7 @@ Logfile::Logfile(Indices &indices) {
     // Write the header to log
     if (!isRestart)
       logfilestream << header_time << header_log << '\n';
+
     // Close the file stream if append
     if (doAppend)
       logfilestream.close();

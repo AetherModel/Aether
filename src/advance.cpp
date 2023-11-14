@@ -11,18 +11,18 @@
 // -----------------------------------------------------------------------------
 
 bool advance(Planets &planet,
-	     Grid &gGrid,
-	     Times &time,
-	     Euv &euv,
-	     Neutrals &neutrals,
-	     Ions &ions,
-	     Chemistry &chemistry,
-	     Electrodynamics &electrodynamics,
-	     Indices &indices,
-	     Logfile &logfile) {
+             Grid &gGrid,
+             Times &time,
+             Euv &euv,
+             Neutrals &neutrals,
+             Ions &ions,
+             Chemistry &chemistry,
+             Electrodynamics &electrodynamics,
+             Indices &indices,
+             Logfile &logfile) {
 
   bool didWork = true;
-  
+
   std::string function = "advance";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -66,19 +66,19 @@ bool advance(Planets &planet,
 
   if (didWork)
     didWork = calc_euv(planet,
-		       gGrid,
-		       time,
-		       euv,
-		       neutrals,
-		       ions,
-		       indices);
+                       gGrid,
+                       time,
+                       euv,
+                       neutrals,
+                       ions,
+                       indices);
 
   if (didWork)
     didWork = electrodynamics.update(planet,
-				     gGrid,
-				     time,
-				     ions);
-    
+                                     gGrid,
+                                     time,
+                                     ions);
+
   if (didWork) {
     calc_ion_neutral_coll_freq(neutrals, ions);
     ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
@@ -111,7 +111,7 @@ bool advance(Planets &planet,
       neutrals.exchange(gGrid);
     else
       neutrals.exchange_old(gGrid);
-      
+
     time.increment_time();
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
@@ -130,7 +130,7 @@ bool advance(Planets &planet,
 
   if (!didWork)
     report.error("Error in Advance!");
-  
+
   report.exit(function);
   return didWork;
 }

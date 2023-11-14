@@ -119,8 +119,10 @@ bool compare(precision_t value1, precision_t value2) {
 std::string add_cmember(std::string inString) {
   std::string outString = inString;
   std::size_t found = outString.rfind(".");
-  if (found!=std::string::npos)
+
+  if (found != std::string::npos)
     outString.replace(found, 1, "_" + cMember + ".");
+
   return outString;
 }
 

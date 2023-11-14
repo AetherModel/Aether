@@ -32,8 +32,10 @@ bool Neutrals::set_bcs(Grid grid,
 
   if (input.get_nAltsGeo() > 1) {
     didWork = set_lower_bcs(grid, time, indices);
+
     if (didWork)
       didWork = set_upper_bcs(grid);
+
     if (didWork)
       calc_mass_density();
   }
@@ -132,6 +134,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
     if (!msis.is_ok()) {
       didWork = false;
       report.error("MSIS initialization not ok");
+
       if (report.test_verbose(0)) {
         std::cout << "MSIS Boundary Conditions asked for, ";
         std::cout << "but MSIS is not compiled! Yikes!\n";
@@ -191,6 +194,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
       species[iSpecies].density_scgc.slice(0).
       fill(species[iSpecies].lower_bc_density);
     }
+
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
     didWork = true;
   }
@@ -220,7 +224,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
     report.error("issue with lower BCs!");
     report.error("maybe check boundaryconditions type : " + bcsType);
   }
-  
+
   report.exit(function);
   return didWork;
 }

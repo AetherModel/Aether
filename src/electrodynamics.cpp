@@ -34,9 +34,9 @@ Electrodynamics::Electrodynamics(Times time) {
 // -----------------------------------------------------------------------------
 
 bool Electrodynamics::update(Planets planet,
-			     Grid gGrid,
-			     Times time,
-			     Ions &ions) {
+                             Grid gGrid,
+                             Times time,
+                             Ions &ions) {
 
   std::string function = "Electrodynamics::update";
   static int iFunction = -1;
@@ -183,9 +183,9 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
 // -----------------------------------------------------------------------------
 
 std::tuple<arma_cube,
-	   arma_mat,
-	   arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
-							  arma_cube magLocalTime) {
+    arma_mat,
+    arma_mat> Electrodynamics::get_electrodynamics(arma_cube magLat,
+arma_cube magLocalTime) {
   arma_cube pot;
   arma_mat eflux;
   arma_mat avee;

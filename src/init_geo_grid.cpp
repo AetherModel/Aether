@@ -279,7 +279,8 @@ void transformation_metrics(Quadtree quadtree,
         A12_inv(i, j) = 0;
         A21_inv(i, j) = p2 * tan(latp) * tan(lonp - cPI / 4. - 3 * cPI / 2.);
         A22_inv(i, j) = p2 / cos(latp);
-      } else if (quadtree.iSide == 6 - 1) { // Face 5 and 6 are flipped than Nair's formulation
+      } else if (quadtree.iSide == 6 -
+                 1) { // Face 5 and 6 are flipped than Nair's formulation
         double p1 = R * sin(latp) / a;
         A11(i, j) = p1 * cos(lonp - 3 * cPI / 4.);
         A12(i, j) = p1 * sin(lonp - 3 * cPI / 4.);
@@ -291,7 +292,8 @@ void transformation_metrics(Quadtree quadtree,
         A12_inv(i, j) = -p2 * sin(lonp - 3 * cPI / 4.);
         A21_inv(i, j) = p2 * sin(latp) * sin(lonp - 3 * cPI / 4.);
         A22_inv(i, j) = p2 * cos(lonp - 3 * cPI / 4.);
-      } else if (quadtree.iSide == 5 - 1) { // Face 5 and 6 are flipped than Nair's formulation
+      } else if (quadtree.iSide == 5 -
+                 1) { // Face 5 and 6 are flipped than Nair's formulation
         double p1 = R * sin(latp) / a;
         A11(i, j) = -p1 * cos(lonp - 3 * cPI / 4.);
         A12(i, j) = p1 * sin(lonp - 3 * cPI / 4.);
@@ -862,7 +864,7 @@ void Grid::correct_xy_grid(Planets planet) {
   int64_t iAlt;
 
   // initialize grid drefx drefy
-  drefx = arma_vec(nAlts); 
+  drefx = arma_vec(nAlts);
   drefy = arma_vec(nAlts);
 
   // Planet.get_radius() takes in latitude

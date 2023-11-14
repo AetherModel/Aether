@@ -20,10 +20,10 @@
 // -----------------------------------------------------------------------------
 
 bool output(const Neutrals &neutrals,
-	    const Ions &ions,
-	    const Grid &grid,
-	    Times time,
-	    const Planets &planet) {
+            const Ions &ions,
+            const Grid &grid,
+            Times time,
+            const Planets &planet) {
 
   std::string function = "output";
   static int iFunction = -1;
@@ -311,8 +311,8 @@ bool output(const Neutrals &neutrals,
       // write output container
 
       if (!AllOutputContainers[iOutput].write()) {
-	report.error("Error in writing output container!");
-	didWork = false;
+        report.error("Error in writing output container!");
+        didWork = false;
       }
 
       // ------------------------------------------------------------

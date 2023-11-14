@@ -313,7 +313,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 // --------------------------------------------------------------------------
 
 void Euv::scale_from_1au(Planets planet,
-			 Times time) {
+                         Times time) {
   precision_t d = planet.get_star_to_planet_dist(time);
   precision_t scale = 1.0 / (d * d);
 
@@ -331,7 +331,7 @@ void Euv::scale_from_1au(Planets planet,
 // --------------------------------------------------------------------------
 
 bool Euv::euvac(Times time,
-		Indices indices) {
+                Indices indices) {
 
   bool didWork = true;
   precision_t slope;
@@ -375,7 +375,7 @@ bool Euv::euvac(Times time,
 // --------------------------------------------------------------------------
 
 bool Euv::neuvac(Times time,
-		 Indices indices) {
+                 Indices indices) {
 
   bool didWork = true;
   precision_t slope;
@@ -419,7 +419,7 @@ bool Euv::neuvac(Times time,
 // --------------------------------------------------------------------------
 
 bool Euv::solomon_hfg(Times time,
-		      Indices indices) {
+                      Indices indices) {
 
   std::string function = "Euv::solomon_hfg";
   static int iFunction = -1;

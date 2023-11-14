@@ -91,8 +91,10 @@ bool Inputs::write_restart() {
 
 std::string Inputs::get_logfile() {
   std::string logfile = check_settings_str("Logfile", "name");
+
   if (nMembers > 1)
     logfile = add_cmember(logfile);
+
   return logfile;
 }
 
@@ -230,7 +232,7 @@ std::string Inputs::get_settings_str(std::string key1,
 }
 
 int Inputs::get_settings(std::string key1,
-			 std::string key2) {
+                         std::string key2) {
   int value = -1;
 
   if (settings.find(key1) != settings.end())
@@ -255,8 +257,8 @@ bool Inputs::check_settings(std::string key1,
 
   if (report.test_verbose(1))
     std::cout << "checking setting : "
-	      << key1 << " and "
-	      << key2 << "\n";
+              << key1 << " and "
+              << key2 << "\n";
 
   //try to find the keys first
   if (settings.find(key1) != settings.end()) {
@@ -516,6 +518,7 @@ int Inputs::get_original_seed() {
     std::cout << "Error in getting seed!\n";
     return 0;
   }
+
   return settings.at("Seed");
 }
 
@@ -582,20 +585,24 @@ bool Inputs::set_verbose(json in) {
   bool DidWork = true;
 
   int iVerbose = -1;
+
   // Want to set verbose level ASAP:
   if (in.contains("Debug")) {
     if (in.at("Debug").contains("iVerbose")) {
       iVerbose = in.at("Debug").at("iVerbose");
+
       if (in.at("Debug").contains("iProc")) {
-	if (iProc != in.at("Debug").at("iProc"))
-	  iVerbose = -1;
+        if (iProc != in.at("Debug").at("iProc"))
+          iVerbose = -1;
       }
-    }	
+    }
   }
+
   if (iVerbose > 0) {
     std::cout << "Setting iVerbose : " << iVerbose << "\n";
     report.set_verbose(iVerbose);
   }
+
   return DidWork;
 }
 

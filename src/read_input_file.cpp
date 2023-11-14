@@ -29,7 +29,7 @@ bool Inputs::read_inputs_json(Times &time) {
   // Set the default values first:
   settings = read_json("UA/inputs/defaults.json");
   DidWork = set_verbose(settings);
-    
+
   // Set the planet-specific file (user can change this in aether.in file!):
   settings["PlanetSpeciesFile"] = settings["Planet"]["file"];
 
@@ -50,9 +50,9 @@ bool Inputs::read_inputs_json(Times &time) {
           restart_file = restart_file + "/settings.json";
           json restart_inputs;
           restart_inputs = read_json(restart_file);
-	  // This forces the logfile to append.  User can override
-	  // if they really want:
-	  restart_inputs["Logfile"]["append"] = true;
+          // This forces the logfile to append.  User can override
+          // if they really want:
+          restart_inputs["Logfile"]["append"] = true;
           settings.merge_patch(restart_inputs);
         }
       }

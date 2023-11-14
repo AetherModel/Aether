@@ -17,8 +17,8 @@
 // -----------------------------------------------------------------------------
 
 bool Neutrals::initial_conditions(Grid grid,
-                                 Times time,
-                                 Indices indices) {
+                                  Times time,
+                                  Indices indices) {
 
   std::string function = "Neutrals::initial_conditions";
   static int iFunction = -1;
@@ -27,7 +27,7 @@ bool Neutrals::initial_conditions(Grid grid,
   // initialize didWork to false, so that we can catch if the initial
   // conditions are not actually set
   bool didWork = false;
-  
+
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
   int64_t nAlts = grid.get_nZ();
@@ -37,8 +37,10 @@ bool Neutrals::initial_conditions(Grid grid,
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading neutral files!");
     didWork = restart_file(input.get_restartin_dir(), DoRead);
+
     if (!didWork) {
-      report.error("Reading Restart for Neutrals Failed!!!");\
+      report.error("Reading Restart for Neutrals Failed!!!");
+      \
     }
   } else {
 
@@ -53,48 +55,48 @@ bool Neutrals::initial_conditions(Grid grid,
 
       if (!msis.is_ok()) {
         didWork = false;
-	report.error("MSIS Initial Conditions asked for, ");
+        report.error("MSIS Initial Conditions asked for, ");
         report.error("but MSIS is not compiled/working!");
       } else {
-	didWork = true;
-	msis.set_time(time);
-	precision_t f107 = indices.get_f107(time.get_current());
-	precision_t f107a = indices.get_f107a(time.get_current());
-	msis.set_f107(f107, f107a);
-	msis.set_ap(10.0);
-	msis.set_locations(grid.geoLon_scgc,
-			   grid.geoLat_scgc,
-			   grid.geoAlt_scgc);
+        didWork = true;
+        msis.set_time(time);
+        precision_t f107 = indices.get_f107(time.get_current());
+        precision_t f107a = indices.get_f107a(time.get_current());
+        msis.set_f107(f107, f107a);
+        msis.set_ap(10.0);
+        msis.set_locations(grid.geoLon_scgc,
+                           grid.geoLat_scgc,
+                           grid.geoAlt_scgc);
 
-	// This is just to check if MSIS is actually working:
-	if (msis.is_valid_species("Tn"))
-	  // if it is, fill will temperature:
-	  temperature_scgc = msis.get_cube("Tn");
-	else
-	  // if it is not, then fill with a value:
-	  temperature_scgc.fill(initial_temperatures[0]);
+        // This is just to check if MSIS is actually working:
+        if (msis.is_valid_species("Tn"))
+          // if it is, fill will temperature:
+          temperature_scgc = msis.get_cube("Tn");
+        else
+          // if it is not, then fill with a value:
+          temperature_scgc.fill(initial_temperatures[0]);
 
-	for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-	  if (report.test_verbose(3))
-	    std::cout << "Setting Species : "
-		      << species[iSpecies].cName << "\n";
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+          if (report.test_verbose(3))
+            std::cout << "Setting Species : "
+                      << species[iSpecies].cName << "\n";
 
-	  if (msis.is_valid_species(species[iSpecies].cName)) {
-	    if (report.test_verbose(3))
-	      std::cout << "  Found in MSIS!\n";
+          if (msis.is_valid_species(species[iSpecies].cName)) {
+            if (report.test_verbose(3))
+              std::cout << "  Found in MSIS!\n";
 
-	    species[iSpecies].density_scgc =
-	      msis.get_cube(species[iSpecies].cName);
-	  } else {
-	    if (report.test_verbose(3))
-	      std::cout << "  NOT Found in MSIS - setting constant\n";
+            species[iSpecies].density_scgc =
+              msis.get_cube(species[iSpecies].cName);
+          } else {
+            if (report.test_verbose(3))
+              std::cout << "  NOT Found in MSIS - setting constant\n";
 
-	    species[iSpecies].density_scgc.slice(0).
-	      fill(species[iSpecies].lower_bc_density);
-	    fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
-	  }
+            species[iSpecies].density_scgc.slice(0).
+            fill(species[iSpecies].lower_bc_density);
+            fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
+          }
 
-	} // for species
+        } // for species
       } // msis init worked ok
     } // type = msis
 
@@ -171,7 +173,7 @@ bool Neutrals::initial_conditions(Grid grid,
 
   if (!didWork)
     report.error("Issue with initial conditions!");
-  
+
   report.exit(function);
   return didWork;
 }
