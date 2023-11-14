@@ -343,70 +343,42 @@ precision_t Neutrals::calc_dt(Grid grid) {
   arma_vec dta(4);
 
   // simply some things, and just take the bulk value for now:
-  arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
-  dta(0) = dtx.min();
 
-  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
-  dta(1) = dty.min();
+  if (input.get_is_cubesphere()) {
+    // Get some dimensions
+    int64_t nAlts = grid.get_nAlts();
+    int64_t nXs = grid.get_nLons();
+    int64_t nYs = grid.get_nLats();
+    
+    // dtx dty for reference coordinate system
+    arma_cube dtx(size(cMax_vcgc[0]));
+    arma_cube dty(size(cMax_vcgc[0]));
 
-  if (input.get_nAltsGeo() > 1) {
-    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
-    dta(2) = dtz.min();
-  } else
-    dta(2) = 1e32;
+    // A dummy constant one matrix
+    arma_mat dummy_1(nXs, nYs, fill::ones);
 
-  dta(3) = 10.0;
+    // Loop through altitudes
+    for (int iAlt = 0; iAlt < nAlts; iAlt++) {
+      // Conver cMax to contravariant velocity first
+      arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) 
+        + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
+      arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) 
+        + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
 
-  dt = dta.min();
+      // Extract a scalar dx and divide by contravariant velocity
+      dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
+      dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+    }
+    dta(0) = dtx.min();
+    dta(1) = dty.min();
+  } else {
+    arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+    dta(0) = dtx.min();
 
-  if (dt < 0.0) dt = 2.0;
-
-  if (report.test_verbose(3))
-    std::cout << "dt for neutrals : " << dt << "\n";
-
-  if (report.test_verbose(4))
-    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
-
-  report.exit(function);
-  return dt;
-}
-
-precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
-
-  std::string function = "Neutrals::calc_dt_cubesphere";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  int iDir;
-
-  arma_vec dta(4);
-
-  // Get some dimensions
-  int64_t nAlts = grid.get_nAlts();
-  int64_t nXs = grid.get_nLons();
-  int64_t nYs = grid.get_nLats();
-  
-  // dtx dty for reference coordinate system
-  arma_cube dtx(size(cMax_vcgc[0]));
-  arma_cube dty(size(cMax_vcgc[0]));
-
-  // A dummy constant one matrix
-  arma_mat dummy_1(nXs, nYs, fill::ones);
-
-  // Loop through altitudes
-  for (int iAlt = 0; iAlt < nAlts; iAlt++) {
-    // Conver cMax to contravariant velocity first
-    arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
-    arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
-
-    dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
-    dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+    arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+    dta(1) = dty.min();
   }
-
-  // simply some things, and just take the bulk value for now:
-  dta(0) = dtx.min();
-  dta(1) = dty.min();
-
+  
   if (input.get_nAltsGeo() > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
