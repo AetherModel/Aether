@@ -20,13 +20,13 @@
 //
 // -------------------------------------------------------------------------
 
-int calc_euv(Planets planet,
-             Grid grid,
-             Times time,
-             Euv &euv,
-             Neutrals &neutrals,
-             Ions &ions,
-             Indices indices);
+bool calc_euv(Planets planet,
+	      Grid grid,
+	      Times time,
+	      Euv &euv,
+	      Neutrals &neutrals,
+	      Ions &ions,
+	      Indices indices);
 
 void calc_ionization_heating(Euv euv,
 			     Neutrals &neutrals,

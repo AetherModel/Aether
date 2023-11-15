@@ -984,11 +984,11 @@ if __name__ == '__main__':  # main code block
                 write_and_plot_data(ensembleData, fileInfo['ensembleFile'],
                                     '_mean', iVar, iAlt, output_netcdf)
                 
-                stdData = calc_std_of_ensembles(filesInfo,
-                                                ensembleIndexList,
-                                                ensembleData)
-                write_and_plot_data(stdData, fileInfo['ensembleFile'],
-                                    '_std', iVar, iAlt, output_netcdf)
+                #stdData = calc_std_of_ensembles(filesInfo,
+                #                                ensembleIndexList,
+                #                                ensembleData)
+                #write_and_plot_data(stdData, fileInfo['ensembleFile'],
+                #                    '_std', iVar, iAlt, output_netcdf)
                             
         if (args.rm):
             print('  --> Removing files ...')

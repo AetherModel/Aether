@@ -252,20 +252,25 @@ Logfile::Logfile(Indices &indices) {
   std::vector<std::string> sat_names = input.get_satellite_names();
   std::vector<precision_t> sat_dts = input.get_satellite_dts();
 
-  // Open the general log file stream
-  if (doAppend)
-    logfilestream.open(logfileName, std::ofstream::app);
+  bool isRestart = input.get_do_restart();
 
-  else {
-    logfilestream.open(logfileName, std::ofstream::trunc);
-    logfilestream.precision(4);
-  }
+  // Only the 0th processor in each member needs to open the logfile
 
-  // Report error if can not open the log file stream
-  if (!logfilestream.is_open()) {
-    // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD
-    // NOT BE EXECUTED
-    throw std::string("Can not open log file");
+  if (iGrid == 0) {
+    // Open the general log file stream
+    if (doAppend)
+      logfilestream.open(logfileName, std::ofstream::app);
+    else {
+      logfilestream.open(logfileName, std::ofstream::trunc);
+      logfilestream.precision(4);
+    }
+
+    // Report error if can not open the log file stream
+    if (!logfilestream.is_open() & !isRestart) {
+      // TRY TO EXIT GRACEFULLY HERE. ALL THE FOLLOWING CODE SHOULD
+      // NOT BE EXECUTED
+      throw std::string("Can not open log file");
+    }
   }
 
   // The header of time. They are placed at the beginning of all values
@@ -288,12 +293,16 @@ Logfile::Logfile(Indices &indices) {
   for (int i = 0; i < indices.all_indices_array_size(); ++i)
     header_log += ' ' + indices.get_name(i);
 
-  // Write the header to log
-  logfilestream << header_time << header_log << '\n';
+  // only the 0th processor writes to the logfile
+  if (logfilestream.is_open()) {
+    // Write the header to log
+    if (!isRestart)
+      logfilestream << header_time << header_log << '\n';
 
-  // Close the file stream if append
-  if (doAppend)
-    logfilestream.close();
+    // Close the file stream if append
+    if (doAppend)
+      logfilestream.close();
+  }
 
   // Check whether the input settings contain Satellites
   if (!sat_files.empty()) {
@@ -329,7 +338,8 @@ Logfile::Logfile(Indices &indices) {
 //-------------------------------------------------------------
 
 Logfile::~Logfile() {
-  if (!doAppend)
+  // only the 0th processor in each ensemble opened the file
+  if (!doAppend & iGrid == 0)
     logfilestream.close();
 }
 
@@ -410,7 +420,7 @@ bool Logfile::write_logfile(Indices &indices,
   }
 
   // Check if the time gate for general log file is open
-  if (iProc == 0 && time.check_time_gate(dt)) {
+  if (iGrid == 0 && time.check_time_gate(dt)) {
     // Open the file stream if append
     if (doAppend) {
       logfilestream.open(logfileName, std::ofstream::app);
@@ -419,7 +429,7 @@ bool Logfile::write_logfile(Indices &indices,
 
     // Report error if the file stream is not open
     if (!logfilestream.is_open()) {
-      std::cout << "Logfile: Can not open output file stream!\n";
+      report.error("Logfile: Can not open output file stream!");
       report.exit(function);
       return false;
     }
@@ -455,43 +465,6 @@ bool Logfile::write_logfile(Indices &indices,
     if (doAppend)
       logfilestream.close();
   }
-
-  // Report error if the file stream is not open
-  if (!logfilestream.is_open()) {
-    std::cout << "Logfile: Can not open output file stream!\n";
-    return false;
-  }
-
-  std::vector<precision_t> values_log;
-  std::vector<precision_t> min_mean_max;
-  // Temperature
-  min_mean_max = get_min_mean_max(neutrals.temperature_scgc);
-  values_log.insert(values_log.end(),
-                    min_mean_max.begin(),
-                    min_mean_max.end());
-  // Temperature at the chosen point
-  values_log.push_back(neutrals.temperature_scgc(lla[0],
-                                                 lla[1],
-                                                 lla[2]));
-
-  // Specified variables
-  for (auto it : species) {
-    min_mean_max = get_min_mean_max_density(it, neutrals, ions);
-    values_log.insert(values_log.end(),
-                      min_mean_max.begin(),
-                      min_mean_max.end());
-  }
-
-  // Indices
-  for (int i = 0; i < indices.all_indices_array_size(); ++i)
-    values_log.push_back(indices.get_index(current, i));
-
-  // Output
-  write_logfile_line(logfilestream, iCurrent, values_log);
-
-  // Close the file stream if append
-  if (doAppend)
-    logfilestream.close();
 
   report.exit(function);
   return true;

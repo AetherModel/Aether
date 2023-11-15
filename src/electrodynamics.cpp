@@ -33,10 +33,10 @@ Electrodynamics::Electrodynamics(Times time) {
 // Update Electrodynamics
 // -----------------------------------------------------------------------------
 
-int Electrodynamics::update(Planets planet,
-                            Grid gGrid,
-                            Times time,
-                            Ions &ions) {
+bool Electrodynamics::update(Planets planet,
+                             Grid gGrid,
+                             Times time,
+                             Ions &ions) {
 
   std::string function = "Electrodynamics::update";
   static int iFunction = -1;
@@ -60,7 +60,7 @@ int Electrodynamics::update(Planets planet,
   }
 
   report.exit(function);
-  return 0;
+  return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -181,8 +181,6 @@ arma_mat Electrodynamics::get_values(arma_mat matToInterpolateOn,
 // -----------------------------------------------------------------------------
 // Get potential, electron energy flux, and electron average energy patterns
 // -----------------------------------------------------------------------------
-
-//average energy and eflux energy as well call to get_values
 
 std::tuple<arma_cube,
     arma_mat,

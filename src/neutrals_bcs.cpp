@@ -32,9 +32,16 @@ bool Neutrals::set_bcs(Grid grid,
 
   if (input.get_nAltsGeo() > 1) {
     didWork = set_lower_bcs(grid, time, indices);
-    didWork = set_upper_bcs(grid);
-    calc_mass_density();
+
+    if (didWork)
+      didWork = set_upper_bcs(grid);
+
+    if (didWork)
+      calc_mass_density();
   }
+
+  if (!didWork)
+    report.error("issue with BCs!");
 
   report.exit(function);
   return didWork;
@@ -106,17 +113,19 @@ bool Neutrals::set_lower_bcs(Grid grid,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  bool didWork = true;
+  bool didWork = false;
 
   json bcs = input.get_boundary_condition_types();
   int64_t nGCs = grid.get_nGCs();
   int64_t iSpecies, iAlt, iDir;
 
+  std::string bcsType = mklower(bcs["type"]);
+
   //-----------------------------------------------
   // MSIS BCs - only works if FORTRAN is enabled!
   //-----------------------------------------------
 
-  if (bcs["type"] == "Msis") {
+  if (bcsType == "msis") {
 
     report.print(2, "Using MSIS for Boundary Conditions");
 
@@ -124,12 +133,14 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
     if (!msis.is_ok()) {
       didWork = false;
+      report.error("MSIS initialization not ok");
 
       if (report.test_verbose(0)) {
         std::cout << "MSIS Boundary Conditions asked for, ";
         std::cout << "but MSIS is not compiled! Yikes!\n";
       }
-    }
+    } else
+      didWork = true;
 
     msis.set_time(time);
     precision_t f107 = indices.get_f107(time.get_current());
@@ -174,7 +185,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
   // Planet BCs - set to fixed constant values.
   //-----------------------------------------------
 
-  if (bcs["type"] == "Planet") {
+  if (bcsType == "planet") {
 
     report.print(2, "setting lower bcs to planet");
 
@@ -185,6 +196,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
     }
 
     temperature_scgc.slice(0).fill(initial_temperatures[0]);
+    didWork = true;
   }
 
   // fill the second+ grid cells with the bottom temperature:
@@ -206,6 +218,11 @@ bool Neutrals::set_lower_bcs(Grid grid,
       // bulk velocity:
       velocity_vcgc[iDir].slice(iAlt).zeros();
     }
+  }
+
+  if (!didWork) {
+    report.error("issue with lower BCs!");
+    report.error("maybe check boundaryconditions type : " + bcsType);
   }
 
   report.exit(function);

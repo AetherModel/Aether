@@ -306,7 +306,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                 species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ) = -100.0;
             }
 
-            if (newTemperature_scgc(iX, iY, iZ) < 200.0 ||
+            if (newTemperature_scgc(iX, iY, iZ) < 100.0 ||
                 std::isnan(newTemperature_scgc(iX, iY, iZ))) {
               std::cout << "low temp found : "
                         << iX << " "
