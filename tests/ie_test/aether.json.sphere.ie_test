@@ -1,0 +1,44 @@
+
+{
+    "Ensembles" : {
+	"nMembers" : 1},
+
+    "Debug" : {
+	"iVerbose" : 0,
+        "iFunctionVerbose" : {
+            "Grid::create_altitudes": 0},	
+	"dt" : 10.0,
+	"check_for_nans" : false
+    },
+
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "GeoBlockSize" : {
+	"nLons" : 22,
+	"nLats" : 18,
+	"nAlts" : 50},
+
+    "CubeSphere" : {
+	"is" : false},
+
+    "Electrodynamics" : {
+	"Potential" : "Weimer05",
+	"DiffuseAurora" : "fta",
+	"Dir" : "UA/inputs/ext/ie/",
+	"File" : ""},
+
+    "GeoGrid" : {
+	"dAlt"   : 0.25,
+	"IsUniformAlt" : false},    
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [900] },
+    
+    "DoCalcBulkIonTemp" : false,
+    
+    "PlanetFile" : "UA/inputs/earth.in"
+    
+}
