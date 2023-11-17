@@ -123,6 +123,7 @@ public:
   
   std::string get_settings_str(std::string key1);
   std::string get_settings_str(std::string key1, std::string key2);
+  int get_settings(std::string key1, std::string key2);
   bool check_settings(std::string key1, std::string key2);
   bool check_settings(std::string key1);
   std::string check_settings_str(std::string key1, std::string key2);

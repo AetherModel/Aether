@@ -29,7 +29,7 @@ bool Inputs::read_inputs_json(Times &time) {
   // Set the default values first:
   settings = read_json("UA/inputs/defaults.json");
   DidWork = set_verbose(settings);
-    
+
   // Set the planet-specific file (user can change this in aether.in file!):
   settings["PlanetSpeciesFile"] = settings["Planet"]["file"];
 
@@ -44,14 +44,15 @@ bool Inputs::read_inputs_json(Times &time) {
     //   - This is BEFORE the user inputs are merged!!!
 
     if (user_inputs.contains("Restart")) {
-      cout << "Contains restart" << endl;
-
       if (user_inputs["Restart"].contains("do")) {
         if (user_inputs["Restart"]["do"]) {
           std::string restart_file = settings["Restart"]["InDir"];
           restart_file = restart_file + "/settings.json";
           json restart_inputs;
           restart_inputs = read_json(restart_file);
+          // This forces the logfile to append.  User can override
+          // if they really want:
+          restart_inputs["Logfile"]["append"] = true;
           settings.merge_patch(restart_inputs);
         }
       }
@@ -68,12 +69,12 @@ bool Inputs::read_inputs_json(Times &time) {
     report.print(1, "Using planet file : " + planet_filename);
 
     // Debug Stuff:
-    report.set_verbose(settings["Debug"]["iVerbose"]);
-    report.set_DefaultVerbose(settings["Debug"]["iVerbose"]);
+    report.set_verbose(get_settings("Debug", "iVerbose"));
+    report.set_DefaultVerbose(get_settings("Debug", "iVerbose"));
     report.set_doInheritVerbose(settings["Debug"]["doInheritVerbose"]);
-    report.set_timing_depth(settings["Debug"]["iTimingDepth"]);
+    report.set_timing_depth(get_settings("Debug", "iTimingDepth"));
     report.set_timing_percent(settings["Debug"]["TimingPercent"]);
-    report.set_iProc(settings["Debug"]["iProc"]);
+    report.set_iProc(get_settings("Debug", "iProc"));
 
     for (auto &item : settings["Debug"]["iFunctionVerbose"].items())
       report.set_FunctionVerbose(item.key(), item.value());

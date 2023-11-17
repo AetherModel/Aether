@@ -153,3 +153,77 @@ arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
   return gradient;
 }
 
+// --------------------------------------------------------------------------
+// Calculate the gradient in cubesphere spatial discretization
+// --------------------------------------------------------------------------
+std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
+  // Must be used for cubesphere (Probably need a boolean check)
+  int64_t nXs = grid.get_nY();
+  int64_t nYs = grid.get_nX();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t nAlts = grid.get_nAlts();
+
+  // Initialize two arma cubes for return
+  arma_cube grad_lon(nXs, nYs, nAlts);
+  arma_cube grad_lat(nXs, nYs, nAlts);
+
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
+    /** Extract Grid Features **/
+    // Addition: Get a copy of dx dy
+    arma_mat curr_refx = grid.refx_scgc.slice(iAlt);
+    arma_mat curr_refy = grid.refy_scgc.slice(iAlt);
+
+    // Get some dx dy metrics from the grid
+    precision_t dx = grid.drefx(iAlt);
+    precision_t dy = grid.drefy(iAlt);
+
+    // Get values of current level
+    arma_mat curr_value = value.slice(iAlt);
+
+    /** Calculate Gradient with Central Difference Scheme **/
+    // Since Reference grid is orthogonal, we only need gradient along reference xy direction
+    // Then we convert gradient from xy direction ot lat-lon direction
+
+    arma_mat grad_x_curr(nXs, nYs);
+    arma_mat grad_y_curr(nXs, nYs);
+
+    // Calc gradient on x and y direction (since reference grid)
+    // Only update interior cells
+    // May vectorize for future improvements
+
+    if (nGCs >=
+        2) { // if more than 1 nGCs, we do fourth order, some foolproofing in case we go into debug hell
+      for (int j = nGCs; j < nYs - nGCs; j++) {
+        for (int i = nGCs; i < nXs - nGCs; i++) {
+          grad_x_curr(i, j) = (-curr_value(i + 2, j) + 8 * curr_value(i + 1,
+                                                                      j) - 8 * curr_value(i - 1, j) + curr_value(i - 2, j)) * (1. / 12. / dx);
+          grad_y_curr(i, j) = (-curr_value(i, j + 2) + 8 * curr_value(i,
+                                                                      j + 1) - 8 * curr_value(i, j - 1) + curr_value(i, j - 2)) * (1. / 12. / dy);
+        }
+      }
+    } else { // otherwise we do second order
+      for (int j = nGCs; j < nYs - nGCs; j++) {
+        for (int i = nGCs; i < nXs - nGCs; i++) {
+          grad_x_curr(i, j) = (curr_value(i + 1, j) - curr_value(i - 1,
+                                                                 j)) * (1. / 2. / dx);
+          grad_y_curr(i, j) = (curr_value(i, j + 1) - curr_value(i,
+                                                                 j - 1)) * (1. / 2. / dy);
+        }
+      }
+    }
+
+    // We then use A transformation matrices to convert grad_xy to grad_latlon
+    // Ref -> Physical, we use A matrix
+    grad_lon.slice(iAlt) = grad_x_curr % grid.A11_inv_scgc.slice(
+                             iAlt) + grad_y_curr % grid.A21_inv_scgc.slice(iAlt);
+    grad_lat.slice(iAlt) = grad_x_curr % grid.A12_inv_scgc.slice(
+                             iAlt) + grad_y_curr % grid.A22_inv_scgc.slice(iAlt);
+  }
+
+  // Not initializing with array like procedure in case I get bugs
+  std::vector<arma_cube> gradient;
+  gradient.push_back(grad_lon);
+  gradient.push_back(grad_lat);
+
+  return gradient;
+}

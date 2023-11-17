@@ -67,11 +67,12 @@ class Electrodynamics {
      \param ions Going to set the potential and aurora
    **/
   
-  int update(Planets planet,
-	     Grid gGrid,
-	     Times time,
-       Indices &indices,
-	     Ions &ions);
+  bool update(Planets planet,
+	      Grid gGrid,
+	      Times time,
+        Indices &indices,
+        Ions &ions);
+
 
   /**************************************************************
      \brief used in main.cpp to ensure electrodynamics times and

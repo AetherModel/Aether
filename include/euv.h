@@ -107,28 +107,28 @@ public:
      \param time The times within the model (dt is needed)
      \param indices Need the F107 and F107a
    **/
-  int euvac(Times time, Indices indices);
+  bool euvac(Times time, Indices indices);
 
  /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a
      \param time The times within the model (dt is needed)
      \param indices Need the F107 and F107a
    **/
-  int solomon_hfg(Times time, Indices indices);
+ bool solomon_hfg(Times time, Indices indices);
   
   /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a (new version)
      \param time The times within the model (dt is needed)
      \param indices Need the F107 and F107a
    **/
-  int neuvac(Times time, Indices indices);
+  bool neuvac(Times time, Indices indices);
 
   /**********************************************************************
      \brief Scale the EUV spectrum given the star - planet distance
      \param planet needed to compute the star - planet distance
      \param time Needed to compute orbital position around star
    **/
-  int scale_from_1au(Planets planet, Times time);
+  void scale_from_1au(Planets planet, Times time);
 
   /**********************************************************************
      \brief Pairs rows in the EUV CSV file with neutral and ions
@@ -142,8 +142,7 @@ public:
      \param neutrals Needs names of the neutrals, stores lines in Neutrals
      \param ions Needs names of the ions
    **/
-  bool pair_euv(Neutrals &neutrals,
-		Ions ions);
+  bool pair_euv(Neutrals &neutrals, Ions ions);
 
   /**********************************************************************
      \brief Check to see if internal state of class is ok

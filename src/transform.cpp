@@ -7,6 +7,18 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
+// transform string to lower case
+// -----------------------------------------------------------------------
+
+std::string mklower(std::string inString) {
+  std::string outString = inString;
+  int64_t nChars = outString.length();
+  for (int64_t iChar = 0; iChar < nChars; iChar++)
+    outString[iChar] = tolower(outString[iChar]);
+  return outString;
+}
+
+// -----------------------------------------------------------------------
 // copy the ascii characters from a string into an int c-array
 //   - this is so we can pass the array to Fortran.
 //   - then in fortran, we convert back
@@ -16,12 +28,10 @@ int* copy_string_to_int(std::string inString) {
   const int length = inString.length(); 
   // declaring character array
   int* outArray = new int[400]; 
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++)
     outArray[i] = inString[i];
-  }
-  for (int i = length; i < 400; i++) {
+  for (int i = length; i < 400; i++)
     outArray[i] = 0;
-  }
   return outArray;
 }
 

@@ -10,6 +10,9 @@
 #include "aether.h"
 using namespace arma;
 
+std::string mklower(std::string inString);
+std::string mkupper(std::string inString);
+
 void copy_cube_to_array(arma_cube cube_in,
                         float *array_out);
 void copy_mat_to_array(arma_mat mat_in,

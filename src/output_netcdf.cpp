@@ -158,9 +158,9 @@ int OutputContainer::read_container_netcdf() {
 // dump the contents of the container out into a binary file
 // -----------------------------------------------------------------------------
 
-int OutputContainer::write_container_netcdf() {
+bool OutputContainer::write_container_netcdf() {
 
-  int iErr = 0;
+  bool didWork = true;
   std::string whole_filename = directory + "/" + filename + ".nc";
   std::string UNITS = "units";
   std::string LONG_NAME = "long_name";
@@ -204,12 +204,11 @@ int OutputContainer::write_container_netcdf() {
 
     ncdf_file.close();
   } catch (...) {
-    std::cout << "Error writing netcdf container file : "
-              << whole_filename << "\n";
-    iErr = 1;
+    report.error("Error writing netcdf container file : " + whole_filename);
+    didWork = false;
   }
 
-  return iErr;
+  return didWork;
 }
 
 #else
@@ -226,10 +225,10 @@ int OutputContainer::read_container_netcdf() {
   return iErr;
 }
 
-int OutputContainer::write_container_netcdf() {
-  int iErr = 1;
-  std::cout << "write_container_netcdf is not working!\n";
-  return iErr;
+bool OutputContainer::write_container_netcdf() {
+  bool didWork = false;
+  report.error("write_container_netcdf is not working!");
+  return didWork;
 }
 
 #endif

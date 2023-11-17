@@ -312,9 +312,8 @@ bool Euv::pair_euv(Neutrals &neutrals,
 // Scale flux (intensity) at 1 AU to distance from the sun:
 // --------------------------------------------------------------------------
 
-int Euv::scale_from_1au(Planets planet,
-                        Times time) {
-  int iErr = 0;
+void Euv::scale_from_1au(Planets planet,
+                         Times time) {
   precision_t d = planet.get_star_to_planet_dist(time);
   precision_t scale = 1.0 / (d * d);
 
@@ -324,17 +323,17 @@ int Euv::scale_from_1au(Planets planet,
   for (int iWave = 0; iWave < nWavelengths; iWave++)
     wavelengths_intensity_top[iWave] = scale * wavelengths_intensity_1au[iWave];
 
-  return iErr;
+  return;
 }
 
 // --------------------------------------------------------------------------
 // Calculate EUVAC
 // --------------------------------------------------------------------------
 
-int Euv::euvac(Times time,
-               Indices indices) {
+bool Euv::euvac(Times time,
+                Indices indices) {
 
-  int iErr = 0;
+  bool didWork = true;
   precision_t slope;
 
   std::string function = "Euv::euvac";
@@ -368,17 +367,17 @@ int Euv::euvac(Times time,
   }
 
   report.exit(function);
-  return iErr;
+  return didWork;
 }
 
 // --------------------------------------------------------------------------
 // Calculate EUVAC
 // --------------------------------------------------------------------------
 
-int Euv::neuvac(Times time,
-                Indices indices) {
+bool Euv::neuvac(Times time,
+                 Indices indices) {
 
-  int iErr = 0;
+  bool didWork = true;
   precision_t slope;
 
   std::string function = "Euv::neuvac";
@@ -412,21 +411,21 @@ int Euv::neuvac(Times time,
   }
 
   report.exit(function);
-  return iErr;
+  return didWork;
 }
 
 // --------------------------------------------------------------------------
 // Calculate HFG
 // --------------------------------------------------------------------------
 
-int Euv::solomon_hfg(Times time,
-                     Indices indices) {
+bool Euv::solomon_hfg(Times time,
+                      Indices indices) {
 
   std::string function = "Euv::solomon_hfg";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int iErr = 0;
+  bool didWork = true;
   precision_t r1;
   precision_t r2;
 
@@ -455,7 +454,7 @@ int Euv::solomon_hfg(Times time,
   }
 
   report.exit(function);
-  return iErr;
+  return didWork;
 }
 
 // --------------------------------------------------------------------------

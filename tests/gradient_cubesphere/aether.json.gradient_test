@@ -1,0 +1,18 @@
+
+{
+
+    "GeoBlockSize" : {
+	"nLons" : 50,
+	"nLats" : 50,
+	"nAlts" : 10},
+
+    "CubeSphere" : {
+	"is" : true},
+
+    "GeoGrid" : {
+	"dAlt"   : 0.25,
+	"IsUniformAlt" : false},    
+
+    "PlanetFile" : "UA/inputs/earth.in"
+    
+}

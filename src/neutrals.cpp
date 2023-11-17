@@ -72,6 +72,7 @@ Neutrals::Neutrals(Grid grid,
                    Indices indices) {
 
   int iErr;
+  bool didWork = true;
   species_chars tmp;
 
   int64_t nLons = grid.get_nLons();
@@ -141,13 +142,13 @@ Neutrals::Neutrals(Grid grid,
   iErr = read_planet_file(planet);
 
   if (iErr > 0)
-    std::cout << "Error reading planet file!" << '\n';
+    report.error("Error reading planet file!");
 
   // This specifies the initial conditions for the neutrals:
-  iErr = initial_conditions(grid, time, indices);
+  didWork = initial_conditions(grid, time, indices);
 
-  if (iErr > 0)
-    std::cout << "Error in setting neutral initial conditions!" << '\n';
+  if (!didWork)
+    report.error("Error in setting neutral initial conditions!");
 
   return;
 }

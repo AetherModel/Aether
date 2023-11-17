@@ -328,8 +328,7 @@ void Neutrals::calc_cMax() {
 }
 
 // ----------------------------------------------------------------------
-// Calculate cMax, which is the sound speed + velocity in each
-// direction
+// Calculate dt primarily for the spherical grid
 // ----------------------------------------------------------------------
 
 precision_t Neutrals::calc_dt(Grid grid) {
@@ -372,6 +371,10 @@ precision_t Neutrals::calc_dt(Grid grid) {
   report.exit(function);
   return dt;
 }
+
+// ----------------------------------------------------------------------
+// Calculate dt for the cubesphere grid.
+// ----------------------------------------------------------------------
 
 precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
 

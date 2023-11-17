@@ -94,7 +94,7 @@ void calc_neutral_friction(Neutrals &neutrals) {
   for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
     for (iDir = 0; iDir < 3; iDir++)
       neutrals.species[iSpecies].acc_neutral_friction[iDir].zeros();
-  
+
   if (input.get_advection_neutrals_vertical() != "hydro") {
 
     arma_vec vels(neutrals.nSpeciesAdvect, fill::zeros);

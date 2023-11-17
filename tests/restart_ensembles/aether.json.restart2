@@ -1,0 +1,67 @@
+
+{
+    "Ensembles" : {
+	"nMembers" : 5},
+
+    "Perturb": {
+	"f107" : { "Mean" : 0.9,
+		   "Std" : 0.1,
+		   "Add" : false,
+		   "Constant" : true},
+	"f107a" : { "Mean" : 1.0,
+		    "Std" : 0.02,
+		    "Add" : false,
+		    "Constant" : true}}, 
+    
+    "Restart" : {
+	"do" : true,
+	"OutDir" : "UA/restartOut",
+	"InDir" : "UA/restartIn",
+	"dt" : 3600.0},
+
+    "Debug" : {
+	"iVerbose" : 0,
+        "iFunctionVerbose" : {
+            "Grid::create_altitudes": 0},	
+	"dt" : 10.0,
+	"check_for_nans" : false
+    },
+
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "GeoBlockSize" : {
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 50},
+
+    "GeoGrid" : {
+	"dAlt"   : 0.25,
+	"IsUniformAlt" : false},    
+
+    "InitialConditions" : {
+	"type" : "msis"},
+
+    "BoundaryConditions" : {
+	"type" : "msis"},
+
+    "Advection" : {
+	"Neutrals" : {
+	    "Vertical" : "hydro",
+	    "Horizontal" : "default"},
+	"Ions" : {
+	    "Along" : "rusanov",
+	    "Across" : "default"} },
+    
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+    
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [900] },
+    
+    "DoCalcBulkIonTemp" : false,
+    
+    "PlanetFile" : "UA/inputs/earth.in"
+    
+}

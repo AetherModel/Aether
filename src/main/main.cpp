@@ -12,7 +12,7 @@ int main() {
 
   int iErr = 0;
   std::string sError;
-  bool DidWork = true;
+  bool didWork = true;
 
   Times time;
 
@@ -36,13 +36,13 @@ int main() {
       throw std::string("quadtree initialization failed!");
     
     // Initialize MPI and parallel aspects of the code:
-    DidWork = init_parallel(quadtree);
-    if (!DidWork)
+    didWork = init_parallel(quadtree);
+    if (!didWork)
       throw std::string("init_parallel failed!");
 
     // Everything should be set for the inputs now, so write a restart file:
-    DidWork = input.write_restart();
-    if (!DidWork)
+    didWork = input.write_restart();
+    if (!didWork)
       throw std::string("input.write_restart failed!");
 
     // Initialize the EUV system:
@@ -58,9 +58,9 @@ int main() {
 
     // Initialize the indices, read the files, and perturb:
     Indices indices;
-    DidWork = read_and_store_indices(indices);
+    didWork = read_and_store_indices(indices);
     MPI_Barrier(aether_comm);
-    if (!DidWork)
+    if (!didWork)
       throw std::string("read_and_store_indices failed!");
     
     // Perturb the inputs if user has asked for this
@@ -72,9 +72,9 @@ int main() {
 	       input.get_nLatsGeo(),
 	       input.get_nAltsGeo(),
 	       nGeoGhosts);
-    DidWork = gGrid.init_geo_grid(quadtree, planet);
+    didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
-    if (!DidWork)
+    if (!didWork)
       throw std::string("init_geo_grid failed!");  
 
     // Calculate centripetal acceleration, since this is a constant
@@ -103,8 +103,8 @@ int main() {
     }
 
     if (input.get_check_for_nans()) {
-      DidWork = neutrals.check_for_nonfinites();
-      DidWork = ions.check_for_nonfinites();
+      didWork = neutrals.check_for_nonfinites();
+      didWork = ions.check_for_nonfinites();
     }
 
     // -----------------------------------------------------------------
@@ -130,14 +130,16 @@ int main() {
     // If the user wants to restart, then get the time of the restart
     if (input.get_do_restart()) {
       report.print(1, "Restarting! Reading time file!");
-      DidWork = time.restart_file(input.get_restartin_dir(), DoRead);
-      if (!DidWork)
+      didWork = time.restart_file(input.get_restartin_dir(), DoRead);
+      if (!didWork)
 	throw std::string("Reading Restart for time Failed!!!\n");
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
     if (time.check_time_gate(input.get_dt_output(0)))
-      iErr = output(neutrals, ions, gGrid, time, planet);
+      didWork = output(neutrals, ions, gGrid, time, planet);
+    if (!didWork)
+      throw std::string("output failed!");  
 
     // This is advancing now... We are not coupling, so set dt_couple to the
     // end of the simulation
@@ -157,18 +159,21 @@ int main() {
       time.increment_intermediate(dt_couple);
 
       // Increment until the intermediate time:
-      while (time.get_current() < time.get_intermediate())
-	iErr = advance(planet,
-		       gGrid,
-		       time,
-		       euv,
-		       neutrals,
-		       ions,
-		       chemistry,
-		       electrodynamics,
-		       indices,
-		       logfile);
-
+      while (time.get_current() < time.get_intermediate()) {
+	didWork = advance(planet,
+			  gGrid,
+			  time,
+			  euv,
+			  neutrals,
+			  ions,
+			  chemistry,
+			  electrodynamics,
+			  indices,
+			  logfile);
+	if (!didWork)
+	  throw std::string("Error in advance!");  
+      }
+      
       // Should write out some restart files every time we are done with
       // intermediate times.  Just so when we restart, we know that we can
       // couple first thing and everything should be good. (Not sure if
@@ -182,16 +187,16 @@ int main() {
       if (!time.check_time_gate(input.get_dt_write_restarts())) {
 	report.print(3, "Writing restart files");
 
-	DidWork = neutrals.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
+	didWork = neutrals.restart_file(input.get_restartout_dir(), DoWrite);
+	if (!didWork)
 	  throw std::string("Writing Restart for Neutrals Failed!!!\n");	
 
-	DidWork = ions.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
+	didWork = ions.restart_file(input.get_restartout_dir(), DoWrite);
+	if (!didWork)
 	  throw std::string("Writing Restart for Ions Failed!!!\n");	
 
-	DidWork = time.restart_file(input.get_restartout_dir(), DoWrite);
-	if (!DidWork)
+	didWork = time.restart_file(input.get_restartout_dir(), DoWrite);
+	if (!didWork)
 	  throw std::string("Writing Restart for time Failed!!!\n");	
       }
 
