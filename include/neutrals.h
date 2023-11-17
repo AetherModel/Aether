@@ -339,6 +339,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   precision_t calc_dt(Grid grid);
+  precision_t calc_dt_cubesphere(Grid grid);
 
   /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
