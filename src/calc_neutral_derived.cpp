@@ -328,8 +328,7 @@ void Neutrals::calc_cMax() {
 }
 
 // ----------------------------------------------------------------------
-// Calculate cMax, which is the sound speed + velocity in each
-// direction
+// Calculate dt primarily for the spherical grid
 // ----------------------------------------------------------------------
 
 precision_t Neutrals::calc_dt(Grid grid) {
@@ -338,47 +337,80 @@ precision_t Neutrals::calc_dt(Grid grid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int iDir;
+  if (input.get_is_cubesphere())
+    dt = calc_dt_cubesphere(grid);
+  else {
+    int iDir;
 
-  arma_vec dta(4);
+    arma_vec dta(4);
 
-  // simply some things, and just take the bulk value for now:
-
-  if (input.get_is_cubesphere()) {
-    // Get some dimensions
-    int64_t nAlts = grid.get_nAlts();
-    int64_t nXs = grid.get_nLons();
-    int64_t nYs = grid.get_nLats();
-
-    // dtx dty for reference coordinate system
-    arma_cube dtx(size(cMax_vcgc[0]));
-    arma_cube dty(size(cMax_vcgc[0]));
-
-    // A dummy constant one matrix
-    arma_mat dummy_1(nXs, nYs, fill::ones);
-
-    // Loop through altitudes
-    for (int iAlt = 0; iAlt < nAlts; iAlt++) {
-      // Conver cMax to contravariant velocity first
-      arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt)
-                    + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
-      arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt)
-                    + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
-
-      // Extract a scalar dx and divide by contravariant velocity
-      dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1;
-      dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
-    }
-
-    dta(0) = dtx.min();
-    dta(1) = dty.min();
-  } else {
+    // simply some things, and just take the bulk value for now:
     arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
     dta(0) = dtx.min();
 
     arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
     dta(1) = dty.min();
+
+    if (input.get_nAltsGeo() > 1) {
+      arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+      dta(2) = dtz.min();
+    } else
+      dta(2) = 1e32;
+
+    dta(3) = 10.0;
+
+    dt = dta.min();
+
+    if (report.test_verbose(3))
+      std::cout << "dt (sphere) for neutrals : " << dt << "\n";
+
+    if (report.test_verbose(4))
+      std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
   }
+
+  report.exit(function);
+  return dt;
+}
+
+// ----------------------------------------------------------------------
+// Calculate dt for the cubesphere grid.
+// ----------------------------------------------------------------------
+
+precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt_cubesphere";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  arma_vec dta(4);
+
+  // Get some dimensions
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nXs = grid.get_nLons();
+  int64_t nYs = grid.get_nLats();
+  
+  // dtx dty for reference coordinate system
+  arma_cube dtx(size(cMax_vcgc[0]));
+  arma_cube dty(size(cMax_vcgc[0]));
+
+  // A dummy constant one matrix
+  arma_mat dummy_1(nXs, nYs, fill::ones);
+
+  // Loop through altitudes
+  for (int iAlt = 0; iAlt < nAlts; iAlt++) {
+    // Conver cMax to contravariant velocity first
+    arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
+    arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
+
+    dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
+    dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+  }
+
+  // simply some things, and just take the bulk value for now:
+  dta(0) = dtx.min();
+  dta(1) = dty.min();
 
   if (input.get_nAltsGeo() > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
@@ -391,7 +423,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
   dt = dta.min();
 
   if (report.test_verbose(3))
-    std::cout << "dt for neutrals : " << dt << "\n";
+    std::cout << "dt (cubesphere) for neutrals : " << dt << "\n";
 
   if (report.test_verbose(4))
     std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
