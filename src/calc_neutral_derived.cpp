@@ -338,32 +338,36 @@ precision_t Neutrals::calc_dt(Grid grid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int iDir;
+  if (input.get_is_cubesphere())
+    dt = calc_dt_cubesphere(grid);
+  else {
+    int iDir;
 
-  arma_vec dta(4);
+    arma_vec dta(4);
 
-  // simply some things, and just take the bulk value for now:
-  arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
-  dta(0) = dtx.min();
+    // simply some things, and just take the bulk value for now:
+    arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+    dta(0) = dtx.min();
 
-  arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
-  dta(1) = dty.min();
+    arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+    dta(1) = dty.min();
 
-  if (input.get_nAltsGeo() > 1) {
-    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
-    dta(2) = dtz.min();
-  } else
-    dta(2) = 1e32;
+    if (input.get_nAltsGeo() > 1) {
+      arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+      dta(2) = dtz.min();
+    } else
+      dta(2) = 1e32;
 
-  dta(3) = 10.0;
+    dta(3) = 10.0;
 
-  dt = dta.min();
+    dt = dta.min();
 
-  if (report.test_verbose(3))
-    std::cout << "dt for neutrals : " << dt << "\n";
+    if (report.test_verbose(3))
+      std::cout << "dt (sphere) for neutrals : " << dt << "\n";
 
-  if (report.test_verbose(4))
-    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+    if (report.test_verbose(4))
+      std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+  }
 
   report.exit(function);
   return dt;
@@ -416,7 +420,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   dt = dta.min();
 
   if (report.test_verbose(3))
-    std::cout << "dt for neutrals : " << dt << "\n";
+    std::cout << "dt (cubesphere) for neutrals : " << dt << "\n";
 
   if (report.test_verbose(4))
     std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
