@@ -77,7 +77,9 @@ bool advance(Planets &planet,
     didWork = electrodynamics.update(planet,
                                      gGrid,
                                      time,
+                                     indices,
                                      ions);
+
 
   if (didWork) {
     calc_ion_neutral_coll_freq(neutrals, ions);

@@ -25,17 +25,18 @@ arma_mat read_in_fmat_array(FILE *infile, int nRows, int nCols) {
   float dummy;
   int reclen;
   values.set_size(nCols, nRows);
+  int64_t iDummy;
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   for (int i = 0; i < nCols; i++) {
     for (int j = 0; j < nRows; j++) {
-      fread(&dummy, sizeof(dummy), 1, infile);
+      iDummy = fread(&dummy, sizeof(dummy), 1, infile);
       values(i, j) = dummy;
     }
   }
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   return values;
 }
@@ -49,14 +50,15 @@ std::vector<float> read_in_float_array(FILE *infile, int nPoints) {
   std::vector<float> values;
   float dummy;
   int reclen;
-  fread(&reclen, sizeof(reclen), 1, infile);
+  int64_t iDummy;
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   for (int i = 0; i < nPoints; i++) {
-    fread(&dummy, sizeof(dummy), 1, infile);
+    iDummy = fread(&dummy, sizeof(dummy), 1, infile);
     values.push_back(dummy);
   }
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   return values;
 }
@@ -70,15 +72,16 @@ std::vector<int> read_in_int_array(FILE *infile, int nPoints) {
   std::vector<int> values;
   int dummy;
   int reclen;
+  int64_t iDummy;
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   for (int i = 0; i < nPoints; i++) {
-    fread(&dummy, sizeof(dummy), 1, infile);
+    iDummy = fread(&dummy, sizeof(dummy), 1, infile);
     values.push_back(dummy);
   }
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   return values;
 }
@@ -92,15 +95,16 @@ std::string read_in_string(FILE *infile) {
   std::string value;
   char dummy;
   int reclen;
+  int64_t iDummy;
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   for (int i = 0; i < reclen; i++) {
-    fread(&dummy, sizeof(dummy), 1, infile);
+    iDummy = fread(&dummy, sizeof(dummy), 1, infile);
     value.push_back(dummy);
   }
 
-  fread(&reclen, sizeof(reclen), 1, infile);
+  iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
   return value;
 }
@@ -143,12 +147,13 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
 
   else {
 
+    int64_t iDummy;
     // read in number of lats, mlts, times:
-    fread(&reclen, sizeof(reclen), 1, infile);
-    fread(&nLats, sizeof(nLats), 1, infile);
-    fread(&nMlts, sizeof(nMlts), 1, infile);
-    fread(&nTimes, sizeof(nTimes), 1, infile);
-    fread(&reclen, sizeof(reclen), 1, infile);
+    iDummy = fread(&reclen, sizeof(reclen), 1, infile);
+    iDummy = fread(&nLats, sizeof(nLats), 1, infile);
+    iDummy = fread(&nMlts, sizeof(nMlts), 1, infile);
+    iDummy = fread(&nTimes, sizeof(nTimes), 1, infile);
+    iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
     std::vector<float> lats, mlts;
     lats = read_in_float_array(infile, nLats);
@@ -162,9 +167,9 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
     mlts_struct = conv_to<arma_mat>::from(mlts);
 
     // read in number of variables
-    fread(&reclen, sizeof(reclen), 1, infile);
-    fread(&nVars, sizeof(nVars), 1, infile);
-    fread(&reclen, sizeof(reclen), 1, infile);
+    iDummy = fread(&reclen, sizeof(reclen), 1, infile);
+    iDummy = fread(&nVars, sizeof(nVars), 1, infile);
+    iDummy = fread(&reclen, sizeof(reclen), 1, infile);
 
     std::vector<std::string> Vars;
 
@@ -216,7 +221,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
 
   fclose(infile);
 
-  HaveElectrodynamics = true;
+  HaveElectrodynamicsFile = true;
 
   input_electrodynamics_struct obj = input_electrodynamics_struct();
   obj.nLats = nLats;

@@ -15,10 +15,21 @@ std::string mkupper(std::string inString);
 
 void copy_cube_to_array(arma_cube cube_in,
                         float *array_out);
+void copy_mat_to_array(arma_mat mat_in,
+                        float *array_out,
+                        bool isFortran);
+void copy_array_to_mat(float *array_in,
+                       arma_mat &mat_out,
+                       bool isFortran);
 
 void copy_vector_to_array(std::vector<float> vector_in,
 			  int64_t nElements,
 			  float *array_out);
+
+// This is needed when sending strings to Fortran.
+// We do this by copying the ascii numbers into an integer array,
+// then in fortran copy them back into a character array.
+int* copy_string_to_int(std::string inString);
 
 std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr);
 std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precision_t angle);

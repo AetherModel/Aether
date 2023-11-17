@@ -4,15 +4,17 @@ set (CMAKE_CXX_STANDARD 11)
 project(Aether LANGUAGES CXX
                VERSION   2023.0)
 
+
+# cmake -DUSE_FORTRAN=ON ..
 if (USE_FORTRAN)
    enable_language(Fortran)
    file(GLOB MSIS_FILES ${PROJECT_SOURCE_DIR}/ext/MSIS/*.[fF]90)
+   file(GLOB IE_FILES ${PROJECT_SOURCE_DIR}/ext/IE/*.[fF]*)
    add_definitions(-DFORTRAN)
 else()
    set(MSIS_FILES )
+   set(IE_FILES )
 endif()
-
-set(CMAKE_CXX_STANDARD 11)
 
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
@@ -23,16 +25,16 @@ set(RUN_DIR ${PROJECT_SOURCE_DIR}/run)
 
 
 if(TEST_INTERPOLATION)
-  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_interpolation.cpp)
+  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main_test_interpolation.cpp)
 elseif(TEST_COORD)
-  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_coord.cpp)
+  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main_test_coord.cpp)
 elseif(TEST_EXCHANGE)
-  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_exchange.cpp)
+  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main_test_exchange.cpp)
   set(USE_DOUBLE_PRECISION True)
 elseif(TEST_GRADIENT)
   add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_gradient.cpp)
 else()
-  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main.cpp)
+  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main.cpp)
 endif()
 
 if(USE_DOUBLE_PRECISION)
@@ -45,7 +47,6 @@ endif()
 # Set compiler and cmake options
 target_compile_options(aether PUBLIC -ffast-math -O3)
 set(SHARE_INCLUDE ${PROJECT_SOURCE_DIR}/share/include)
-set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_FIND_ROOT_PATH ${SHARE_INCLUDE}
                          ${CMAKE_FIND_ROOT_PATH}
