@@ -178,9 +178,6 @@ class Neutrals {
   /// Vector of all species-specific items:
   std::vector<species_chars> species;
 
-  /// when computing dt, derive a dt for neutrals:
-  precision_t dt;
-  
   /// Maximum Chapman integral (will give nearly infinite tau in EUV)
   precision_t max_chapman = 1.0e26;
 
