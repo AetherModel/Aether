@@ -337,6 +337,8 @@ precision_t Neutrals::calc_dt(Grid grid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  precision_t dt;
+
   if (input.get_is_cubesphere())
     dt = calc_dt_cubesphere(grid);
   else {
@@ -382,6 +384,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  precision_t dt;
   int iDir;
 
   arma_vec dta(4);
@@ -401,11 +404,18 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   // Loop through altitudes
   for (int iAlt = 0; iAlt < nAlts; iAlt++) {
     // Conver cMax to contravariant velocity first
-    arma_mat u1 = cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt);
-    arma_mat u2 = cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt);
-
-    dtx.slice(iAlt) = grid.drefx(iAlt)*dummy_1 / u1; 
-    dty.slice(iAlt) = grid.drefy(iAlt)*dummy_1 / u2; 
+    arma_mat u1 = sqrt(
+      cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
+      cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
+      cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
+      cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
+    arma_mat u2 = sqrt(
+      cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
+      cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + 
+      cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
+      cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
+    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1; 
+    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2; 
   }
 
   // simply some things, and just take the bulk value for now:
