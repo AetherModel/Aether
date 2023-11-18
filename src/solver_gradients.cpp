@@ -11,9 +11,13 @@ std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
   std::vector<arma_cube> gradient_vcgc;
 
-  gradient_vcgc.push_back(calc_gradient_lon(value_scgc, grid));
-  gradient_vcgc.push_back(calc_gradient_lat(value_scgc, grid));
-  gradient_vcgc.push_back(calc_gradient_alt(value_scgc, grid));
+  if (input.get_is_cubesphere()) {
+    gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
+  } else {
+    gradient_vcgc.push_back(calc_gradient_lon(value_scgc, grid));
+    gradient_vcgc.push_back(calc_gradient_lat(value_scgc, grid));
+    gradient_vcgc.push_back(calc_gradient_alt(value_scgc, grid));
+  }
   return gradient_vcgc;
 }
 
@@ -211,7 +215,6 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
         }
       }
     }
-
     // We then use A transformation matrices to convert grad_xy to grad_latlon
     // Ref -> Physical, we use A matrix
     grad_lon.slice(iAlt) = grad_x_curr % grid.A11_inv_scgc.slice(
@@ -224,6 +227,7 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
   std::vector<arma_cube> gradient;
   gradient.push_back(grad_lon);
   gradient.push_back(grad_lat);
+  gradient.push_back(calc_gradient_alt(value, grid));
 
   return gradient;
 }
