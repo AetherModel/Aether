@@ -286,17 +286,28 @@ void Neutrals::nan_test(std::string variable) {
 //----------------------------------------------------------------------
 
 bool Neutrals::check_for_nonfinites() {
-  bool non_finites_exist = false;
+  bool isBad = false;
+  bool didWork = true;
 
-  if (!all_finite(density_scgc, "density_scgc") ||
-      !all_finite(temperature_scgc, "temperature_scgc") ||
-      !all_finite(velocity_vcgc, "velocity_vcgc"))
-    non_finites_exist = true;
+  isBad = !all_finite(density_scgc, "density_scgc");
+  if (isBad) {
+    report.error("non-finite found in neutral density!");
+    didWork = false;
+  }
 
-  if (non_finites_exist)
-    throw std::string("Check for nonfinites failed!!!\n");
+  isBad = !all_finite(temperature_scgc, "temperature_scgc");
+  if (isBad) {
+    report.error("non-finite found in neutral temperature!");
+    didWork = false;
+  }  
 
-  return non_finites_exist;
+  isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
+  if (isBad) {
+    report.error("non-finite found in neutral velocity!");
+    didWork = false;
+  }  
+
+  return didWork;
 }
 
 //----------------------------------------------------------------------
