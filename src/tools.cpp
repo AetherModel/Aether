@@ -18,22 +18,23 @@ void fill_corners(arma_cube &values, int64_t nGCs) {
     for (iGCy = 0; iGCy < nGCs; iGCy++) {
       // lower left:
       values.tube(iGCx, iGCy) = 0.5 * (
-        values.tube(iGCx, nGCs) + 
-        values.tube(nGCs, iGCy));
+                                  values.tube(iGCx, nGCs) +
+                                  values.tube(nGCs, iGCy));
       // lower right:
       values.tube(nXs - iGCx - 1, iGCy) = 0.5 * (
-        values.tube(nXs - iGCx - 1, nGCs) + 
-        values.tube(nXs - nGCs - 1, iGCy));
+                                            values.tube(nXs - iGCx - 1, nGCs) +
+                                            values.tube(nXs - nGCs - 1, iGCy));
       // upper left:
       values.tube(iGCx, nYs - iGCy - 1) = 0.5 * (
-        values.tube(iGCx, nYs - nGCs - 1) + 
-        values.tube(nGCs, nYs - iGCy - 1));
+                                            values.tube(iGCx, nYs - nGCs - 1) +
+                                            values.tube(nGCs, nYs - iGCy - 1));
       // upper right:
       values.tube(nXs - iGCx - 1, nYs - iGCy - 1) = 0.5 * (
-        values.tube(nXs - iGCx - 1, nYs - nGCs - 1) + 
-        values.tube(nXs - nGCs - 1, nYs - iGCy - 1));
+                                                      values.tube(nXs - iGCx - 1, nYs - nGCs - 1) +
+                                                      values.tube(nXs - nGCs - 1, nYs - iGCy - 1));
     }
   }
+
   return;
 }
 

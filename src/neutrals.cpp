@@ -290,22 +290,25 @@ bool Neutrals::check_for_nonfinites() {
   bool didWork = true;
 
   isBad = !all_finite(density_scgc, "density_scgc");
+
   if (isBad) {
     report.error("non-finite found in neutral density!");
     didWork = false;
   }
 
   isBad = !all_finite(temperature_scgc, "temperature_scgc");
+
   if (isBad) {
     report.error("non-finite found in neutral temperature!");
     didWork = false;
-  }  
+  }
 
   isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
+
   if (isBad) {
     report.error("non-finite found in neutral velocity!");
     didWork = false;
-  }  
+  }
 
   return didWork;
 }

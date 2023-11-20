@@ -461,7 +461,7 @@ bool Inputs::get_euv_douse() {
 }
 
 // -----------------------------------------------------------------------
-// Return the Electrodynamics Dir - this is where all of the 
+// Return the Electrodynamics Dir - this is where all of the
 //   files that are for the empirical models reside
 // -----------------------------------------------------------------------
 
@@ -470,7 +470,7 @@ std::string Inputs::get_electrodynamics_north_file() {
 }
 
 // -----------------------------------------------------------------------
-// Return the Electrodynamics Dir - this is where all of the 
+// Return the Electrodynamics Dir - this is where all of the
 //   files that are for the empirical models reside
 // -----------------------------------------------------------------------
 
@@ -479,7 +479,7 @@ std::string Inputs::get_electrodynamics_south_file() {
 }
 
 // -----------------------------------------------------------------------
-// Return the Electrodynamics Dir - this is where all of the 
+// Return the Electrodynamics Dir - this is where all of the
 //   files that are for the empirical models reside
 // -----------------------------------------------------------------------
 
@@ -488,7 +488,7 @@ std::string Inputs::get_electrodynamics_file() {
 }
 
 // -----------------------------------------------------------------------
-// Return the Electrodynamics Dir - this is where all of the 
+// Return the Electrodynamics Dir - this is where all of the
 //   files that are for the empirical models reside
 // -----------------------------------------------------------------------
 

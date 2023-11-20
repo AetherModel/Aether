@@ -602,10 +602,12 @@ void Grid::exchange(arma_cube &data, const bool pole_inverse) {
 bool Neutrals::exchange(Grid &grid) {
   // For each species, exchange if its DoAdvect is true
   int64_t nGCs = grid.get_nGCs();
+
   for (int i = 0; i < nSpecies; ++i) {
     if (species[i].DoAdvect)
       grid.exchange(species[i].density_scgc, false);
-      fill_corners(species[i].density_scgc, nGCs);
+
+    fill_corners(species[i].density_scgc, nGCs);
   }
 
   // Exchange temperature
@@ -617,7 +619,9 @@ bool Neutrals::exchange(Grid &grid) {
   grid.exchange(velocity_vcgc[0], true);
   grid.exchange(velocity_vcgc[1], true);
   grid.exchange(velocity_vcgc[2], false);
+
   for (int iDir = 0; iDir < 3; iDir++)
     fill_corners(velocity_vcgc[iDir], nGCs);
+
   return true;
 }

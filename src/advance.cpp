@@ -59,6 +59,7 @@ bool advance(Planets &planet,
   // first
 
   neutrals.calc_scale_height(gGrid);
+
   if (didWork)
     didWork = neutrals.set_bcs(gGrid, time, indices);
 

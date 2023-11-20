@@ -393,7 +393,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   int64_t nAlts = grid.get_nAlts();
   int64_t nXs = grid.get_nLons();
   int64_t nYs = grid.get_nLats();
-  
+
   // dtx dty for reference coordinate system
   arma_cube dtx(size(cMax_vcgc[0]));
   arma_cube dty(size(cMax_vcgc[0]));
@@ -405,17 +405,17 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   for (int iAlt = 0; iAlt < nAlts; iAlt++) {
     // Conver cMax to contravariant velocity first
     arma_mat u1 = sqrt(
-      cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
-      cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
-      cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
-      cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
+                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
+                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
     arma_mat u2 = sqrt(
-      cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
-      cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) + 
-      cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
-      cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
-    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1; 
-    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2; 
+                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
+                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
+    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1;
+    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
   }
 
   // simply some things, and just take the bulk value for now:

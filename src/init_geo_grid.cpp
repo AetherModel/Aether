@@ -984,10 +984,12 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate the radius (for spherical or non-spherical)
   fill_grid_radius(planet);
+
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
   if (input.get_is_cubesphere())
     correct_xy_grid(planet);
+
   // Calculate grid spacing
   calc_grid_spacing(planet);
   //calculate radial unit vector (for spherical or oblate planet)
