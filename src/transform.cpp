@@ -13,8 +13,10 @@
 std::string mklower(std::string inString) {
   std::string outString = inString;
   int64_t nChars = outString.length();
+
   for (int64_t iChar = 0; iChar < nChars; iChar++)
     outString[iChar] = tolower(outString[iChar]);
+
   return outString;
 }
 
@@ -25,13 +27,16 @@ std::string mklower(std::string inString) {
 // -----------------------------------------------------------------------
 
 int* copy_string_to_int(std::string inString) {
-  const int length = inString.length(); 
+  const int length = inString.length();
   // declaring character array
-  int* outArray = new int[400]; 
+  int* outArray = new int[400];
+
   for (int i = 0; i < length; i++)
     outArray[i] = inString[i];
+
   for (int i = length; i < 400; i++)
     outArray[i] = 0;
+
   return outArray;
 }
 
@@ -75,8 +80,8 @@ void copy_cube_to_array(arma_cube cube_in,
 // -----------------------------------------------------------------------
 
 void copy_mat_to_array(arma_mat mat_in,
-                        float *array_out,
-                        bool isFortran) {
+                       float *array_out,
+                       bool isFortran) {
 
   int64_t nX = mat_in.n_rows;
   int64_t nY = mat_in.n_cols;
@@ -88,14 +93,16 @@ void copy_mat_to_array(arma_mat mat_in,
         index = iY * nX + iX;
       else
         index = iX * nY + iY;
+
       array_out[index] = mat_in(iX, iY);
     }
   }
+
   return;
 }
 
 // -----------------------------------------------------------------------
-// copy from a 2d c-native array to 
+// copy from a 2d c-native array to
 // an already defined (!!) armidillo matrix
 //    - the code uses the dimension of the matrix to figure out
 //      the size of the array, so be careful!!!  There is no checking!
@@ -116,9 +123,11 @@ void copy_array_to_mat(float *array_in,
         index = iY * nX + iX;
       else
         index = iX * nY + iY;
+
       mat_out(iX, iY) = array_in[index];
     }
   }
+
   return;
 }
 

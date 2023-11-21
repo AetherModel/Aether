@@ -39,7 +39,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
-    if (report.test_verbose(3)) {
+    if (report.test_verbose(4)) {
       std::cout << "===> Reaction : " << iReaction
                 << " of " << nReactions << "\n";
       display_reaction(reactions[iReaction]);

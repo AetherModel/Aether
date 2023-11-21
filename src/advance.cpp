@@ -35,6 +35,9 @@ bool advance(Planets &planet,
     report.print(-1, "(1) What function is this " +
                  input.get_student_name() + "?");
 
+  if (didWork & input.get_check_for_nans())
+    didWork = neutrals.check_for_nonfinites();
+
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
   neutrals.calc_mean_major_mass();
@@ -56,10 +59,16 @@ bool advance(Planets &planet,
   // first
 
   neutrals.calc_scale_height(gGrid);
-  didWork = neutrals.set_bcs(gGrid, time, indices);
+
+  if (didWork)
+    didWork = neutrals.set_bcs(gGrid, time, indices);
 
   if (input.get_nAltsGeo() > 1)
     neutrals.advect_vertical(gGrid, time);
+
+  if (didWork & input.get_check_for_nans())
+    didWork = neutrals.check_for_nonfinites();
+
 
   // ------------------------------------
   // Calculate source terms next:
@@ -97,9 +106,6 @@ bool advance(Planets &planet,
     if (input.get_NO_cooling())
       neutrals.calc_NO_cool();
 
-    neutrals.calc_conduction(gGrid, time);
-    chemistry.calc_chemistry(neutrals, ions, time, gGrid);
-
     neutrals.vertical_momentum_eddy(gGrid);
     calc_ion_collisions(neutrals, ions);
     calc_neutral_friction(neutrals);
@@ -123,6 +129,9 @@ bool advance(Planets &planet,
       time.restart_file(input.get_restartout_dir(), DoWrite);
     }
   }
+
+  if (didWork & input.get_check_for_nans())
+    didWork = neutrals.check_for_nonfinites();
 
   if (didWork)
     didWork = output(neutrals, ions, gGrid, time, planet);

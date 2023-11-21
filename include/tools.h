@@ -15,6 +15,13 @@ struct mat_2x2{
     arma_mat A22;
 };
 
+// ----------------------------------------------------------------------------
+// Fix corners in an arma cube
+//   - basically fill in the corners with values near them
+// ----------------------------------------------------------------------------
+
+void fill_corners(arma_cube &values, int64_t nGCs);
+
 // -----------------------------------------------------------------------------
 // add cMember into a string just before last period
 // -----------------------------------------------------------------------------
