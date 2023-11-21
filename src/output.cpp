@@ -157,7 +157,7 @@ bool output(const Neutrals &neutrals,
           type_output == "states")
         for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
-          store_variable(ions.temperature_name + "_" + 
+          store_variable(ions.temperature_name + "_" +
                          ions.species[iSpecies].cName,
                          ions.temperature_unit,
                          ions.species[iSpecies].temperature_scgc);

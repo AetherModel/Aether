@@ -69,14 +69,19 @@ bool Inputs::read_inputs_json(Times &time) {
     // Debug Stuff:
     if (isOk)
       report.set_verbose(get_setting_int("Debug", "iVerbose"));
+
     if (isOk)
       report.set_DefaultVerbose(get_setting_int("Debug", "iVerbose"));
+
     if (isOk)
       report.set_doInheritVerbose(get_setting_bool("Debug", "doInheritVerbose"));
+
     if (isOk)
       report.set_timing_depth(get_setting_int("Debug", "iTimingDepth"));
+
     if (isOk)
       report.set_timing_percent(get_setting_float("Debug", "TimingPercent"));
+
     if (isOk)
       report.set_iProc(get_setting_int("Debug", "iProc"));
 
@@ -86,6 +91,7 @@ bool Inputs::read_inputs_json(Times &time) {
     // Capture time information:
     if (isOk)
       time.set_times(get_setting_timearr("StartTime"));
+
     if (isOk)
       time.set_end_time(get_setting_timearr("EndTime"));
 
