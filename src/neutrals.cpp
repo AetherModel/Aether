@@ -88,9 +88,9 @@ Neutrals::Neutrals(Grid grid,
     species.push_back(tmp);
   }
 
-  velocity_name.push_back("Zonal Wind");
-  velocity_name.push_back("Meridional Wind");
-  velocity_name.push_back("Vertical Wind");
+  velocity_name.push_back("velocity_east");
+  velocity_name.push_back("velocity_north");
+  velocity_name.push_back("velocity_up");
 
   // State variables:
 
