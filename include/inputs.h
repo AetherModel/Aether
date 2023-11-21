@@ -121,16 +121,37 @@ public:
   std::vector<std::string> get_satellite_names();
   std::vector<precision_t> get_satellite_dts();
   
-  std::string get_settings_str(std::string key1);
-  std::string get_settings_str(std::string key1, std::string key2);
-  int get_settings(std::string key1, std::string key2);
-  bool check_settings(std::string key1, std::string key2);
+  // General get_setting functions with error checks:
+  std::string get_setting_str(std::string key1);
+  std::string get_setting_str(std::string key1, std::string key2);
+  std::string get_setting_str(std::string key1,
+                              std::string key2,
+                              std::string key3);
+
+  json get_setting_json(std::string key1);
+  json get_setting_json(std::string key1, std::string key2);
+
+  bool get_setting_bool(std::string key1);
+  bool get_setting_bool(std::string key1, std::string key2);
+  bool get_setting_bool(std::string key1, std::string key2, std::string key3);
+
+  precision_t get_setting_float(std::string key1);
+  precision_t get_setting_float(std::string key1, std::string key2);
+
+  int64_t get_setting_int(std::string key1);
+  int64_t get_setting_int(std::string key1, std::string key2);
+
+  std::vector<int> get_setting_intarr(std::string key1);
+  std::vector<int> get_setting_timearr(std::string key1);
+
+  // Check settings functions:
   bool check_settings(std::string key1);
-  std::string check_settings_str(std::string key1, std::string key2);
+  bool check_settings(std::string key1, std::string key2);
+
   std::string check_settings_str(std::string key1);
+  std::string check_settings_str(std::string key1, std::string key2);
+
   precision_t check_settings_pt(std::string key1, std::string key2);
-  std::vector<int> get_settings_timearr(std::string key1);
-  std::vector<int> get_settings_intarr(std::string key1);
   
   /**********************************************************************
      \brief Check to see if internal state of class is ok
@@ -181,7 +202,7 @@ private:
   int updated_seed;
   
   /// An internal variable to hold the state of the class
-  bool IsOk;
+  bool isOk;
 
   std::vector<std::string> missing_settings;
 };
