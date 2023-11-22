@@ -112,7 +112,7 @@ bool output(const Neutrals &neutrals,
           type_output == "states")
         for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
-          store_variable(neutrals.species[iSpecies].cName,
+          store_variable("density_" + neutrals.species[iSpecies].cName,
                          neutrals.density_unit,
                          neutrals.species[iSpecies].density_scgc);
 
@@ -120,7 +120,7 @@ bool output(const Neutrals &neutrals,
       if (type_output == "neutrals" ||
           type_output == "states")
         AllOutputContainers[iOutput].
-        store_variable(neutrals.temperature_name,
+        store_variable(neutrals.temperature_name + "_neutral",
                        neutrals.temperature_unit,
                        neutrals.temperature_scgc);
 
@@ -129,7 +129,7 @@ bool output(const Neutrals &neutrals,
           type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
           AllOutputContainers[iOutput].
-          store_variable(neutrals.velocity_name[iDir],
+          store_variable(neutrals.velocity_name[iDir] + "_neutral",
                          neutrals.velocity_unit,
                          neutrals.velocity_vcgc[iDir]);
 
@@ -138,8 +138,8 @@ bool output(const Neutrals &neutrals,
         for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
           for (int iDir = 0; iDir < 3; iDir++)
             AllOutputContainers[iOutput].
-            store_variable(neutrals.species[iSpecies].cName + " " +
-                           neutrals.velocity_name[iDir],
+            store_variable(neutrals.velocity_name[iDir] + "_" +
+                           neutrals.species[iSpecies].cName,
                            neutrals.velocity_unit,
                            neutrals.species[iSpecies].velocity_vcgc[iDir]);
 
@@ -148,7 +148,7 @@ bool output(const Neutrals &neutrals,
           type_output == "states")
         for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
-          store_variable(ions.species[iSpecies].cName,
+          store_variable("density_" + ions.species[iSpecies].cName,
                          ions.density_unit,
                          ions.species[iSpecies].density_scgc);
 
@@ -157,23 +157,22 @@ bool output(const Neutrals &neutrals,
           type_output == "states")
         for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
           AllOutputContainers[iOutput].
-          store_variable(ions.species[iSpecies].cName + " " + ions.temperature_name,
+          store_variable(ions.temperature_name + "_" +
+                         ions.species[iSpecies].cName,
                          ions.temperature_unit,
                          ions.species[iSpecies].temperature_scgc);
 
       // Bulk Ion Temperature:
       if (type_output == "ions" ||
           type_output == "states")
-        AllOutputContainers[iOutput].store_variable("Bulk Ion " +
-                                                    ions.temperature_name,
+        AllOutputContainers[iOutput].store_variable(ions.temperature_name + "_ion",
                                                     ions.temperature_unit,
                                                     ions.temperature_scgc);
 
       // Bulk Ion Drifts:
       if (type_output == "states")
         for (int iDir = 0; iDir < 3; iDir++)
-          AllOutputContainers[iOutput].store_variable("Bulk " +
-                                                      ions.velocity_name[iDir],
+          AllOutputContainers[iOutput].store_variable(ions.velocity_name[iDir] + "_ion",
                                                       ions.velocity_unit,
                                                       ions.velocity_vcgc[iDir]);
 
@@ -251,15 +250,15 @@ bool output(const Neutrals &neutrals,
       }
 
       if (type_output == "moment") {
-        AllOutputContainers[iOutput].store_variable("Cent Acc East",
+        AllOutputContainers[iOutput].store_variable("accel_cent_east",
                                                     "Logitudinal Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[0]);
-        AllOutputContainers[iOutput].store_variable("Cent Acc North",
+        AllOutputContainers[iOutput].store_variable("accel_cent_north",
                                                     "Latitudinal Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[1]);
-        AllOutputContainers[iOutput].store_variable("Cent Acc Vert",
+        AllOutputContainers[iOutput].store_variable("accel_cent_up",
                                                     "Radial Centripetal Acceleration",
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[2]);

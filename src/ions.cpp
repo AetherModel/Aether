@@ -66,17 +66,17 @@ Ions::Ions(Grid grid, Planets planet) {
     species.push_back(tmp);
   }
 
-  velocity_name.push_back("Ion Velocity (Zonal)");
-  velocity_name.push_back("Ion Velocity (Meridional)");
-  velocity_name.push_back("Ion Velocity (Vertical)");
+  velocity_name.push_back("velocity_east");
+  velocity_name.push_back("velocity_north");
+  velocity_name.push_back("velocity_up");
 
-  par_velocity_name.push_back("Parallel Ion Velocity (Zonal)");
-  par_velocity_name.push_back("Parallel Ion Velocity (Meridional)");
-  par_velocity_name.push_back("Parallel Ion Velocity (Vertical)");
+  par_velocity_name.push_back("velocity_parallel_east");
+  par_velocity_name.push_back("velocity_parallel_north");
+  par_velocity_name.push_back("velocity_parallel_up");
 
-  perp_velocity_name.push_back("Perp. Ion Velocity (Zonal)");
-  perp_velocity_name.push_back("Perp. Ion Velocity (Meridional)");
-  perp_velocity_name.push_back("Perp. Ion Velocity (Vertical)");
+  perp_velocity_name.push_back("velocity_perp_east");
+  perp_velocity_name.push_back("velocity_perp_north");
+  perp_velocity_name.push_back("velocity_perp_up");
 
   // Create one extra species for electrons
   tmp = create_species(grid);

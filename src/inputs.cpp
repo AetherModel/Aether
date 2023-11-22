@@ -62,9 +62,9 @@ Inputs::Inputs(Times &time) {
 
   // ------------------------------------------------
   // Now read the input file:
-  IsOk = read_inputs_json(time);
+  isOk = read_inputs_json(time);
 
-  if (!IsOk && iProc == 0)
+  if (!isOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
 }
 
@@ -73,177 +73,23 @@ Inputs::Inputs(Times &time) {
 // -----------------------------------------------------------------------
 
 bool Inputs::write_restart() {
-  bool DidWork = true;
+  bool didWork = true;
 
   if (iProc == 0) {
-    std::string filename = check_settings_str("Restart", "OutDir");
+    std::string filename = get_setting_str("Restart", "OutDir");
     filename = filename + "/settings.json";
-    DidWork = write_json(filename, settings);
+    didWork = write_json(filename, settings);
   }
 
-  DidWork = sync_across_all_procs(DidWork);
-  return DidWork;
+  didWork = sync_across_all_procs(didWork);
+  return didWork;
 }
 
-// -----------------------------------------------------------------------
-// Return log file name
-// -----------------------------------------------------------------------
-
-std::string Inputs::get_logfile() {
-  std::string logfile = check_settings_str("Logfile", "name");
-
-  if (nMembers > 1)
-    logfile = add_cmember(logfile);
-
-  return logfile;
-}
 
 // -----------------------------------------------------------------------
-// Return how oftern to write log file
-// -----------------------------------------------------------------------
-
-precision_t Inputs::get_logfile_dt() {
-  precision_t setting = -1;
-
-  if (check_settings("Logfile", "dt"))
-    setting = settings.at("Logfile").at("dt");
-
-  return setting;
-}
-
-// -----------------------------------------------------------------------
-// Return whether to append or rewrite
-// -----------------------------------------------------------------------
-
-bool Inputs::get_logfile_append() {
-  return settings.at("Logfile").at("append");
-}
-
-// -----------------------------------------------------------------------
-// Return the name of specified variables as a vector
-// -----------------------------------------------------------------------
-
-std::vector<std::string> Inputs::get_species_vector() {
-  std::vector<std::string> species;
-  const json &json_species = settings.at("Logfile").at("species");
-
-  for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++)
-    species.push_back(json_species.at(iOutput));
-
-  return species;
-}
-
-// -----------------------------------------------------------------------
-// Return the name of satellite files as a vector
-// -----------------------------------------------------------------------
-
-std::vector<std::string> Inputs::get_satellite_files() {
-  std::vector<std::string> files;
-  const json &json_files = settings["Satellites"]["files"];
-
-  for (size_t i = 0; i < json_files.size(); ++i)
-    files.push_back(json_files.at(i));
-
-  return files;
-}
-
-// -----------------------------------------------------------------------
-// Return the output file names of satellites as a vector
-// -----------------------------------------------------------------------
-
-std::vector<std::string> Inputs::get_satellite_names() {
-  std::vector<std::string> names;
-  const json &json_names = settings["Satellites"]["names"];
-
-  for (size_t i = 0; i < json_names.size(); ++i)
-    names.push_back(json_names.at(i));
-
-  return names;
-}
-
-// -----------------------------------------------------------------------
-// Return how oftern to write log file for satellites as a vector
-// -----------------------------------------------------------------------
-
-std::vector<precision_t> Inputs::get_satellite_dts() {
-  std::vector<precision_t> dts;
-  const json &json_dts = settings["Satellites"]["dts"];
-
-  for (size_t i = 0; i < json_dts.size(); ++i)
-    dts.push_back(json_dts.at(i));
-
-  return dts;
-}
-
-// -----------------------------------------------------------------------
-// Return value of a key in the json formatted inputs
-// -----------------------------------------------------------------------
-
-//set up dummy values for settings that aren't set
-
-std::vector<int> Inputs::get_settings_intarr(std::string key1) {
-  std::vector<int> value;
-
-  if (settings.find(key1) != settings.end()) {
-    int nPts = settings.at(key1).size();
-
-    for (int i = 0; i < nPts; i++)
-      value.push_back(settings.at(key1).at(i));
-  } else
-    IsOk = false;
-
-  return value;
-}
-
-std::vector<int> Inputs::get_settings_timearr(std::string key1) {
-  int nPtsTime = 7;
-  std::vector<int> outarr(nPtsTime, 0);
-  std::vector<int> timearr = get_settings_intarr(key1);
-
-  int nPts = timearr.size();
-
-  if (nPts > nPtsTime)
-    nPts = nPtsTime;
-
-  for (int i = 0; i < nPts; i++)
-    outarr[i] = timearr[i];
-
-  return outarr;
-}
-
-std::string Inputs::get_settings_str(std::string key1) {
-  std::string value = "unknown";
-
-  if (settings.find(key1) != settings.end())
-    value = settings.at(key1);
-
-  return value;
-}
-
-std::string Inputs::get_settings_str(std::string key1,
-                                     std::string key2) {
-  std::string value = "unknown";
-
-  if (settings.find(key1) != settings.end())
-    if (settings.at(key1).find(key2) != settings.at(key1).end())
-      value = settings.at(key1).at(key2);
-
-  return value;
-}
-
-int Inputs::get_settings(std::string key1,
-                         std::string key2) {
-  int value = -1;
-
-  if (settings.find(key1) != settings.end())
-    if (settings.at(key1).find(key2) != settings.at(key1).end())
-      value = settings.at(key1).at(key2);
-
-  return value;
-}
-
-// -----------------------------------------------------------------------
-// Check for missing settings
+// General check functions to see if keys exist:
+// check settings and throw invalid_argument error
+// if the setting doesn't exist
 // -----------------------------------------------------------------------
 
 //dummy values, to use if the settings are not set
@@ -251,10 +97,11 @@ int dummy_int = -1;
 float dummy_float = -1;
 std::string dummy_string = "unknown";
 
-//check settings and throw invalid_argument error if the setting doesn't exist
+// -----------------------------------------------------------------------
+// 2 keys:
+
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-
   if (report.test_verbose(1))
     std::cout << "checking setting : "
               << key1 << " and "
@@ -263,36 +110,270 @@ bool Inputs::check_settings(std::string key1,
   //try to find the keys first
   if (settings.find(key1) != settings.end()) {
     if (settings.at(key1).find(key2) != settings.at(key1).end())
-      return true;
+      isOk = true;
+  } else
+    //if we haven't found the keys print a message & set IsOk to false
+    isOk = false;
+
+  if (!isOk) {
+    report.error("Error in setting : " + key1 + " : " + key2);
+    std::cout << "Missing setting called! [" << key1 << ", " << key2 << "]\n";
   }
 
-  //if we haven't found the keys print a message & set IsOk to false
-  IsOk = false;
-
-  if (!IsOk)
-    std::cout << "Missing setting called! [" << key1 << ", " << key2 << "]\n";
-
-  return false;
+  return isOk;
 }
 
-bool Inputs::check_settings(std::string key1) {
+// -----------------------------------------------------------------------
+// 1 key:
 
+bool Inputs::check_settings(std::string key1) {
   if (report.test_verbose(1))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
   if (settings.find(key1) != settings.end())
-    return true;
-
-  //if we haven't found the key print a message & set IsOk to false
-  IsOk = false;
+    isOk = true;
+  else
+    //if we haven't found the key print a message & set IsOk to false
+    isOk = false;
 
   //perturb is non-essential, otherwise print error message
-  if (!IsOk && key1 != "Perturb")
+  if (!isOk && key1 != "Perturb") {
+    report.error("Error in setting : " + key1);
     std::cout << "Missing setting called! [" << key1 << "]\n";
+  }
 
-  return false;
+  return isOk;
 }
+
+// -----------------------------------------------------------------------
+// Functions that check keys and return values:
+// -----------------------------------------------------------------------
+
+// -----------------------------------------------------------------------
+// a general int vector
+
+std::vector<int> Inputs::get_setting_intarr(std::string key1) {
+  std::vector<int> value;
+
+  if (check_settings(key1)) {
+    int nPts = settings.at(key1).size();
+    isOk = true;
+
+    for (int i = 0; i < nPts; i++)
+      value.push_back(settings.at(key1).at(i));
+  } else
+    isOk = false;
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// A specific length int vector
+
+std::vector<int> Inputs::get_setting_timearr(std::string key1) {
+  int nPtsTime = 7;
+  std::vector<int> outarr(nPtsTime, 0);
+  std::vector<int> timearr = get_setting_intarr(key1);
+
+  if (isOk) {
+    int nPts = timearr.size();
+
+    if (nPts > nPtsTime)
+      nPts = nPtsTime;
+
+    for (int i = 0; i < nPts; i++)
+      outarr[i] = timearr[i];
+  }
+
+  return outarr;
+}
+
+// -----------------------------------------------------------------------
+// a string with 1 key:
+
+std::string Inputs::get_setting_str(std::string key1) {
+  std::string value = "unknown";
+
+  if (check_settings(key1))
+    value = settings.at(key1);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a string with 2 keys:
+
+std::string Inputs::get_setting_str(std::string key1,
+                                    std::string key2) {
+  std::string value = "unknown";
+
+  if (check_settings(key1, key2))
+    value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a string with 3 keys:
+
+std::string Inputs::get_setting_str(std::string key1,
+                                    std::string key2,
+                                    std::string key3) {
+  std::string value = "unknown";
+  isOk = false;
+
+  if (settings.find(key1) != settings.end())
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
+      if (settings.at(key1).at(key2).find(key3) !=
+          settings.at(key1).at(key2).end()) {
+        value = settings.at(key1).at(key2).at(key3);
+        isOk = true;
+      }
+
+  if (!isOk)
+    report.error("Error in setting : " + key1 + " : " + key2 + " : " + key3);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// an int with 1 key:
+
+int64_t Inputs::get_setting_int(std::string key1) {
+  int64_t value = LONG_MIN;
+
+  if (check_settings(key1))
+    value = settings.at(key1);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// an int with 2 keys:
+
+int64_t Inputs::get_setting_int(std::string key1,
+                                std::string key2) {
+  int64_t value = LONG_MIN;
+
+  if (check_settings(key1, key2))
+    value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a bool with 1 key:
+
+bool Inputs::get_setting_bool(std::string key1) {
+  bool value = false;
+
+  if (check_settings(key1))
+    value = settings.at(key1);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a bool with 2 keys:
+
+bool Inputs::get_setting_bool(std::string key1,
+                              std::string key2) {
+  bool value = false;
+
+  if (check_settings(key1, key2))
+    value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a bool with 3 keys:
+
+bool Inputs::get_setting_bool(std::string key1,
+                              std::string key2,
+                              std::string key3) {
+  bool value = false;
+  isOk = false;
+
+  if (settings.find(key1) != settings.end())
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
+      if (settings.at(key1).at(key2).find(key3) !=
+          settings.at(key1).at(key2).end()) {
+        value = settings.at(key1).at(key2).at(key3);
+        isOk = true;
+      }
+
+  if (!isOk)
+    report.error("Error in setting : " + key1 + " : " + key2 + " : " + key3);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a float with 1 key:
+
+precision_t Inputs::get_setting_float(std::string key1) {
+  precision_t value = std::numeric_limits<precision_t>::lowest();
+
+  if (check_settings(key1))
+    value = settings.at(key1);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a float with 2 key:
+
+precision_t Inputs::get_setting_float(std::string key1,
+                                      std::string key2) {
+  precision_t value = std::numeric_limits<precision_t>::lowest();
+
+  if (check_settings(key1, key2))
+    value = settings.at(key1).at(key2);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a json with 1 key:
+
+json Inputs::get_setting_json(std::string key1) {
+  json value;
+
+  if (settings.find(key1) != settings.end())
+    value = settings.at(key1);
+  else {
+    isOk = false;
+    report.error("Error in setting : " + key1);
+  }
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a json with 2 keys:
+
+json Inputs::get_setting_json(std::string key1,
+                              std::string key2) {
+  json value;
+
+  if (settings.find(key1) != settings.end())
+    if (settings.at(key1).find(key2) != settings.at(key1).end())
+      value = settings.at(key1).at(key2);
+    else {
+      isOk = false;
+      report.error("Error in setting : " + key1 + " : " + key2);
+    } else {
+    isOk = false;
+    report.error("Error in setting : " + key1);
+  }
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// a string with 2 keys:
 
 std::string Inputs::check_settings_str(std::string key1,
                                        std::string key2) {
@@ -302,20 +383,27 @@ std::string Inputs::check_settings_str(std::string key1,
   return dummy_string;
 }
 
+// -----------------------------------------------------------------------
+// a string with 1 key:
+
 std::string Inputs::check_settings_str(std::string key) {
-  if (get_settings_str(key) == dummy_string) {
-    IsOk = false;
+  if (get_setting_str(key) == dummy_string) {
+    isOk = false;
     return dummy_string;
   }
 
   return settings[key];
 }
 
+// -----------------------------------------------------------------------
+// a float with 2 keys:
+
 precision_t Inputs::check_settings_pt(std::string key1,
                                       std::string key2) {
   if (check_settings(key1, key2))
     return settings.at(key1).at(key2);
 
+  isOk = false;
   return dummy_float;
 }
 
@@ -328,8 +416,8 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
   geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
 
   if (check_settings("GeoGrid", "IsUniformAlt")) {
-    bool reality = settings.at("GeoGrid").at("IsUniformAlt");
-    geo_grid_input.IsUniformAlt = settings.at("GeoGrid").at("IsUniformAlt");
+    bool reality = get_setting_bool("GeoGrid", "IsUniformAlt");
+    geo_grid_input.IsUniformAlt = get_setting_bool("GeoGrid", "IsUniformAlt");
   } else
     geo_grid_input.IsUniformAlt = true;
 
@@ -356,14 +444,210 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 }
 
 // -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// More complicated get functions:
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+// This is needed, because we may want to check for verbose specifically
+// in a given json and not the normal settings json:
+
+bool Inputs::set_verbose(json in) {
+  bool didWork = true;
+  int iVerbose = -1;
+
+  // Want to set verbose level ASAP:
+  if (in.contains("Debug")) {
+    if (in.at("Debug").contains("iVerbose")) {
+      iVerbose = in.at("Debug").at("iVerbose");
+
+      if (in.at("Debug").contains("iProc")) {
+        if (iProc != in.at("Debug").at("iProc"))
+          iVerbose = -1;
+      }
+    } else
+      didWork = false;
+  } else
+    didWork = false;
+
+  if (iVerbose > 0) {
+    std::cout << "Setting iVerbose : " << iVerbose << "\n";
+    report.set_verbose(iVerbose);
+  }
+
+  return didWork;
+}
+
+// -----------------------------------------------------------------------
+// Return total number of OMNIWeb files to read
+// -----------------------------------------------------------------------
+
+int Inputs::get_number_of_omniweb_files() {
+  if (settings.find("OmniwebFiles") != settings.end())
+    return settings.at("OmniwebFiles").size();
+
+  isOk = false;
+  return dummy_int;
+}
+
+// -----------------------------------------------------------------------
+// Return OMNIWeb file names as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_omniweb_files() {
+  std::vector<std::string> omniweb_files;
+  int nFiles = get_number_of_omniweb_files();
+
+  for (int i = 0; i < nFiles; i++)
+    omniweb_files.push_back(settings.at("OmniwebFiles").at(i));
+
+  return omniweb_files;
+}
+
+// -----------------------------------------------------------------------
+// Return how often to output a given output type
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_dt_output(int iOutput) {
+  precision_t value = 0.0;
+  int nOutputs = settings.at("Outputs").at("type").size();
+
+  if (iOutput < nOutputs)
+    value = settings.at("Outputs").at("dt").at(iOutput);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// Return the output type
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_type_output(int iOutput) {
+  std::string value = "unknown";
+  int nOutputs = settings.at("Outputs").at("type").size();
+
+  if (iOutput < nOutputs)
+    value = settings.at("Outputs").at("type").at(iOutput);
+
+  return value;
+}
+
+// -----------------------------------------------------------------------
+// Set random number seed
+// -----------------------------------------------------------------------
+
+void Inputs::set_seed(int seed) {
+  settings["Seed"] = seed;
+  updated_seed = seed;
+}
+
+// -----------------------------------------------------------------------
+// Return random number seed that has been updated
+// -----------------------------------------------------------------------
+
+int Inputs::get_updated_seed() {
+  std::default_random_engine get_random(updated_seed);
+  updated_seed = get_random();
+  return updated_seed;
+}
+
+// -----------------------------------------------------------------------
+// Return log file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_logfile() {
+  std::string logfile = get_setting_str("Logfile", "name");
+
+  if (nMembers > 1)
+    logfile = add_cmember(logfile);
+
+  return logfile;
+}
+
+// -----------------------------------------------------------------------
+// Return the name of specified variables as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_species_vector() {
+  std::vector<std::string> species;
+  const json &json_species = get_setting_json("Logfile", "species");
+
+  for (size_t iOutput = 0; iOutput < json_species.size(); iOutput++)
+    species.push_back(json_species.at(iOutput));
+
+  return species;
+}
+
+// -----------------------------------------------------------------------
+// Return the name of satellite files as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_satellite_files() {
+  std::vector<std::string> files;
+  const json &json_files = get_setting_json("Satellites", "files");
+
+  for (size_t i = 0; i < json_files.size(); ++i)
+    files.push_back(json_files.at(i));
+
+  return files;
+}
+
+// -----------------------------------------------------------------------
+// Return the output file names of satellites as a vector
+// -----------------------------------------------------------------------
+
+std::vector<std::string> Inputs::get_satellite_names() {
+  std::vector<std::string> names;
+  const json &json_names = get_setting_json("Satellites", "names");
+
+  for (size_t i = 0; i < json_names.size(); ++i)
+    names.push_back(json_names.at(i));
+
+  return names;
+}
+
+// -----------------------------------------------------------------------
+// Return how oftern to write log file for satellites as a vector
+// -----------------------------------------------------------------------
+
+std::vector<precision_t> Inputs::get_satellite_dts() {
+  std::vector<precision_t> dts;
+  const json &json_dts = get_setting_json("Satellites", "dts");
+
+  for (size_t i = 0; i < json_dts.size(); ++i)
+    dts.push_back(json_dts.at(i));
+
+  return dts;
+}
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// Extremely simple get functions:
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+// -----------------------------------------------------------------------
+// Return how oftern to write log file
+// -----------------------------------------------------------------------
+
+precision_t Inputs::get_logfile_dt() {
+  return get_setting_float("Logfile", "dt");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to append or rewrite
+// -----------------------------------------------------------------------
+
+bool Inputs::get_logfile_append() {
+  return get_setting_bool("Logfile", "append");
+}
+
+// -----------------------------------------------------------------------
 // Return whether user is student
 // -----------------------------------------------------------------------
 
 bool Inputs::get_is_student() {
-  if (check_settings("Student", "is"))
-    return settings.at("Student").at("is");
-
-  return false;
+  return get_setting_bool("Student", "is");
 }
 
 // -----------------------------------------------------------------------
@@ -379,10 +663,7 @@ std::string Inputs::get_student_name() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_is_cubesphere() {
-  if (check_settings("CubeSphere", "is"))
-    return settings.at("CubeSphere").at("is");
-
-  return false;
+  return get_setting_bool("CubeSphere", "is");
 }
 
 // -----------------------------------------------------------------------
@@ -390,10 +671,7 @@ bool Inputs::get_is_cubesphere() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_restart() {
-  if (check_settings("Restart", "do"))
-    return settings.at("Restart").at("do");
-
-  return false;
+  return get_setting_bool("Restart", "do");
 }
 
 // -----------------------------------------------------------------------
@@ -401,7 +679,7 @@ bool Inputs::get_do_restart() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_NO_cooling() {
-  return settings["Sources"]["Neutrals"]["NO_cool"];
+  return get_setting_bool("Sources", "Neutrals", "NO_cool");
 }
 
 // -----------------------------------------------------------------------
@@ -409,7 +687,7 @@ bool Inputs::get_NO_cooling() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_O_cooling() {
-  return settings["Sources"]["Neutrals"]["O_cool"];
+  return get_setting_bool("Sources", "Neutrals", "O_cool");
 }
 
 // -----------------------------------------------------------------------
@@ -417,7 +695,7 @@ bool Inputs::get_O_cooling() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_cent_acc() {
-  return settings["Sources"]["Grid"]["Cent_acc"];
+  return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
 // -----------------------------------------------------------------------
@@ -457,7 +735,7 @@ std::string Inputs::get_bfield_type() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_euv_douse() {
-  return settings.at("Euv").at("doUse");
+  return get_setting_bool("Euv", "doUse");
 }
 
 // -----------------------------------------------------------------------
@@ -501,7 +779,7 @@ std::string Inputs::get_electrodynamics_dir() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_potential_model() {
-  return check_settings_str("Electrodynamics", "Potential");
+  return mklower(check_settings_str("Electrodynamics", "Potential"));
 }
 
 // -----------------------------------------------------------------------
@@ -509,7 +787,7 @@ std::string Inputs::get_potential_model() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_diffuse_auroral_model() {
-  return check_settings_str("Electrodynamics", "DiffuseAurora");
+  return mklower(check_settings_str("Electrodynamics", "DiffuseAurora"));
 }
 
 // -----------------------------------------------------------------------
@@ -517,7 +795,7 @@ std::string Inputs::get_diffuse_auroral_model() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_model() {
-  return check_settings_str("Euv", "Model");
+  return mklower(check_settings_str("Euv", "Model"));
 }
 
 // -----------------------------------------------------------------------
@@ -533,7 +811,7 @@ precision_t Inputs::get_euv_heating_eff_neutrals() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_include_photoelectrons() {
-  return settings["Euv"]["IncludePhotoElectrons"];
+  return get_setting_bool("Euv", "IncludePhotoElectrons");
 }
 
 // -----------------------------------------------------------------------
@@ -565,32 +843,7 @@ precision_t Inputs::get_n_outputs() {
 // -----------------------------------------------------------------------
 
 int Inputs::get_original_seed() {
-  if (settings.find("Seed") == settings.end()) {
-    IsOk = false;
-    std::cout << "Error in getting seed!\n";
-    return 0;
-  }
-
-  return settings.at("Seed");
-}
-
-// -----------------------------------------------------------------------
-// Set random number seed
-// -----------------------------------------------------------------------
-
-void Inputs::set_seed(int seed) {
-  settings["Seed"] = seed;
-  updated_seed = seed;
-}
-
-// -----------------------------------------------------------------------
-// Return random number seed that has been updated
-// -----------------------------------------------------------------------
-
-int Inputs::get_updated_seed() {
-  std::default_random_engine get_random(updated_seed);
-  updated_seed = get_random();
-  return updated_seed;
+  return get_setting_int("Seed");
 }
 
 // -----------------------------------------------------------------------
@@ -633,68 +886,12 @@ int Inputs::get_nMembers() {
 // Return verbose variables
 // -----------------------------------------------------------------------
 
-bool Inputs::set_verbose(json in) {
-  bool DidWork = true;
-
-  int iVerbose = -1;
-
-  // Want to set verbose level ASAP:
-  if (in.contains("Debug")) {
-    if (in.at("Debug").contains("iVerbose")) {
-      iVerbose = in.at("Debug").at("iVerbose");
-
-      if (in.at("Debug").contains("iProc")) {
-        if (iProc != in.at("Debug").at("iProc"))
-          iVerbose = -1;
-      }
-    }
-  }
-
-  if (iVerbose > 0) {
-    std::cout << "Setting iVerbose : " << iVerbose << "\n";
-    report.set_verbose(iVerbose);
-  }
-
-  return DidWork;
-}
-
 int Inputs::get_verbose() {
   return check_settings_pt("Debug", "iVerbose");
 }
 
 int Inputs::get_verbose_proc() {
-  if (check_settings("Debug", "iProc"))
-    return settings.at("Debug").at("iProc");
-
-  return dummy_int;
-}
-
-// -----------------------------------------------------------------------
-// Return how often to output a given output type
-// -----------------------------------------------------------------------
-
-precision_t Inputs::get_dt_output(int iOutput) {
-  precision_t value = 0.0;
-  int nOutputs = settings.at("Outputs").at("type").size();
-
-  if (iOutput < nOutputs)
-    value = settings.at("Outputs").at("dt").at(iOutput);
-
-  return value;
-}
-
-// -----------------------------------------------------------------------
-// Return the output type
-// -----------------------------------------------------------------------
-
-std::string Inputs::get_type_output(int iOutput) {
-  std::string value = "unknown";
-  int nOutputs = settings.at("Outputs").at("type").size();
-
-  if (iOutput < nOutputs)
-    value = settings.at("Outputs").at("type").at(iOutput);
-
-  return value;
+  return get_setting_int("Debug", "iProc");
 }
 
 // -----------------------------------------------------------------------
@@ -738,32 +935,6 @@ std::string Inputs::get_indices_lookup_file() {
 }
 
 // -----------------------------------------------------------------------
-// Return total number of OMNIWeb files to read
-// -----------------------------------------------------------------------
-
-int Inputs::get_number_of_omniweb_files() {
-  if (settings.find("OmniwebFiles") != settings.end())
-    return settings.at("OmniwebFiles").size();
-
-  IsOk = false;
-  return dummy_int;
-}
-
-// -----------------------------------------------------------------------
-// Return OMNIWeb file names as a vector
-// -----------------------------------------------------------------------
-
-std::vector<std::string> Inputs::get_omniweb_files() {
-  std::vector<std::string> omniweb_files;
-  int nFiles = get_number_of_omniweb_files();
-
-  for (int i = 0; i < nFiles; i++)
-    omniweb_files.push_back(settings.at("OmniwebFiles").at(i));
-
-  return omniweb_files;
-}
-
-// -----------------------------------------------------------------------
 // Return F107 file to read
 // -----------------------------------------------------------------------
 
@@ -776,7 +947,7 @@ std::string Inputs::get_f107_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet() {
-  return settings["Planet"]["name"];
+  return get_setting_str("Planet", "name");
 }
 
 // -----------------------------------------------------------------------
@@ -802,13 +973,7 @@ std::string Inputs::get_planet_species_file() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_calc_bulk_ion_temp() {
-  bool value = false;
-
-  if (check_settings("DoCalcBulkIonTemp"))
-    return settings.at("DoCalcBulkIonTemp");
-
-  IsOk = false;
-  return false;
+  return get_setting_bool("DoCalcBulkIonTemp");
 }
 
 // -----------------------------------------------------------------------
@@ -816,7 +981,7 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_eddy_coef() {
-  return settings["Eddy"]["Coefficient"];
+  return get_setting_float("Eddy", "Coefficient");
 }
 
 // -----------------------------------------------------------------------
@@ -824,7 +989,7 @@ precision_t Inputs::get_eddy_coef() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_eddy_bottom() {
-  return settings["Eddy"]["BottomPressure"];
+  return get_setting_float("Eddy", "BottomPressure");
 }
 
 // -----------------------------------------------------------------------
@@ -832,7 +997,7 @@ precision_t Inputs::get_eddy_bottom() {
 // -----------------------------------------------------------------------
 
 precision_t Inputs::get_eddy_top() {
-  return settings["Eddy"]["TopPressure"];
+  return get_setting_float("Eddy", "TopPressure");
 }
 
 // -----------------------------------------------------------------------
@@ -840,16 +1005,15 @@ precision_t Inputs::get_eddy_top() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_use_eddy_momentum() {
-  return settings["Eddy"]["UseInMomentum"];
+  return get_setting_bool("Eddy", "UseInMomentum");
 }
 
-// -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
 
 bool Inputs::get_use_eddy_energy() {
-  return settings["Eddy"]["UseInEnergy"];
+  return get_setting_bool("Eddy", "UseInEnergy");
 }
 
 // -----------------------------------------------------------------------
@@ -857,12 +1021,7 @@ bool Inputs::get_use_eddy_energy() {
 // -----------------------------------------------------------------------
 
 json Inputs::get_perturb_values() {
-  json values;
-
-  if (check_settings("Perturb"))
-    values = settings.at("Perturb");
-
-  return values;
+  return get_setting_json("Perturb");
 }
 
 // -----------------------------------------------------------------------
@@ -870,7 +1029,7 @@ json Inputs::get_perturb_values() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_check_for_nans() {
-  return settings.at("Debug").at("check_for_nans");;
+  return get_setting_bool("Debug", "check_for_nans");
 }
 
 // -----------------------------------------------------------------------
@@ -878,7 +1037,7 @@ bool Inputs::get_check_for_nans() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_nan_test() {
-  return settings.at("Debug").at("nan_test").at("insert");
+  return get_setting_bool("Debug", "nan_test", "insert");
 }
 
 // -----------------------------------------------------------------------
@@ -886,7 +1045,7 @@ bool Inputs::get_nan_test() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_nan_test_variable() {
-  return settings.at("Debug").at("nan_test").at("variable");
+  return get_setting_str("Debug", "nan_test", "variable");
 }
 
 // -----------------------------------------------------------------------
@@ -894,7 +1053,7 @@ std::string Inputs::get_nan_test_variable() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_lat_dependent_radius() {
-  return settings["Oblate"]["isOblate"];
+  return get_setting_bool("Oblate", "isOblate");
 }
 
 // -----------------------------------------------------------------------
@@ -902,7 +1061,7 @@ bool Inputs::get_do_lat_dependent_radius() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_J2() {
-  return settings["Oblate"]["isJ2"];
+  return get_setting_bool("Oblate", "isJ2");
 }
 
 // -----------------------------------------------------------------------
@@ -910,12 +1069,7 @@ bool Inputs::get_do_J2() {
 // -----------------------------------------------------------------------
 
 json Inputs::get_initial_condition_types() {
-  json values;
-
-  if (check_settings("InitialConditions"))
-    values = settings.at("InitialConditions");
-
-  return values;
+  return get_setting_json("InitialConditions");
 }
 
 // -----------------------------------------------------------------------
@@ -923,34 +1077,11 @@ json Inputs::get_initial_condition_types() {
 // -----------------------------------------------------------------------
 
 json Inputs::get_boundary_condition_types() {
-  json values;
-
-  if (check_settings("BoundaryConditions"))
-    values = settings.at("BoundaryConditions");
-
-  return values;
+  return get_setting_json("BoundaryConditions");
 }
 
 std::string Inputs::get_advection_neutrals_vertical() {
-
-  std::string value = "none";
-
-  if (settings.contains("Advection"))
-    if (settings["Advection"].contains("Neutrals"))
-      if (settings["Advection"]["Neutrals"].contains("Vertical"))
-        value = settings["Advection"]["Neutrals"]["Vertical"];
-      else {
-        std::cout << "Error trying to get inputs:\n";
-        std::cout << "  settings['Advection']['Neutrals']['Vertical']\n";
-      } else {
-      std::cout << "Error trying to get inputs:\n";
-      std::cout << "  settings['Advection']['Neutrals']\n";
-    } else {
-    std::cout << "Error trying to get inputs:\n";
-    std::cout << "  settings['Advection']\n";
-  }
-
-  return value;
+  return get_setting_str("Advection", "Neutrals", "Vertical");
 }
 
 // --------------------------------------------------------------------------
@@ -958,5 +1089,5 @@ std::string Inputs::get_advection_neutrals_vertical() {
 // --------------------------------------------------------------------------
 
 bool Inputs::is_ok() {
-  return IsOk;
+  return isOk;
 }
