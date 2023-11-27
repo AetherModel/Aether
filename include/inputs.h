@@ -81,6 +81,7 @@ public:
   json get_boundary_condition_types();
 
   std::string get_advection_neutrals_vertical();
+  bool get_advection_neutrals_bulkwinds();
 
   // ------------------------------
   // Grid inputs:
