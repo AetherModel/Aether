@@ -183,6 +183,9 @@ class Neutrals {
 
   // Source terms:
 
+  // Bulk acceleration due to collisions with ions:
+  std::vector<arma_cube> acc_ion_collisions;
+
   /// Bulk neutral thermal conduction temperature change rate (K/s)
   arma_cube conduction_scgc;
 
@@ -191,6 +194,12 @@ class Neutrals {
 
   /// Bulk neutral chemical heating temperatuare change (K/s)
   arma_cube heating_chemical_scgc;
+
+  // Bulk neutral collisional heating with ions (K/s)
+  arma_cube heating_ion_collisions_scgc;
+
+  // Total heating sources
+  arma_cube heating_sources_total;
 
   /// Nuetral gas direct absorption heating efficiency (~5%)
   precision_t heating_efficiency;
@@ -349,7 +358,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
    **/
-  void calc_conduction(Grid grid, Times time);
+  void update_temperature(Grid grid, Times time);
 
   /**********************************************************************
      \brief Calculate the O radiative cooling
@@ -364,8 +373,10 @@ class Neutrals {
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations
      \param time The times within the model (dt is needed)
+     \param planet Need things like rotation rate
+     \param grid Need things like radius
    **/
-  void add_sources(Times time);
+  void add_sources(Times time, Planets planet, Grid grid);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals

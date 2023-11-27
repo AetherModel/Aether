@@ -135,8 +135,14 @@ Neutrals::Neutrals(Grid grid,
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
   heating_chemical_scgc.set_size(nLons, nLats, nAlts);
+  heating_sources_total.set_size(nLons, nLats, nAlts);
+  heating_sources_total.zeros();
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
+
+  // bulk ion_neutral collisional acceleration:
+  acc_ion_collisions = make_cube_vector(nLons, nLats, nAlts, 3);
+
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(planet);
@@ -201,15 +207,18 @@ int Neutrals::read_planet_file(Planets planet) {
 }
 
 //----------------------------------------------------------------------
-// Fill With Hydrostatic Solution (all species)
+// Fill With Hydrostatic Solution (all ADVECTED species)
 //   - iEnd is NOT included (python style)!
+//   - only do advected, since others are probably chemistry dominated
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
                                      int64_t iEnd,
                                      Grid grid) {
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+  int64_t iNeutral, iSpecies;
+  for (iNeutral = 0; iNeutral < nSpeciesAdvect; iNeutral++) {
+    iSpecies = species_to_advect[iNeutral];
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
