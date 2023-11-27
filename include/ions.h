@@ -57,6 +57,8 @@ class Ions {
   arma_cube temperature_scgc;
   arma_cube conduction_scgc;
   arma_cube electron_temperature_scgc;
+  arma_cube rho_scgc;
+  arma_cube mean_major_mass_scgc;
 
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;

@@ -96,6 +96,10 @@ Ions::Ions(Grid grid, Planets planet) {
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
   electron_temperature_scgc.fill(200);
 
+  rho_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.ones();
+
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
@@ -247,12 +251,16 @@ void Ions::fill_electrons() {
   report.enter(function, iFunction);
 
   species[nSpecies].density_scgc.zeros();
+  rho_scgc.zeros();
 
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[nSpecies].density_scgc =
       species[nSpecies].density_scgc + species[iSpecies].density_scgc;
-
+    rho_scgc = rho_scgc + 
+      species[iSpecies].mass * species[iSpecies].density_scgc;
+  }
   density_scgc = species[nSpecies].density_scgc;
+  mean_major_mass_scgc = rho_scgc / density_scgc;
 
   report.exit(function);
   return;
