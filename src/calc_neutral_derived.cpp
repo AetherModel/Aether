@@ -157,11 +157,18 @@ void Neutrals::assign_bulk_velocity() {
 
   static int64_t iSpecies, iDir;
 
-  // If you don't advect a species, then fill with bulk velocity:
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    if (!species[iSpecies].DoAdvect)
+  if (input.get_advection_neutrals_bulkwinds()) {
+    // assume every species is advected with the bunk velocity:
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       for (iDir = 0; iDir < 3; iDir++)
         species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+  } else {
+    // If you don't advect a species, then fill with bulk velocity:
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+      if (!species[iSpecies].DoAdvect)
+        for (iDir = 0; iDir < 3; iDir++)
+          species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+  }
 
   report.exit(function);
   return;
@@ -604,74 +611,6 @@ void Neutrals::calc_chapman(Grid grid) {
       }  // iLat
     }  // iLon
   }  // iSpecies
-
-  report.exit(function);
-  return;
-}
-
-// -----------------------------------------------------------------------------
-// Calculate thermal conduction
-// -----------------------------------------------------------------------------
-
-void Neutrals::calc_conduction(Grid grid, Times time) {
-
-  std::string function = "Neutrals::calc_conduction";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t dt;
-  int64_t iLon, iLat;
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
-  int64_t nGCs = grid.get_nGCs();
-
-  if (nAlts == 2 * nGCs + 1)
-    conduction_scgc.zeros();
-
-  else {
-
-    arma_cube rhocvr23d(nLons, nLats, nAlts);
-    arma_cube lambda3d(nLons, nLats, nAlts);
-    arma_cube prandtl3d(nLons, nLats, nAlts);
-
-    rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
-
-    // Need to make this eddy * rho * cv:
-    if (input.get_use_eddy_energy())
-      prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
-    else
-      prandtl3d.zeros();
-
-    lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
-
-    arma_vec temp1d(nAlts);
-    arma_vec lambda1d(nAlts);
-    arma_vec rhocvr21d(nAlts);
-    arma_vec dalt1d(nAlts);
-    arma_vec conduction1d(nAlts);
-
-    for (iLon = 0; iLon < nLons; iLon++) {
-      for (iLat = 0; iLat < nLats; iLat++) {
-
-        temp1d = temperature_scgc.tube(iLon, iLat);
-        lambda1d = lambda3d.tube(iLon, iLat);
-        rhocvr21d = rhocvr23d.tube(iLon, iLat);
-        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
-        conduction1d.zeros();
-
-        dt = time.get_dt();
-
-        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
-
-        // We want the sources to be in terms of dT/dt, while the
-        // conduction actually solves for Tnew-Told, so divide by dt
-
-        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
-      }  // lat
-    }  // lon
-
-  } // if nAlts == 1 + 2*GCs
 
   report.exit(function);
   return;
