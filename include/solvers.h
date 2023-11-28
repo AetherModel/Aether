@@ -9,17 +9,24 @@
 #include <armadillo>
 using namespace arma;
 
-arma_vec solver_conduction(arma_vec value,
+arma_vec solver_conduction(
+			   arma_vec value,
 			   arma_vec lambda,
 			   arma_vec front,
+			   arma_vec source,
+			   arma_vec dx,
 			   precision_t dt,
-			   arma_vec dx);
-
+			   int64_t nGCs,
+			   bool return_diff);
 
 arma_cube solver_chemistry(arma_cube density,
 			   arma_cube source,
 			   arma_cube loss,
 			   precision_t dt);
+
+std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity,
+                                precision_t rotation_rate,
+                                arma_cube lat_scgc);
 
 /// Set flag values that indicate whether the previous, next, closest,
 /// or an interpolated value should be used.
