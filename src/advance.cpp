@@ -66,6 +66,8 @@ bool advance(Planets &planet,
   if (input.get_nAltsGeo() > 1)
     neutrals.advect_vertical(gGrid, time);
 
+  advect(gGrid, time, neutrals);
+
   if (didWork & input.get_check_for_nans())
     didWork = neutrals.check_for_nonfinites();
 
