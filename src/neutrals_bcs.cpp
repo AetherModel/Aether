@@ -318,7 +318,7 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
     }
   }
 
-  // iDir = 2 is left BC:
+  // iDir = 3 is lower BC:
   if (iDir == 3) {
     for (iX = 0; iX < nX; iX++) {
       for (iY = nGCs - 1; iY >= 0; iY--) {
