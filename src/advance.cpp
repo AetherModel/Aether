@@ -96,8 +96,6 @@ bool advance(Planets &planet,
 
     calc_aurora(gGrid, neutrals, ions);
 
-    // Calculate some neutral source terms:
-    neutrals.calc_conduction(gGrid, time);
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
 
     if (input.get_O_cooling())
@@ -110,7 +108,7 @@ bool advance(Planets &planet,
     calc_ion_collisions(neutrals, ions);
     calc_neutral_friction(neutrals);
 
-    neutrals.add_sources(time);
+    neutrals.add_sources(time, planet, gGrid);
 
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
