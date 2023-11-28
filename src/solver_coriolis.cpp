@@ -14,10 +14,10 @@ std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity,
                                 precision_t rotation_rate,
                                 arma_cube lat_scgc) {
   std::vector<arma_cube> coriolis_vec(3);
-  coriolis_vec[0] = -2 * rotation_rate * velocity[1] % sin(lat_scgc);
-  coriolis_vec[1] =
-    2 * rotation_rate * velocity[0] % sin(lat_scgc) -
+  coriolis_vec[0] =
+    2 * rotation_rate * velocity[1] % sin(lat_scgc) -
     2 * rotation_rate * velocity[2] % cos(lat_scgc);
+  coriolis_vec[1] = -2 * rotation_rate * velocity[0] % sin(lat_scgc);
   coriolis_vec[2] = 2 * rotation_rate * cos(lat_scgc) % velocity[1];
   return coriolis_vec;
 }
