@@ -23,7 +23,8 @@
     "Advection" : {
 	"Neutrals" : {
 	    "Vertical" : "rusanov",
-	    "Horizontal" : "default"},
+	    "Horizontal" : "default",
+		"useBulkWinds" : true},
 	"Ions" : {
 	    "Along" : "rusanov",
 	    "Across" : "default"} },
