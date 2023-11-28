@@ -124,6 +124,21 @@ public:
   // Vector of dx dy of different altitudes
   arma_vec drefx, drefy;
 
+  /// These are switching to the LR and DU directions for generalized coords
+  /// They are also in radians
+
+  arma_cube x_Center, y_Center;
+  arma_cube x_Left, y_Down;
+
+  /// these are center-to-center distances in the LR (X) and DU (Y) directions:
+  arma_cube dx_Center, dy_Center;
+  /// need dx on the lower / upper edges, don't need them on the left/right
+  arma_cube dx_Down;
+  /// need dy on the left / right edges:
+  arma_cube dy_Left;
+  /// cell area (in radians^2)
+  arma_cube cell_area;
+
   std::vector<arma_cube> bfield_vcgc;
   arma_cube bfield_mag_scgc;
   std::vector<arma_cube> bfield_unit_vcgc;

@@ -650,6 +650,13 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
       geoLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
   }
 
+  arma_cube cos_lat = cos(geoLat_scgc);
+  cos_lat.elem( find(cos_lat < 0.00001) ).fill(0.00001);
+
+  y_Center = geoLat_scgc;
+  x_Center = geoLon_scgc % cos_lat;
+  cell_area = dlat * dlon * cos_lat;
+
   // ---------------------------------------------
   // Left Sides - edges on left side (no offset left)
   // ---------------------------------------------
@@ -668,6 +675,13 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
     geoLat_Left.slice(iAlt) = lat2d_left;
   }
 
+  arma_cube cos_lat_L = cos(geoLat_Left);
+  cos_lat_L.elem( find(cos_lat_L < 0.00001) ).fill(0.00001);
+
+  x_Left = geoLon_Left % cos_lat_L;
+  dy_Left.set_size(nLons, nLats, nAlts);
+  dy_Left.fill(dlat);
+
   // ---------------------------------------------
   // Down Sides - edges on down side (no offset lat)
   // ---------------------------------------------
@@ -685,6 +699,12 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
     geoLon_Down.slice(iAlt) = lon2d_down;
     geoLat_Down.slice(iAlt) = lat2d_down;
   }
+
+  arma_cube cos_lat_D = cos(geoLat_Down);
+  cos_lat_D.elem( find(cos_lat_D < 0.00001) ).fill(0.00001);
+
+  y_Down = geoLat_Down;
+  dx_Down = dlon * cos_lat_D;
 
   // ---------------------------------------------
   // Corner Sides - corner (no offset lat or lon)
