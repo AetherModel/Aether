@@ -1,11 +1,11 @@
-// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
-// Full license can be found in License.md
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md
+// for members) Full license can be found in License.md
 
 #include "aether.h"
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Calculate thermal conduction
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 void Neutrals::update_temperature(Grid grid, Times time) {
 
@@ -59,11 +59,20 @@ void Neutrals::update_temperature(Grid grid, Times time) {
         dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
         conduction1d.zeros();
 
-        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, sources1d, dalt1d, dt, nGCs, false);
+        conduction1d = solver_conduction(temp1d,
+					 lambda1d,
+					 rhocvr21d,
+					 sources1d,
+					 dalt1d,
+					 dt,
+					 nGCs,
+					 false);
         temperature_scgc.tube(iLon, iLat) = conduction1d;
 
-        // Store the difference (as a rate), so we can output it later if we want:
-        conduction_scgc.tube(iLon, iLat) = (conduction1d - temp1d)/dt - sources1d;
+        // Store the difference (as a rate), so we can output it later
+        // if we want:
+        conduction_scgc.tube(iLon, iLat) =
+	  (conduction1d - temp1d)/dt - sources1d;
       }  // lat
     }  // lon
 
