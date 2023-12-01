@@ -23,7 +23,7 @@ void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
                         + heating_ion_collisions_scgc
                         - O_cool_scgc
                         - NO_cool_scgc;
-
+  
   // Solve the laplace equations using the source terms,
   // updating the neutral temperature:
   update_temperature(grid, time);
@@ -40,7 +40,10 @@ void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
         grid.cent_acc_vcgc[iDir] +
         acc_coriolis[iDir] + 
         acc_ion_collisions[iDir]);
+      acc_sources_total[iDir].zeros();
     }
+    // Apply Viscosity:
+    update_horizontal_velocity(grid, time);
   } else {
     for (int64_t iSpec = 0; iSpec < nSpeciesAdvect; iSpec++) {
       // Pick out the advected neutral species:
