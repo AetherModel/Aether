@@ -18,20 +18,20 @@ void fill_corners(arma_cube &values, int64_t nGCs) {
     for (iGCy = 0; iGCy < nGCs; iGCy++) {
       // lower left:
       values.tube(iGCx, iGCy) = 0.5 * (
-                                  values.tube(iGCx, nGCs) +
-                                  values.tube(nGCs, iGCy));
+                  values.tube(iGCx, nGCs) +
+                  values.tube(nGCs, iGCy));
       // lower right:
       values.tube(nXs - iGCx - 1, iGCy) = 0.5 * (
-                                            values.tube(nXs - iGCx - 1, nGCs) +
-                                            values.tube(nXs - nGCs - 1, iGCy));
+                  values.tube(nXs - iGCx - 1, nGCs) +
+                  values.tube(nXs - nGCs - 1, iGCy));
       // upper left:
       values.tube(iGCx, nYs - iGCy - 1) = 0.5 * (
-                                            values.tube(iGCx, nYs - nGCs - 1) +
-                                            values.tube(nGCs, nYs - iGCy - 1));
+                  values.tube(iGCx, nYs - nGCs - 1) +
+                  values.tube(nGCs, nYs - iGCy - 1));
       // upper right:
       values.tube(nXs - iGCx - 1, nYs - iGCy - 1) = 0.5 * (
-                                                      values.tube(nXs - iGCx - 1, nYs - nGCs - 1) +
-                                                      values.tube(nXs - nGCs - 1, nYs - iGCy - 1));
+                  values.tube(nXs - iGCx - 1, nYs - nGCs - 1) +
+                  values.tube(nXs - nGCs - 1, nYs - iGCy - 1));
     }
   }
 
@@ -493,13 +493,11 @@ void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v,
 //----------------------------------------------------------------------
 
 std::vector<int> index_to_ijk(arma_cube cube, int index) {
-  arma::uword x = cube.n_rows;
-  arma::uword y = cube.n_cols;
-  int altitude = index / (x * y);
-  int remainder = index % (x * y);
-  int lattitude = remainder / y;
-  int longitude = remainder % y;
-  return std::vector<int> {lattitude, longitude, altitude};
+  uvec u = ind2sub(size(cube), index);
+  int iLon = u(0);
+  int iLat = u(1);
+  int iAlt = u(2);
+  return std::vector<int> {iLon, iLat, iAlt};
 }
 
 //----------------------------------------------------------------------
@@ -520,6 +518,7 @@ bool all_finite(arma_cube cube, std::string name) {
       "," + std::to_string(loc[1]) +
       "," + std::to_string(loc[2]) + ")";
     int size = locations.size();
+    std::cout << "all_finite : " << cube(loc[0], loc[1], loc[2]) << "\n";
     std::string error_message =
       std::to_string(size) +
       " Nonfinite values exist in " + name +
