@@ -7,6 +7,23 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
+//  Calculate viscosity
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_viscosity() {
+
+  std::string function = "Neutrals::calc_viscosity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  viscosity_scgc = 0.00013 * sqrt(temperature_scgc %
+				  mean_major_mass_scgc / cKB);
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
 //  Calculate eddy diffusion coefficient
 // ----------------------------------------------------------------------
 
@@ -66,10 +83,34 @@ void Neutrals::calc_concentration() {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].concentration_scgc =
       species[iSpecies].density_scgc / density_scgc;
+    species[iSpecies].mass_concentration_scgc =
+      species[iSpecies].mass * species[iSpecies].density_scgc / rho_scgc;
+  }
+  
+  report.exit(function);
+  return;
+}
 
+// ----------------------------------------------------------------------
+//  Calculate densities from mass concentration
+//    Assuming mass density calculation is accurate...
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_density_from_mass_concentration() {
+
+  std::string function = "Neutrals::calc_density_from_mass_concentration";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].density_scgc =
+      rho_scgc % species[iSpecies].mass_concentration_scgc /
+      species[iSpecies].mass;
+  }
+  
   report.exit(function);
   return;
 }

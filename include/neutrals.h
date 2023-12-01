@@ -72,6 +72,8 @@ class Neutrals {
             
     /// concentration (density of species / total density)
     arma_cube concentration_scgc;
+    // mass concentration (mass * density of species / rho)
+    arma_cube mass_concentration_scgc;
 
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
@@ -169,6 +171,9 @@ class Neutrals {
   /// Eddy Diffusion
   arma_cube kappa_eddy_scgc;
 
+  /// Viscosity
+  arma_cube viscosity_scgc;
+
   /// O cooling 
   arma_cube O_cool_scgc;
 
@@ -185,6 +190,9 @@ class Neutrals {
 
   // Bulk acceleration due to collisions with ions:
   std::vector<arma_cube> acc_ion_collisions;
+
+  // Total bulk acceleration
+  std::vector<arma_cube> acc_sources_total;
 
   /// Bulk neutral thermal conduction temperature change rate (K/s)
   arma_cube conduction_scgc;
@@ -300,6 +308,11 @@ class Neutrals {
   void calc_scale_height(Grid grid);
   
   /**********************************************************************
+     \brief Calculate the viscosity coefficient
+   **/
+  void calc_viscosity();
+  
+  /**********************************************************************
      \brief Calculate the eddy diffusion coefficient in valid pressure
    **/
   void calc_kappa_eddy();
@@ -308,7 +321,13 @@ class Neutrals {
      \brief Calculate the concentration for each species (species ndensity / total ndensity)
    **/
   void calc_concentration();
-    
+
+  /**********************************************************************
+     \brief Calculate the density of each species from the mass concentration 
+            for each species and rho (ndensity = con * rho / mass)
+   **/
+  void calc_density_from_mass_concentration();
+  
   /**********************************************************************
      \brief Calculate the bulk mean major mass
    **/
@@ -359,6 +378,13 @@ class Neutrals {
      \param time The times within the model (dt is needed)
    **/
   void update_temperature(Grid grid, Times time);
+
+  /**********************************************************************
+     \brief Calculate the neutral bulk horizontal viscosity
+     \param grid The grid to define the neutrals on
+     \param time The times within the model (dt is needed)
+   **/
+  void update_horizontal_velocity(Grid grid, Times time);
 
   /**********************************************************************
      \brief Calculate the O radiative cooling

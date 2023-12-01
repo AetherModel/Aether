@@ -45,6 +45,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.ionization_scgc.zeros();
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
+  tmp.mass_concentration_scgc.set_size(nLons, nLats, nAlts);
 
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
@@ -132,6 +133,9 @@ Neutrals::Neutrals(Grid grid,
   kappa_eddy_scgc.set_size(nLons, nLats, nAlts);
   kappa_eddy_scgc.zeros();
 
+  viscosity_scgc.set_size(nLons, nLats, nAlts);
+  viscosity_scgc.zeros();
+
   conduction_scgc.set_size(nLons, nLats, nAlts);
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
   heating_chemical_scgc.set_size(nLons, nLats, nAlts);
@@ -142,7 +146,9 @@ Neutrals::Neutrals(Grid grid,
 
   // bulk ion_neutral collisional acceleration:
   acc_ion_collisions = make_cube_vector(nLons, nLats, nAlts, 3);
-
+  
+  // bulk ion_neutral collisional acceleration:
+  acc_sources_total = make_cube_vector(nLons, nLats, nAlts, 3);
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(planet);
