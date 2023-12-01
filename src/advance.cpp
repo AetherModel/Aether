@@ -46,6 +46,7 @@ bool advance(Planets &planet,
   neutrals.calc_pressure();
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
+  neutrals.calc_viscosity();
   neutrals.calc_cMax();
 
   precision_t dtNeutral = neutrals.calc_dt(gGrid);
@@ -66,11 +67,11 @@ bool advance(Planets &planet,
   if (input.get_nAltsGeo() > 1)
     neutrals.advect_vertical(gGrid, time);
 
+  neutrals.exchange_old(gGrid);
   advect(gGrid, time, neutrals);
 
   if (didWork & input.get_check_for_nans())
     didWork = neutrals.check_for_nonfinites();
-
 
   // ------------------------------------
   // Calculate source terms next:
