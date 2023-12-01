@@ -1021,7 +1021,10 @@ bool Inputs::get_use_eddy_energy() {
 // -----------------------------------------------------------------------
 
 json Inputs::get_perturb_values() {
-  return get_setting_json("Perturb");
+  json value;
+  if (settings.find("Perturb") != settings.end())
+    value = settings.at("Perturb");
+  return value;
 }
 
 // -----------------------------------------------------------------------
