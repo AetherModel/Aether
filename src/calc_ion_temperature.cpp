@@ -60,14 +60,11 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Get the time step size
   precision_t dt = time.get_dt();
 
-  for (iIon = 0; iIon < nSpecs; iIon++)
-    species[iIon].temperature_scgc =
-      neutrals.temperature_scgc + 
-      1.5 * (neutrals.temperature_scgc - neutrals.temperature_scgc(2,2,2));
+  for (iIon = 0; iIon < nSpecies; iIon++)
+    species[iIon].temperature_scgc = neutrals.temperature_scgc;
 
-  temperature_scgc = neutrals.temperature_scgc + 
-    1.5 * (neutrals.temperature_scgc - neutrals.temperature_scgc(2,2,2));
-
+  temperature_scgc = neutrals.temperature_scgc;
+  
   report.exit(function);
   return;
 
