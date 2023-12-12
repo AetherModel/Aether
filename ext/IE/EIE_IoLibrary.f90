@@ -604,6 +604,14 @@ subroutine IO_GetElectronDiffuseAurora(EFluxOut, AveEOut, iError)
 
       endif
 
+      if ((index(EIE_NameOfAuroralModel,'zero') > 0) .or. &
+          (index(EIE_NameOfAuroralModel,'none') > 0)) then
+         iError = 0
+         AveEOut = 3.0
+         EFluxOut = 1e-9
+      endif
+
+
   endif
 
 end subroutine IO_GetElectronDiffuseAurora
