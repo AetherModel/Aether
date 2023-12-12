@@ -557,20 +557,17 @@ void Neutrals::calc_chapman(Grid grid) {
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
-    iAlt = nAlts - 1;
 
     integral3d.fill(0.0);
-
+    iAlt = nAlts - 1;
     integral3d.slice(iAlt) =
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    for (iAlt = nAlts - 1; iAlt >= 0; iAlt--) {
-      if (iAlt < nAlts - 1) {
-        integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
-                                 species[iSpecies].density_scgc.slice(iAlt) %
-                                 grid.dalt_lower_scgc.slice(iAlt + 1);
-      }
+    for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
+      integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
+                               species[iSpecies].density_scgc.slice(iAlt) %
+                               grid.dalt_lower_scgc.slice(iAlt + 1);
     }
 
     species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
