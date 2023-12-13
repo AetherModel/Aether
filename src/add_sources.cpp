@@ -29,11 +29,13 @@ void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
   update_temperature(grid, time);
 
   std::vector<arma_cube> acc_coriolis;
+  acc_coriolis = make_cube_vector(grid.get_nX(), grid.get_nY(), grid.get_nZ(), 3);
 
   // If we only consider the bulk winds in the horizontal direction:
   if (input.get_advection_neutrals_bulkwinds()) {
     // Calculate Coriolis:
-    acc_coriolis = coriolis(velocity_vcgc, planet.get_omega(), grid.geoLat_scgc);
+    if (input.get_use_coriolis()) 
+      acc_coriolis = coriolis(velocity_vcgc, planet.get_omega(), grid.geoLat_scgc);
     // Add Velocity sources to bulk winds:
     for (int iDir = 0; iDir < 3; iDir++) {
       velocity_vcgc[iDir] = velocity_vcgc[iDir] + dt * (
@@ -49,9 +51,10 @@ void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
       // Pick out the advected neutral species:
       species_chars & advected_neutral = species[species_to_advect[iSpec]];
       // Calculate Coriolis:
-      acc_coriolis = coriolis(advected_neutral.velocity_vcgc, 
-                              planet.get_omega(), 
-                              grid.geoLat_scgc);
+      if (input.get_use_coriolis()) 
+        acc_coriolis = coriolis(advected_neutral.velocity_vcgc, 
+                                planet.get_omega(), 
+                                grid.geoLat_scgc);
 
       for (int iDir = 0; iDir < 2; iDir++) {
         // update velocities based on acceleration:
