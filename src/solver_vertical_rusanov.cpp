@@ -277,7 +277,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         species[iSpecies].velocity_vcgc[2]
         - dt * (species[iSpecies].velocity_vcgc[2] % gradVertVel_s[iSpecies]
                 - v2or
-                + 0.1 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
+                + 0.05 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
                          + gradTemp * cKB / mass
                          + abs(grid.gravity_vcgc[2])))
         + dt * diffVertVel_s[iSpecies];
@@ -294,28 +294,9 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
     + dt * diffTemp;
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    if (species[iSpecies].DoAdvect) {
-
-      for (iX = nGCs; iX < nXs - nGCs; iX++)
-        for (iY = nGCs; iY < nYs - nGCs; iY++)
-          for (iZ = nGCs; iZ < nZs - nGCs; iZ++) {
-            if (abs(species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ)) > 100.0) {
-              if (species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ) > 100.0)
-                species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ) = 100.0;
-              else
-                species[iSpecies].newVelocity_vcgc[2](iX, iY, iZ) = -100.0;
-            }
-
-            if (newTemperature_scgc(iX, iY, iZ) < 100.0 ||
-                std::isnan(newTemperature_scgc(iX, iY, iZ))) {
-              std::cout << "low temp found : "
-                        << iX << " "
-                        << iY << " "
-                        << iZ << " "
-                        << newTemperature_scgc(iX, iY, iZ) << " ";
-            }
-          }
-    }
+    if (species[iSpecies].DoAdvect)
+      species[iSpecies].newVelocity_vcgc[2].clamp(-100,100);
+  newTemperature_scgc.clamp(10, 1e32);
 
   for (iX = nGCs; iX < nXs - nGCs; iX++)
     for (iY = nGCs; iY < nYs - nGCs; iY++)
@@ -336,13 +317,15 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         }
       }
 
-  // If you don't advect a species, then fill with hydrostatic:
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    if (!species[iSpecies].DoAdvect)
-      fill_with_hydrostatic(iSpecies, nGCs, nZs, grid);
-
   calc_mass_density();
-  calc_bulk_velocity();
+  // Calculate bulk vertical winds:
+  velocity_vcgc[2].zeros();
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    if (species[iSpecies].DoAdvect) {
+      velocity_vcgc[2] = velocity_vcgc[2] + 
+        species[iSpecies].mass * species[iSpecies].density_scgc % 
+        species[iSpecies].velocity_vcgc[2] / rho_scgc;
+    }
 
   report.exit(function);
   return;
