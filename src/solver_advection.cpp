@@ -279,6 +279,7 @@ void advect(Grid &grid,
   projection_struct xVelP;
   projection_struct yVelP;
   projection_struct tempP;
+  projection_struct gammaP;
 
   precision_t gamma = 5.0/3.0;
   precision_t dt = time.get_dt();
@@ -318,6 +319,8 @@ void advect(Grid &grid,
 
   arma_mat area, xWidth, yWidth, geometry;
 
+  arma_mat gamma2d;
+
   // These are all needed by the solver:
   neutrals.calc_mass_density();
   neutrals.calc_mean_major_mass();
@@ -334,7 +337,8 @@ void advect(Grid &grid,
     yVel = neutrals.velocity_vcgc[1].slice(iAlt);
     rho = neutrals.rho_scgc.slice(iAlt);
     // this is "e", or temperature expressed as an energy
-    t_to_e = 1.0/(gamma-1.0) * cKB / neutrals.mean_major_mass_scgc.slice(iAlt);
+    gamma2d = neutrals.gamma_scgc.slice(iAlt);
+    t_to_e = 1.0 / (gamma2d - 1.0) * cKB / neutrals.mean_major_mass_scgc.slice(iAlt);
     temp = t_to_e % neutrals.temperature_scgc.slice(iAlt);
 
     // ------------------------------------------------
@@ -358,6 +362,7 @@ void advect(Grid &grid,
     xVelP = project_to_edges(xVel, x, xEdges, y, yEdges, nGCs);
     yVelP = project_to_edges(yVel, x, xEdges, y, yEdges, nGCs);
     tempP = project_to_edges(temp, x, xEdges, y, yEdges, nGCs);
+    gammaP = project_to_edges(gamma2d, x, xEdges, y, yEdges, nGCs);
 
     // ------------------------------------------------
     // Calculate derived equations (at edges)
@@ -398,32 +403,32 @@ void advect(Grid &grid,
     eq1FluxD = rhoP.D % yVelP.D;
     eq1FluxU = rhoP.U % yVelP.U;
 
-    eq2FluxL = rhoP.L % (xVelP.L % xVelP.L + (gamma-1) * tempP.L);
-    eq2FluxR = rhoP.R % (xVelP.R % xVelP.R + (gamma-1) * tempP.R);
+    eq2FluxL = rhoP.L % (xVelP.L % xVelP.L + (gammaP.L - 1) % tempP.L);
+    eq2FluxR = rhoP.R % (xVelP.R % xVelP.R + (gammaP.R - 1) % tempP.R);
     eq2FluxD = rhoP.D % xVelP.D % yVelP.D;
     eq2FluxU = rhoP.U % xVelP.U % yVelP.U;
     eq2Flux = rho % xVel % yVel;
 
     eq3FluxR = rhoP.R % xVelP.R % yVelP.R;
     eq3FluxL = rhoP.L % xVelP.L % yVelP.L;
-    eq3FluxD = rhoP.D % (yVelP.D % yVelP.D + (gamma-1) * tempP.D);
-    eq3FluxU = rhoP.U % (yVelP.U % yVelP.U + (gamma-1) * tempP.U);
-    eq3Flux = rho % (yVel % yVel + (gamma-1) * temp);
+    eq3FluxD = rhoP.D % (yVelP.D % yVelP.D + (gammaP.D - 1) % tempP.D);
+    eq3FluxU = rhoP.U % (yVelP.U % yVelP.U + (gammaP.U - 1) % tempP.U);
+    eq3Flux = rho % (yVel % yVel + (gamma2d - 1) % temp);
 
-    eq4FluxL = rhoP.L % xVelP.L % (0.5 * velL2 + gamma * tempP.L);
-    eq4FluxR = rhoP.R % xVelP.R % (0.5 * velR2 + gamma * tempP.R);
-    eq4FluxD = rhoP.D % yVelP.D % (0.5 * velD2 + gamma * tempP.D);
-    eq4FluxU = rhoP.U % yVelP.U % (0.5 * velU2 + gamma * tempP.U);
+    eq4FluxL = rhoP.L % xVelP.L % (0.5 * velL2 + gammaP.L % tempP.L);
+    eq4FluxR = rhoP.R % xVelP.R % (0.5 * velR2 + gammaP.R % tempP.R);
+    eq4FluxD = rhoP.D % yVelP.D % (0.5 * velD2 + gammaP.D % tempP.D);
+    eq4FluxU = rhoP.U % yVelP.U % (0.5 * velU2 + gammaP.U % tempP.U);
 
     // ------------------------------------------------
     // Calculate the wave speed for the diffusive flux:
 
     report.print(3, "Advection: Diffusive Fluxes");
 
-    wsL = sqrt(velL2) + sqrt(gamma * (gamma-1) * tempP.L);
-    wsR = sqrt(velR2) + sqrt(gamma * (gamma-1) * tempP.R);
-    wsD = sqrt(velD2) + sqrt(gamma * (gamma-1) * tempP.D);
-    wsU = sqrt(velU2) + sqrt(gamma * (gamma-1) * tempP.U);
+    wsL = sqrt(velL2) + sqrt(gammaP.L % (gammaP.L - 1) % tempP.L);
+    wsR = sqrt(velR2) + sqrt(gammaP.R % (gammaP.R - 1) % tempP.R);
+    wsD = sqrt(velD2) + sqrt(gammaP.D % (gammaP.D - 1) % tempP.D);
+    wsU = sqrt(velU2) + sqrt(gammaP.U % (gammaP.U - 1) % tempP.U);
 
     wsLR = wsR;
     for (int64_t i = 0; i < nX + 1; i++) {
