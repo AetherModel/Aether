@@ -694,8 +694,16 @@ bool Inputs::get_O_cooling() {
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
-bool Inputs::get_cent_acc() {
-  return get_setting_bool("Sources", "Grid", "Cent_acc");
+bool Inputs::get_use_centripetal() {
+  return get_setting_bool("Sources", "Grid", "Centripetal");
+}
+
+// -----------------------------------------------------------------------
+// Return coriolis acceleration
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_coriolis() {
+  return get_setting_bool("Sources", "Grid", "Coriolis");
 }
 
 // -----------------------------------------------------------------------

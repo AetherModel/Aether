@@ -72,7 +72,8 @@ public:
   bool get_NO_cooling();
   bool get_O_cooling();
 
-  bool get_cent_acc();
+  bool get_use_centripetal();
+  bool get_use_coriolis();
 
   std::string get_student_name();
   bool get_is_student();
