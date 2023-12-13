@@ -92,7 +92,8 @@
 
     "Sources" : {
 	"Grid" : {
-	    "Cent_acc" : true },
+	    "Centripetal" : true,
+		"Coriolis" : true },
 	"Neutrals" : {
 	    "NO_cool" : false,
 	    "O_cool": false } },
