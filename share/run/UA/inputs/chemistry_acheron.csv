@@ -1,0 +1,3 @@
+name,loss1,loss2,loss3,->,source1,source2,source3,rate,temp dependent,Temp range,branching,heat,uncertainty,Numerator,Denominator,Exponent,Piecewise,Min,Max,FormulaType
+reaction,name,name,name,goes to,name,name,name,mks,,,ratio,eV,,K,T,dimensionless,T,K,K,,
+R1,O+,e-,,,O,,,1.00E-15,,,,0,0.1,,,,,,,,
