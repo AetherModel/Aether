@@ -79,7 +79,7 @@ int main() {
 
     // Calculate centripetal acceleration, since this is a constant
     // vector on the grid:
-    if (input.get_cent_acc())
+    if (input.get_use_centripetal())
       gGrid.calc_cent_acc(planet);
 
     // Initialize Magnetic grid:
