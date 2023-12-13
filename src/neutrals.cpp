@@ -101,10 +101,6 @@ Neutrals::Neutrals(Grid grid,
   temperature_scgc.ones();
   newTemperature_scgc.set_size(nLons, nLats, nAlts);
   newTemperature_scgc.ones();
-  O_cool_scgc.set_size(nLons, nLats, nAlts);
-  O_cool_scgc.zeros();
-  NO_cool_scgc.set_size(nLons, nLats, nAlts);
-  NO_cool_scgc.zeros();
 
   // Derived quantities:
 
@@ -137,10 +133,19 @@ Neutrals::Neutrals(Grid grid,
   viscosity_scgc.zeros();
 
   conduction_scgc.set_size(nLons, nLats, nAlts);
+  conduction_scgc.zeros();
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_euv_scgc.zeros();
   heating_chemical_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.zeros();
   heating_sources_total.set_size(nLons, nLats, nAlts);
   heating_sources_total.zeros();
+  heating_ion_collisions_scgc.set_size(nLons, nLats, nAlts);
+  heating_ion_collisions_scgc.zeros();
+  O_cool_scgc.set_size(nLons, nLats, nAlts);
+  O_cool_scgc.zeros();
+  NO_cool_scgc.set_size(nLons, nLats, nAlts);
+  NO_cool_scgc.zeros();
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
 
