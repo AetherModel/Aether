@@ -151,6 +151,8 @@ Neutrals::Neutrals(Grid grid,
 
   // bulk ion_neutral collisional acceleration:
   acc_ion_collisions = make_cube_vector(nLons, nLats, nAlts, 3);
+  // bulk coriolis acceleration:
+  acc_coriolis = make_cube_vector(nLons, nLats, nAlts, 3);
   
   // bulk ion_neutral collisional acceleration:
   acc_sources_total = make_cube_vector(nLons, nLats, nAlts, 3);
