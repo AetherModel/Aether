@@ -191,6 +191,9 @@ class Neutrals {
   // Bulk acceleration due to collisions with ions:
   std::vector<arma_cube> acc_ion_collisions;
 
+  // Bulk acceleration due to coriolis
+  std::vector<arma_cube> acc_coriolis;
+
   // Total bulk acceleration
   std::vector<arma_cube> acc_sources_total;
 
@@ -524,6 +527,11 @@ class Neutrals {
    **/
 
   bool advect_vertical(Grid grid, Times time);
+
+  arma_vec calc_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
+				   arma_vec &vels);
+
+  void calc_neutral_friction();  
   
 };
 
