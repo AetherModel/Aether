@@ -307,7 +307,7 @@ void Neutrals::nan_test(std::string variable) {
 // Checks for nans and +/- infinities in density, temp, and velocity
 //----------------------------------------------------------------------
 
-bool Neutrals::check_for_nonfinites() {
+bool Neutrals::check_for_nonfinites(std::string location) {
   bool isBad = false;
   bool didWork = true;
 
@@ -315,6 +315,7 @@ bool Neutrals::check_for_nonfinites() {
 
   if (isBad) {
     report.error("non-finite found in neutral density!");
+    report.error("from location : " + location);
     didWork = false;
   }
 
@@ -322,6 +323,7 @@ bool Neutrals::check_for_nonfinites() {
 
   if (isBad) {
     report.error("non-finite found in neutral temperature!");
+    report.error("from location : " + location);
     didWork = false;
   }
 
@@ -329,6 +331,7 @@ bool Neutrals::check_for_nonfinites() {
 
   if (isBad) {
     report.error("non-finite found in neutral velocity!");
+    report.error("from location : " + location);
     didWork = false;
   }
 

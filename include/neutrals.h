@@ -451,7 +451,7 @@ class Neutrals {
   /*****************************************************************************
       \brief  Checks for nans and +/- infinities in density, temp, and velocity
     **/
-  bool check_for_nonfinites();
+  bool check_for_nonfinites(std::string location);
 
   /**********************************************************************
       \brief Checks for nans in the specified variable

@@ -36,7 +36,7 @@ bool advance(Planets &planet,
                  input.get_student_name() + "?");
 
   if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites();
+    didWork = neutrals.check_for_nonfinites("Top of Advance");
 
   gGrid.calc_sza(planet, time);
   neutrals.calc_mass_density();
@@ -67,11 +67,14 @@ bool advance(Planets &planet,
   neutrals.exchange_old(gGrid);
   advect(gGrid, time, neutrals);
 
+  if (didWork & input.get_check_for_nans())
+    didWork = neutrals.check_for_nonfinites("After Horizontal Advection");
+  
   if (input.get_nAltsGeo() > 1)
     neutrals.advect_vertical(gGrid, time);
 
   if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites();
+    didWork = neutrals.check_for_nonfinites("After Vertical Advection");
 
   // ------------------------------------
   // Calculate source terms next:
@@ -111,6 +114,9 @@ bool advance(Planets &planet,
 
     neutrals.add_sources(time, planet, gGrid);
 
+    if (didWork & input.get_check_for_nans())
+      didWork = neutrals.check_for_nonfinites("After Add Sources");
+
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
 
@@ -128,9 +134,6 @@ bool advance(Planets &planet,
       time.restart_file(input.get_restartout_dir(), DoWrite);
     }
   }
-
-  if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites();
 
   if (didWork)
     didWork = output(neutrals, ions, gGrid, time, planet);
