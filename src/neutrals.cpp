@@ -334,7 +334,8 @@ bool Neutrals::check_for_nonfinites(std::string location) {
     report.error("from location : " + location);
     didWork = false;
   }
-
+  didWork = sync_across_all_procs(didWork);
+  
   return didWork;
 }
 
