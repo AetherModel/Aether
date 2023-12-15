@@ -546,6 +546,11 @@ void advect(Grid &grid,
   }
   neutrals.calc_density_from_mass_concentration();
 
+  // Assign bulk horizontal velocity to all species:
+  for (int64_t iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+    for (int64_t iDir = 0; iDir < 2; iDir++)
+      neutrals.species[iSpecies].velocity_vcgc[iDir] = neutrals.velocity_vcgc[iDir];
+  
   report.exit(function);
   return;
 }
