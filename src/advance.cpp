@@ -107,9 +107,7 @@ bool advance(Planets &planet,
     if (input.get_NO_cooling())
       neutrals.calc_NO_cool();
 
-    neutrals.vertical_momentum_eddy(gGrid);
     calc_ion_collisions(neutrals, ions);
-    calc_neutral_friction(neutrals);
 
     neutrals.add_sources(time, planet, gGrid);
 
