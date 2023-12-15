@@ -148,6 +148,11 @@ public:
    **/
   std::vector<int> get_iCurrent();
   
+  /**************************************************************
+     \brief Get the current simulation time (sec since start)
+   **/
+  double get_simulation_time();
+  
   /**********************************************************************
      \brief Read / Write restart files for time
      \param dir directory to write restart files
