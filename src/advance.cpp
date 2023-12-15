@@ -70,12 +70,6 @@ bool advance(Planets &planet,
   if (didWork & input.get_check_for_nans())
     didWork = neutrals.check_for_nonfinites("After Horizontal Advection");
   
-  if (input.get_nAltsGeo() > 1)
-    neutrals.advect_vertical(gGrid, time);
-
-  if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites("After Vertical Advection");
-
   // ------------------------------------
   // Calculate source terms next:
 
@@ -120,10 +114,19 @@ bool advance(Planets &planet,
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
 
+    if (input.get_nAltsGeo() > 1)
+      neutrals.advect_vertical(gGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = neutrals.check_for_nonfinites("After Vertical Advection");
+
+
     if (input.get_is_cubesphere())
       neutrals.exchange(gGrid);
     else
       neutrals.exchange_old(gGrid);
+
+
 
     time.increment_time();
 
