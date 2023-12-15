@@ -251,6 +251,10 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
   v2or = (velocity_vcgc[0] % velocity_vcgc[0] +
           velocity_vcgc[1] % velocity_vcgc[1]) / grid.radius_scgc;
 
+  // calculate vertical momentum due to eddy diffusion:
+  vertical_momentum_eddy(grid);
+
+
   // -----------------------------------------------------------
   // Now calculate new states:
   precision_t mass;
@@ -277,7 +281,10 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         species[iSpecies].velocity_vcgc[2]
         - dt * (species[iSpecies].velocity_vcgc[2] % gradVertVel_s[iSpecies]
                 - v2or
-                + 0.05 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
+                - species[iSpecies].acc_eddy
+                - acc_coriolis[2]
+                - grid.cent_acc_vcgc[2]
+                + 0.025 * (temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
                          + gradTemp * cKB / mass
                          + abs(grid.gravity_vcgc[2])))
         + dt * diffVertVel_s[iSpecies];
@@ -286,6 +293,9 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
       species[iSpecies].newDensity_scgc = species[iSpecies].density_scgc;
     }
   }
+
+
+
 
   newTemperature_scgc =
     temperature_scgc
@@ -317,6 +327,17 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
         }
       }
 
+  // Force the neutrals to move together with friction:
+  calc_neutral_friction();
+  /*
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect) {
+        species[iSpecies].velocity_vcgc[2] = 
+          species[iSpecies].velocity_vcgc[2] + dt * 
+          species[iSpecies].acc_neutral_friction[iDir];
+    }
+  }
+  */
   calc_mass_density();
   // Calculate bulk vertical winds:
   velocity_vcgc[2].zeros();
