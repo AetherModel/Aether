@@ -312,15 +312,25 @@ bool Neutrals::check_for_nonfinites(std::string location) {
   bool didWork = true;
 
   isBad = !all_finite(density_scgc, "density_scgc");
-
   if (isBad) {
     report.error("non-finite found in neutral density!");
     report.error("from location : " + location);
     didWork = false;
   }
 
+  int64_t iSpecies;
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    isBad = !all_finite(species[iSpecies].density_scgc,
+			species[iSpecies].cName + " density");
+    if (isBad) {
+      report.error("non-finite found in " +
+		   species[iSpecies].cName + " density!");
+      report.error("from location : " + location);
+      didWork = false;
+    }
+  }
+  
   isBad = !all_finite(temperature_scgc, "temperature_scgc");
-
   if (isBad) {
     report.error("non-finite found in neutral temperature!");
     report.error("from location : " + location);
@@ -328,13 +338,23 @@ bool Neutrals::check_for_nonfinites(std::string location) {
   }
 
   isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
-
   if (isBad) {
     report.error("non-finite found in neutral velocity!");
     report.error("from location : " + location);
     didWork = false;
   }
   didWork = sync_across_all_procs(didWork);
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    isBad = !all_finite(species[iSpecies].velocity_vcgc,
+			species[iSpecies].cName + " velocity!");
+    if (isBad) {
+      report.error("non-finite found in " + 
+		   species[iSpecies].cName + " velocity!");
+      report.error("from location : " + location);
+      didWork = false;
+    }
+  }
   
   return didWork;
 }
