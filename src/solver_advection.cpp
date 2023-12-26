@@ -516,24 +516,26 @@ void advect(Grid &grid,
     neutrals.velocity_vcgc[0].slice(iAlt) = xVel;
     neutrals.velocity_vcgc[1].slice(iAlt) = yVel;
     temp = (totalE / rho - 0.5 * (xVel % xVel + yVel % yVel)) / t_to_e;
-    precision_t fac, dm, dp;
+    temp.clamp(200, 2000);
+    
+    //precision_t fac, dm, dp;
     
     for (int64_t j = nGCs; j < nY - nGCs; j++) {
       for (int64_t i = nGCs; i < nX - nGCs; i++) {
-	fac = 1.0;
-	if (cos(grid.geoLat_scgc(i,j,iAlt)) < 0.2) {
-	  fac = fac * (0.2 - cos(grid.geoLat_scgc(i,j,iAlt)));
-	}
-	dm = (1.0 - fac) * neutrals.temperature_scgc(i,j,iAlt);
-	dp = (1.0 + fac) * neutrals.temperature_scgc(i,j,iAlt);
-	if (temp(i,j) < dm) temp(i,j) = dm;
-	if (temp(i,j) > dp) temp(i,j) = dp;
+	//fac = 1.0;
+	//if (cos(grid.geoLat_scgc(i,j,iAlt)) < 0.2) {
+	//  fac = fac * (0.2 - cos(grid.geoLat_scgc(i,j,iAlt)));
+	//}
+	//dm = (1.0 - fac) * neutrals.temperature_scgc(i,j,iAlt);
+	//dp = (1.0 + fac) * neutrals.temperature_scgc(i,j,iAlt);
+	//if (temp(i,j) < dm) temp(i,j) = dm;
+	//if (temp(i,j) > dp) temp(i,j) = dp;
 	neutrals.temperature_scgc(i,j,iAlt) = temp(i,j);
 
-	dm = (1.0 - fac) * neutrals.rho_scgc(i,j,iAlt);
-	dp = (1.0 + fac) * neutrals.rho_scgc(i,j,iAlt);
-	if (rho(i,j) < dm) rho(i,j) = dm;
-	if (rho(i,j) > dp) rho(i,j) = dp;
+	//dm = (1.0 - fac) * neutrals.rho_scgc(i,j,iAlt);
+	//dp = (1.0 + fac) * neutrals.rho_scgc(i,j,iAlt);
+	//if (rho(i,j) < dm) rho(i,j) = dm;
+	//if (rho(i,j) > dp) rho(i,j) = dp;
 	neutrals.rho_scgc(i,j,iAlt) = rho(i,j);
       }
     }
