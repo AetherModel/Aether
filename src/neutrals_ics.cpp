@@ -167,7 +167,9 @@ bool Neutrals::initial_conditions(Grid grid,
       }
 
       calc_scale_height(grid);
-      fill_with_hydrostatic(1, nAlts, grid);
+      for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+	fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
+      
     } // type = planet
   }
 
