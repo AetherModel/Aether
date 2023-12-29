@@ -198,9 +198,11 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       sum_rho = sum_rho + rho;
 
       for (int64_t iComp = 0; iComp < 3; iComp++) {
+        species[iIon].velocity_vcgc[iComp] = 
+          species[iIon].perp_velocity_vcgc[iComp] +
+          species[iIon].par_velocity_vcgc[iComp];
         velocity_vcgc[iComp] = velocity_vcgc[iComp] +
-                               rho % (species[iIon].perp_velocity_vcgc[iComp] +
-                                      species[iIon].par_velocity_vcgc[iComp]);
+                               rho % (species[iIon].velocity_vcgc[iComp]);
       }
 
     }  // if DoAdvect
