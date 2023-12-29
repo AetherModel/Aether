@@ -139,8 +139,11 @@ double Times::get_end() {
 // Get the current time as a string
 // -----------------------------------------------------------------------------
 
-std::string Times::get_YMD_HMS() {
-  return sYMD_HMS;
+std::string Times::get_YMD_HMS(bool useSeconds) {
+  if (useSeconds)
+    return sYMD_HMS;
+  else 
+    return sYMD_HM0;
 }
 
 // -----------------------------------------------------------------------------
@@ -230,6 +233,9 @@ void Times::increment_time() {
   sprintf(tmp, "%04d%02d%02d_%02d%02d%02d",
           year, month, day, hour, minute, second);
   sYMD_HMS = std::string(tmp);
+  sprintf(tmp, "%04d%02d%02d_%02d%02d%02d",
+          year, month, day, hour, minute, 0);
+  sYMD_HM0 = std::string(tmp);
   sprintf(tmp, "%04d%02d%02d", year, month, day);
   sYMD = std::string(tmp);
   sprintf(tmp, "%02d%02d%02d", hour, minute, second);
