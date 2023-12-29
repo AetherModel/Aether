@@ -312,7 +312,10 @@ bool output(const Neutrals &neutrals,
       if (type_output == "therm")
         filename = "3DTHR_";
 
-      filename = filename + time.get_YMD_HMS();
+      bool useSeconds = false;
+      if (input.get_dt_output(iOutput) < 60)
+        useSeconds = true;
+      filename = filename + time.get_YMD_HMS(useSeconds);
 
       if (nMembers > 1)
         filename = filename + "_" + cMember;
