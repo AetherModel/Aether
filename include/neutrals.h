@@ -362,14 +362,6 @@ class Neutrals {
   void calc_cMax();
 
   /**********************************************************************
-     \brief Calculate dt (cell size / cMax) in each direction, and take min
-     \param dt returns the neutral time-step
-     \param grid The grid to define the neutrals on
-   **/
-  precision_t calc_dt(Grid grid);
-  precision_t calc_dt_cubesphere(Grid grid);
-
-  /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
      \param grid The grid to define the neutrals on
    **/
