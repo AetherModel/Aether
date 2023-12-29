@@ -20,7 +20,7 @@ class Ions {
     std::string cName;
     precision_t mass;
     int charge;
-
+    int vibe;
     int DoAdvect;
 
     std::vector<precision_t> nu_ion_neutral_coef;
@@ -39,8 +39,10 @@ class Ions {
     // Sources and Losses:
 
     arma_cube density_scgc;
+    arma_cube newDensity_scgc;
     std::vector<arma_cube> par_velocity_vcgc;
     std::vector<arma_cube> perp_velocity_vcgc;
+    std::vector<arma_cube> velocity_vcgc;
 
     arma_cube temperature_scgc;
     arma_cube conduction_scgc;
@@ -59,6 +61,9 @@ class Ions {
   arma_cube electron_temperature_scgc;
   arma_cube rho_scgc;
   arma_cube mean_major_mass_scgc;
+  std::vector<arma_cube> cMax_vcgc;
+  arma_cube sound_scgc;
+  arma_cube gamma_scgc;
 
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;
@@ -100,6 +105,12 @@ class Ions {
   void init_ion_temperature(Neutrals neutrals, Grid grid);
   void set_floor();
   void fill_electrons();
+  void calc_sound_speed();
+  void calc_cMax();
+  void set_bcs(Grid grid);
+  void set_upper_bcs(Grid grid);
+  void set_lower_bcs(Grid grid);
+
   int get_species_id(std::string name);
   void calc_efield(Grid grid);
   void calc_exb_drift(Grid grid);
@@ -113,5 +124,14 @@ class Ions {
   bool check_for_nonfinites();
   void nan_test(std::string variable);
   bool restart_file(std::string dir, bool DoRead);
+
+  /**********************************************************************
+     \brief Vertical advection solver - Rusanov 
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  void solver_vertical_rusanov(Grid grid, Times time);
+
 };
 #endif  // INCLUDE_IONS_H_
