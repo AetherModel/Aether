@@ -104,4 +104,15 @@ precision_t limiter_mc(precision_t dUp,
 		       precision_t dDown,
 		       precision_t beta);
 
+
+  /**********************************************************************
+     \brief Calculate dt (cell size / cMax) in each direction, and take min
+     \param dt returns the neutral time-step
+     \param grid The grid to define the neutrals on
+   **/
+  precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc);
+  precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc);  
+  precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc);  
+  precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc);  
+
 #endif  // INCLUDE_SOLVERS_H_
