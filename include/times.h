@@ -91,8 +91,10 @@ public:
      \brief Returns the current time as a string (year, month...)
 
      Returns the current time as a string of format YYYYMMDD_HHMMSS
+
+     \param useSeconds if false, replace seconds with 0
    **/
-  std::string get_YMD_HMS();
+  std::string get_YMD_HMS(bool useSeconds);
 
   /**************************************************************
      \brief Returns the intermediate time in seconds since ref date
@@ -225,6 +227,9 @@ private:
 
   /// represented as YYYYMMDD_HHMMSS
   std::string sYMD_HMS;
+
+  /// represented as YYYYMMDD_HHMM00
+  std::string sYMD_HM0;  
 
   // -------------------------------------------------------------
   // Keeping track of walltime for the run:
