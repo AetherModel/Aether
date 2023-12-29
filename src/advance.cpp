@@ -49,8 +49,12 @@ bool advance(Planets &planet,
   neutrals.calc_viscosity();
   neutrals.calc_cMax();
 
-  precision_t dtNeutral = neutrals.calc_dt(gGrid);
-  precision_t dtIon = 100.0;
+  ions.fill_electrons();
+  ions.calc_sound_speed();
+  ions.calc_cMax();
+
+  precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
+  precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
   time.calc_dt(dtNeutral, dtIon);
 
   // ------------------------------------
@@ -63,7 +67,10 @@ bool advance(Planets &planet,
 
   if (didWork)
     didWork = neutrals.set_bcs(gGrid, time, indices);
-
+ 
+  if (didWork)
+    didWork = ions.set_bcs(gGrid, time, indices);
+  
   neutrals.exchange_old(gGrid);
   advect(gGrid, time, neutrals);
 
