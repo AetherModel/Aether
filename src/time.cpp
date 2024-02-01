@@ -219,12 +219,12 @@ void Times::increment_time() {
   milli = iCurrent[6];
 
   char tmp[100];
-  sprintf(tmp, "%04d%02d%02d_%02d%02d%02d",
+  snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
           year, month, day, hour, minute, second);
   sYMD_HMS = std::string(tmp);
-  sprintf(tmp, "%04d%02d%02d", year, month, day);
+  snprintf(tmp, 100, "%04d%02d%02d", year, month, day);
   sYMD = std::string(tmp);
-  sprintf(tmp, "%02d%02d%02d", hour, minute, second);
+  snprintf(tmp, 100, "%02d%02d%02d", hour, minute, second);
   sHMS = std::string(tmp);
 
   // Calculate Julian Day (day of year):
