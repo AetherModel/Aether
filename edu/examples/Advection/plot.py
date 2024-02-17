@@ -33,8 +33,11 @@ def read_file(file):
 
     return values
 
-def plot_data(values, fileout):
+def plot_data(values, fileout, x = []):
 
+    if (len(x) == 0):
+        nPts = len(values[0])
+        x = np.arange(0, nPts)
     fig = plt.figure(figsize = (10,10))
     ax = fig.add_subplot(111)
     n = len(values)-1
@@ -42,12 +45,13 @@ def plot_data(values, fileout):
         nSkip = int(n / 10)
     else:
         nSkip = 1
+        if (n == 0):
+            n = 1
     for i, v in enumerate(values):
         per = 0.1 + 0.9 * float(i) / float(n)
         if (i % nSkip == 0):
-            ax.plot(v, alpha = per)
-
-    ax.plot(values[-1])
+            print('Plotting... ', i, values[i][10])
+            ax.plot(x, values[i])
     fig.savefig(fileout)
     plt.close()
         
@@ -61,6 +65,7 @@ if (not np.isscalar(fileout)):
     fileout = fileout[0]
 
 values = read_file(filein)
-
-plot_data(values, fileout)
+x = read_file('x.txt')
+x = x[0]
+plot_data(values, fileout, x = x)
 
