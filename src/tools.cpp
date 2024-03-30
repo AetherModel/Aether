@@ -3,6 +3,107 @@
 
 #include "../include/aether.h"
 
+
+// -----------------------------------------------------------------------------
+// Set all of the ghost cells to a constant value that is fed in.
+//   This is primarily for testing of message passing.
+// -----------------------------------------------------------------------------
+
+void set_gcs_to_value(arma_cube &var_scgc,
+		      precision_t value,
+		      int64_t nGCs) {
+
+  std::string function = "set_gcs_to_value";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iX, nX = var_scgc.n_rows;
+  int64_t iY, nY = var_scgc.n_cols;
+  int64_t iZ, nZ = var_scgc.n_slices;
+
+  for (iZ = 0; iZ < nGCs; iZ++) {
+    var_scgc.slice(iZ).fill(value);
+    var_scgc.slice(nZ - 1 - iZ).fill(value);
+  }
+  // bottom:
+  var_scgc.tube(0, 0, nX - 1, nGCs - 1).fill(value);
+  // top:
+  var_scgc.tube(0, nY - nGCs, nX - 1, nY - 1).fill(value);
+  // left:
+  var_scgc.tube(0, 0, nGCs - 1, nY - 1).fill(value);
+  // right:
+  var_scgc.tube(nX - nGCs, 0, nX - 1, nY - 1).fill(value);
+  
+  report.exit(function);
+  return;
+}
+
+// -----------------------------------------------------------------------------
+// find interpolation coefficients for a 1D interpolator
+//   inX is the grid you are interpolating FROM
+//   outX is the position you want to interpolate TO
+//   outIndex and outRatio are the interpolation coefficents
+// -----------------------------------------------------------------------------
+
+bool find_interpolation_coefficients(arma_vec inX,
+				     arma_vec outX,
+				     arma_vec &outIndex,
+				     arma_vec &outRatio) {
+
+  bool didWork = true;
+  
+  // Assume inX and outX are defined the same...
+  int64_t iXo, iXi, nX = outX.n_rows;
+
+  outIndex.set_size(nX);
+  outRatio.set_size(nX);
+
+  bool isFound;
+  for (iXo = 0; iXo < nX; iXo++) {
+    iXi = 0;
+    isFound = false;
+    while (!isFound && iXi < nX - 1) {
+      if (inX[iXi] <= outX[iXo] &&
+	  inX[iXi + 1] > outX[iXo])
+	isFound = true;
+      else
+	iXi++;
+    }
+    if (isFound) {
+      outIndex[iXo] = iXi;
+      outRatio[iXo] =
+	(outX[iXo] - inX[iXi]) /
+	(inX[iXi + 1] - inX[iXi]);
+    } else {
+      didWork = false;
+      outIndex[iXo] = -1;
+      outRatio[iXo] = 0.0;
+    }
+  }
+  return didWork;
+}
+
+// -----------------------------------------------------------------------------
+// This takes the index and ratio determined in the above function and
+// uses them to interpolate.
+// -----------------------------------------------------------------------------
+
+arma_vec interpolate1d(arma_vec inY,
+		       arma_vec &index,
+		       arma_vec &ratio) {
+  int64_t iY, iy_, nY = inY.n_rows;
+  precision_t r_;
+  arma_vec outY(nY);
+  for (iY = 0; iY < nY; iY++) {
+    iy_ = index(iY);
+    r_ = ratio(iY);
+    if (iy_ > -1)
+      outY(iY) = (1.0 - r_) * inY(iy_) + r_ * inY(iy_);
+  }
+  return outY;
+}
+
+
 // ----------------------------------------------------------------------------
 // Fix corners in an arma cube
 //   - basically fill in the corners with values near them
