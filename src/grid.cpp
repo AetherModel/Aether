@@ -26,6 +26,8 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
 
   refx_scgc.set_size(nX, nY, nZ);
   refy_scgc.set_size(nX, nY, nZ);
+  refx_angle.set_size(nX, nY, nZ);
+  refy_angle.set_size(nX, nY, nZ);
 
   A11_scgc.set_size(nX, nY, nZ);
   A12_scgc.set_size(nX, nY, nZ);
