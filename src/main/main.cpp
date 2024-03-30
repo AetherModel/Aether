@@ -77,6 +77,10 @@ int main() {
     if (!didWork)
       throw std::string("init_geo_grid failed!");  
 
+    // Find interpolation coefs for the ghostcells if cubesphere grid
+    didWork = find_ghostcell_interpolation_coefs(gGrid);
+
+    
     // Calculate centripetal acceleration, since this is a constant
     // vector on the grid:
     if (input.get_cent_acc())
