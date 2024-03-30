@@ -30,6 +30,7 @@ public:
   arma_cube A11_inv_scgc, A12_inv_scgc, A21_inv_scgc, A22_inv_scgc;
   arma_cube g11_upper_scgc, g12_upper_scgc, g21_upper_scgc, g22_upper_scgc;
   arma_cube sqrt_g_scgc;
+  arma_cube refx_angle, refy_angle;
 
   // Edge/Corner coordinates
   arma_cube geoLon_Left;
@@ -52,6 +53,8 @@ public:
   arma_cube A11_inv_Left, A12_inv_Left, A21_inv_Left, A22_inv_Left;
   arma_cube g11_upper_Left, g12_upper_Left, g21_upper_Left, g22_upper_Left;
   arma_cube sqrt_g_Left;
+  arma_mat refx_angle_Left, refy_angle_Left;
+  arma_mat refx_angle_Down, refy_angle_Down;
 
   arma_cube A11_Down, A12_Down, A21_Down, A22_Down;
   arma_cube A11_inv_Down, A12_inv_Down, A21_inv_Down, A22_inv_Down;
@@ -215,9 +218,15 @@ public:
     MPI_Request requests;
     precision_t* buffer;
     precision_t* rbuffer;
+
+    // For cubesphere. these are needed for interpolation
+    // when the cells go onto a different face:
+    arma_mat index;
+    arma_mat ratio;
   };
 
   std::vector<messages_struct> interchanges;
+  std::vector<messages_struct> interchangesOneVar;
 
   messages_struct make_new_interconnection(int64_t iDir,
 					   int64_t nVars,
@@ -229,7 +238,9 @@ public:
 					   bool XbecomesY);
 
   bool send_one_face(int64_t iFace);
+  bool send_one_var_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
+  bool receive_one_var_one_face(int64_t iFace);
 
   /**
    * \brief Set the interpolation coefficients
