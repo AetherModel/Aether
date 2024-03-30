@@ -79,4 +79,45 @@ bool unpack_border(arma_cube &value,
 		   bool DoReverseY,
 		   bool XbecomesY);
 
+/**********************************************************************
+  \brief initialize the grid variables to set up ghostcell message passing 
+  \param grid the grid to set up message passing on
+  \param nVarsToPass how many variables to pass
+**/
+
+bool exchange_sides_init(Grid &grid, int64_t nVarsToPass);
+
+/**********************************************************************
+  \brief exchange one variable's ghost cells to adjacent blocks
+  \param grid the grid that describes the system
+  \param vat_to_pass is variable to pass
+  \param doReverseSignAcrossPole true for east/north vector components
+**/
+
+bool exchange_one_var(Grid &grid,
+		      arma_cube &var_to_pass,
+		      bool doReverseSignAcrossPole);
+
+/**********************************************************************
+  \brief test the exchange messages one var function
+  \param grid the grid that describes the system
+**/
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid);
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+bool test_ghostcell_interpolation(Grid &grid);
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+bool find_ghostcell_interpolation_coefs(Grid &grid);
+
+
+
 #endif  // INCLUDE_PARALLEL_H_
