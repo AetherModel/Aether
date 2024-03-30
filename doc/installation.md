@@ -87,7 +87,7 @@ cmake -DCMAKE_CXX_COMPILER=<gcc or mpi executable with full path>
 Finally, run the make command in the build directory:
 
 ```bash
-make -jN
+make [-jN]
 ```
 
 The `-j` flag tells the computer the number of processers to use when running
