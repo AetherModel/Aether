@@ -27,6 +27,43 @@
 //       near the equator.
 // -----------------------------------------------------------------------------
 
+
+// -----------------------------------------------------------------------------
+// This is the main exchange messages for the neutrals.
+//   We are exchanging densities, temperatures, and velocities   
+// -----------------------------------------------------------------------------
+
+
+bool Neutrals::exchange_old(Grid &grid) {
+
+  std::string function = "Neutrals::exchange";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  bool DidWork = true;
+  int64_t nGCs = grid.get_nGCs();
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect)
+      DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
+  }
+
+  DidWork = exchange_one_var(grid, temperature_scgc, false);
+
+  // velocity components:
+  // reverse east across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
+  // reverse north across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
+  // don't reverse vertical across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
+
+  report.exit(function);
+  return DidWork;
+}
+
+
+
 // -----------------------------------------------------------------------------
 // Pack variables for message passing
 //   value is variable to pack
@@ -471,38 +508,6 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
     (edge_center(2) + 1) * 100;
 
   return new_inter;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-
-
-bool Neutrals::exchange_old(Grid &grid) {
-
-  std::string function = "Neutrals::exchange";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  bool DidWork = true;
-
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    if (species[iSpecies].DoAdvect)
-      DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
-  }
-
-  DidWork = exchange_one_var(grid, temperature_scgc, false);
-
-  // velocity components:
-  // reverse east across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
-  // reverse north across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
-  // don't reverse vertical across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
-
-  report.exit(function);
-  return DidWork;
 }
 
 
@@ -993,6 +998,9 @@ bool exchange_one_var(Grid &grid,
     var_scgc = interpolate_ghostcells(var_to_pass, grid);
     var_to_pass = var_scgc;
   }
+
+  // Now we fill in the corners so that we don't have zero values there:
+  fill_corners(var_to_pass, nG);
 
   report.exit(function);
   return DidWork;
