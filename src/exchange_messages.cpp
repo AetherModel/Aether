@@ -286,19 +286,20 @@ bool Neutrals::pack_one_face(int iReceiver,
 }
 
 // -----------------------------------------------------------------------------
-// Pack one face for one variable
+// Pack one face for one variable - this is a generic code to pack one
+// variable one one face.
 // -----------------------------------------------------------------------------
 
 bool pack_one_var_on_one_face(arma_cube var_scgc,
-			      int iDirToPass,
-			      Grid &grid) {
-  
+                              int iDirToPass,
+                              Grid &grid) {
+
   static int nG = grid.get_nGCs();
   int iDir = grid.interchangesOneVar[iDirToPass].iFace;
   int iReceiver = grid.interchangesOneVar[iDirToPass].iProc_to;
   precision_t *buffer = grid.interchangesOneVar[iDirToPass].buffer;
   bool IsPole = grid.interchangesOneVar[iDirToPass].IsPole;
-    
+
   bool DidWork = true;
   int64_t iP;
 
@@ -706,7 +707,7 @@ bool Neutrals::exchange_old(Grid &grid) {
 // -----------------------------------------------------------------------------
 
 bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
-  
+
   std::string function = "exchange_sides_init";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -733,14 +734,14 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
   }
 
   grid.interchangesOneVar.push_back(
-       grid.make_new_interconnection(0,
-				     nVarsToPass,
-				     grid.iProcXp,
-				     grid.edge_Xp,
-				     IsPole,
-				     ReverseX,
-				     ReverseY,
-				     XbecomesY));
+    grid.make_new_interconnection(0,
+                                  nVarsToPass,
+                                  grid.iProcXp,
+                                  grid.edge_Xp,
+                                  IsPole,
+                                  ReverseX,
+                                  ReverseY,
+                                  XbecomesY));
 
   // Message passing up:
   ReverseX = false;
@@ -770,14 +771,14 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
   }
 
   grid.interchangesOneVar.push_back(
-       grid.make_new_interconnection(1,
-				     nVarsToPass,
-				     grid.iProcYp,
-				     grid.edge_Yp,
-				     IsPole,
-				     ReverseX,
-				     ReverseY,
-				     XbecomesY));
+    grid.make_new_interconnection(1,
+                                  nVarsToPass,
+                                  grid.iProcYp,
+                                  grid.edge_Yp,
+                                  IsPole,
+                                  ReverseX,
+                                  ReverseY,
+                                  XbecomesY));
 
   // Message passing left:
   ReverseX = false;
@@ -796,14 +797,14 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
   }
 
   grid.interchangesOneVar.push_back(
-       grid.make_new_interconnection(2,
-				     nVarsToPass,
-				     grid.iProcXm,
-				     grid.edge_Xm,
-				     IsPole,
-				     ReverseX,
-				     ReverseY,
-				     XbecomesY));
+    grid.make_new_interconnection(2,
+                                  nVarsToPass,
+                                  grid.iProcXm,
+                                  grid.edge_Xm,
+                                  IsPole,
+                                  ReverseX,
+                                  ReverseY,
+                                  XbecomesY));
 
   // Message passing down:
   ReverseX = false;
@@ -833,14 +834,14 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
   }
 
   grid.interchangesOneVar.push_back(
-       grid.make_new_interconnection(3,
-				     nVarsToPass,
-				     grid.iProcYm,
-				     grid.edge_Ym,
-				     IsPole,
-				     ReverseX,
-				     ReverseY,
-				     XbecomesY));
+    grid.make_new_interconnection(3,
+                                  nVarsToPass,
+                                  grid.iProcYm,
+                                  grid.edge_Ym,
+                                  IsPole,
+                                  ReverseX,
+                                  ReverseY,
+                                  XbecomesY));
 
   return DidWork;
 }
@@ -858,8 +859,8 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
 // -----------------------------------------------------------------------------
 
 bool exchange_one_var(Grid &grid,
-		      arma_cube &var_to_pass,
-		      bool doReverseSignAcrossPole) {
+                      arma_cube &var_to_pass,
+                      bool doReverseSignAcrossPole) {
 
   std::string function = "exchange_one_var";
   static int iFunction = -1;
@@ -889,14 +890,15 @@ bool exchange_one_var(Grid &grid,
 
   int64_t iP;
   precision_t oneSign = 1.0;
-  
+
   for (int iDir = 0; iDir < 4; iDir++) {
     if (report.test_verbose(2))
       std::cout << "packing one var : " << iDir << " " << iProc
                 << " " << grid.interchangesOneVar[iDir].iProc_to
                 << " " << grid.interchangesOneVar[iDir].iTag << "\n";
+
     if (grid.interchangesOneVar[iDir].IsPole &&
-	doReverseSignAcrossPole)
+        doReverseSignAcrossPole)
       var_scgc = -1.0 * var_to_pass;
     else
       var_scgc = 1.0 * var_to_pass;
@@ -906,10 +908,10 @@ bool exchange_one_var(Grid &grid,
       iP = 0;
       report.print(2, "Packing Border");
       DidWork = pack_border(var_scgc,
-			    grid.interchangesOneVar[iDir].buffer,
-			    &iP,
-			    nG,
-			    iDir);
+                            grid.interchangesOneVar[iDir].buffer,
+                            &iP,
+                            nG,
+                            iDir);
       report.print(2, "Done Packing Border");
     }
   }
@@ -925,7 +927,7 @@ bool exchange_one_var(Grid &grid,
   // Receive all faces asynchronously:
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
-      report.print(2, "Receiving one face"); 
+      report.print(2, "Receiving one face");
       DidWork = grid.receive_one_var_one_face(iDir);
     }
   }
@@ -940,21 +942,27 @@ bool exchange_one_var(Grid &grid,
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
       iP = 0;
-      report.print(2, "Unpacking Border");      
+      report.print(2, "Unpacking Border");
       DidWork = unpack_border(var_to_pass,
                               grid.interchangesOneVar[iDir].rbuffer,
-			      &iP,
-			      nG,
-			      iDir,
-			      grid.interchangesOneVar[iDir].DoReverseX,
-			      grid.interchangesOneVar[iDir].DoReverseY,
-			      grid.interchangesOneVar[iDir].XbecomesY);
+                              &iP,
+                              nG,
+                              iDir,
+                              grid.interchangesOneVar[iDir].DoReverseX,
+                              grid.interchangesOneVar[iDir].DoReverseY,
+                              grid.interchangesOneVar[iDir].XbecomesY);
       report.print(2, "Done Unpacking Border");
     }
   }
 
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
+
+  // If this is a cubesphere grid, interpolate ghostcells to their proper location
+  if (grid.IsCubeSphereGrid) {
+    var_scgc = interpolate_ghostcells(var_to_pass, grid);
+    var_to_pass = var_scgc;
+  }
 
   report.exit(function);
 
@@ -971,7 +979,7 @@ bool test_ghostcell_interpolation(Grid &grid) {
   report.enter(function, iFunction);
 
   bool didWork = true;
-  
+
   static int64_t iX, nX = grid.get_nX();
   static int64_t iY, nY = grid.get_nY();
   static int64_t iZ, nZ = grid.get_nZ();
@@ -984,82 +992,91 @@ bool test_ghostcell_interpolation(Grid &grid) {
   arma_cube lats = grid.geoLat_scgc * cRtoD;
   arma_cube lons = grid.geoLon_scgc * cRtoD;
 
+  arma_cube latsFixed = lats;
+  arma_cube lonsFixed = lons;
+
   // Set the ghostcells to 0:
   set_gcs_to_value(lats, 0.0, nG);
   set_gcs_to_value(lons, 0.0, nG);
-  
+
   // Message pass to get the lats and lons from the other faces
   report.print(1, "starting exchange to pass lats and lons");
   didWork = exchange_one_var(grid, lats, false);
   didWork = exchange_one_var(grid, lons, false);
-  
-  arma_cube latsFixed = interpolate_ghostcells(lats, grid);
-  arma_cube lonsFixed = interpolate_ghostcells(lons, grid);
 
   if (report.test_verbose(1)) {
-  
-  // Loop through the different directions:
-  for (iDir = 0; iDir < 4; iDir++) {
 
-    // Iteration indices - last point is <, so it is not included:
-    // Right:
-    if (iDir == 0) {
-      iStart = nX - nG;
-      iEnd = nX;
-      jStart = nG;
-      jEnd = nY - nG;
-    }
-    // Up:
-    if (iDir == 1) {
-      jStart = nY - nG;
-      jEnd = nY;
-      iStart = nG;
-      iEnd = nX - nG;
-    }
-    // Left:
-    if (iDir == 2) {
-      iStart = 0;
-      iEnd = nG;
-      jStart = nG;
-      jEnd = nY - nG;
-    }
-    // Down:
-    if (iDir == 3) {
-      jStart = 0;
-      jEnd = nG;
-      iStart = nG;
-      iEnd = nX - nG;
-    }
+    // Loop through the different directions:
+    for (iDir = 0; iDir < 4; iDir++) {
 
-    iZ = nG;
-    std::cout << "Looping through iDir = " << iDir << "\n";
-    for (iX = iStart; iX < iEnd; iX++) {
-      for (iY = jStart; iY < jEnd; iY++) {
+      // Iteration indices - last point is <, so it is not included:
+      // Right:
+      if (iDir == 0) {
+        iStart = nX - nG;
+        iEnd = nX;
+        jStart = nG;
+        jEnd = nY - nG;
+      }
 
-	std::cout << "iX, iY : " << iX << " " << iY << " ";
-	std::cout << " lats pre-inter : " << lats(iX, iY, iZ);
-	std::cout << " lats post-inter : " << latsFixed(iX, iY, iZ);
-	std::cout << " should be : " << grid.geoLat_scgc(iX, iY, iZ) * cRtoD;
-	if (!compare(latsFixed(iX, iY, iZ), grid.geoLat_scgc(iX, iY, iZ) * cRtoD)) {
-	  std::cout << " <-- lats don't match!!! ";
-	  didWork = false;
-	}
-	std::cout << "\n";
-	std::cout << "       lons pre-inter : " << lons(iX, iY, iZ);
-	std::cout << " lons post-inter : " << lonsFixed(iX, iY, iZ);
-	std::cout << " should be : " << grid.geoLon_scgc(iX, iY, iZ) * cRtoD;
-	if (!compare(lonsFixed(iX, iY, iZ), grid.geoLon_scgc(iX, iY, iZ) * cRtoD)) {
-	  std::cout << " <-- lons don't match!!! ";
-	  didWork = false;
-	}
-	std::cout << "\n";
+      // Up:
+      if (iDir == 1) {
+        jStart = nY - nG;
+        jEnd = nY;
+        iStart = nG;
+        iEnd = nX - nG;
+      }
+
+      // Left:
+      if (iDir == 2) {
+        iStart = 0;
+        iEnd = nG;
+        jStart = nG;
+        jEnd = nY - nG;
+      }
+
+      // Down:
+      if (iDir == 3) {
+        jStart = 0;
+        jEnd = nG;
+        iStart = nG;
+        iEnd = nX - nG;
+      }
+
+      iZ = nG;
+      std::cout << "Looping through iDir = " << iDir << "\n";
+
+      for (iX = iStart; iX < iEnd; iX++) {
+        for (iY = jStart; iY < jEnd; iY++) {
+
+          std::cout << "iX, iY : " << iX << " " << iY << " ";
+          std::cout << " lats pre-inter : " << lats(iX, iY, iZ);
+          std::cout << " lats post-inter : " << latsFixed(iX, iY, iZ);
+          std::cout << " should be : " << grid.geoLat_scgc(iX, iY, iZ) * cRtoD;
+
+          if (!compare(latsFixed(iX, iY, iZ), grid.geoLat_scgc(iX, iY, iZ) * cRtoD)) {
+            std::cout << " <-- lats don't match!!! ";
+            didWork = false;
+          }
+
+          std::cout << "\n";
+          std::cout << "       lons pre-inter : " << lons(iX, iY, iZ);
+          std::cout << " lons post-inter : " << lonsFixed(iX, iY, iZ);
+          std::cout << " should be : " << grid.geoLon_scgc(iX, iY, iZ) * cRtoD;
+
+          if (!compare(lonsFixed(iX, iY, iZ), grid.geoLon_scgc(iX, iY, iZ) * cRtoD)) {
+            std::cout << " <-- lons don't match!!! ";
+            didWork = false;
+          }
+
+          std::cout << "\n";
+        }
       }
     }
   }
-  }
+
   return didWork;
 }
-  
+
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
@@ -1070,14 +1087,14 @@ arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid) {
   report.enter(function, iFunction);
 
   bool didWork = true;
-  
+
   int64_t iDir;
   static int64_t iX, ix_, nX = grid.get_nX();
   static int64_t iY, iy_, nY = grid.get_nY();
   static int64_t iG, nG = grid.get_nGCs();
   precision_t r_;
   arma_cube varOut = varIn;
-  
+
   // Loop through the different directions:
   for (iDir = 0; iDir < 4; iDir++) {
 
@@ -1086,38 +1103,45 @@ arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid) {
 
       // Right and Left sides of the block
       if (iDir == 0 || iDir == 2) {
-	if (iDir == 0)
-	  iX = nX - 1 - iG;
-	if (iDir == 2)
-	  iX = iG;
-	for (iY = 0; iY < nY; iY++) {
-	  iy_ = grid.interchangesOneVar[iDir].index(iG, iY);
-	  r_ = grid.interchangesOneVar[iDir].ratio(iG, iY);
-	  if (iy_ > -1)
-	    varOut.tube(iX, iY) =
-	      (1.0 - r_) * varIn.tube(iX, iy_) + r_ * varIn.tube(iX, iy_ + 1);
-	}
+        if (iDir == 0)
+          iX = nX - 1 - iG;
+
+        if (iDir == 2)
+          iX = iG;
+
+        for (iY = 0; iY < nY; iY++) {
+          iy_ = grid.interchangesOneVar[iDir].index(iG, iY);
+          r_ = grid.interchangesOneVar[iDir].ratio(iG, iY);
+
+          if (iy_ > -1)
+            varOut.tube(iX, iY) =
+              (1.0 - r_) * varIn.tube(iX, iy_) + r_ * varIn.tube(iX, iy_ + 1);
+        }
       }
+
       // Up and Down sides of the block
       if (iDir == 1 || iDir == 3) {
-	if (iDir == 1)
-	  iY = nY - 1 - iG;
-	if (iDir == 3)
-	  iY = iG;
-	for (iX = 0; iX < nX; iX++) {
-	  ix_ = grid.interchangesOneVar[iDir].index(iG, iX);
-	  r_ = grid.interchangesOneVar[iDir].ratio(iG, iX);
-	  if (ix_ > -1)
-	    varOut.tube(iX, iY) =
-	      (1.0 - r_) * varIn.tube(ix_, iY) + r_ * varIn.tube(ix_ + 1, iY);
-	}
+        if (iDir == 1)
+          iY = nY - 1 - iG;
+
+        if (iDir == 3)
+          iY = iG;
+
+        for (iX = 0; iX < nX; iX++) {
+          ix_ = grid.interchangesOneVar[iDir].index(iG, iX);
+          r_ = grid.interchangesOneVar[iDir].ratio(iG, iX);
+
+          if (ix_ > -1)
+            varOut.tube(iX, iY) =
+              (1.0 - r_) * varIn.tube(ix_, iY) + r_ * varIn.tube(ix_ + 1, iY);
+        }
       }
     }
   }
-  
+
   return varOut;
 }
-  
+
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
@@ -1128,7 +1152,7 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
   report.enter(function, iFunction);
 
   bool didWork = true;
-  
+
   static int64_t iX, nX = grid.get_nX();
   static int64_t iY, nY = grid.get_nY();
   static int64_t iZ, nZ = grid.get_nZ();
@@ -1141,20 +1165,21 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
   arma_cube xLocal = grid.refx_angle * cRtoD;
 
   iZ = nG;
-  
+
   // Set the ghostcells to 0:
   set_gcs_to_value(yOther, 0.0, nG);
   set_gcs_to_value(xOther, 0.0, nG);
-  
+
   // Message pass to get the X and Y from the other faces
   report.print(1, "starting exchange to find interpolation indices");
   didWork = exchange_one_var(grid, yOther, false);
   didWork = exchange_one_var(grid, xOther, false);
-  
+
   report.print(1, "finished exchange");
 
   for (int64_t ip = 0; ip < 6; ip++) {
     MPI_Barrier(aether_comm);
+
     if (iProc == ip) {
       std::cout << "ip : " << ip << "\n";
       std::cout << "xLocal : \n" << xLocal.slice(iZ) << "\n";
@@ -1162,8 +1187,9 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
     }
   }
 
-      
+
   MPI_Barrier(aether_comm);
+
   if (report.test_verbose(1)) {
     std::cout << "xLocal : \n" << xLocal.slice(iZ) << "\n";
     std::cout << "xOther : \n" << xOther.slice(iZ) << "\n";
@@ -1180,7 +1206,7 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
   // These are just variables to make things easier to deal with:
   arma_vec ind, rat;
   arma_vec from, to;
-  
+
   // For the cubesphere, we can assume that we only need to do this
   // for one slice, since the angles are constant with altitude.
 
@@ -1196,74 +1222,84 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
       //std::cout << "iG : " << iG << " " << iX << "\n";
 
       if (iDir == 0)
-	iX = nX - 1 - iG;
+        iX = nX - 1 - iG;
+
       if (iDir == 1)
-	iY = nY - 1 - iG;
+        iY = nY - 1 - iG;
+
       if (iDir == 2)
-	iX = iG;
+        iX = iG;
+
       if (iDir == 3)
-	iY = iG;
+        iY = iG;
 
       // From are the message passed ghost cells (wider),
       // To are the locations of the native grid (narrower)
       if (iDir == 0 || iDir == 2) {
-	// This is for right and left...
-	if (grid.interchangesOneVar[iDir].XbecomesY) {
-	  // moving from a row to a vector, so do a transpose:
-	  from = xOther.slice(iZ).row(iX).t();
-	} else
-	  from = yOther.slice(iZ).row(iX).t();
-	if (grid.interchangesOneVar[iDir].DoReverseY)
-	  from = reverse(from);
-	to = yLocal.slice(iZ).row(iX).t();
+        // This is for right and left...
+        if (grid.interchangesOneVar[iDir].XbecomesY) {
+          // moving from a row to a vector, so do a transpose:
+          from = xOther.slice(iZ).row(iX).t();
+        } else
+          from = yOther.slice(iZ).row(iX).t();
+
+        if (grid.interchangesOneVar[iDir].DoReverseY)
+          from = reverse(from);
+
+        to = yLocal.slice(iZ).row(iX).t();
       } else {
-	// This is for up and down...
-	if (grid.interchangesOneVar[iDir].XbecomesY) {
-	  // moving from a row to a vector, so do a transpose:
-	  from = yOther.slice(iZ).col(iY);
-	} else
-	  from = xOther.slice(iZ).col(iY);
-	if (grid.interchangesOneVar[iDir].DoReverseX)
-	  from = reverse(from);
-	to = xLocal.slice(iZ).col(iY);
+        // This is for up and down...
+        if (grid.interchangesOneVar[iDir].XbecomesY) {
+          // moving from a row to a vector, so do a transpose:
+          from = yOther.slice(iZ).col(iY);
+        } else
+          from = xOther.slice(iZ).col(iY);
+
+        if (grid.interchangesOneVar[iDir].DoReverseX)
+          from = reverse(from);
+
+        to = xLocal.slice(iZ).col(iY);
       }
+
       if (report.test_verbose(1)) {
-	std::cout << "iDir : " << iDir << "\n";
-	std::cout << "drx : " << grid.interchangesOneVar[iDir].DoReverseX <<"\n";
-	std::cout << "dry : " << grid.interchangesOneVar[iDir].DoReverseY <<"\n";
-	std::cout << "xby : " << grid.interchangesOneVar[iDir].XbecomesY <<"\n";
-	std::cout << "from : " << from.t();
-	std::cout << "to : " << to.t();
+        std::cout << "iDir : " << iDir << "\n";
+        std::cout << "drx : " << grid.interchangesOneVar[iDir].DoReverseX << "\n";
+        std::cout << "dry : " << grid.interchangesOneVar[iDir].DoReverseY << "\n";
+        std::cout << "xby : " << grid.interchangesOneVar[iDir].XbecomesY << "\n";
+        std::cout << "from : " << from.t();
+        std::cout << "to : " << to.t();
       }
+
       // This takes in vectors and returns them (ind and rat are vectors)
       didWork = find_interpolation_coefficients(from,
-						to,
-						ind,
-						rat);
+                                                to,
+                                                ind,
+                                                rat);
       grid.interchangesOneVar[iDir].index.row(iG) = ind.t();
       grid.interchangesOneVar[iDir].ratio.row(iG) = rat.t();
 
       if (report.test_verbose(3)) {
-	std::cout << "from :\n";
-	std::cout << from;
-	std::cout << "to :\n";
-	std::cout << to;
-	std::cout << "ind :\n";
-	std::cout << ind;
-	std::cout << "rat :\n";
-	std::cout << rat;
-	/*
-	  for (int64_t iY = nG; iY < nY - nG; iY++) {
-	  iy_ = grid.interchangesOneVar[iDir].index(iG, iY);
-	  r = grid.interchangesOneVar[iDir].ratio(iG, iY);
-	*/
+        std::cout << "from :\n";
+        std::cout << from;
+        std::cout << "to :\n";
+        std::cout << to;
+        std::cout << "ind :\n";
+        std::cout << ind;
+        std::cout << "rat :\n";
+        std::cout << rat;
+        /*
+          for (int64_t iY = nG; iY < nY - nG; iY++) {
+          iy_ = grid.interchangesOneVar[iDir].index(iG, iY);
+          r = grid.interchangesOneVar[iDir].ratio(iG, iY);
+        */
       }
     }
   }
+
   report.print(1, "finished compare");
 
   didWork = test_ghostcell_interpolation(grid);
-  
+
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
 
@@ -1272,5 +1308,5 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
   return didWork;
 }
 
-  
-  
+
+
