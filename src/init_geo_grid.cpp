@@ -191,9 +191,9 @@ void transformation_metrics(Quadtree quadtree,
                             arma_mat &g21_upper,
                             arma_mat &g22_upper,
                             arma_mat &sqrt_g,
-			    arma_mat &refx_angle,
-			    arma_mat &refy_angle) {
-  
+                            arma_mat &refx_angle,
+                            arma_mat &refy_angle) {
+
   int64_t nX = lat2d.n_rows;
   int64_t nY = lat2d.n_cols;
   // Assume R = 1 (since lat-lon/ xy generation assumes unit vect)
@@ -212,9 +212,9 @@ void transformation_metrics(Quadtree quadtree,
       rref = std::sqrt(xref * xref + yref * yref + a * a);
 
       // Want to calculate angles based on x, y, z
-      refx_angle(i, j) = asin(xref/rref);
-      refy_angle(i, j) = asin(yref/rref);
-      
+      refx_angle(i, j) = asin(xref / rref);
+      refy_angle(i, j) = asin(yref / rref);
+
       latp = lat2d(i, j);
       lonp = lon2d(i, j);
 
@@ -368,7 +368,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   arma_mat g22_upper(nLons, nLats);
   arma_mat sqrt_g(nLons, nLats);
   arma_mat refx_angle_temp(nLons, nLats);
-  arma_mat refy_angle_temp(nLons, nLats);  
+  arma_mat refy_angle_temp(nLons, nLats);
   fill_cubesphere_lat_lon_from_norms(quadtree, dr, du, ll, nGCs, 0.5, 0.5,
                                      lat2d, lon2d, refx, refy);
 
@@ -376,12 +376,12 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
                          A11, A12, A21, A22, A11_inv, A12_inv,
                          A21_inv, A22_inv, g11_upper, g12_upper,
                          g21_upper, g22_upper, sqrt_g,
-			 refx_angle_temp, refy_angle_temp);
+                         refx_angle_temp, refy_angle_temp);
 
   for (iAlt = 0; iAlt < nAlts; iAlt++) {
     refx_angle.slice(iAlt) = refx_angle_temp;
     refy_angle.slice(iAlt) = refy_angle_temp;
-  
+
     geoLon_scgc.slice(iAlt) = lon2d;
     geoLat_scgc.slice(iAlt) = lat2d;
     refx_scgc.slice(iAlt) = refx;
@@ -435,8 +435,8 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
                          g11_upper_left, g12_upper_left,
                          g21_upper_left, g22_upper_left,
                          sqrt_g_left,
-			 refx_angle_left_temp, refy_angle_left_temp);
-  
+                         refx_angle_left_temp, refy_angle_left_temp);
+
   refx_angle_Left = refx_angle_left_temp;
   refy_angle_Left = refy_angle_left_temp;
 
@@ -495,7 +495,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
                          g11_upper_down, g12_upper_down,
                          g21_upper_down, g22_upper_down,
                          sqrt_g_down,
-			 refx_angle_down_temp, refy_angle_down_temp);
+                         refx_angle_down_temp, refy_angle_down_temp);
   refx_angle_Down = refx_angle_down_temp;
   refy_angle_Down = refy_angle_down_temp;
 

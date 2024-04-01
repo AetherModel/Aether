@@ -10,8 +10,8 @@
 // -----------------------------------------------------------------------------
 
 void set_gcs_to_value(arma_cube &var_scgc,
-		      precision_t value,
-		      int64_t nGCs) {
+                      precision_t value,
+                      int64_t nGCs) {
 
   std::string function = "set_gcs_to_value";
   static int iFunction = -1;
@@ -25,6 +25,7 @@ void set_gcs_to_value(arma_cube &var_scgc,
     var_scgc.slice(iZ).fill(value);
     var_scgc.slice(nZ - 1 - iZ).fill(value);
   }
+
   // bottom:
   var_scgc.tube(0, 0, nX - 1, nGCs - 1).fill(value);
   // top:
@@ -33,7 +34,7 @@ void set_gcs_to_value(arma_cube &var_scgc,
   var_scgc.tube(0, 0, nGCs - 1, nY - 1).fill(value);
   // right:
   var_scgc.tube(nX - nGCs, 0, nX - 1, nY - 1).fill(value);
-  
+
   report.exit(function);
   return;
 }
@@ -46,12 +47,12 @@ void set_gcs_to_value(arma_cube &var_scgc,
 // -----------------------------------------------------------------------------
 
 bool find_interpolation_coefficients(arma_vec inX,
-				     arma_vec outX,
-				     arma_vec &outIndex,
-				     arma_vec &outRatio) {
+                                     arma_vec outX,
+                                     arma_vec &outIndex,
+                                     arma_vec &outRatio) {
 
   bool didWork = true;
-  
+
   // Assume inX and outX are defined the same...
   int64_t iXo, iXi, nX = outX.n_rows;
 
@@ -59,27 +60,31 @@ bool find_interpolation_coefficients(arma_vec inX,
   outRatio.set_size(nX);
 
   bool isFound;
+
   for (iXo = 0; iXo < nX; iXo++) {
     iXi = 0;
     isFound = false;
+
     while (!isFound && iXi < nX - 1) {
       if (inX[iXi] <= outX[iXo] &&
-	  inX[iXi + 1] > outX[iXo])
-	isFound = true;
+          inX[iXi + 1] > outX[iXo])
+        isFound = true;
       else
-	iXi++;
+        iXi++;
     }
+
     if (isFound) {
       outIndex[iXo] = iXi;
       outRatio[iXo] =
-	(outX[iXo] - inX[iXi]) /
-	(inX[iXi + 1] - inX[iXi]);
+        (outX[iXo] - inX[iXi]) /
+        (inX[iXi + 1] - inX[iXi]);
     } else {
       didWork = false;
       outIndex[iXo] = -1;
       outRatio[iXo] = 0.0;
     }
   }
+
   return didWork;
 }
 
@@ -89,17 +94,20 @@ bool find_interpolation_coefficients(arma_vec inX,
 // -----------------------------------------------------------------------------
 
 arma_vec interpolate1d(arma_vec inY,
-		       arma_vec &index,
-		       arma_vec &ratio) {
+                       arma_vec &index,
+                       arma_vec &ratio) {
   int64_t iY, iy_, nY = inY.n_rows;
   precision_t r_;
   arma_vec outY(nY);
+
   for (iY = 0; iY < nY; iY++) {
     iy_ = index(iY);
     r_ = ratio(iY);
+
     if (iy_ > -1)
       outY(iY) = (1.0 - r_) * inY(iy_) + r_ * inY(iy_);
   }
+
   return outY;
 }
 

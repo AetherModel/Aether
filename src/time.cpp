@@ -220,7 +220,7 @@ void Times::increment_time() {
 
   char tmp[100];
   snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
-          year, month, day, hour, minute, second);
+           year, month, day, hour, minute, second);
   sYMD_HMS = std::string(tmp);
   snprintf(tmp, 100, "%04d%02d%02d", year, month, day);
   sYMD = std::string(tmp);
