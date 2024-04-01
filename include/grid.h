@@ -227,6 +227,7 @@ public:
 
   std::vector<messages_struct> interchanges;
   std::vector<messages_struct> interchangesOneVar;
+  bool gcInterpolationSet = false;
 
   messages_struct make_new_interconnection(int64_t iDir,
 					   int64_t nVars,
