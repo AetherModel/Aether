@@ -114,8 +114,8 @@
 	"species" : ["O2", "O2+"]},
 
     "Outputs" : {
-	"type" : ["neutrals"],
-	"dt" : [900, 0.0]},
+	"type" : ["states", "grid"],
+	"dt" : [900, -1]},
 
     "Restart" : {
 	"do" : false,
