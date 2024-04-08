@@ -83,6 +83,11 @@ public:
   double get_current();
 
   /**************************************************************
+     \brief Sets the start time at the start of the time loop
+   **/
+  void set_start_time_loop();
+
+  /**************************************************************
      \brief Returns the end time in seconds since ref date
    **/
   double get_end();
@@ -236,6 +241,9 @@ private:
 
   /// This is the system time at the start of the simulation
   time_t sys_time_start;
+
+  /// This is the system time at the start of time loop
+  time_t sys_time_start_time_loop;
 
   /// This is the current system time of the simulation
   time_t sys_time_current;
