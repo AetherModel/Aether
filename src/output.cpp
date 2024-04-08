@@ -296,7 +296,10 @@ bool output(const Neutrals &neutrals,
       if (type_output == "therm")
         filename = "3DTHR_";
 
-      filename = filename + time.get_YMD_HMS();
+      if ((int64_t(input.get_dt_output(iOutput)) % 60) == 0)
+        filename = filename + time.get_YMD_HM0();
+      else
+        filename = filename + time.get_YMD_HMS();
 
       if (nMembers > 1)
         filename = filename + "_" + cMember;

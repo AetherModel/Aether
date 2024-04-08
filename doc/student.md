@@ -26,7 +26,9 @@ emacs can be installed using a package manager such as apt or port
 
 21st Century Editors:
 
-1. There are always popular Integrated Development Environments (IDEs) that can
+1. Most people are using Visual Studio Code to work on Aether.
+
+2. There are always popular Integrated Development Environments (IDEs) that can
    be used to edit, develop, and test code.  If you use one and develop on
    Aether, please feel free to update this section.
 
@@ -44,7 +46,7 @@ this:
 3. Click "Create fork"
 
 4. GitHub will take you to this repository automatically.  It is now your
-   "version" of Aether, and all development will be done here.  Will will use
+   "version" of Aether, and all development will be done here.  We will use
    the username "YourRepo" instead of your actual repository in the
    examples below.
 

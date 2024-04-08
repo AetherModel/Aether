@@ -144,6 +144,15 @@ std::string Times::get_YMD_HMS() {
 }
 
 // -----------------------------------------------------------------------------
+// Get the current time as a string, with seconds as 00
+// -----------------------------------------------------------------------------
+
+std::string Times::get_YMD_HM0() {
+  return sYMD_HM0;
+}
+
+
+// -----------------------------------------------------------------------------
 // Get the intermediate stopping time
 // -----------------------------------------------------------------------------
 
@@ -219,12 +228,15 @@ void Times::increment_time() {
   milli = iCurrent[6];
 
   char tmp[100];
-  sprintf(tmp, "%04d%02d%02d_%02d%02d%02d",
-          year, month, day, hour, minute, second);
+  snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
+           year, month, day, hour, minute, second);
   sYMD_HMS = std::string(tmp);
-  sprintf(tmp, "%04d%02d%02d", year, month, day);
+  snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
+           year, month, day, hour, minute, 0);
+  sYMD_HM0 = std::string(tmp);
+  snprintf(tmp, 100, "%04d%02d%02d", year, month, day);
   sYMD = std::string(tmp);
-  sprintf(tmp, "%02d%02d%02d", hour, minute, second);
+  snprintf(tmp, 100, "%02d%02d%02d", hour, minute, second);
   sHMS = std::string(tmp);
 
   // Calculate Julian Day (day of year):

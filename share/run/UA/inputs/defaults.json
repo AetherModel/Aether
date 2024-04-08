@@ -21,16 +21,16 @@
 	"type" : "Planet"},
 
     "Advection" : {
-	"Neutrals" : {
-	    "Vertical" : "rusanov",
-	    "Horizontal" : "default"},
-	"Ions" : {
-	    "Along" : "rusanov",
-	    "Across" : "default"} },
+		"Neutrals" : {
+	    	"Vertical" : "rusanov",
+	    	"Horizontal" : "default"},
+		"Ions" : {
+	    	"Along" : "rusanov",
+	    	"Across" : "default"} },
     
     "Student" : {
-	"name" : "",
-	"is" : false },
+		"name" : "",
+		"is" : false },
 
     "Planet" : {
         "name" : "earth",
@@ -39,18 +39,18 @@
     "BField" : "dipole",
 
     "Electrodynamics" : {
-	"Potential" : "weimer",
-	"DiffuseAurora" : "fta",
-	"Dir" : "UA/inputs/ext/ie/",
-	"File" : ""},
+		"Potential" : "weimer",
+		"DiffuseAurora" : "fta",
+		"Dir" : "UA/inputs/ext/ie/",
+		"File" : ""},
 
     "Euv" : {
-	"doUse" : true,
-	"Model" : "euvac",
-	"File" : "UA/inputs/euv.csv",
-	"IncludePhotoElectrons" : true,
-	"HeatingEfficiency" : 0.05,
-	"dt" : 60.0},
+		"doUse" : true,
+		"Model" : "euvac",
+		"File" : "UA/inputs/euv.csv",
+		"IncludePhotoElectrons" : true,
+		"HeatingEfficiency" : 0.05,
+		"dt" : 60.0},
 
     "DoCalcBulkIonTemp" : false,
     
@@ -106,7 +106,6 @@
     "IndicesLookupFile" : "UA/inputs/indices_lookup.json",
 
     "OnmiwebFile" : [""],
-    "ElectrodynamicsFile" : [""],
     
     "Logfile" : {
 	"name" : "UA/output/log.txt",

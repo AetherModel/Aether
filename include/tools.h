@@ -15,6 +15,36 @@ struct mat_2x2{
     arma_mat A22;
 };
 
+// -----------------------------------------------------------------------------
+// find interpolation coefficients for a 1D interpolator
+//   inX is the grid you are interpolating FROM
+//   outX is the position you want to interpolate TO
+//   outIndex and outRatio are the interpolation coefficents
+// -----------------------------------------------------------------------------
+
+bool find_interpolation_coefficients(arma_vec inX,
+				     arma_vec outX,
+				     arma_vec &outIndex,
+				     arma_vec &outRatio);
+
+// -----------------------------------------------------------------------------
+// This takes the index and ratio determined in the above function and
+// uses them to interpolate.
+// -----------------------------------------------------------------------------
+
+arma_vec interpolate1d(arma_vec inY,
+		       arma_vec &index,
+		       arma_vec &ratio);
+
+// -----------------------------------------------------------------------------
+// Set all of the ghost cells to a constant value that is fed in.
+//   This is primarily for testing of message passing.
+// -----------------------------------------------------------------------------
+
+void set_gcs_to_value(arma_cube &var_scgc,
+		      precision_t value,
+		      int64_t nGCs);
+
 // ----------------------------------------------------------------------------
 // Fix corners in an arma cube
 //   - basically fill in the corners with values near them
