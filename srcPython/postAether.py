@@ -444,7 +444,7 @@ def parse_args():
     parser.add_argument('-rm', \
                         help='removes processed files', \
                         action="store_true")
-    parser.add_argument('-alt', default = 2, type = int, \
+    parser.add_argument('-alt', default = -1, type = int, \
                         help='altitude to plot (-1 for no plot!)')
     parser.add_argument('-v', \
                         help='turn on verbose mode', \
@@ -463,11 +463,11 @@ def get_core_file(filename):
     isEnsemble = False
     ensembleFile = ''
     ensembleNumber = -1
-    m = re.match('.*([0123]D.*)(_g\d*)(\..*)',filename)
+    m = re.match(r'.*([0123]D.*)(_g[0-9]*)(\..*)',filename)
     if m:
         coreFile = m.group(1)
         # check if file is a member of an ensemble:
-        check = re.match('.*([0123]D.*)(_m)(\d*)',coreFile)
+        check = re.match('.*([0123]D.*)(_m)([0-9]*)',coreFile)
         if (check):
             ensembleFile = check.group(1)
             isEnsemble = True
@@ -934,7 +934,7 @@ def write_and_plot_data(dataToWrite,
         print('  --> Outputting hdf5 file : ', hdf5File)
         write_hdf5(dataToWrite, hdf5File, isVerbose = isVerbose)
 
-    if (iAlt > -1):
+    if ((iAlt > -1) & (len(dataToWrite) > 1)):
         plotFile = fileStart + fileAddon + '.png'
         var = dataToWrite[0]['vars'][iVar]
         plot_all_blocks(dataToWrite, var, iAlt, plotFile)
