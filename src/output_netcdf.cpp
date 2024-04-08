@@ -65,9 +65,9 @@ void output_netcdf_3d(std::vector<size_t> count_start,
 // read contents of a netcdf file into an output container
 // -----------------------------------------------------------------------------
 
-int OutputContainer::read_container_netcdf() {
+bool OutputContainer::read_container_netcdf() {
 
-  int iErr = 0;
+  bool didWork = true;
   std::string whole_filename = directory + "/" + filename + ".nc";
   std::string UNITS = "units";
 
@@ -148,10 +148,10 @@ int OutputContainer::read_container_netcdf() {
   } catch (...) {
     std::cout << "Error reading netcdf file : "
               << whole_filename << "\n";
-    iErr = 1;
+    didWork = false;
   }
 
-  return iErr;
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------
@@ -219,10 +219,10 @@ bool OutputContainer::write_container_netcdf() {
 
  -------------------------------------------------------------------- */
 
-int OutputContainer::read_container_netcdf() {
-  int iErr = 1;
+bool OutputContainer::read_container_netcdf() {
+  bool didWork = false;
   std::cout << "read_container_netcdf is not working!\n";
-  return iErr;
+  return didWork;
 }
 
 bool OutputContainer::write_container_netcdf() {

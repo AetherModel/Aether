@@ -133,7 +133,12 @@ class OutputContainer {
      \brief write a binary file with the information in the container
    **/
   bool write_container_binary();
-  
+
+  /**********************************************************************
+     \brief read a binary file with the information into a container
+   **/
+  bool read_container_binary();
+
   /**********************************************************************
      \brief write a netcdf file with the information in the container
    **/
@@ -142,7 +147,7 @@ class OutputContainer {
   /**********************************************************************
      \brief read from a file an load into the container
    **/
-  void read();
+  bool read();
   
   /**********************************************************************
      \brief display information contained in the container
@@ -152,7 +157,7 @@ class OutputContainer {
   /**********************************************************************
      \brief read a netcdf file - put the information in the container
    **/
-  int read_container_netcdf();
+  bool read_container_netcdf();
   
   /**********************************************************************
      \brief clears the vector of variables 
