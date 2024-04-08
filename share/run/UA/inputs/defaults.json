@@ -106,7 +106,6 @@
     "IndicesLookupFile" : "UA/inputs/indices_lookup.json",
 
     "OnmiwebFile" : [""],
-    "ElectrodynamicsFile" : [""],
     
     "Logfile" : {
 	"name" : "UA/output/log.txt",
