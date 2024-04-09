@@ -30,7 +30,7 @@
 
 // -----------------------------------------------------------------------------
 // This is the main exchange messages for the neutrals.
-//   We are exchanging densities, temperatures, and velocities   
+//   We are exchanging densities, temperatures, and velocities
 // -----------------------------------------------------------------------------
 
 
@@ -1116,6 +1116,7 @@ bool test_ghostcell_interpolation(Grid &grid) {
       }
     }
   }
+
   report.exit(function);
   return didWork;
 }

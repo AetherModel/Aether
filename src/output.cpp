@@ -328,6 +328,7 @@ bool output(const Neutrals &neutrals,
       AllOutputContainers[iOutput].clear_variables();
 
     }
+
     if (!didWork)
       break;
   }

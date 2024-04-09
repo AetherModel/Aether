@@ -212,15 +212,15 @@ bool OutputContainer::write() {
 
 bool OutputContainer::read() {
 
-    bool didWork = true;
+  bool didWork = true;
 
-    if (output_type == binary_type)
-        didWork = read_container_binary();
+  if (output_type == binary_type)
+    didWork = read_container_binary();
 
-    if (output_type == netcdf_type)
-        didWork = read_container_netcdf();
+  if (output_type == netcdf_type)
+    didWork = read_container_netcdf();
 
-    return didWork;
+  return didWork;
 }
 
 
@@ -307,62 +307,64 @@ bool OutputContainer::write_container_header() {
 
 bool OutputContainer::read_container_binary() {
 
-    std::string function = "OutputContainer::read_container_binary";
-    static int iFunction = -1;
-    report.enter(function, iFunction);
+  std::string function = "OutputContainer::read_container_binary";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
-    bool didWork = true;
-    std::string bin_filename = directory + "/" + filename + ".bin";
-    std::string json_filename = directory + "/" + filename + ".json";
+  bool didWork = true;
+  std::string bin_filename = directory + "/" + filename + ".bin";
+  std::string json_filename = directory + "/" + filename + ".json";
 
-    json header = read_json(json_filename);
+  json header = read_json(json_filename);
 
+  if (report.test_verbose(2)) {
+    std::cout << "reading binary restart\n --> json header is here:\n";
+    std::cout << std::setw(2) << header;
+  }
+
+  int64_t iVar, nVars = header["nVars"];
+  int64_t iX, nX = header["nX"];
+  int64_t iY, nY = header["nY"];
+  int64_t iZ, nZ = header["nZ"];
+  int64_t iTotalSize = nX * nY * nZ;
+
+  float *variable_array = new float[iTotalSize];
+  arma_cube value_scgc;
+  value_scgc.set_size(nX, nY, nZ);
+  int64_t index;
+
+  std::ifstream binary;
+  binary.open(bin_filename, ios::binary | ios::in);
+
+  // Now, read and store variable-by-variable
+
+  for (iVar = 0; iVar < nVars; iVar++) {
+
+    // Read from the binary file
+    binary.read((char *) variable_array, iTotalSize * sizeof(float));
+
+    for (iZ = 0; iZ < nZ; iZ++) {
+      for (iY = 0; iY < nY; iY++) {
+        for (iX = 0; iX < nX; iX++) {
+          // Python ordering!
+          index = iX + iY * nX + iZ * nY * nX;
+          value_scgc(iX, iY, iZ) = variable_array[index];
+        }
+      }
+    }
+
+    // Store in the container:
     if (report.test_verbose(2)) {
-        std::cout << "reading binary restart\n --> json header is here:\n";
-        std::cout << std::setw(2) << header;
+      std::cout << "Storing Variable : ";
+      std::cout << header["variables"][iVar] << " : " << value_scgc(int(nX / 2),
+                int(nY / 2), int(nZ / 2)) << "\n";
     }
 
-    int64_t iVar, nVars = header["nVars"];
-    int64_t iX, nX = header["nX"];
-    int64_t iY, nY = header["nY"];
-    int64_t iZ, nZ = header["nZ"];
-    int64_t iTotalSize = nX * nY * nZ;
+    store_variable(header["variables"][iVar], header["units"][iVar], value_scgc);
+  }
 
-    float *variable_array = new float[iTotalSize];
-    arma_cube value_scgc;
-    value_scgc.set_size(nX, nY, nZ);
-    int64_t index;
-
-    std::ifstream binary;
-    binary.open(bin_filename, ios::binary | ios::in);
-
-    // Now, read and store variable-by-variable
-
-    for (iVar = 0; iVar < nVars; iVar++) {
-
-        // Read from the binary file
-        binary.read((char *) variable_array, iTotalSize * sizeof(float));
-
-        for (iZ = 0; iZ < nZ; iZ++) {
-            for (iY = 0; iY < nY; iY++) {
-                for (iX = 0; iX < nX; iX++) {
-                    // Python ordering!
-                    index = iX + iY * nX + iZ * nY * nX;
-                    value_scgc(iX, iY, iZ) = variable_array[index];
-                }
-            }
-        }
-
-        // Store in the container:
-        if (report.test_verbose(2)) {
-            std::cout << "Storing Variable : ";
-            std::cout << header["variables"][iVar] << " : " << value_scgc(int(nX/2), int(nY/2), int(nZ/2)) << "\n";
-        }
-
-        store_variable(header["variables"][iVar], header["units"][iVar], value_scgc);
-    }
-    report.exit(function);
-    return didWork;
+  report.exit(function);
+  return didWork;
 }
 
 //----------------------------------------------------------------------

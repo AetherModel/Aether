@@ -955,8 +955,9 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     DidWork = read_restart(input.get_restartin_dir());
   } else {
     if (input.get_is_cubesphere()) {
-      if (input.get_do_restart()) 
+      if (input.get_do_restart())
         report.print(0, "Not restarting the grid - it is too complicated!");
+
       create_cubesphere_grid(quadtree);
     } else
       create_sphere_grid(quadtree);
