@@ -907,19 +907,6 @@ void Grid::correct_xy_grid(Planets planet) {
     precision_t R = R_Alts(iAlt);
     refx_scgc.slice(iAlt) *= R;
     refy_scgc.slice(iAlt) *= R;
-    //A11_scgc.slice(iAlt) *= R;
-    //A12_scgc.slice(iAlt) *= R;
-    //A21_scgc.slice(iAlt) *= R;
-    //A22_scgc.slice(iAlt) *= R;
-    //A11_inv_scgc.slice(iAlt) /= R;
-    //A12_inv_scgc.slice(iAlt) /= R;
-    //A21_inv_scgc.slice(iAlt) /= R;
-    //A22_inv_scgc.slice(iAlt) /= R;
-    //g11_upper_scgc.slice(iAlt) /= R * R;
-    //g12_upper_scgc.slice(iAlt) /= R * R;
-    //g21_upper_scgc.slice(iAlt) /= R * R;
-    //g22_upper_scgc.slice(iAlt) /= R * R;
-    //sqrt_g_scgc.slice(iAlt) *= R * R;
 
     // Addition: Get a copy of dx dy
     arma_mat curr_refx = refx_scgc.slice(iAlt);
@@ -930,36 +917,8 @@ void Grid::correct_xy_grid(Planets planet) {
 
     refx_Left.slice(iAlt) *= R;
     refy_Left.slice(iAlt) *= R;
-    //A11_Left.slice(iAlt) *= R;
-    //A12_Left.slice(iAlt) *= R;
-    //A21_Left.slice(iAlt) *= R;
-    //A22_Left.slice(iAlt) *= R;
-    //A11_inv_Left.slice(iAlt) /= R;
-    //A12_inv_Left.slice(iAlt) /= R;
-    //A21_inv_Left.slice(iAlt) /= R;
-    //A22_inv_Left.slice(iAlt) /= R;
-    //g11_upper_Left.slice(iAlt) /= R * R;
-    //g12_upper_Left.slice(iAlt) /= R * R;
-    //g21_upper_Left.slice(iAlt) /= R * R;
-    //g22_upper_Left.slice(iAlt) /= R * R;
-    //sqrt_g_Left.slice(iAlt) *= R * R;
-
     refx_Down.slice(iAlt) *= R;
     refy_Down.slice(iAlt) *= R;
-    //A11_Down.slice(iAlt) *= R;
-    //A12_Down.slice(iAlt) *= R;
-    //A21_Down.slice(iAlt) *= R;
-    //A22_Down.slice(iAlt) *= R;
-    //A11_inv_Down.slice(iAlt) /= R;
-    //A12_inv_Down.slice(iAlt) /= R;
-    //A21_inv_Down.slice(iAlt) /= R;
-    //A22_inv_Down.slice(iAlt) /= R;
-    //g11_upper_Down.slice(iAlt) /= R * R;
-    //g12_upper_Down.slice(iAlt) /= R * R;
-    //g21_upper_Down.slice(iAlt) /= R * R;
-    //g22_upper_Down.slice(iAlt) /= R * R;
-    //sqrt_g_Down.slice(iAlt) *= R * R;
-
     refx_Corner.slice(iAlt) *= R;
     refy_Corner.slice(iAlt) *= R;
   }
@@ -991,13 +950,15 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   else
     create_sphere_connection(quadtree);
 
-  if (input.get_do_restart()) {
+  if (input.get_do_restart() & !input.get_is_cubesphere()) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
-    if (input.get_is_cubesphere())
+    if (input.get_is_cubesphere()) {
+      if (input.get_do_restart()) 
+        report.print(0, "Not restarting the grid - it is too complicated!");
       create_cubesphere_grid(quadtree);
-    else
+    } else
       create_sphere_grid(quadtree);
 
     MPI_Barrier(aether_comm);
