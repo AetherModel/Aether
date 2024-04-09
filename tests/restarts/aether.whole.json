@@ -3,18 +3,20 @@
 
     "Debug" : {
 	"iVerbose" : 0,
-	"dt" : 60.0},
+	"dt" : 10.0},
 
-    "Mysetting" : {
-	"setting1" : "this_is_an_example",
-	"setting2" : 42,
-	"setting3" : true},
-
+    "GeoBlockSize" : {
+	"nLons" : 18,
+	"nLats" : 18,
+	"nAlts" : 50},
+    
     "StartTime" : [2011, 3, 20, 0, 0, 0],
-    "EndTime" : [2011, 3, 20, 1, 0, 0],
+    "EndTime" : [2011, 3, 20, 0, 30, 0],
 
+    "Electrodynamics" : {
+	"File" : "UA/inputs/b20110320n_omni.bin"},
+    
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
     
     "Restart" : {
 	"do" : false,

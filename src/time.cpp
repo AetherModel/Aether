@@ -31,6 +31,14 @@ Times::Times() {
 }
 
 // -----------------------------------------------------------------------------
+// This sets the end of the initialization time
+// -----------------------------------------------------------------------------
+
+void Times::set_start_time_loop() {
+  time(&sys_time_start_time_loop);
+}
+
+// -----------------------------------------------------------------------------
 // This is for restarting the code. Either write or read the time.
 // -----------------------------------------------------------------------------
 
@@ -279,7 +287,7 @@ void Times::display() {
   time(&sys_time_current);
   walltime =
     static_cast<double>(sys_time_current) -
-    static_cast<double>(sys_time_start);
+    static_cast<double>(sys_time_start_time_loop);
 
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;

@@ -258,18 +258,18 @@ bool Grid::read_restart(std::string dir) {
     RestartContainer.set_version(0.1);
     // Cell Centers:
     RestartContainer.set_filename("grid_" + cGrid);
-    RestartContainer.read_container_netcdf();
+    RestartContainer.read();
     geoLon_scgc = RestartContainer.get_element_value(longitude_name);
     geoLat_scgc = RestartContainer.get_element_value(latitude_name);
     geoAlt_scgc = RestartContainer.get_element_value(altitude_name);
     // Down Edges:
     RestartContainer.set_filename("grid_below_" + cGrid);
-    RestartContainer.read_container_netcdf();
+    RestartContainer.read();
     geoAlt_Below = RestartContainer.get_element_value(altitude_name +
                                                       " Below");
     // Cell Corners:
     RestartContainer.set_filename("grid_corners_" + cGrid);
-    RestartContainer.read_container_netcdf();
+    RestartContainer.read();
     geoLon_Corner = RestartContainer.get_element_value(longitude_name +
                                                        " Corners");
     geoLat_Corner = RestartContainer.get_element_value(latitude_name +
@@ -278,14 +278,14 @@ bool Grid::read_restart(std::string dir) {
                                                        " Corners");
     // Left Edges:
     RestartContainer.set_filename("grid_left_" + cGrid);
-    RestartContainer.read_container_netcdf();
+    RestartContainer.read();
     geoLon_Left = RestartContainer.get_element_value(longitude_name +
                                                      " Left");
     geoLat_Left = RestartContainer.get_element_value(latitude_name +
                                                      " Left");
     // Down Edges:
     RestartContainer.set_filename("grid_down_" + cGrid);
-    RestartContainer.read_container_netcdf();
+    RestartContainer.read();
     geoLon_Down = RestartContainer.get_element_value(longitude_name +
                                                      " Down");
     geoLat_Down = RestartContainer.get_element_value(latitude_name +

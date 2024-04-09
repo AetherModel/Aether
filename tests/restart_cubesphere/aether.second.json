@@ -1,6 +1,5 @@
 
 {
-
     "Debug" : {
 	"iVerbose" : 0,
 	"dt" : 10.0},
@@ -18,8 +17,10 @@
     
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
     
+    "CubeSphere" : {
+	"is" : true},
+
     "Restart" : {
 	"do" : true,
 	"dt" : 900.0}
-
 }

@@ -111,4 +111,4 @@ cd run.test
 The output should LOOK LIKE THIS
 
 For more details about running Aether, see the documentation about creating and
-modifying input files HERE.
+modifying input files in the document running_aether.md.
