@@ -1,117 +1,494 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_NEUTRALS_H_
-#define AETHER_INCLUDE_NEUTRALS_H_
+#ifndef INCLUDE_NEUTRALS_H_
+#define INCLUDE_NEUTRALS_H_
 
-#include "grid.h"
-#include "euv.h"
-#include "time.h"
-#include "ions.h"
-#include "inputs.h"
-#include "report.h"
+#include "../include/aether.h"
+
+/**************************************************************
+ * \class Neutrals
+ *
+ * \brief Defines the neutral states
+ * 
+ * The Neutrals class defines the neutrals states as well as a bunch
+ * of derived states and source/loss terms.  The initial temperature
+ * structure as well as the lower boundary densities can be set
+ * through the planet input file.
+ *
+ * \author Aaron Ridley
+ *
+ * \date 2021/03/28 
+ *
+ **************************************************************/
+
+#include <string>
+#include <vector>
 
 class Neutrals {
 
  public:
 
+  int nSpecies = 11;
+
+  /// This struct contains all of the information needed for a single
+  /// species of neutrals.  We will then have a vector of these species.
+
   struct species_chars {
 
+    /// Name of the species
     std::string cName;
-    float mass;
-    float vibe;
 
+    /// Mass of the species (kg)
+    precision_t mass;
+
+    /// Vibrations of species (for calculation specific heat)
+    precision_t vibe;
+
+    /// Advect this species? (1 = yes, 0 = no)
     int DoAdvect;
-    
-    float *density_s3gc;
-    float *velocity_v3gc;
 
+    /// Number density of species (/m3)
+    arma_cube density_scgc;
+    arma_cube newDensity_scgc;
+    
+    /// Velocity of each species (m/s). For all below:
+    /// Index 0 = longitudinal component of velocity
+    /// Index 1 = latitudinal
+    /// Index 2 = altitudinal
+    std::vector<arma_cube> velocity_vcgc;
+    std::vector<arma_cube> newVelocity_vcgc;
+
+    /// Acceleration of each species (m/s^2)
+    std::vector<arma_cube> acc_neutral_friction;
+      
+    /// Acceleration of each species based on Eddy contribution.
+    /// Only in vertical direction.
+    arma_cube acc_eddy;
+      
+    /// Acceleration of each species due to ion drag.
+    std::vector<arma_cube> acc_ion_drag;
+            
+    /// concentration (density of species / total density)
+    arma_cube concentration_scgc;
+
+    /// Diffusion through other neutral species:
     std::vector<float> diff0;
     std::vector<float> diff_exp;
+
+    /// Neutral - Ion collision frequency coefficients
     std::vector<float> neutral_ion;
 
-    float thermal_cond;
-    float thermal_exp;
+    /// Thermal conduction coefficients:
+    precision_t thermal_cond;
+    precision_t thermal_exp;
 
+    /// Which row in the EUV CSV file is for absorption:
     int iEuvAbsId_;
+    /// How many rows in the EUV CSV file are for ionization of this species?
     int nEuvIonSpecies;
-    std::vector<int> iEuvIonSpecies_;
+    /// Which row in the EUV CSV file if for the particular ionization?
     std::vector<int> iEuvIonId_;
+    /// Which ion species results from the ionization?
+    std::vector<int> iEuvIonSpecies_;
 
+    /// How many rows in the EUV CSV file are for ionization of this species?
+    int nEuvPeiSpecies;
+    /// Which row in the EUV CSV file if for the particular ionization?
+    std::vector<int> iEuvPeiId_;
+    /// Which ion species results from the ionization?
+    std::vector<int> iEuvPeiSpecies_;
+    
+    int nAuroraIonSpecies;
+    std::vector<int> iAuroraIonSpecies_;
+    float Aurora_Coef;
+
+    // --------------------------------------------------
     // Some derived quantities:
-    float *chapman_s3gc;
+    arma_cube rho_alt_int_scgc;
 
+    /// Chapman Integrals for the species for EUV calculation (/m2)
+    arma_cube chapman_scgc;
+
+    /// Scale height for the species (m)
+    arma_cube scale_height_scgc;
+
+    // --------------------------------------------------
     // Sources and Losses:
 
-    float *ionization_s3gc;
+    /// How much of this species is lost to ionization (/m3/s)
+    arma_cube ionization_scgc;
 
-    // If we want a flat lower BC:
-    float lower_bc_density;
+    /// Chemistry source rate (/m3/s)
+    arma_cube sources_scgc;
     
+    /// Chemistry loss rate (/m3/s)
+    arma_cube losses_scgc;
+
+    /// If we want a fixed lower BC:
+    precision_t lower_bc_density;
   };
-  
+
   // bulk quantities (states):
-  float *density_s3gc;
-  float *velocity_v3gc;
-  float *temperature_s3gc;
 
-  float *rho_s3gc;
-  float *mean_major_mass_s3gc;
-  float *pressure_s3gc;
-  float *sound_s3gc;
+  /// bulk number density (/m3)
+  arma_cube density_scgc;
+
+  /// bulk velocity (m/s)
+  std::vector<arma_cube> velocity_vcgc;
+
+  /// sound speed + abs(bulk velocity (m/s))
+  std::vector<arma_cube> cMax_vcgc;
   
-  // For heating/cooling:
-  float *Cv_s3gc;
-  float *gamma_s3gc;
-  float *kappa_s3gc;
+  /// bunk temperature (K)
+  arma_cube temperature_scgc;
+  arma_cube newTemperature_scgc;
 
-  std::vector<species_chars> neutrals;
+  /// bulk mass density (kg/m3)
+  arma_cube rho_scgc;
 
-  float max_chapman = 1.0e26;
+  /// mean major mass (kg)
+  arma_cube mean_major_mass_scgc;
+
+  /// mean pressure (Pa)
+  arma_cube pressure_scgc;
+
+  /// speed of sound (m/s)
+  arma_cube sound_scgc;
+
+  /// Specific heat (constant volume):
+  arma_cube Cv_scgc;
+
+  /// Bulk Gamma:
+  arma_cube gamma_scgc;
+
+  /// Bulk thermal heat conduction:
+  arma_cube kappa_scgc;
+
+  /// Eddy Diffusion
+  arma_cube kappa_eddy_scgc;
+
+  /// O cooling 
+  arma_cube O_cool_scgc;
+
+  /// NO cooling
+  arma_cube NO_cool_scgc;
+
+  /// Vector of all species-specific items:
+  std::vector<species_chars> species;
+
+  /// Maximum Chapman integral (will give nearly infinite tau in EUV)
+  precision_t max_chapman = 1.0e26;
 
   // Source terms:
 
-  float *heating_euv_s3gc;
-  float *conduction_s3gc;
+  /// Bulk neutral thermal conduction temperature change rate (K/s)
+  arma_cube conduction_scgc;
 
-  float heating_efficiency;
-  
-  // This is an initial temperature profile, read in through the
-  // planet.in file:
-  float *initial_temperatures, *initial_altitudes;
-  int nInitial_temps=0;
+  /// Bulk neutral EUV heating temperatuare change (K/s)
+  arma_cube heating_euv_scgc;
 
-  // names and units
-  std::string density_unit="(/m3)";
-  std::string density_name="Neutral Bulk Density";
+  /// Bulk neutral chemical heating temperatuare change (K/s)
+  arma_cube heating_chemical_scgc;
 
-  std::string velocity_unit="(m/s)";
+  /// Nuetral gas direct absorption heating efficiency (~5%)
+  precision_t heating_efficiency;
+
+  /// Initial temperature profile, read in through the planet.in file:
+  std::vector<double> initial_altitudes;
+  std::vector<double> initial_temperatures;
+  int64_t nInitial_temps = 0;
+    
+  /// Number of species to advect:
+  int nSpeciesAdvect;
+    
+  /// IDs of species to advect:
+  std::vector<int> species_to_advect;
+
+  /// names and units
+  std::string density_name = "Neutral Bulk Density";
+  std::string density_unit = "/m3";
+
   std::vector<std::string> velocity_name;
+  std::string velocity_unit = "m/s";
 
-  std::string temperature_unit="(K)";
-  std::string temperature_name="Temperature";
-  
-  // ------------------------------
+  std::string temperature_name = "Temperature";
+  std::string temperature_unit = "K";
+
+  // --------------------------------------------------------------------
   // Functions:
+
+  /**********************************************************************
+     \brief Initialize the neutrals
+     \param grid The grid to define the neutrals on
+     \param planet contains information about the species to simulate
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+   **/
+  Neutrals(Grid grid,
+	   Planets planet,
+	   Times time,
+	   Indices indices);
+
+  /**********************************************************************
+     \brief Creates the variables within the species_chars structure
+     \param grid The grid to define the neutrals on
+   **/
+  species_chars create_species(Grid grid);
+
+  /**********************************************************************
+     \brief Read in the planet-specific file
+
+     This file specifies the species to model, their masses, 
+     diffusion coefficients and all of the other things needed
+     for specifying the neutrals.
+
+     \param planet contains information about the species to simulate
+   **/
+  int read_planet_file(Planets planet);
+
+  /**********************************************************************
+     \brief Sets the initial conditions of the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+   **/
+  bool initial_conditions(Grid grid,
+			  Times time,
+			  Indices indices);
+
+  /**********************************************************************
+     \brief temporary function to set neutral densities with in the model
+
+     This function integrates the species densities from the bottom
+     of the model using a hydrostatic approximation and the bulk
+     temperature.  It is temporary until we get a vertical solver.
+
+     \param iSpecies The species to fill (optional)
+     \param iStart The starting altitude to work with
+     \param iEnd The ending altitude to work with (NOT INCLUDED!!)
+     \param grid The grid to define the neutrals on
+   **/
+  void fill_with_hydrostatic(int64_t iStart,
+			     int64_t iEnd,
+			     Grid grid);
+
+  void fill_with_hydrostatic(int64_t iSpecies,
+			     int64_t iStart,
+			     int64_t iEnd,
+			     Grid grid);
   
-  Neutrals(Grid grid, Inputs input, Report report);
-  species_chars create_species();
-  int read_planet_file(Inputs input, Report report);
-  int initial_conditions(Grid grid, Inputs input, Report report);
-  float calc_scale_height(int iSpecies,
-			  long index,
-			  Grid grid);
-  int pair_euv(Euv euv, Ions ions, Report report);
-  void calc_mass_density(Report &report);
-  void calc_specific_heat(Report &report);
-  void calc_chapman(Grid grid, Report &report);
-  void calc_ionization_heating(Euv euv, Ions &ions, Report &report);
-  void calc_conduction(Grid grid, Times time, Report &report);
-  void add_sources(Times time, Report &report);
+  /**********************************************************************
+     \brief Calculate the bulk mass density from individual species densities
+   **/
+  void calc_mass_density();
+
+  /**********************************************************************
+     \brief Calculate the scale heights for the individual species
+     \param grid The grid to define the neutrals on
+   **/
+  void calc_scale_height(Grid grid);
+  
+  /**********************************************************************
+     \brief Calculate the eddy diffusion coefficient in valid pressure
+   **/
+  void calc_kappa_eddy();
+  
+  /**********************************************************************
+     \brief Calculate the concentration for each species (species ndensity / total ndensity)
+   **/
+  void calc_concentration();
+    
+  /**********************************************************************
+     \brief Calculate the bulk mean major mass
+   **/
+  void calc_mean_major_mass();
+    
+  /**********************************************************************
+     \brief Calculate the mean pressure
+   **/
+  void calc_pressure();
+    
+  /**********************************************************************
+     \brief Calculate bulk velocity
+   **/
+  void calc_bulk_velocity();
+
+  /**********************************************************************
+     \brief Assigns bulk velocity to all non-advected species
+   **/
+  void assign_bulk_velocity();
+
+  /**********************************************************************
+     \brief Calculate the bulk specific heat from individual species
+   **/
+  void calc_specific_heat();
+
+  /**********************************************************************
+     \brief Calculate speed of sound + abs(velocity) in all 3 directions
+   **/
+  void calc_cMax();
+
+  /**********************************************************************
+     \brief Calculate dt (cell size / cMax) in each direction, and take min
+     \param dt returns the neutral time-step
+     \param grid The grid to define the neutrals on
+   **/
+  precision_t calc_dt(Grid grid);
+  precision_t calc_dt_cubesphere(Grid grid);
+
+  /**********************************************************************
+     \brief Calculate the chapman integrals for the individual species
+     \param grid The grid to define the neutrals on
+   **/
+  void calc_chapman(Grid grid);
+
+  /**********************************************************************
+     \brief Calculate the neutral bulk vertical thermal conduction
+     \param grid The grid to define the neutrals on
+     \param time The times within the model (dt is needed)
+   **/
+  void calc_conduction(Grid grid, Times time);
+
+  /**********************************************************************
+     \brief Calculate the O radiative cooling
+   **/
+  void calc_O_cool();
+
+  /**********************************************************************
+     \brief Calculate the NO radiative cooling
+   **/
+  void calc_NO_cool();
+
+  /**********************************************************************
+     \brief Add all of the neutral source terms to each of the equations
+     \param time The times within the model (dt is needed)
+   **/
+  void add_sources(Times time);
+
+  /**********************************************************************
+     \brief Set boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+   **/
+  bool set_bcs(Grid grid,
+	       Times time,
+	       Indices indices);
+
+  /**********************************************************************
+     \brief Set lower boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+   **/
+  bool set_lower_bcs(Grid grid,
+		     Times time,
+		     Indices indices);
+
+  /**********************************************************************
+     \brief Set upper boundary conditions for the neutrals
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+   **/
+  bool set_upper_bcs(Grid grid);
+
+  /**********************************************************************
+     \brief Set boundary conditions for the neutrals
+     \param iDir direction of the BC to set
+     \param grid The grid to define the neutrals on
+  **/
+  bool set_horizontal_bcs(int64_t iDir, Grid grid);
+  
+  /**********************************************************************
+     \brief Get the species ID number (int) given the species name (string)
+     \param name string holding the species name (e.g., "O+")
+   **/
+  int get_species_id(std::string name);
+
+  /*****************************************************************************
+      \brief  Checks for nans and +/- infinities in density, temp, and velocity
+    **/
+  bool check_for_nonfinites();
+
+  /**********************************************************************
+      \brief Checks for nans in the specified variable
+    **/
+  void nan_test(std::string variable);
+
+  /**********************************************************************
+     \brief Read / Write restart files for the neutral variables
+     \param dir directory to write restart files
+     \param DoRead read the restart files if true, write if false
+   **/
+  bool restart_file(std::string dir, bool DoRead);  
+
+  /**********************************************************************
+     \brief Exchange messages between processors
+     \param grid The grid to define the neutrals on
+   **/
+  bool exchange(Grid &grid);
+  bool exchange_old(Grid &grid);
+
+  /**********************************************************************
+   \brief add eddy contributions to vertical acceleration
+   \param grid The grid to define the neutrals on
+  **/ 
+  void vertical_momentum_eddy(Grid &grid);
+  
+  /**********************************************************************
+     \brief Exchange one face for the NEUTRALS
+
+     1. pack all of the variables (den, temp, vel)
+     2. send the buffer
+     3. receive the buffer
+     4. Unpack all of the variables (den, temp, vel)
+     5. Wait for everyone to finish (technically the send...)
+
+     \param iReceiver which processor to get data from
+     \param iSender which processor to send data too
+     \param buffer the buffer to use for the message pass
+     \param iTotalSize buffer size for the message pass
+     \param nG number of ghost cells
+     \param iDir direction for message pass (0-3)
+   **/
+
+  bool exchange_one_face(int iReceiver, int iSender,
+			 precision_t *buffer,
+			 int64_t iTotalSize,
+			 int nG, int iDir);
+
+  bool pack_one_face(int iReceiver,
+		     precision_t *buffer,
+		     int nG, int iDir,
+		     bool IsPole);
+  bool unpack_one_face(int iSender,
+		       precision_t *buffer,
+		       int nG, int iDir,
+		       bool DoReverseX,
+		       bool DoReverseY,
+		       bool XbecomesY);
+
+  /**********************************************************************
+     \brief Vertical advection solver - Rusanov 
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  void solver_vertical_rusanov(Grid grid,
+			       Times time);
+  
+  /**********************************************************************
+     \brief Call the correct vertical advection scheme
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+
+  bool advect_vertical(Grid grid, Times time);
   
 };
-  
 
-
-#endif // AETHER_INCLUDE_NEUTRALS_H_
+#endif  // INCLUDE_NEUTRALS_H_
 

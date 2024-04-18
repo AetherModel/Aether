@@ -1,0 +1,10 @@
+cmake
+libarmadillo-dev
+libblas-dev
+libboost-dev
+liblapack-dev
+libnetcdf-dev
+libnetcdf-c++4-dev
+libopenmpi-dev
+nlohmann-json3-dev
+openmpi-bin

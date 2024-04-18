@@ -1,0 +1,37 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "Ensembles" : {
+        "nMembers" : 3},
+
+    "CubeSphere" : {
+        "is" : false},
+
+    "GeoBlockSize" : {
+        "nLons" : 9,
+        "nLats" : 9,
+        "nAlts" : 30},
+
+    "Perturb": {
+        "f107" : { "Mean" : 1.0,
+                   "Std" : 0.10,
+                   "Add" : false,
+                   "Constant" : true},
+        "f107a" : { "Mean" : 1.0,
+                   "Std" : 0.10,
+                   "Add" : false,
+                    "Constant" : true},
+        "imfbz" : { "Mean" : 0.0,
+                   "Std" : 2.0,
+                   "Add" : true,
+                   "Constant" : false}
+    },
+    
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin"
+
+}

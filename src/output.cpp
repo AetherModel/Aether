@@ -1,192 +1,339 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include <netcdf>
+#include "aether.h"
 
-#include "../include/neutrals.h"
-#include "../include/grid.h"
-#include "../include/times.h"
-#include "../include/planets.h"
-#include "../include/inputs.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/transform.h"
+/* ---------------------------------------------------------------------
 
-using namespace netCDF;
-using namespace netCDF::exceptions;
+   Fill output containers for certain output types.  Supported types:
+   states - neutral states, ion den., bulk ion vel., temp, elec. temp
+   neutrals - neutral states
+   ions - Ion densites, temperatures, par & perp velocities, elec temp
+   bfield - magnetic coordinates, b-field vector
 
-int output(Neutrals neutrals,
-	   Ions ions,
-	   Grid grid,
-	   Times time,
-	   Planets planet,
-	   Inputs args,
-	   Report &report) {
+ -------------------------------------------------------------------- */
 
-  int iErr = 0;
+// -----------------------------------------------------------------------------
+//  Fills output containers and outputs them for common output types
+// -----------------------------------------------------------------------------
 
-  int nOutputs = args.get_n_outputs();
-  int IsGeoGrid = grid.get_IsGeoGrid();
+bool output(const Neutrals &neutrals,
+            const Ions &ions,
+            const Grid &grid,
+            Times time,
+            const Planets &planet) {
 
-  std::string function="output";
+  std::string function = "output";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
+
+  static bool IsFirstTime = true;
+
+  bool didWork = true;
+
+  int nOutputs = input.get_n_outputs();
+  static std::vector<OutputContainer> AllOutputContainers;
+
+  if (IsFirstTime) {
+    // Initialize all of the output containers for all of the output
+    // types requested
+    OutputContainer DummyOutputContainer;
+    std::string output_dir = "UA/output/";
+    DummyOutputContainer.set_directory(output_dir);
+    DummyOutputContainer.set_version(0.1);
+
+    for (int iOutput = 0; iOutput < nOutputs; iOutput++)
+      AllOutputContainers.push_back(DummyOutputContainer);
+
+    IsFirstTime = false;
+  }
+
+  report.student_checker_function_name(input.get_is_student(),
+                                       input.get_student_name(),
+                                       3, "");
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
- 
-      std::string time_string;
-      std::string file_name;
-      std::string file_ext = ".nc";
-      std::string UNITS = "units";
-      std::string file_pre;
+    if (time.check_time_gate(input.get_dt_output(iOutput))) {
 
-      std::string type_output = args.get_type_output(iOutput);
+      // ------------------------------------------------------------
+      // Store time in all of the files:
 
-      if (type_output == "neutrals") file_pre = "3DNEU";
-      if (type_output == "states") file_pre = "3DALL";
-      if (type_output == "bfield") file_pre = "3DBFI";
+      AllOutputContainers[iOutput].set_time(time.get_current());
 
-      time_string = time.get_YMD_HMS();
-      file_name = file_pre + "_" + time_string + file_ext;
-  
-      // Create the file:
-      NcFile ncdf_file(file_name, NcFile::replace);
+      std::string type_output = input.get_type_output(iOutput);
 
-      // Add dimensions:
-      NcDim lonDim = ncdf_file.addDim("Longitude", nGeoLonsG); 
-      NcDim latDim = ncdf_file.addDim("Latitude", nGeoLatsG); 
-      NcDim altDim = ncdf_file.addDim("Altitude", nGeoAltsG); 
+      // ------------------------------------------------------------
+      // Put Lon, Lat, Alt into all output containers:
 
-      // If we wanted 1D variables, we would do something like this, but
-      // since all of out variables will be 3d, skip this:
-      // Define the Coordinate Variables
-      //NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, altDim);
-  
-      // Define the netCDF variables for the 3D data.
-      // First create a vector of dimensions:
-      std::vector<NcDim> dimVector;
-      dimVector.push_back(lonDim);
-      dimVector.push_back(latDim);
-      dimVector.push_back(altDim);
+      if (type_output == "corners" || type_output == "grid") {
+        // Cell Corners:
+        AllOutputContainers[iOutput].
+        store_variable("lon",
+                       "longitude",
+                       "degrees_east",
+                       grid.geoLon_Corner * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("lat",
+                       "latitude",
+                       "degrees_north",
+                       grid.geoLat_Corner * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("z",
+                       "height above mean sea level",
+                       "m",
+                       grid.geoAlt_Corner);
+      } else {
+        // Cell Centers:
+        AllOutputContainers[iOutput].
+        store_variable("lon",
+                       "longitude",
+                       "degrees_east",
+                       grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("lat",
+                       "latitude",
+                       "degrees_north",
+                       grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].
+        store_variable("z",
+                       "height above mean sea level",
+                       "m",
+                       grid.geoAlt_scgc);
+      }
 
-      NcVar lonVar = ncdf_file.addVar("Longitude", ncFloat, dimVector);
-      NcVar latVar = ncdf_file.addVar("Latitude", ncFloat, dimVector);
-      NcVar altVar = ncdf_file.addVar("Altitude", ncFloat, dimVector);
+      // ------------------------------------------------------------
+      // Put certain variables into each file type
 
-      lonVar.putAtt(UNITS,"radians");
-      latVar.putAtt(UNITS,"radians");
-      altVar.putAtt(UNITS,"meters");
-
-      std::vector<size_t> startp,countp;
-      startp.push_back(0);
-      startp.push_back(0);
-      startp.push_back(0);
-
-      countp.push_back(nGeoLonsG);
-      countp.push_back(nGeoLatsG);
-      countp.push_back(nGeoAltsG);
-
-      // Output longitude, latitude, altitude 3D arrays:
-      lonVar.putVar(startp, countp, grid.geoLon_s3gc);
-      latVar.putVar(startp, countp, grid.geoLat_s3gc);
-      altVar.putVar(startp, countp, grid.geoAlt_s3gc);
-
-      // ----------------------------------------------
-      // Neutral Densities and Temperature
-      // ----------------------------------------------
-
+      // Neutral Densities:
       if (type_output == "neutrals" ||
-	  type_output == "states") {
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+          AllOutputContainers[iOutput].
+          store_variable("density_" + neutrals.species[iSpecies].cName,
+                         neutrals.density_unit,
+                         neutrals.species[iSpecies].density_scgc);
 
-	// Output all species densities:
-	std::vector<NcVar> denVar;
-	for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  if (report.test_verbose(3))
-	    std::cout << "Outputting Var : "
-		      << neutrals.neutrals[iSpecies].cName << "\n";
-	  denVar.push_back(ncdf_file.addVar(neutrals.neutrals[iSpecies].cName, ncFloat, dimVector));
-	  denVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  denVar[iSpecies].putVar(startp, countp, neutrals.neutrals[iSpecies].density_s3gc);
-	}
-  
-	// Output bulk temperature:
-	NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
-	tempVar.putAtt(UNITS,neutrals.temperature_unit);
-	tempVar.putVar(startp, countp, neutrals.temperature_s3gc);
+      // Neutral Temperature:
+      if (type_output == "neutrals" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].
+        store_variable(neutrals.temperature_name + "_neutral",
+                       neutrals.temperature_unit,
+                       neutrals.temperature_scgc);
 
-      }
+      // Bulk Neutral Winds:
+      if (type_output == "neutrals" ||
+          type_output == "states")
+        for (int iDir = 0; iDir < 3; iDir++)
+          AllOutputContainers[iOutput].
+          store_variable(neutrals.velocity_name[iDir] + "_neutral",
+                         neutrals.velocity_unit,
+                         neutrals.velocity_vcgc[iDir]);
 
-      // ----------------------------------------------
-      // Ion Densities and Ion Temperature and Electron Temperature
-      // ----------------------------------------------
+      // Neutral Species Winds:
+      if (type_output == "neutrals")
+        for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+          for (int iDir = 0; iDir < 3; iDir++)
+            AllOutputContainers[iOutput].
+            store_variable(neutrals.velocity_name[iDir] + "_" +
+                           neutrals.species[iSpecies].cName,
+                           neutrals.velocity_unit,
+                           neutrals.species[iSpecies].velocity_vcgc[iDir]);
 
+      // Ion Densities:
       if (type_output == "ions" ||
-	  type_output == "states") {
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
+          AllOutputContainers[iOutput].
+          store_variable("density_" + ions.species[iSpecies].cName,
+                         ions.density_unit,
+                         ions.species[iSpecies].density_scgc);
 
-	// Output all species densities:
-	std::vector<NcVar> ionVar;
-	for (int iSpecies=0; iSpecies < nIons; iSpecies++) {
-	  if (report.test_verbose(3))
-	    std::cout << "Outputting Var : "
-		      << ions.species[iSpecies].cName << "\n";
-	  ionVar.push_back(ncdf_file.addVar(ions.species[iSpecies].cName, ncFloat, dimVector));
-	  ionVar[iSpecies].putAtt(UNITS,neutrals.density_unit);
-	  ionVar[iSpecies].putVar(startp, countp, ions.species[iSpecies].density_s3gc);
-	}
-  
-	ionVar.push_back(ncdf_file.addVar("e-", ncFloat, dimVector));
-	ionVar[nIons].putAtt(UNITS,neutrals.density_unit);
-	ionVar[nIons].putVar(startp, countp, ions.density_s3gc);
+      // Ion Temperatures:
+      if (type_output == "ions" ||
+          type_output == "states")
+        for (int iSpecies = 0; iSpecies <= ions.nSpecies; iSpecies++)
+          AllOutputContainers[iOutput].
+          store_variable(ions.temperature_name + "_" +
+                         ions.species[iSpecies].cName,
+                         ions.temperature_unit,
+                         ions.species[iSpecies].temperature_scgc);
 
-	// // Output bulk temperature:
-	// NcVar tempVar = ncdf_file.addVar(neutrals.temperature_name, ncFloat, dimVector);
-	// tempVar.putAtt(UNITS,neutrals.temperature_unit);
-	// tempVar.putVar(startp, countp, neutrals.temperature_s3gc);
+      // Bulk Ion Temperature:
+      if (type_output == "ions" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].store_variable(ions.temperature_name + "_ion",
+                                                    ions.temperature_unit,
+                                                    ions.temperature_scgc);
 
+      // Bulk Ion Drifts:
+      if (type_output == "states")
+        for (int iDir = 0; iDir < 3; iDir++)
+          AllOutputContainers[iOutput].store_variable(ions.velocity_name[iDir] + "_ion",
+                                                      ions.velocity_unit,
+                                                      ions.velocity_vcgc[iDir]);
+
+      // Electric Potential:
+      if (type_output == "ions" ||
+          type_output == "states")
+        AllOutputContainers[iOutput].store_variable(ions.potential_name,
+                                                    ions.potential_unit,
+                                                    ions.potential_scgc);
+
+      if (type_output == "gravity") {
+        AllOutputContainers[iOutput].store_variable("glat",
+                                                    "grav Latitude",
+                                                    "degrees",
+                                                    grid.geoLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("glon",
+                                                    "grav Longitude",
+                                                    "degrees",
+                                                    grid.geoLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("lt",
+                                                    "Local Time",
+                                                    "hours",
+                                                    grid.geoLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Geast",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Gnorth",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Gvertical",
+                                                    "m/s^2",
+                                                    grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gpotential",
+                                                    "m^2/s^2",
+                                                    grid.gravity_potential_scgc);
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "m",
+                                                    grid.radius_scgc);
       }
-
-      // ----------------------------------------------
-      // Magnetic field
-      // ----------------------------------------------
 
       if (type_output == "bfield") {
-	NcVar mLatVar = ncdf_file.addVar("Magnetic Latitude", ncFloat, dimVector);
-	mLatVar.putAtt(UNITS,"radians");
-	mLatVar.putVar(startp, countp, grid.magLat_s3gc);
-	NcVar mLonVar = ncdf_file.addVar("Magnetic Longitude", ncFloat, dimVector);
-	mLonVar.putAtt(UNITS,"radians");
-	mLonVar.putVar(startp, countp, grid.magLon_s3gc);
-
-	// Output magnetic field components:
-	float *bfield_component_s3gc;
-	long nPointsTotal = grid.get_nPointsInGrid();
-	bfield_component_s3gc = (float*) malloc( nPointsTotal * sizeof(float) );
-	
-	NcVar bxVar = ncdf_file.addVar("Bx", ncFloat, dimVector);
-	bxVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 0, IsGeoGrid, bfield_component_s3gc);
-	bxVar.putVar(startp, countp, bfield_component_s3gc);
-	
-	NcVar byVar = ncdf_file.addVar("By", ncFloat, dimVector);
-	byVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 1, IsGeoGrid, bfield_component_s3gc);
-	byVar.putVar(startp, countp, bfield_component_s3gc);
-	
-	NcVar bzVar = ncdf_file.addVar("Bz", ncFloat, dimVector);
-	bzVar.putAtt(UNITS,"nT");
-	get_vector_component(grid.bfield_v3gc, 2, IsGeoGrid, bfield_component_s3gc);
-	bzVar.putVar(startp, countp, bfield_component_s3gc);
-	
+        AllOutputContainers[iOutput].store_variable("mlat",
+                                                    "Magnetic Latitude",
+                                                    "degrees",
+                                                    grid.magLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("mlon",
+                                                    "Magnetic Longitude",
+                                                    "degrees",
+                                                    grid.magLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("mlt",
+                                                    "Magnetic Local Time",
+                                                    "hours",
+                                                    grid.magLocalTime_scgc);
+        AllOutputContainers[iOutput].store_variable("Beast",
+                                                    "nT",
+                                                    grid.bfield_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("Bnorth",
+                                                    "nT",
+                                                    grid.bfield_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("Bvertical",
+                                                    "nT",
+                                                    grid.bfield_vcgc[2]);
       }
-      
-      ncdf_file.close();
+
+      // Thermal:
+      if (type_output == "therm") {
+        AllOutputContainers[iOutput].store_variable("O Rad Cooling",
+                                                    "[O] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.O_cool_scgc);
+        AllOutputContainers[iOutput].store_variable("NO Rad Cooling",
+                                                    "[NO] Radiative Cooling",
+                                                    "K/s",
+                                                    neutrals.NO_cool_scgc);
+      }
+
+      if (type_output == "moment") {
+        AllOutputContainers[iOutput].store_variable("accel_cent_east",
+                                                    "Logitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[0]);
+        AllOutputContainers[iOutput].store_variable("accel_cent_north",
+                                                    "Latitudinal Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[1]);
+        AllOutputContainers[iOutput].store_variable("accel_cent_up",
+                                                    "Radial Centripetal Acceleration",
+                                                    "m/s^2",
+                                                    grid.cent_acc_vcgc[2]);
+      }
+
+      // ------------------------------------------------------------
+      // Set output file names
+
+      std::string filename;
+
+      if (type_output == "neutrals")
+        filename = "3DNEU_";
+
+      if (type_output == "states")
+        filename = "3DALL_";
+
+      if (type_output == "ions")
+        filename = "3DION_";
+
+      if (type_output == "bfield")
+        filename = "3DBFI_";
+
+      if (type_output == "moment")
+        filename = "3DMMT_";
+
+      if (type_output == "gravity")
+        filename = "3DGRA_";
+
+      if (type_output == "moment")
+        filename = "3DMMT_";
+
+      if (type_output == "corners" || type_output == "grid")
+        filename = "3DCOR_";
+
+      if (type_output == "therm")
+        filename = "3DTHR_";
+
+      if (filename.length() < 5) {
+        report.print(0, "type_output : " + type_output);
+        report.error("File output type not found!");
+        didWork = false;
+      } else {
+
+        if ((int64_t(input.get_dt_output(iOutput)) % 60) == 0)
+          filename = filename + time.get_YMD_HM0();
+        else
+          filename = filename + time.get_YMD_HMS();
+
+        if (nMembers > 1)
+          filename = filename + "_" + cMember;
+
+        filename = filename + "_" + cGrid;
+
+        report.print(0, "Writing file : " + filename);
+        AllOutputContainers[iOutput].set_filename(filename);
+
+        // ------------------------------------------------------------
+        // write output container
+
+        if (!AllOutputContainers[iOutput].write()) {
+          report.error("Error in writing output container!");
+          didWork = false;
+        }
+      }
+
+      // ------------------------------------------------------------
+      // Clear variables for next time
+
+      AllOutputContainers[iOutput].clear_variables();
 
     }
+
+    if (!didWork)
+      break;
   }
-  
+
   report.exit(function);
-  return iErr;
-  
+  return didWork;
 }
+

@@ -1,114 +1,95 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#include "../include/sizes.h"
+#include <iostream>
 
-// Assume that lambda and front are scaled by radius squared!
+#include "aether.h"
 
-int solver_conduction(float value[nGeoAltsG],
-		      float lambda[nGeoAltsG],
-		      float front[nGeoAltsG],
-		      float dt,
-		      float dalt_lower[nGeoAltsG],
-		      float *conduction) {
+// -----------------------------------------------------------------------
+// This code solves the conduction equation in 1D.
+// Some assumptions:
+//  - Assume that lambda and front are scaled by radius squared!
+//  - The spacing can be non-uniform.
+//  - At this point, the bottom BC is fixed, while the top BC is zero gradient
+//  - The dx variable is assumed to be distance between the CURRENT cell center
+//    (i) and the cell center of the cell BELOW the current one (i-1).
+// -----------------------------------------------------------------------
 
-  int iErr = 0;
+arma_vec solver_conduction(arma_vec value,
+                           arma_vec lambda,
+                           arma_vec front,
+                           precision_t dt,
+                           arma_vec dx) {
 
-  int iAlt;
+  int64_t nPts = value.n_elem;
 
-  float r[nGeoAltsG];
-  float di[nGeoAltsG];
-  float m[nGeoAltsG];
-  float du[nGeoAltsG];
-  float dl[nGeoAltsG];
-  float du12[nGeoAltsG];
-  float du22[nGeoAltsG];
-  float lou[nGeoAltsG];
-  float a[nGeoAltsG];
-  float b[nGeoAltsG];
-  float c[nGeoAltsG];
-  float d[nGeoAltsG];
-  float cp[nGeoAltsG];
-  float dp[nGeoAltsG];
-  float result[nGeoAltsG];
-  
-  // Only solve for conduction in the middle section.
-  conduction[0] = 0.0;
-  conduction[nGeoAltsG-1] = 0.0;
-    
-  for (iAlt=1; iAlt < nGeoAltsG-1; iAlt++) {
+  arma_vec di = lambda;
+  arma_vec m = dt / front;
 
-    di[iAlt] = lambda[iAlt];
-    m[iAlt] = dt / front[iAlt];
+  // These are to allow for a stretched grid:
+  // du is cell spacing in upper direction (so, lower, shifted by one):
+  arma_vec du(nPts);
+  du(span(0, nPts - 2)) = dx(span(1, nPts - 1));
+  du(nPts - 1) = du(nPts - 2);
+  // dl is lower cell spacing:
+  arma_vec dl = dx;
+  arma_vec r = du / dl;
+  arma_vec du12 = du % du % (1 + r) % (1 + r);
+  arma_vec du22 = 0.5 * (dl % du + du % du);
+  arma_vec lou = di / du22;
 
-    // This is the dalt upper (lower @ iAlt+1)
-    du[iAlt] = dalt_lower[iAlt+1];
-    // This is the dalt lower
-    dl[iAlt] = dalt_lower[iAlt];
+  arma_vec conduction(nPts);
+  conduction.zeros();
 
-    r[iAlt] = du[iAlt]/dl[iAlt];
+  int64_t i;
 
-    du12[iAlt] = du[iAlt]*du[iAlt] * (1+r[iAlt])*(1+r[iAlt]);
-    du22[iAlt] = 0.5 * (dl[iAlt]*du[iAlt] + du[iAlt]*du[iAlt]);
-    lou[iAlt] = di[iAlt]/du22[iAlt];
+  for (i = 2; i < nPts - 2; i++)
+    dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r(i));
 
-  }
-    
-  for (iAlt=2; iAlt < nGeoAltsG-2; iAlt++) {
+  arma_vec a = di / du22 % r - dl / du12 % r % r;
+  arma_vec c = di / du22 + dl / du12;
+  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r);
+  arma_vec d = -1.0 * value / m;
 
-    dl[iAlt] =
-      di[iAlt+1] -
-      di[iAlt-1] * r[iAlt] * r[iAlt] -
-      di[iAlt] * (1.0-r[iAlt]*r[iAlt]);
-
-    a[iAlt] = di[iAlt]/du22[iAlt]*r[iAlt] - dl[iAlt]/du12[iAlt]*r[iAlt]*r[iAlt];
-    c[iAlt] = di[iAlt]/du22[iAlt] + dl[iAlt]/du12[iAlt];
-    b[iAlt] =
-      - 1.0/m[iAlt]
-      - di[iAlt]/du22[iAlt]*(1.0+r[iAlt])
-      - dl[iAlt]/du12[iAlt]*(1.0-r[iAlt]*r[iAlt]);
-    d[iAlt] = -1.0*value[iAlt]/m[iAlt];
-
-  }
-
-  // Lower BCs:
-  a[1] = 0.0;
-  b[1] = -1.0;
-  c[1] = 0.0;
-  d[1] = -1.0*value[1];
+  // Lower BCs (fixed value):
+  a(1) = 0.0;
+  b(1) = -1.0;
+  c(1) = 0.0;
+  d(1) = -1.0 * value(1);
 
   // Upper BCs:
-  // This assumes a constant-gradient BC:
-  //     (For neutral temperature, this isn't really needed, since it is iso-thermal
-  //      in the upper thermosphere, but in the ionosphere, the electron and
-  //      ion temperatures are typically sloped.)
-  iAlt = nGeoAltsG-2;
-  a[iAlt] = 1.0*( r[iAlt]*(1.0+r[iAlt])*di[iAlt]*m[iAlt]/du22[iAlt]);
-  b[iAlt] = -1.0*( 1.0 + r[iAlt]*(1+r[iAlt])*di[iAlt]*m[iAlt]/du22[iAlt]);
-  c[iAlt] = 0.0;
-  d[iAlt] = -1.0*value[iAlt];
+  // This assumes a constant-gradient BC (need to change for ion and ele temps.
 
-  cp[1] = c[1]/b[1];
-  for (iAlt=2; iAlt <= nGeoAltsG-2; iAlt++) 
-    cp[iAlt] = c[iAlt]/(b[iAlt]-cp[iAlt-1]*a[iAlt]);
+  i = nPts - 2;
+  a(i) = 1.0 * (r(i) * (1.0 + r(i)) * di(i) * m(i) / du22(i));
+  b(i) = -1.0 * (1.0 + r(i) * (1 + r(i)) * di(i) * m(i) / du22(i));
+  c(i) = 0.0;
+  d(i) = -1.0 * value(i);
 
-  dp[1] = d[1]/b[1];
-  for (iAlt=2; iAlt <= nGeoAltsG-2; iAlt++) 
-    dp[iAlt] = (d[iAlt]-dp[iAlt-1]*a[iAlt])/(b[iAlt]-cp[iAlt-1]*a[iAlt]);
+  arma_vec cp(nPts, fill::zeros);
+  arma_vec dp(nPts, fill::zeros);
+  arma_vec result(nPts, fill::zeros);
 
-  result[nGeoAltsG-2] = dp[nGeoAltsG-2];
-  for (iAlt=nGeoAltsG-3; iAlt>0; iAlt--)
-    result[iAlt] = dp[iAlt] - cp[iAlt]*result[iAlt+1];
-  
-  conduction[0] = 0.0;
-  for (iAlt=1; iAlt<nGeoAltsG-2; iAlt++) {
-    conduction[iAlt] = result[iAlt] - value[iAlt];
-    //cout << "Conduction : " << iAlt << " " <<  conduction[iAlt]*seconds_per_day << " (deg/day)\n";
-  }
-  conduction[nGeoAltsG-1] = conduction[nGeoAltsG-2];
+  cp(1) = c(1) / b(1);
 
-  return iErr;
+  for (i = 2; i <= nPts - 2; i++)
+    cp(i) = c(i) / (b(i) - cp(i - 1) * a(i));
 
+  dp(1) = d(1) / b(1);
+
+  for (i = 2; i <= nPts - 2; i++)
+    dp(i) = (d(i) - dp(i - 1) * a(i)) / (b(i) - cp(i - 1) * a(i));
+
+  result(nPts - 2) = dp(nPts - 2);
+
+  for (i = nPts - 3; i > 0; i--)
+    result(i) = dp(i) - cp(i) * result(i + 1);
+
+  conduction = result - value;
+  conduction(0) = 0.0;
+  conduction(1) = 0.0;
+  conduction(nPts - 2) = 0.0;
+  conduction(nPts - 1) = 0.0;
+
+  return conduction;
 }
-
-    

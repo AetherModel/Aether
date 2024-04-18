@@ -1,35 +1,28 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_BFIELD_H_
-#define AETHER_INCLUDE_BFIELD_H_
+#ifndef INCLUDE_BFIELD_H_
+#define INCLUDE_BFIELD_H_
 
 struct bfield_info_type {
-  float b[3];
-  float lon;
-  float lat;
+  precision_t b[3];
+  precision_t lon;
+  precision_t lat;
 };
 
-bfield_info_type get_bfield(float lon,
-			    float lat,
-			    float alt,
-			    Planets planet,
-			    Inputs input,
-			    Report &report);
+arma_vec get_magnetic_pole(int IsNorth,
+		       Planets planet);
 
-bfield_info_type get_dipole(float lon,
-			    float lat,
-			    float alt,
-			    Planets planet,
-			    Inputs input,
-			    Report &report);
+bfield_info_type get_bfield(precision_t lon,
+                            precision_t lat,
+                            precision_t alt,
+			    bool DoDebug,
+                            Planets planet);
 
-bfield_info_type get_dipole(float lon,
-			    float lat,
-			    float alt,
-			    Planets planet,
-			    Inputs input,
-			    Report &report);
+bfield_info_type get_dipole(precision_t lon,
+                            precision_t lat,
+                            precision_t alt,
+			    bool DoDebug,
+                            Planets planet);
 
-#endif // AETHER_INCLUDE_EUV_H_
-
+#endif // INCLUDE_BFIELD_H_

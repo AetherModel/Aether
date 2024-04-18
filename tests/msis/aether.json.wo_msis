@@ -1,0 +1,43 @@
+
+{
+
+    "Debug" : {
+	"iVerbose" : 0,
+	"dt" : 10.0},
+
+    "GeoBlockSize" : {
+	"nLons" : 20,
+	"nLats" : 20,
+	"nAlts" : 30},
+    
+    "GeoGrid" : {
+	"dAlt"   : 0.3,
+	"IsUniformAlt" : false},
+
+    "CubeSphere" : {
+	"is" : true},
+
+    "EndTime" : [2011, 3, 20, 0, 15, 0],
+
+    "InitialConditions" : {
+	"type" : "Planet",
+	"Msis" : {
+	    "tn" : true,
+	    "den" : true,
+	    "ap" : 10.0},
+	"PlanetFile" : {
+	    "tn" : true,
+	    "den" : true}
+    },
+
+    "BoundaryConditions" : {
+	"type" : "Planet"},
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+
+    "ChemistryFile" : "UA/inputs/chemistry_earth_richards.csv",
+
+    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+
+    "DoCalcBulkIonTemp" : true
+}

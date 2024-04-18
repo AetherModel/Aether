@@ -1,373 +1,455 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <math.h>
 #include <iostream>
 #include <fstream>
 
-#include "../include/constants.h"
-#include "../include/inputs.h"
-#include "../include/file_input.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/earth.h"
+#include "aether.h"
 
 // -----------------------------------------------------------------------------
-//  
+//  Create a single species by filling the species structure
 // -----------------------------------------------------------------------------
 
-Neutrals::species_chars Neutrals::create_species() {
+Neutrals::species_chars Neutrals::create_species(Grid grid) {
 
-  long iDir, iLon, iLat, iAlt, index;
   species_chars tmp;
 
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
 
   // Constants:
   tmp.DoAdvect = 0;
   tmp.thermal_cond = 0.0;
   tmp.thermal_exp = 0.0;
   tmp.lower_bc_density = -1.0;
-  
-  tmp.density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  tmp.chapman_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  tmp.ionization_s3gc = (float*) malloc( iTotal * sizeof(float) );
 
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  tmp.density_scgc.set_size(nLons, nLats, nAlts);
+  tmp.newDensity_scgc.set_size(nLons, nLats, nAlts);
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.newVelocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
-	tmp.density_s3gc[index] = 1.0e-32;
-	tmp.chapman_s3gc[index] = 1.0e-32;
-	tmp.ionization_s3gc[index] = 1.0e-32;
-
-	for (iDir = 0; iDir < 3; iDir++) {
-	  index = ijkl_geo_v3gc(iLon,iLat,iAlt,iDir);
-	  tmp.velocity_v3gc[index] = 0.0;
-	}
-	
-      }
-    }
+  for (int iDir = 0; iDir < 3; iDir++) {
+    tmp.velocity_vcgc[iDir].zeros();
+    tmp.newVelocity_vcgc[iDir].zeros();
   }
-	
+
+  tmp.chapman_scgc.set_size(nLons, nLats, nAlts);
+  tmp.scale_height_scgc.set_size(nLons, nLats, nAlts);
+  tmp.ionization_scgc.set_size(nLons, nLats, nAlts);
+
+  tmp.acc_neutral_friction = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_ion_drag = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.acc_eddy.set_size(nLons, nLats, nAlts);
+  tmp.ionization_scgc.zeros();
+
+  tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
+
+  tmp.density_scgc.ones();
+  tmp.chapman_scgc.ones();
+  tmp.scale_height_scgc.ones();
+  tmp.rho_alt_int_scgc.zeros();
+
+  tmp.sources_scgc.set_size(nLons, nLats, nAlts);
+  tmp.sources_scgc.zeros();
+  tmp.losses_scgc.set_size(nLons, nLats, nAlts);
+  tmp.losses_scgc.zeros();
+
+  tmp.nAuroraIonSpecies = 0;
+  tmp.Aurora_Coef = -1.0;
+
   return tmp;
-  
 }
 
 // -----------------------------------------------------------------------------
-//  
+//  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid, Inputs input, Report report) {
+Neutrals::Neutrals(Grid grid,
+                   Planets planet,
+                   Times time,
+                   Indices indices) {
 
   int iErr;
+  bool didWork = true;
   species_chars tmp;
-  long iTotal = long(nGeoLonsG) * long(nGeoLatsG) * long(nGeoAltsG);
+
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
 
   report.print(2, "Initializing Neutrals");
 
-  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-    tmp = create_species();
-    neutrals.push_back(tmp);
+  json planet_neutrals = planet.get_neutrals();
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    tmp = create_species(grid);
+    species.push_back(tmp);
   }
 
+  velocity_name.push_back("velocity_east");
+  velocity_name.push_back("velocity_north");
+  velocity_name.push_back("velocity_up");
+
   // State variables:
-  density_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  velocity_v3gc = (float*) malloc( long(3)*iTotal * sizeof(float) );
-  temperature_s3gc = (float*) malloc( iTotal * sizeof(float) );
+
+  density_scgc.set_size(nLons, nLats, nAlts);
+  density_scgc.ones();
+  temperature_scgc.set_size(nLons, nLats, nAlts);
+  temperature_scgc.ones();
+  newTemperature_scgc.set_size(nLons, nLats, nAlts);
+  newTemperature_scgc.ones();
+  O_cool_scgc.set_size(nLons, nLats, nAlts);
+  O_cool_scgc.zeros();
+  NO_cool_scgc.set_size(nLons, nLats, nAlts);
+  NO_cool_scgc.zeros();
 
   // Derived quantities:
-  rho_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  mean_major_mass_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  pressure_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  sound_s3gc = (float*) malloc( iTotal * sizeof(float) );
+
+  rho_scgc.set_size(nLons, nLats, nAlts);
+  rho_scgc.ones();
+  velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iDir = 0; iDir < 3; iDir++)
+    velocity_vcgc[iDir].zeros();
+
+  cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.ones();
+  pressure_scgc.set_size(nLons, nLats, nAlts);
+  pressure_scgc.ones();
+  sound_scgc.set_size(nLons, nLats, nAlts);
+  sound_scgc.ones();
 
   // Heating and cooling parameters:
-  Cv_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  gamma_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  kappa_s3gc = (float*) malloc( iTotal * sizeof(float) );
+  Cv_scgc.set_size(nLons, nLats, nAlts);
+  Cv_scgc.ones();
+  gamma_scgc.set_size(nLons, nLats, nAlts);
+  gamma_scgc.zeros();
+  kappa_scgc.set_size(nLons, nLats, nAlts);
+  kappa_scgc.zeros();
+  kappa_eddy_scgc.set_size(nLons, nLats, nAlts);
+  kappa_eddy_scgc.zeros();
 
-  // Source Terms:
-  heating_euv_s3gc = (float*) malloc( iTotal * sizeof(float) );
-  conduction_s3gc = (float*) malloc( iTotal * sizeof(float) );
+  conduction_scgc.set_size(nLons, nLats, nAlts);
+  heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.set_size(nLons, nLats, nAlts);
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
-  
-  initial_temperatures = NULL;
-  initial_altitudes = NULL;
-  
+
   // This gets a bunch of the species-dependent characteristics:
-  iErr = read_planet_file(input, report);
+  iErr = read_planet_file(planet);
+
+  if (iErr > 0)
+    report.error("Error reading planet file!");
 
   // This specifies the initial conditions for the neutrals:
-  iErr = initial_conditions(grid, input, report);
+  didWork = initial_conditions(grid, time, indices);
 
+  if (!didWork)
+    report.error("Error in setting neutral initial conditions!");
+
+  return;
 }
 
 // -----------------------------------------------------------------------------
 // Read in the planet file that describes the species - only neutrals
 // -----------------------------------------------------------------------------
 
-int Neutrals::read_planet_file(Inputs input, Report report) {
+int Neutrals::read_planet_file(Planets planet) {
 
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
 
-  report.print(3,"In read_planet_file for Neutrals");
+  report.print(3, "In read_planet_file for Neutrals");
 
-  infile_ptr.open(input.get_planet_species_file());
+  json neutrals = planet.get_neutrals();
 
-  if (!infile_ptr.is_open()) {
-    std::cout << "Could not open input file: "
-	      << input.get_planet_species_file() << "!!!\n";
-    iErr = 1;
-  } else {
+  nSpecies = neutrals["name"].size();
+  nSpeciesAdvect = 0;
 
-    int IsDone = 0;
-
-    while (!IsDone) {
-
-      hash = find_next_hash(infile_ptr);
-      
-      if (report.test_verbose(4))
-	std::cout << "hash : -->" << hash << "<--\n";
-
-      if (hash == "#neutrals") {
-
-	// Read in the characteristics as CSVs:
-	report.print(4,"Found #neutrals!");
-	
-	std::vector<std::vector<std::string>> lines = read_csv(infile_ptr);
-
-	// I should totally redo the initialization of the species,
-	// since we could just do it here, but that is for the future.
-
-	if (lines.size()-1 != nSpecies) {
-	  std::cout << "number of neutrals species defined in planet.h file : "
-		    << nSpecies << "\n";
-	  std::cout << "number of species defined in planet.in file : "
-		    << lines.size() << "\n";
-	  std::cout << "These don't match!\n";
-	  iErr = 1;
-	} else {
-
-	  // assume order of rows right now:
-	  // name, mass, vibration, thermal_cond, thermal_exp, advect, lower BC
-	  	  
-	  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	    report.print(5, "setting neutral species " + lines[iSpecies+1][0]);
-	    neutrals[iSpecies].cName = lines[iSpecies+1][0];
-	    neutrals[iSpecies].mass = stof(lines[iSpecies+1][1])*amu;
-	    neutrals[iSpecies].vibe = stof(lines[iSpecies+1][2]);
-	    neutrals[iSpecies].thermal_cond = stof(lines[iSpecies+1][3]);
-	    neutrals[iSpecies].thermal_exp = stof(lines[iSpecies+1][4]);
-	    neutrals[iSpecies].DoAdvect = stoi(lines[iSpecies+1][5]);
-	    neutrals[iSpecies].lower_bc_density = stof(lines[iSpecies+1][6]);
-	  }
-
-	}
-	
-      }
-
-      if (hash == "#temperature") {
-
-	report.print(4,"Found #temperatures!");
-	
-	std::vector<std::vector<std::string>> temps = read_csv(infile_ptr);
-
-	int nTemps = temps.size()-1;
-	initial_temperatures = (float*) malloc(nTemps * sizeof(float) );
-	initial_altitudes = (float*) malloc(nTemps * sizeof(float) );
-	for (int iTemp=0; iTemp < nTemps; iTemp++) {
-	  report.print(5, "reading initial temp alt " + temps[iTemp+1][0]);
-	  // convert altitudes from km to m
-	  initial_altitudes[iTemp] = stof(temps[iTemp+1][0]) * 1000;
-	  initial_temperatures[iTemp] = stof(temps[iTemp+1][1]);
-	}
-	nInitial_temps = nTemps;
-      }
-      
-      if (infile_ptr.eof()) IsDone = 1;
-
-    }
-
-    infile_ptr.close();
-
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].cName = neutrals["name"][iSpecies];
+    double mass = neutrals["mass"][iSpecies];
+    species[iSpecies].mass = mass * cAMU;
+    species[iSpecies].vibe = neutrals["vibration"][iSpecies];
+    species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
+    species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
+    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
   }
 
-  return iErr;
-  
-}
-
-// -----------------------------------------------------------------------------
-//  
-// -----------------------------------------------------------------------------
-
-float Neutrals::calc_scale_height(int iSpecies,
-				  long index,
-				  Grid grid) {
-
-  float g = grid.gravity_s3gc[index];
-  float t = temperature_s3gc[index];
-  float m = neutrals[iSpecies].mass;
-  float H = boltzmanns_constant * t / m / g;
-
-  return H;
-
-}
-
-// -----------------------------------------------------------------------------
-//  
-// -----------------------------------------------------------------------------
-
-int Neutrals::initial_conditions(Grid grid, Inputs input, Report report) {
-
-  int iErr = 0;
-  long iDir, iLon, iLat, iAlt, index, iA, indexm;
-  float alt, r, H;
-
-  report.print(3, "Creating Neutrals initial_condition");
-  
-  // ---------------------------------------------------------------------
-  // This section assumes we want a hydrostatic solution given the
-  // temperature profile in the planet.in file.
-  // ---------------------------------------------------------------------
-
-  if (nInitial_temps > 0) {
-
-    for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-      for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-	for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	  alt = grid.geoAlt_s3gc[index];
-
-	  // Need to make a generic linear interpolator!!!
-	
-	  // Find temperatures:
-	  if (alt <= initial_altitudes[0]) {
-	    temperature_s3gc[index] = initial_temperatures[0];
-	  } else {
-	    if (alt >= initial_altitudes[nInitial_temps-1]) {
-	      temperature_s3gc[index] = initial_temperatures[nInitial_temps-1];
-	    } else {
-	      // Linear interpolation!
-	      iA = 0;
-	      while (alt > initial_altitudes[iA]) iA++;
-	      iA--;
-	      // alt will be between iA and iA+1:
-	      r = (alt - initial_altitudes[iA]) /
-		(initial_altitudes[iA+1] - initial_altitudes[iA]);
-	      temperature_s3gc[index] =
-		(1.0-r) * initial_temperatures[iA  ] + 
-		(    r) * initial_temperatures[iA+1];
-	    }
-	  }
-	
-	  // Now do the neutrals.
-
-	  // For the bottom, set to the constant conditions:
-
-	  if (iAlt == 0) {
-	    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	      neutrals[iSpecies].density_s3gc[index] =
-		neutrals[iSpecies].lower_bc_density;
-	  } else {
-
-	    // Let's use the cell below to set the density.
-	    // Calculate scale height and then use hydrostatic balance
-	    // to derive the density:
-
-	    indexm = ijk_geo_s3gc(iLon,iLat,iAlt-1);
-
-	    for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	      H = calc_scale_height(iSpecies, index, grid);
-	      
-	      neutrals[iSpecies].density_s3gc[index] = 
-		neutrals[iSpecies].density_s3gc[indexm] *
-		exp(-grid.dalt_lower_s3gc[index]/H);
-
-	    }
-	    
-	  }
-	}
-      }
+  // account for advected neutrals:
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    if (species[iSpecies].DoAdvect == 1) {
+      nSpeciesAdvect++;
+      species_to_advect.push_back(iSpecies);
     }
   }
 
+  json temperatures = planet.get_temperatures();
+  nInitial_temps = temperatures["alt"].size();
+
+  for (int i = 0; i < nInitial_temps; i++) {
+    initial_altitudes.push_back(double(temperatures["alt"][i]) * 1000.0);
+    initial_temperatures.push_back(temperatures["temp"][i]);
+  }
+
   return iErr;
-  
 }
 
 //----------------------------------------------------------------------
-// This code takes the EUV information that was read in from the EUV
-// file and tries to figure out which things are absorbtion/ionization
-// cross sections.  It does this by comparing the name of the neutral
-// species to the first column in the euv.csv file.  If it finds a
-// match, it then checks to see if it is an absorbtion or ionization
-// cross section.  If it is an ionization cs, then it tries to figure
-// out which ion it is producing (the "to" column).
-// ---------------------------------------------------------------------
+// Fill With Hydrostatic Solution (all species)
+//   - iEnd is NOT included (python style)!
+//----------------------------------------------------------------------
 
-int Neutrals::pair_euv(Euv euv, Ions ions, Report report) {
+void Neutrals::fill_with_hydrostatic(int64_t iStart,
+                                     int64_t iEnd,
+                                     Grid grid) {
 
-  int iErr = 0;
-
-  if (report.test_verbose(3))
-    std::cout << "Pairing EUV abs/ion cross sections... (Neutrals::pair_euv) \n";
-  
-  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-
-    if (report.test_verbose(5))
-      std::cout << neutrals[iSpecies].cName << "\n";
-
-    neutrals[iSpecies].iEuvAbsId_ = -1;
-    neutrals[iSpecies].nEuvIonSpecies = 0;
-    
-    // Check each row to see if the first column "name" matches:
-    for (int iEuv=0; iEuv < euv.waveinfo.size(); iEuv++) {
-
-      if (report.test_verbose(6))
-	std::cout << "  " << euv.waveinfo[iEuv].name << "\n";
-
-      // if this matches...
-      if (neutrals[iSpecies].cName == euv.waveinfo[iEuv].name) {
-
-	// First see if we can find absorbtion:
-	if (euv.waveinfo[iEuv].type == "abs") {
-	  if (report.test_verbose(5)) std::cout << "  Found absorbtion\n";
-	  neutrals[iSpecies].iEuvAbsId_ = iEuv;
-	}
-	
-	// Next see if we can find ionizations:
-	if (euv.waveinfo[iEuv].type == "ion") {
-
-	  // Loop through the ions to see if names match:
-	  for (int iIon=0; iIon<nIons; iIon++) {
-	    if (ions.species[iIon].cName == euv.waveinfo[iEuv].to) {
-	      if (report.test_verbose(5))
-		std::cout << "  Found ionization!! --> "
-			  << ions.species[iIon].cName << "\n";
-	      neutrals[iSpecies].iEuvIonId_.push_back(iEuv);
-	      neutrals[iSpecies].iEuvIonSpecies_.push_back(iIon);
-	      neutrals[iSpecies].nEuvIonSpecies++;
-	    }
-	  }
-	}
-      }
-      
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // Integrate with hydrostatic equilibrium up:
+    for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
+      species[iSpecies].density_scgc.slice(iAlt) =
+        temperature_scgc.slice(iAlt - 1) /
+        temperature_scgc.slice(iAlt) %
+        species[iSpecies].density_scgc.slice(iAlt - 1) %
+        exp(-grid.dalt_lower_scgc.slice(iAlt) /
+            species[iSpecies].scale_height_scgc.slice(iAlt));
     }
-    
   }
-  
-  return iErr;
-  
+
+  calc_mass_density();
+  return;
 }
 
+//----------------------------------------------------------------------
+// Fill With Hydrostatic Solution (only one constituent)
+//   - iEnd is NOT included (python style)!
+//----------------------------------------------------------------------
+
+void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
+                                     int64_t iStart,
+                                     int64_t iEnd,
+                                     Grid grid) {
+
+  // Integrate with hydrostatic equilibrium up:
+  for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
+    species[iSpecies].density_scgc.slice(iAlt) =
+      temperature_scgc.slice(iAlt - 1) /
+      temperature_scgc.slice(iAlt) %
+      species[iSpecies].density_scgc.slice(iAlt - 1) %
+      exp(-grid.dalt_lower_scgc.slice(iAlt) /
+          species[iSpecies].scale_height_scgc.slice(iAlt));
+  }
+
+  calc_mass_density();
+  return;
+}
+
+//----------------------------------------------------------------------
+// Reports location of nans inserted into specified variable
+//----------------------------------------------------------------------
+void Neutrals::nan_test(std::string variable) {
+  std::vector<int> locations;
+  std::string message = ("For Neutrals " + variable + " ");
+
+  if (variable == "temperature_scgc") {
+    locations = insert_indefinites(temperature_scgc);
+    message += print_nan_vector(locations, temperature_scgc);
+  }
+
+  if (variable == "density_scgc") {
+    locations = insert_indefinites(density_scgc);
+    message += print_nan_vector(locations, density_scgc);
+  }
+
+  if (variable == "velocity_vcgc") {
+    locations = insert_indefinites(velocity_vcgc[0]);
+    message +=
+      "at the x loc " + print_nan_vector(locations, velocity_vcgc[0]);
+    locations = insert_indefinites(velocity_vcgc[1]);
+    message +=
+      "at the y loc " + print_nan_vector(locations, velocity_vcgc[1]);
+    locations = insert_indefinites(velocity_vcgc[2]);
+    message +=
+      "at the z loc " + print_nan_vector(locations, velocity_vcgc[2]);
+  }
+
+  std::cout << message;
+}
+
+//----------------------------------------------------------------------
+// Checks for nans and +/- infinities in density, temp, and velocity
+//----------------------------------------------------------------------
+
+bool Neutrals::check_for_nonfinites() {
+  bool isBad = false;
+  bool didWork = true;
+
+  isBad = !all_finite(density_scgc, "density_scgc");
+
+  if (isBad) {
+    report.error("non-finite found in neutral density!");
+    didWork = false;
+  }
+
+  isBad = !all_finite(temperature_scgc, "temperature_scgc");
+
+  if (isBad) {
+    report.error("non-finite found in neutral temperature!");
+    didWork = false;
+  }
+
+  isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
+
+  if (isBad) {
+    report.error("non-finite found in neutral velocity!");
+    didWork = false;
+  }
+
+  return didWork;
+}
+
+//----------------------------------------------------------------------
+// return the index of the requested species
+// This will return -1 if the species is not found or name is empty
+//----------------------------------------------------------------------
+
+int Neutrals::get_species_id(std::string name) {
+
+  std::string function = "Neutrals::get_species_id";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iSpecies;
+  int id_ = -1;
+
+  if (name.length() > 0) {
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+      if (name == species[iSpecies].cName) {
+        id_ = iSpecies;
+        break;
+      }
+  }
+
+  report.exit(function);
+  return id_;
+}
+
+//----------------------------------------------------------------------
+// Read/Write restart files for the neutrals
+//----------------------------------------------------------------------
+
+bool Neutrals::restart_file(std::string dir, bool DoRead) {
+
+  std::string filename;
+  bool DidWork = true;
+  int64_t iVar;
+  std::string cName;
+
+  OutputContainer RestartContainer;
+  RestartContainer.set_directory(dir);
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
+
+  try {
+    if (DoRead)
+      RestartContainer.read();
+    else {
+      RestartContainer.set_version(0.1);
+      RestartContainer.set_time(0.0);
+    }
+
+    for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      cName = species[iSpecies].cName;
+
+      if (DoRead)
+        species[iSpecies].density_scgc =
+          RestartContainer.get_element_value(cName);
+      else
+        RestartContainer.store_variable(cName,
+                                        density_unit,
+                                        species[iSpecies].density_scgc);
+    }
+
+    cName = temperature_name;
+
+    if (DoRead)
+      temperature_scgc = RestartContainer.get_element_value(cName);
+    else
+      RestartContainer.store_variable(cName,
+                                      temperature_unit,
+                                      temperature_scgc);
+
+    for (int iDir = 0; iDir < 3; iDir++) {
+      cName = velocity_name[iDir];
+
+      if (DoRead)
+        velocity_vcgc[iDir] = RestartContainer.get_element_value(cName);
+      else
+        RestartContainer.store_variable(cName,
+                                        velocity_unit,
+                                        velocity_vcgc[iDir]);
+    }
+
+    if (!DoRead) {
+      RestartContainer.write();
+      RestartContainer.clear_variables();
+    }
+  } catch (...) {
+    std::cout << "Error reading in neutral restart file!\n";
+    DidWork = false;
+  }
+
+  return DidWork;
+}
+
+//----------------------------------------------------------------------
+// Calculate value of NO Cooling
+//----------------------------------------------------------------------
+
+void Neutrals::calc_NO_cool() {
+  // finds O & NO species
+  int iO = get_species_id("O");
+  int iNO = get_species_id("NO");
+
+  if (iNO != -1) {
+    // omega value using O density
+    arma_cube omega = 3.6e-17 * species[iO].density_scgc / (3.6e-17 *
+                                                            species[iO].density_scgc + 13.3);
+
+    arma_cube v = -cH * cC / (5.3e-6 * cKB * temperature_scgc);
+
+    // calculation for NO_cool_scgc
+    arma_cube NO_cool_scgc_calc = cH * cC /
+                                  5.3e-6 * omega * 13.3 % exp(v) % species[iNO].density_scgc;
+
+    NO_cool_scgc = NO_cool_scgc_calc / (rho_scgc % Cv_scgc);
+  }
+
+  return;
+}
+
+//----------------------------------------------------------------------
+// Calculate value of O Cooling
+//----------------------------------------------------------------------
+
+void Neutrals::calc_O_cool() {
+  // find O species
+  int iO = get_species_id("O");
+
+  if (iO != -1) {
+    arma_cube tmp2 = exp(-228 / temperature_scgc);
+    arma_cube tmp3 = exp(-326 / temperature_scgc);
+
+    // calculation for O_cool_scgc
+    arma_cube O_cool_scgc_calc = (1.69e-18 * tmp2 + 4.59e-20 * tmp3) %
+                                 (species[iO].density_scgc / 1.0e6) / (1.0 + 0.6 * tmp2 + 0.2 * tmp3);
+
+    O_cool_scgc = O_cool_scgc_calc / (rho_scgc % Cv_scgc);
+  }
+
+  return;
+}

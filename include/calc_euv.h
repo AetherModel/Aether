@@ -1,8 +1,8 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_CALC_EUV_H_
-#define AETHER_INCLUDE_CALC_EUV_H_
+#ifndef INCLUDE_CALC_EUV_H_
+#define INCLUDE_CALC_EUV_H_
 
 #include <vector>
 #include <string>
@@ -20,14 +20,17 @@
 //
 // -------------------------------------------------------------------------
 
-int calc_euv( Planets planet,
+bool calc_euv(Planets planet,
 	      Grid grid,
 	      Times time,
 	      Euv &euv,
 	      Neutrals &neutrals,
 	      Ions &ions,
-	      Indices indices,
-	      Inputs args,
-	      Report &report);
+	      Indices indices);
 
-#endif // AETHER_INCLUDE_CALC_EUV_H_
+void calc_ionization_heating(Euv euv,
+			     Neutrals &neutrals,
+			     Ions &ions);
+
+
+#endif  // INCLUDE_CALC_EUV_H_

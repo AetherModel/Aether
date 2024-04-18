@@ -1,0 +1,125 @@
+
+{
+    "Debug" : {
+	"iVerbose" : 0,
+	"doInheritVerbose" : false,
+	"dt" : 60.0,
+	"TimingPercent" : 1.0,
+	"iTimingDepth" : 5,
+	"iProc" : 0,
+        "iFunctionVerbose" : {
+            "Grid::create_altitudes": 0},	
+	"check_for_nans" : false,
+	"nan_test" : {
+            "insert" : false,
+            "variable" : "temperature_scgc"} },
+
+    "InitialConditions" : {
+	"type" : "Planet"},    
+
+    "BoundaryConditions" : {
+	"type" : "Planet"},
+
+    "Advection" : {
+		"Neutrals" : {
+	    	"Vertical" : "rusanov",
+	    	"Horizontal" : "default"},
+		"Ions" : {
+	    	"Along" : "rusanov",
+	    	"Across" : "default"} },
+    
+    "Student" : {
+		"name" : "",
+		"is" : false },
+
+    "Planet" : {
+        "name" : "earth",
+        "file": "UA/inputs/earth.in"},
+
+    "BField" : "dipole",
+
+    "Electrodynamics" : {
+		"Potential" : "weimer",
+		"DiffuseAurora" : "fta",
+		"Dir" : "UA/inputs/ext/ie/",
+		"File" : ""},
+
+    "Euv" : {
+		"doUse" : true,
+		"Model" : "euvac",
+		"File" : "UA/inputs/euv.csv",
+		"IncludePhotoElectrons" : true,
+		"HeatingEfficiency" : 0.05,
+		"dt" : 60.0},
+
+    "DoCalcBulkIonTemp" : false,
+    
+    "Eddy" : {
+	"Coefficient" : 50.0,
+	"BottomPressure" : 0.01,
+	"TopPressure" : 0.005,
+	"UseInEnergy": true,
+	"UseInMomentum": true},
+
+    "StartTime" : [2011, 3, 20, 0, 0, 0],
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "GeoBlockSize" : {
+	"nLons" : 36,
+	"nLats" : 36,
+	"nAlts" : 50},
+
+    "GeoGrid" : {
+	"MinLat" : -90.0,
+	"MaxLat" :  90.0,
+	"MinLon" :   0.0,
+	"MaxLon" : 360.0,
+	"MinAlt" : 100.0,
+	"dAlt"   : 5.0,
+        "AltFile" : "",
+	"IsUniformAlt" : true},
+
+    "CubeSphere" : {
+	"is" : false},
+
+    "Oblate" : {
+	"isOblate" : false,
+        "isJ2" : false},
+
+    "Ensembles" : {
+        "nMembers" : 1},
+
+    "Sources" : {
+	"Grid" : {
+	    "Cent_acc" : true },
+	"Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool": false } },
+    
+    "Seed" : 0,
+
+    "F107File" : "UA/inputs/f107.txt",
+    "ChemistryFile" : "UA/inputs/chemistry_earth_richards.csv",
+    "CollisionsFile" : "UA/inputs/ion_neutral_collision_frequencies.csv",
+    "PlanetCharacteristicsFile" : "UA/inputs/orbits.csv",
+    "AuroraFile" : "UA/inputs/aurora_earth.csv",
+    "IndicesLookupFile" : "UA/inputs/indices_lookup.json",
+
+    "OnmiwebFile" : [""],
+    
+    "Logfile" : {
+	"name" : "UA/output/log.txt",
+	"append" : false,
+	"dt" : 10.0,
+	"species" : ["O2", "O2+"]},
+
+    "Outputs" : {
+	"type" : ["states", "grid"],
+	"dt" : [900, -1]},
+
+    "Restart" : {
+	"do" : false,
+	"OutDir" : "UA/restartOut",
+	"InDir" : "UA/restartIn",
+	"dt" : 3600.0}
+}

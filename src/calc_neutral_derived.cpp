@@ -1,118 +1,445 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <cmath>
 #include <iostream>
 
-#include "../include/constants.h"
-#include "../include/neutrals.h"
-#include "../include/earth.h"
-#include "../include/report.h"
-#include "../include/time.h"
-#include "../include/solvers.h"
+#include "aether.h"
 
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+//  Calculate eddy diffusion coefficient
+// ----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density(Report &report) {
+void Neutrals::calc_kappa_eddy() {
 
-  long iLon, iLat, iAlt, index, iSpecies;
-
-  std::string function="Neutrals::calc_mass_density";
+  std::string function = "Neutrals::calc_kappa_eddy";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
 
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  kappa_eddy_scgc.zeros();
 
-	density_s3gc[index] = 0.0;
-	rho_s3gc[index] = 0.0;
+  precision_t coef = input.get_eddy_coef();
+  precision_t bottom = input.get_eddy_bottom();
+  precision_t top = input.get_eddy_top();
 
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  density_s3gc[index] = density_s3gc[index] +
-	    neutrals[iSpecies].density_s3gc[index];
-	  rho_s3gc[index] = rho_s3gc[index] +
-	    neutrals[iSpecies].mass *
-	    neutrals[iSpecies].density_s3gc[index];
-	}
+  kappa_eddy_scgc = coef * (pressure_scgc - top) / (bottom - top);
+  kappa_eddy_scgc.elem( find(kappa_eddy_scgc > coef)).fill(coef);
+  kappa_eddy_scgc.elem( find(kappa_eddy_scgc < 0)).zeros();
 
-	mean_major_mass_s3gc[index] = rho_s3gc[index] / density_s3gc[index];
-	pressure_s3gc[index] =
-	  density_s3gc[index] *
-	  boltzmanns_constant *
-	  temperature_s3gc[index];
-      }
-    }
-  }
-    
   report.exit(function);
   return;
-  
 }
-  
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat(Report &report) {
+// ----------------------------------------------------------------------
+//  Calculate mass density and number density:
+// ----------------------------------------------------------------------
 
-  long iLon, iLat, iAlt, index, iSpecies;
+void Neutrals::calc_mass_density() {
 
-  double t, p, r;
-  
-  std::string function="Neutrals::calc_specific_heat";
+  std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
 
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-	
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  rho_scgc.zeros();
+  density_scgc.zeros();
 
-	Cv_s3gc[index] = 0.0;
-	gamma_s3gc[index] = 0.0;
-	kappa_s3gc[index] = 0.0;
+  int64_t iSpecies;
 
-	t = temperature_s3gc[index];
-		
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  p = neutrals[iSpecies].thermal_exp;
-	  r = pow(t,p); // temp ^ exp; <--- This line slows the code way down.
-	  Cv_s3gc[index] = Cv_s3gc[index] +
-	    (neutrals[iSpecies].vibe - 2) *
-	    neutrals[iSpecies].density_s3gc[index] *
-	    boltzmanns_constant / neutrals[iSpecies].mass;
-	  gamma_s3gc[index] = gamma_s3gc[index] +
-	    neutrals[iSpecies].density_s3gc[index] / (neutrals[iSpecies].vibe-2);
-	  kappa_s3gc[index] = kappa_s3gc[index] +
-	    neutrals[iSpecies].density_s3gc[index] *
-	    neutrals[iSpecies].thermal_cond *
-	    r;
-	}
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    rho_scgc = rho_scgc +
+               species[iSpecies].mass * species[iSpecies].density_scgc;
+    density_scgc = density_scgc + species[iSpecies].density_scgc;
+  }
 
-	Cv_s3gc[index] = Cv_s3gc[index] / (2*density_s3gc[index]);
-	gamma_s3gc[index] = gamma_s3gc[index] * 2.0 / density_s3gc[index] + 1.0;
-	kappa_s3gc[index] = kappa_s3gc[index] / density_s3gc[index];
+  report.exit(function);
+  return;
+}
 
-	r = gamma_s3gc[index] *
-	  boltzmanns_constant *
-	  temperature_s3gc[index] /
-	  mean_major_mass_s3gc[index];
-	
-	sound_s3gc[index] = sqrt(r); // <---- Same with this line
+// ----------------------------------------------------------------------
+//  Calculate concentration (species number density / total density)
+//    Must call calc_mass_density first!!!
+// ----------------------------------------------------------------------
 
-      }
+void Neutrals::calc_concentration() {
+
+  std::string function = "Neutrals::calc_concentration";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].concentration_scgc =
+      species[iSpecies].density_scgc / density_scgc;
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+//  Calculate mean major mass
+//     Must call calc_mass_density first!!!
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_mean_major_mass() {
+
+  std::string function = "Neutrals::calc_mean_major_mass";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  mean_major_mass_scgc = rho_scgc / density_scgc;
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+//  Calculate pressure
+//     Must call calc_mass_density first!!!
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_pressure() {
+
+  std::string function = "Neutrals::calc_pressure";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  pressure_scgc = cKB * density_scgc % temperature_scgc;
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+//  Calculate bulk velocity:
+// ((sum of species mass * density * velocity) / bulk mass density)
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_bulk_velocity() {
+
+  std::string function = "Neutrals::calc_bulk_velocity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Get rho to be the correct size by assigning it to a variable:
+  arma_cube rho_advected = rho_scgc;
+  static int64_t iSpecies, iSpecies_, iDir;
+
+  for (iDir = 0; iDir < 3; iDir++) {
+    velocity_vcgc[iDir].zeros();
+
+    if (iDir == 0)
+      rho_advected.zeros();
+
+    for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++) {
+      iSpecies_ = species_to_advect[iSpecies];
+      velocity_vcgc[iDir] +=
+        species[iSpecies_].mass *
+        species[iSpecies_].density_scgc %
+        species[iSpecies_].velocity_vcgc[iDir];
+
+      if (iDir == 0)
+        rho_advected += species[iSpecies_].mass * species[iSpecies_].density_scgc;
+    }
+
+    velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_advected;
+  }
+
+  report.exit(function);
+  return;
+}
+
+//----------------------------------------------------------------------
+// Assign bulk velocity to non-advected species
+//----------------------------------------------------------------------
+
+void Neutrals::assign_bulk_velocity() {
+
+  std::string function = "Neutrals::assign_bulk_velocity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  static int64_t iSpecies, iDir;
+
+  // If you don't advect a species, then fill with bulk velocity:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    if (!species[iSpecies].DoAdvect)
+      for (iDir = 0; iDir < 3; iDir++)
+        species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+
+  report.exit(function);
+  return;
+}
+
+//----------------------------------------------------------------------
+// Calculate scale heights of different species
+//----------------------------------------------------------------------
+
+void Neutrals::calc_scale_height(Grid grid) {
+
+  int64_t nAlts = grid.get_nAlts();
+
+  int64_t iSpecies;
+
+  // Calculate scale-heights of each species, completely independently:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+  }
+
+  // If we have eddy diffusion, the scale-heights need to be adjusted,
+  // since all of the scale heights should be the same in the region
+  // where eddy diffusion is dominant.
+
+  if (input.get_use_eddy_momentum()) {
+    // We need the mean major mass in the bottom-most cell, which we
+    // assume is the region where the atmosphere is well-mixed:
+
+    // sum mass densities and densities to calculate mean major mass:
+    precision_t mTotal = 0.0, dTotal = 0.0, mmm;
+    // Need the mass density and the number density in the bottom slice:
+    arma_mat mSlice, dSlice;
+
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      mSlice =
+        species[iSpecies].mass *
+        species[iSpecies].density_scgc.slice(0);
+      dSlice =
+        species[iSpecies].density_scgc.slice(0);
+      mTotal = mTotal + accu(mSlice);
+      dTotal = dTotal + accu(dSlice);
+    }
+
+    mmm = mTotal / dTotal;
+    mmm = sync_mean_across_all_procs(mmm);
+
+    // bulk scale height, assuming well mixed atmosphere:
+    arma_cube bulkH =
+      cKB * temperature_scgc /
+      (mmm * abs(grid.gravity_vcgc[2]));
+
+    // percentage will go from 1 = use bulk scale, to 0 = use individual
+    arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
+    arma_cube one = percentage;
+    one.ones();
+    arma_cube omp = one - percentage;
+
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      species[iSpecies].scale_height_scgc =
+        omp % species[iSpecies].scale_height_scgc +
+        percentage % bulkH;
+    }
+  }
+
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Calculate a bunch of derived products:
+//   - Specific Heat at Constant Volume (Cv)
+//   - Gamma
+//   - Kappa
+//   - Speed of sound
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_specific_heat() {
+
+  int64_t iSpecies;
+
+  std::string function = "Neutrals::calc_specific_heat";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  Cv_scgc.zeros();
+  gamma_scgc.zeros();
+  kappa_scgc.zeros();
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    Cv_scgc = Cv_scgc +
+              (species[iSpecies].vibe - 2) *
+              species[iSpecies].density_scgc *
+              cKB / species[iSpecies].mass;
+    gamma_scgc = gamma_scgc +
+                 species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
+    kappa_scgc = kappa_scgc +
+                 species[iSpecies].thermal_cond *
+                 species[iSpecies].density_scgc %
+                 pow(temperature_scgc, species[iSpecies].thermal_exp);
+  }
+
+  Cv_scgc = Cv_scgc / (2 * density_scgc);
+  gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
+  kappa_scgc = kappa_scgc / density_scgc;
+
+  sound_scgc = sqrt(cKB *
+                    gamma_scgc %
+                    temperature_scgc /
+                    mean_major_mass_scgc);
+
+  if (report.test_verbose(2)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+    std::cout << "max gamma : " << gamma_scgc.max() << "\n";
+    std::cout << "max temperature : " << temperature_scgc.max() << "\n";
+    std::cout << "max mean_major_mass : "
+              << mean_major_mass_scgc.max() << "\n";
+
+    if (!all_finite(rho_scgc, "rho")) {
+      std::cout << "rho has nans!\n";
+      report.report_errors();
+    }
+
+    if (!all_finite(sound_scgc, "sound speed")) {
+      std::cout << "sound speed has nans!\n";
+      report.report_errors();
     }
   }
 
   report.exit(function);
   return;
-  
+}
+
+// ----------------------------------------------------------------------
+// Calculate cMax, which is the sound speed + velocity in each
+// direction
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_cMax() {
+
+  std::string function = "Neutrals::calc_cMax";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  // just take the bulk value for now:
+
+  if (report.test_verbose(3)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+
+    for (iDir = 0; iDir < 3; iDir++) {
+      arma_cube tmp = abs(velocity_vcgc[iDir]);
+      std::cout << "min velocity : " << tmp.min() << "\n";
+      std::cout << "max velocity : " << tmp.max() << "\n";
+    }
+  }
+
+  for (iDir = 0; iDir < 3; iDir++)
+    cMax_vcgc[iDir] = sound_scgc + abs(velocity_vcgc[iDir]);
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Calculate dt primarily for the spherical grid
+// ----------------------------------------------------------------------
+
+precision_t Neutrals::calc_dt(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  precision_t dt;
+
+  if (input.get_is_cubesphere())
+    dt = calc_dt_cubesphere(grid);
+  else {
+    int iDir;
+
+    arma_vec dta(4);
+
+    // simply some things, and just take the bulk value for now:
+    arma_cube dtx = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+    dta(0) = dtx.min();
+
+    arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+    dta(1) = dty.min();
+
+    if (input.get_nAltsGeo() > 1) {
+      arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+      dta(2) = dtz.min();
+    } else
+      dta(2) = 1e32;
+
+    dta(3) = 10.0;
+
+    dt = dta.min();
+
+    if (report.test_verbose(3))
+      std::cout << "dt (sphere) for neutrals : " << dt << "\n";
+
+    if (report.test_verbose(4))
+      std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+  }
+
+  report.exit(function);
+  return dt;
+}
+
+// ----------------------------------------------------------------------
+// Calculate dt for the cubesphere grid.
+// ----------------------------------------------------------------------
+
+precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
+
+  std::string function = "Neutrals::calc_dt_cubesphere";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  precision_t dt;
+  int iDir;
+
+  arma_vec dta(4);
+
+  // Get some dimensions
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nXs = grid.get_nLons();
+  int64_t nYs = grid.get_nLats();
+
+  // dtx dty for reference coordinate system
+  arma_cube dtx(size(cMax_vcgc[0]));
+  arma_cube dty(size(cMax_vcgc[0]));
+
+  // A dummy constant one matrix
+  arma_mat dummy_1(nXs, nYs, fill::ones);
+
+  // Loop through altitudes
+  for (int iAlt = 0; iAlt < nAlts; iAlt++) {
+    // Conver cMax to contravariant velocity first
+    arma_mat u1 = sqrt(
+                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
+                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
+    arma_mat u2 = sqrt(
+                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
+                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
+                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
+    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1;
+    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
+  }
+
+  // simply some things, and just take the bulk value for now:
+  dta(0) = dtx.min();
+  dta(1) = dty.min();
+
+  if (input.get_nAltsGeo() > 1) {
+    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    dta(2) = dtz.min();
+  } else
+    dta(2) = 1e32;
+
+  dta(3) = 10.0;
+
+  dt = dta.min();
+
+  if (report.test_verbose(3))
+    std::cout << "dt (cubesphere) for neutrals : " << dt << "\n";
+
+  if (report.test_verbose(4))
+    std::cout << " derived from dt(x, y, z, extra) : " << dta << "\n";
+
+  report.exit(function);
+  return dt;
 }
 
 //----------------------------------------------------------------------
@@ -122,20 +449,19 @@ void Neutrals::calc_specific_heat(Report &report) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid, Report &report) {
+void Neutrals::calc_chapman(Grid grid) {
 
-  long iAlt, iLon, iLat, index, indexp;
-  float H;  // scale height
+  int64_t iAlt, iLon, iLat;
 
   // This is all from Smith and Smith, JGR 1972, vol. 77, page 3592
   // "Numerical evaluation of chapman's grazing incidence integral ch(X,x)"
   // Xp is supposed to be R/H
-  // JMB Update: 05/2017.  Corrected a small error in the y-calc for 
+  // JMB Update: 05/2017.  Corrected a small error in the y-calc for
   // erfc(y)
   //
   // Also Updated the Grazing Integral for SZA > 90.0
   // We now do log-linear interpolation for smoother transitions
-  
+
   double a = 1.06069630;
   double b = 0.55643831;
   double c = 1.06198960;
@@ -143,403 +469,210 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
   double f = 0.56498823;
   double g = 0.06651874;
 
-  double integral[nGeoAltsG], xp[nGeoAltsG], erfcy[nGeoAltsG];
-  double log_int[nGeoAltsG];
   double y, dy;
 
-  float Hp_up, Hp_dn, grad_hs, grad_xp, grad_in, Hg, Xg, in, int_g, int_p;
-  long index_bottom, iindex, iindexp, iiAlt;
-    
-  std::string function="Neutrals::calc_chapman";
+  precision_t grad_xp, grad_in, Xg, in, int_g, int_p;
+  int64_t iiAlt;
+
+  std::string function = "Neutrals::calc_chapman";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
 
-  for (int iSpecies=0; iSpecies < nSpecies; iSpecies++) {
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
 
-    for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-      for (iLat = 0; iLat < nGeoLatsG; iLat++) {
+  // New way of doing it with 3D arrays:
 
-	iAlt = nGeoAltsG-1;
+  arma_cube integral3d(nLons, nLats, nAlts);
+  arma_cube log_int3d(nLons, nLats, nAlts);
+  arma_cube xp3d(nLons, nLats, nAlts);
+  arma_cube y3d(nLons, nLats, nAlts);
+  arma_cube erfcy3d(nLons, nLats, nAlts);
 
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	
-	// The integral from the top to infinity is the density * H (scale height)
-	// So calculate the scale height:
+  arma_vec integral1d(nAlts);
+  arma_vec log_int1d(nAlts);
+  arma_vec xp1d(nAlts);
+  arma_vec y1d(nAlts);
+  arma_vec erfcy1d(nAlts);
+  arma_vec dAlt1d(nAlts);
+  arma_vec sza1d(nAlts);
+  arma_vec radius1d(nAlts);
+  arma_vec H1d(nAlts);
 
-	H = calc_scale_height(iSpecies, index, grid);
-    
-	integral[iAlt] = neutrals[iSpecies].density_s3gc[index] * H;
-	log_int[iAlt] = log(integral[iAlt]);
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
-	// if we wanted to do this properly, then the integral should be
-	// with cell edge values and the distances from cell centers to
-	// cell centers. But, we are approximating here:
+    species[iSpecies].scale_height_scgc =
+      cKB * temperature_scgc /
+      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
 
-	for (int iAlt=nGeoAltsG-1; iAlt>=0; iAlt--) {
+    xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
+    y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
+    iAlt = nAlts - 1;
 
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	  indexp = ijk_geo_s3gc(iLon,iLat,iAlt+1);
+    integral3d.fill(0.0);
 
-	  if (iAlt < nGeoAltsG-1) {
-	    integral[iAlt] = integral[iAlt+1] +
-	      neutrals[iSpecies].density_s3gc[index] * grid.dalt_lower_s3gc[indexp];
-	    log_int[iAlt] = log(integral[iAlt]);
-	  }
+    integral3d.slice(iAlt) =
+      species[iSpecies].density_scgc.slice(iAlt) %
+      species[iSpecies].scale_height_scgc.slice(iAlt);
 
-	  H = calc_scale_height(iSpecies, index, grid);
-      
-	  xp[iAlt] = grid.radius_s3gc[index] / H;
+    for (iAlt = nAlts - 1; iAlt >= 0; iAlt--) {
+      if (iAlt < nAlts - 1) {
+        integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
+                                 species[iSpecies].density_scgc.slice(iAlt) %
+                                 grid.dalt_lower_scgc.slice(iAlt + 1);
+      }
+    }
 
-	  // Eqn (10) Smith & Smith
-	  y = sqrt(0.5 * xp[iAlt]) * fabs(grid.cos_sza_s3gc[index]);
+    species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
 
-	  // Eqn (12) Smith and Smith
-	  if (y < 8) erfcy[iAlt] = (a + b*y) / (c + d*y + y*y);
-	  else erfcy[iAlt] = f / (g + y);
+    erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
 
-	}
-    
-	// Don't need chapman integrals in the lower ghostcells:
+    for (iLon = 0; iLon < nLons ; iLon++)
+      for (iLat = 0; iLat < nLats ; iLat++)
+        for (iAlt = 0; iAlt < nAlts ; iAlt++)
+          if (y3d(iLon, iLat, iAlt) >= 8.0)
+            erfcy3d(iLon, iLat, iAlt) = f / (g + y3d(iLon, iLat, iAlt));
 
-	for (int iAlt=0; iAlt < nGeoGhosts; iAlt++) { 
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	  neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
-	}
-	
-	// Rest of domain:
+    log_int3d = log(integral3d);
 
-	for (int iAlt=nGeoGhosts; iAlt < nGeoAltsG; iAlt++) {
+    // Set chapman integrals to max in the lower ghostcells
 
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
+    species[iSpecies].chapman_scgc.fill(max_chapman);
 
-	  // This is on the dayside:
-	  if (grid.sza_s3gc[index] < pi/2 || grid.sza_s3gc[index] > 3*pi/2) {
+    for (iLon = 0; iLon < nLons ; iLon++) {
+      for (iLat = 0; iLat < nLats ; iLat++) {
 
-	    neutrals[iSpecies].chapman_s3gc[index] =
-	      integral[iAlt] * sqrt(0.5 * pi * xp[iAlt]) * erfcy[iAlt];
+        dAlt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        sza1d = grid.sza_scgc.tube(iLon, iLat);
+        integral1d = integral3d.tube(iLon, iLat);
+        log_int1d = log_int3d.tube(iLon, iLat);
+        xp1d = xp3d.tube(iLon, iLat);
+        y1d = y3d.tube(iLon, iLat);
+        erfcy1d = erfcy3d.tube(iLon, iLat);
+        radius1d = grid.radius_scgc.tube(iLon, iLat);
+        H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
 
-	  } else {
+        for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
+          // This is on the dayside:
+          if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
+            species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+              integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
+          } else {
+            // This is on the nghtside of the terminator:
 
-	    // This is on the nghtside of the terminator:
+            y = radius1d(iAlt) * abs(cos(sza1d(iAlt) - cPI / 2));
 
-	    y = grid.radius_s3gc[index] * abs(cos(grid.sza_s3gc[index]-pi/2));
+            // This sort of assumes that nGeoGhosts >= 2:
+            if (y > radius1d(nGCs)) {
 
-	    // This sort of assumes that nGeoGhosts >= 2:
-	    index_bottom = ijk_geo_s3gc(iLon,iLat,nGeoGhosts);
-	    if (y > grid.radius_s3gc[index_bottom]) {
+              iiAlt = iAlt;
 
-	      iiAlt = iAlt;
-	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
-	      while (grid.radius_s3gc[iindex]>y) {
-		iiAlt--;
-		iindex = ijk_geo_s3gc(iLon,iLat,iiAlt-1);
-	      }
-	      iiAlt--;
+              while (radius1d(iiAlt - 1) > y)
+                iiAlt--;
 
-	      iindexp = ijk_geo_s3gc(iLon,iLat,iiAlt+1);
-	      iindex = ijk_geo_s3gc(iLon,iLat,iiAlt);
+              iiAlt--;
 
-	      Hp_up = calc_scale_height(iSpecies, iindexp, grid);
-	      Hp_dn = calc_scale_height(iSpecies, iindex, grid);
+              // make sure to use the proper cell spacing (iiAlt+1 & lower):
+              grad_xp = (xp1d(iiAlt + 1) - xp1d(iiAlt)) / dAlt1d(iiAlt + 1);
+              grad_in = (log_int1d(iiAlt + 1) - log_int1d(iiAlt)) /
+                        dAlt1d(iiAlt + 1);
 
-	      // make sure to use the proper cell spacing (iiAlt+1 & lower):
-	      grad_hs = (Hp_up - Hp_dn) / grid.dalt_lower_s3gc[iindexp];
-	      grad_xp = (xp[iiAlt+1]-xp[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
-	      grad_in = (log_int[iiAlt+1] - log_int[iiAlt]) / grid.dalt_lower_s3gc[iindexp];
-	  
-	      // Linearly interpolate H and X:
-	      dy = y - grid.radius_s3gc[iindex];
-	      Hg = Hp_dn + grad_hs * dy;
-	      Xg = xp[iiAlt] + grad_xp * dy;
-	      in = log_int[iiAlt] + grad_in * dy;
+              // Linearly interpolate H and X:
+              dy = y - radius1d(iiAlt);
+              Xg = xp1d(iiAlt) + grad_xp * dy;
+              in = log_int1d(iiAlt) + grad_in * dy;
 
-	      int_g = exp(in);
-	      int_p = integral[iAlt];
-	      // Equation (19) Smith & Smith
-	      neutrals[iSpecies].chapman_s3gc[index] =
-		sqrt(0.5 * pi * Xg) * (2.0 * int_g - int_p * erfcy[iAlt]);
+              int_g = exp(in);
+              int_p = integral1d(iAlt);
+              // Equation (19) Smith & Smith
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
+                sqrt(0.5 * cPI * Xg) * (2.0 * int_g - int_p * erfcy1d(iAlt));
 
-	      if (neutrals[iSpecies].chapman_s3gc[index] > max_chapman)
-		neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
-	  
-	    } else {
+              if (species[iSpecies].chapman_scgc(iLon, iLat, iAlt) >
+                  max_chapman)
+                species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
 
-	      // This says that we are in the shadow of the planet:
+            } else {
+              // This says that we are in the shadow of the planet:
 
-	      neutrals[iSpecies].chapman_s3gc[index] = max_chapman;
+              species[iSpecies].chapman_scgc(iLon, iLat, iAlt) = max_chapman;
+            }
+          }
+        }  // iAlt
+      }  // iLat
+    }  // iLon
+  }  // iSpecies
 
-	    }
-
-	  }
-
-	  if (report.test_verbose(10))
-	    std::cout << "iSpecies, iAlt, chap : " << iSpecies << " " << iAlt << " " <<
-	      grid.sza_s3gc[index]*rtod << " " << 
-	      xp[iAlt] << " " << 
-	      erfcy[iAlt] << " " << 
-	      neutrals[iSpecies].chapman_s3gc[index] << " " << integral[iAlt] << "\n";
-
-	} // iAlt
-
-      } // iLat
-    } // iLon
-    
-  } // iSpecies
-    
   report.exit(function);
   return;
-  
 }
 
 // -----------------------------------------------------------------------------
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
+void Neutrals::calc_conduction(Grid grid, Times time) {
 
-  float prandtl[nGeoAltsG];
-  float rhocv[nGeoAltsG];
-  float lambda[nGeoAltsG];
-  float conduction[nGeoAltsG];
-  float temp[nGeoAltsG];
-  float dalt_lower[nGeoAltsG];
-  float dt;
-  
-  long iLon, iLat, iAlt, index;
-
-  std::string function="Neutrals::calc_conduction";
+  std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
-  
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	conduction_s3gc[index] = 0.0;
-      }
-    }
-  }
-	
-  for (iLon = iGeoLonStart_; iLon < iGeoLonEnd_; iLon++) {
-    for (iLat = iGeoLatStart_; iLat < iGeoLatEnd_; iLat++) {
-      
-      // Treat each altitude slice individually:
-      
-      for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
+  report.enter(function, iFunction);
 
-	rhocv[iAlt] = rho_s3gc[index] * Cv_s3gc[index];
-	// rhocv needs to be scaled by radius squared:
-	rhocv[iAlt] = rhocv[iAlt] * grid.radius_sq_s3gc[index];
-    
-	// Need to make this eddy * rho * cv:
-	prandtl[iAlt] = 0.0;
+  precision_t dt;
+  int64_t iLon, iLat;
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
 
-	lambda[iAlt] = kappa_s3gc[index] + prandtl[iAlt];
-	// lambda needs to be scaled by radius squared:
-	lambda[iAlt] = lambda[iAlt] * grid.radius_sq_s3gc[index];
-    
-	conduction[iAlt] = 0.0;
+  if (nAlts == 2 * nGCs + 1)
+    conduction_scgc.zeros();
 
-	temp[iAlt] = temperature_s3gc[index];
+  else {
 
-	dalt_lower[iAlt] = grid.dalt_lower_s3gc[index];
-	
-      }
+    arma_cube rhocvr23d(nLons, nLats, nAlts);
+    arma_cube lambda3d(nLons, nLats, nAlts);
+    arma_cube prandtl3d(nLons, nLats, nAlts);
 
-      dt = time.get_dt();
+    rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
 
-      // if (iLon == nGeoLonsG/2 && iLat == nGeoLatsG/2) {
-      //   for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-      // 	  std::cout << "before conduction : "
-      // 		    << iLon << " " << iLat << " " << iAlt << " "
-      // 		    << temp[iAlt] << " "
-      // 		    << lambda[iAlt] << " " 
-      // 		    << rhocv[iAlt] << " " 
-      // 		    << dt << " " 
-      // 		    << dalt_lower[iAlt] << "\n";
-      // 	}
-      // }
-	    
-      solver_conduction(temp, lambda, rhocv, dt, dalt_lower, conduction);
+    // Need to make this eddy * rho * cv:
+    if (input.get_use_eddy_energy())
+      prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
+    else
+      prandtl3d.zeros();
 
-      // if (iLon == nGeoLonsG/2 && iLat == nGeoLatsG/2) {
-      //   for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-      // 	  std::cout << "after conduction : "
-      // 		    << iLon << " " << iLat << " " << iAlt << " "
-      // 		    << conduction[iAlt] << "\n";
-      // 	}
-      // }
-      // We want the sources to be in terms of dT/dt, while the
-      // conduction actually solves for Tnew-Told, so divide by dt
+    lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
 
-      for (iAlt=0; iAlt < nGeoAltsG; iAlt++) {
-	conduction_s3gc[index] = conduction[iAlt]/dt;
+    arma_vec temp1d(nAlts);
+    arma_vec lambda1d(nAlts);
+    arma_vec rhocvr21d(nAlts);
+    arma_vec dalt1d(nAlts);
+    arma_vec conduction1d(nAlts);
 
-	if (report.test_verbose(10))
-	  std::cout << "conduction : " << index
-		    << " " << conduction_s3gc[index]*seconds_per_day << " deg/day\n";
-	
-      }
+    for (iLon = 0; iLon < nLons; iLon++) {
+      for (iLat = 0; iLat < nLats; iLat++) {
 
-      // End of calculation for each altitude
+        temp1d = temperature_scgc.tube(iLon, iLat);
+        lambda1d = lambda3d.tube(iLon, iLat);
+        rhocvr21d = rhocvr23d.tube(iLon, iLat);
+        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        conduction1d.zeros();
 
-    } // lat
+        dt = time.get_dt();
 
-  } // lon
+        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
 
-  report.exit(function);
+        // We want the sources to be in terms of dT/dt, while the
+        // conduction actually solves for Tnew-Told, so divide by dt
 
-}
+        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
+      }  // lat
+    }  // lon
 
-  
-
-// -----------------------------------------------------------------------------
-// Calculate EUV driven ionization and heating rates
-// -----------------------------------------------------------------------------
-
-void Neutrals::calc_ionization_heating(Euv euv, Ions &ions, Report &report) {
-
-  long iAlt, iLon, iLat, iWave, iSpecies, index, indexp;
-  int i_, idion_, ideuv_, nIonizations, iIon, iIonization;
-  float tau, intensity, photoion;
-
-  float ionization;
-
-  std::string function="calc_ionization_heating";
-  static int iFunction = -1;
-  report.enter(function, iFunction);  
-
-  // Zero out all source terms:
-  
-  for (iLon = 0; iLon < nGeoLonsG; iLon++) {
-    for (iLat = 0; iLat < nGeoLatsG; iLat++) {
-      for (iAlt = 0; iAlt < nGeoAltsG; iAlt++) {
-
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-
-	heating_euv_s3gc[index] = 0.0;
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
-
-      }
-    }
-  }
-	
-  for (iLon = iGeoLonStart_; iLon < iGeoLonEnd_; iLon++) {
-    for (iLat = iGeoLatStart_; iLat < iGeoLatEnd_; iLat++) {
-      for (iAlt = iGeoAltStart_; iAlt < iGeoAltEnd_; iAlt++) {
-
-	index = ijk_geo_s3gc(iLon,iLat,iAlt);
-      
-	heating_euv_s3gc[index] = 0.0;
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++)
-	  neutrals[iSpecies].ionization_s3gc[index] = 0.0;
-    
-	for (iWave=0; iWave < euv.nWavelengths; iWave++) {
-
-	  // Need to calculate the intensity at particular wavelength
-	  // (iWave), for each species (iSpecies), which is dependent
-	  // on the chapman integrals at that particular location (index)
-	  // and the cross section (i_):
-	
-	  tau = 0.0;
-	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	    if (neutrals[iSpecies].iEuvAbsId_ > -1) {
-	      i_ = neutrals[iSpecies].iEuvAbsId_;
-	      tau = tau +
-		euv.waveinfo[i_].values[iWave] *
-		neutrals[iSpecies].chapman_s3gc[index];
-	    }	  
-	  }
-
-	  intensity = euv.wavelengths_intensity_top[iWave] * exp(-1.0*tau);
-	  
-	  for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-
-	    // Calculate Photo-Absorbtion for each species and add them up:
-	    i_ = neutrals[iSpecies].iEuvAbsId_; // index of photo abs cross section
-	    if (i_ > -1) {
-	      heating_euv_s3gc[index] = heating_euv_s3gc[index] +
-		intensity *
-		euv.wavelengths_energy[iWave] * 
-		euv.waveinfo[i_].values[iWave] *  // cross section
-		neutrals[iSpecies].density_s3gc[index];
-	    }
-
-	    for (iIonization = 0; iIonization < neutrals[iSpecies].nEuvIonSpecies; iIonization++) {
-
-	      i_ = neutrals[iSpecies].iEuvIonId_[iIonization];
-	      // std::cout << iSpecies << " " << iIonization << " " << i_ << "\n";
-	      
-	      ionization = 
-		intensity *
-		euv.waveinfo[i_].values[iWave] *  // cross section
-		neutrals[iSpecies].density_s3gc[index];
-
-	      neutrals[iSpecies].ionization_s3gc[index] =
-		neutrals[iSpecies].ionization_s3gc[index] + ionization;
-
-	      iIon = neutrals[iSpecies].iEuvIonSpecies_[iIonization];
-	      ions.species[iIon].ionization_s3gc[index] = 
-		ions.species[iIon].ionization_s3gc[index] + ionization;	
-
-	    }
-	     
-	  } // Each species
-
-	  
-	} // Each wavelength
-
-	// Scale heating with efficiency, and 
-	// convert energy deposition to change in temperature:
-
-	heating_euv_s3gc[index] =
-	  heating_efficiency *
-	  heating_euv_s3gc[index] / rho_s3gc[index] / Cv_s3gc[index];
-
-	if (report.test_verbose(10))
-	  std::cout << "heating : " << index
-	       << " " << heating_euv_s3gc[index]*seconds_per_day << " deg/day\n";
-	  
-      } // Alts
-    } // Lats
-  } // Lons
-	    
-//	// We need to do things here:
-//	// - Identify where the ionization cross section is stored
-//	// - Identify which ion gets the ionization
-//	// - Keep track of neutral losses
-//
-//	// How many ionizations do we have:
-//	nIonizations = neutrals[iSpecies].iEuvIonId_.size();
-//	for (int iIon=0; iIon < nIonizations; iIon++) {
-//
-//	  // Find cross section:
-//	  ideuv_ = neutrals[iSpecies].iEuvIonId_[iIon];
-//	  // Find ion to put sources:
-//	  idion_ = neutrals[iSpecies].iEuvIonSpecies_[iIon];
-//
-//	  photoion = euv.waveinfo[ideuv_].values[iWave];
-//
-//	  // This is the ionization rate:
-//	  ionization = intensity * photoion * 
-//	    neutrals[iSpecies].density[iAlt];
-//	    
-//	  // Keep track of losses for neutrals:
-//	  neutrals[iSpecies].ionization[iAlt] =
-//	    neutrals[iSpecies].ionization[iAlt] +
-//	    ionization;
-//
-//	  // Keep track of sources for ions:
-//	  ions.species[idion_].ionization[iAlt] = 
-//	    ions.species[idion_].ionization[iAlt] +
-//	    ionization;
-//
-//	}
-//	  
+  } // if nAlts == 1 + 2*GCs
 
   report.exit(function);
   return;
-
 }

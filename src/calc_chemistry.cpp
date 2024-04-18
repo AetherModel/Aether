@@ -1,123 +1,84 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
 #include <iostream>
 
-#include "../include/sizes.h"
+#include "aether.h"
 
-#include "../include/chemistry.h"
-#include "../include/neutrals.h"
-#include "../include/ions.h"
-#include "../include/times.h"
-#include "../include/grid.h"
-#include "../include/report.h"
-#include "../include/solvers.h"
+// -----------------------------------------------------------------------------
+// calculates the chemical reactions in the model by taking into account
+// EUV ionization and chemistry as this time
+// -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemistry(Neutrals &neutrals,
-			       Ions &ions,
-			       Times time,
-			       Grid grid,
-			       Report &report) {
+                               Ions &ions,
+                               Times time,
+                               Grid grid) {
 
-  long nLons, nLats, nAlts, iLon, iLat, iAlt, index;
   int iSpecies;
 
   std::string function = "Chemistry::calc_chemistry";
   static int iFunction = -1;
-  report.enter(function, iFunction);  
+  report.enter(function, iFunction);
 
-  if (grid.get_IsGeoGrid()) {
-    nLons = nGeoLonsG;
-    nLats = nGeoLatsG;
-    nAlts = nGeoAltsG;
-  } else {
-    nLons = nMagLonsG;
-    nLats = nMagLatsG;
-    nAlts = nMagAltsG;
-  }
+  precision_t dt = time.get_dt();
 
-  float neutral_density[nSpecies];
-  float ion_density[nIons+1];  // add one for electron density
-  float neutral_sources[nSpecies];
-  float neutral_losses[nSpecies];
-  float ion_sources[nIons];
-  float ion_losses[nIons];
-
-  float Tn, Te, Ti;
-
-  float dt = time.get_dt();
-  float old_density, source, loss, new_density;
-  float heat_neutrals, heat_ions, heat_electrons;
-  
   // ------------------------------------
   // Calculate electron densities
   // ------------------------------------
 
-  ions.fill_electrons(grid, report);
+  ions.fill_electrons();
 
-  // Don't do chemistry in the ghostcells!
+  // ----------------------------------------------------------
+  // Initialize the sources and losses with EUV stuff:
+  // ----------------------------------------------------------
 
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iLat = 0; iLat < nLats; iLat++) {
-      for (iAlt = 0; iAlt < nAlts; iAlt++) {
-
-	if (grid.get_IsGeoGrid()) {
-	  index = ijk_geo_s3gc(iLon,iLat,iAlt);
-	} else {
-	  index = ijk_mag_s3gc(iLon,iLat,iAlt);
-	}
-
-	// Use the private variable sources_and_losses, so we don't
-	// have to pass it around
-
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  neutral_density[iSpecies] = neutrals.neutrals[iSpecies].density_s3gc[index];
-	  sources_and_losses.neutral_losses[iSpecies] = neutrals.neutrals[iSpecies].ionization_s3gc[index];
-	  sources_and_losses.neutral_sources[iSpecies] = 0.0;
-	}
-
-	for (iSpecies=0; iSpecies < nIons; iSpecies++) {
-	  ion_density[iSpecies] = ions.species[iSpecies].density_s3gc[index];
-	  sources_and_losses.ion_sources[iSpecies] = ions.species[iSpecies].ionization_s3gc[index];
-	  sources_and_losses.ion_losses[iSpecies] = 0.0;
-	}
-	ion_density[nIons] = ions.density_s3gc[index];
-
-	Tn = neutrals.temperature_s3gc[index];
-	Ti = ions.ion_temperature_s3gc[index];
-	Te = ions.electron_temperature_s3gc[index];
-
-	// If we wanted to do a higher-order solver, we would probably
-	// put it starting here: (If we do that, we may want to have a
-	// code that calculates the reaction rates first, then take
-	// this outside of the higher-order solver, since the reaction
-	// rates involve a lot of powers, which seem like there are
-	// quite slow in C.)
-	
-	calc_chemical_sources(neutral_density,
-			      ion_density,
-			      Tn, Ti, Te, report);
-	
-	for (iSpecies=0; iSpecies < nSpecies; iSpecies++) {
-	  old_density = neutral_density[iSpecies];
-	  source = sources_and_losses.neutral_sources[iSpecies];
-	  loss = sources_and_losses.neutral_losses[iSpecies];
-	  neutrals.neutrals[iSpecies].density_s3gc[index] =
-	    solver_chemistry(old_density, source, loss, dt);
-	}
-
-	for (iSpecies=0; iSpecies < nIons; iSpecies++) {
-	  old_density = ion_density[iSpecies];
-	  source = sources_and_losses.ion_sources[iSpecies];
-	  loss = sources_and_losses.ion_losses[iSpecies];
-	  ions.species[iSpecies].density_s3gc[index] =
-	    solver_chemistry(old_density, source, loss, dt);
-	}
-	
-      }
-    }
+  // Neutrals have losses due to ionization
+  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
+    neutrals.species[iSpecies].losses_scgc =
+      neutrals.species[iSpecies].ionization_scgc;
+    neutrals.species[iSpecies].sources_scgc.zeros();
   }
-  
+
+  // Ions have sources due to ionization
+  for (iSpecies = 0; iSpecies < ions.nSpecies; iSpecies++) {
+    ions.species[iSpecies].losses_scgc.zeros();
+    ions.species[iSpecies].sources_scgc =
+      ions.species[iSpecies].ionization_scgc;
+  }
+
+  // ----------------------------------------------------
+  // Calculate the chemical sources and losses
+  // ----------------------------------------------------
+
+  calc_chemical_sources(neutrals, ions);
+
+  // ---------------------------------------------------------
+  // Once sources and losses are done, solve for new densities
+  // ---------------------------------------------------------
+
+  for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
+    neutrals.species[iSpecies].density_scgc =
+      solver_chemistry(neutrals.species[iSpecies].density_scgc,
+                       neutrals.species[iSpecies].sources_scgc,
+                       neutrals.species[iSpecies].losses_scgc,
+                       dt);
+  }
+
+  for (iSpecies = 0; iSpecies < ions.nSpecies; iSpecies++) {
+    ions.species[iSpecies].density_scgc =
+      solver_chemistry(ions.species[iSpecies].density_scgc,
+                       ions.species[iSpecies].sources_scgc,
+                       ions.species[iSpecies].losses_scgc,
+                       dt);
+  }
+
+  // ---------------------------------------------------------
+  // Recalculate electrons
+  // ---------------------------------------------------------
+  ions.set_floor();
+  ions.fill_electrons();
+
   report.exit(function);
   return;
 }

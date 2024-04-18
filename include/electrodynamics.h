@@ -1,0 +1,494 @@
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
+#ifndef INCLUDE_ELECTRODYNAMICS_H_
+#define INCLUDE_ELECTRODYNAMICS_H_
+
+extern "C" void ie_init_library(int[], int[], int[], int* iError);
+extern "C" void ie_set_nxs(int *nXsIn);
+extern "C" void ie_set_nys(int *nYsIn);
+extern "C" void ie_set_time(double *TimeIn);
+extern "C" void ie_set_imfbz(float *IMFBzIn);
+extern "C" void ie_set_imfby(float *IMFByIn);
+extern "C" void ie_set_swv(float *SWVIn);
+extern "C" void ie_set_swn(float *SWNIn);
+extern "C" void ie_set_au(float *AUIn);
+extern "C" void ie_set_al(float *ALIn);
+extern "C" void ie_set_ae(float *AEIn);
+extern "C" void ie_set_hp_from_ae(float *AEIn);
+extern "C" void ie_set_north();
+extern "C" void ie_set_south();
+extern "C" void ie_set_mlts(float[], int *iError);
+extern "C" void ie_set_lats(float[], int *iError);
+extern "C" void ie_update_grid(int *iError);
+extern "C" void ie_get_potential(float[], int *iError);
+extern "C" void ie_get_eflux(float[], int *iError);
+extern "C" void ie_get_avee(float[], int *iError);
+extern "C" void ie_get_electron_diffuse_aurora(float[], float[], int *iError);
+
+/**************************************************************
+ * This is the electrodynamics class for Aether.
+
+   To use this, you have to:
+   1. initialize it, which reads in the electrodynamics file (if used).
+   2. set the time to use.
+   3. set any indices to you need for the electrodynmics.
+   4. set the magnetic latitudes (2d) you need
+   5. set the magnetic local times (2d) you need
+   6. call get_potential or get_eflux or ... to get the electrodynamics
+      on the grid that was specified.
+   2-6 can all be called as many times as you want.
+ *
+ **************************************************************/
+
+#include <vector>
+
+#include "aether.h"
+
+class Electrodynamics {
+
+ public:
+
+  /**************************************************************
+     \brief Initialize electrodynamics variables and routines
+
+     This does the following:
+     - initialize all variables to missing values
+     - read in file if it exists 
+   **/
+  Electrodynamics(Times time);
+
+  /**************************************************************
+     \brief update the potential and aurora
+
+     \param planet need info about SZA and stuff to get MLTs
+     \param gGrid need grid
+     \param time need current time
+     \param ions Going to set the potential and aurora
+   **/
+  
+  bool update(Planets planet,
+	      Grid gGrid,
+	      Times time,
+        Indices &indices,
+        Ions &ions);
+
+
+  /**************************************************************
+     \brief used in main.cpp to ensure electrodynamics times and
+      aether input times match up. Returns false if times are
+      misaligned, true if they are aligned
+
+     \param inputStartTime input file starting time
+
+     \param inputEndTime input file ending time
+   **/
+
+  bool check_times(double inputStartTime, double inputEndTime);
+  
+  /**************************************************************
+     \brief used in advance.cpp to get potential, eflux, avee
+
+     \param magLat magnetic latitude
+
+     \param magLocalTime magnetic local time
+   **/
+
+  std::tuple<arma_cube,
+	     arma_mat,
+	     arma_mat> get_electrodynamics(arma_cube magLat,
+					   arma_cube magLocalTime);
+
+  /**************************************************************
+     \brief Gets interpolation indices
+
+     Performs 2d interpolation over search vector to get indices
+
+     \param vals the 2d array that needs indices
+     \param search The vector of values to interpolate over  
+   **/
+
+  arma_mat get_interpolation_indices(arma_mat vals, arma_vec search);
+
+  /**************************************************************
+     \brief Sets time needed for electrodynamics
+
+     Internally, if there is a file read, this function:
+     - finds interpolation indices in time
+     - interpolates the primaary quantities (pot, avee, eflux, etc) to
+       the given time, creating internal states of these quantities. This
+       is done for all relavant grids.
+
+     \param time the time requested.
+   **/
+  
+  void set_time(double time);
+
+  /**************************************************************
+     \brief Sets the current grid to request data on
+
+     Internally, if there is a file read, this function finds the
+     interpolation indices in space for each relevant grid
+
+     \param lats a 2D matrix of magnetic latitudes to interpolate to
+     \param mlts a 2D matrix of magnetic local times to interpolate to
+   **/
+  void set_grid(arma_mat lats, arma_mat mlts);
+
+  /**************************************************************
+     \brief Set the IMF Bx for internal usage
+     \param value Value to assign to IMF Bx (nT)
+   **/
+  void set_imf_bx(precision_t value);
+
+  /**************************************************************
+     \brief Set the IMF By for internal usage
+     \param value Value to assign to IMF By (nT)
+   **/
+  void set_imf_by(precision_t value);
+
+  /**************************************************************
+     \brief  Set the IMF Bz for internal usage
+     \param value Value to assign to IMF Bz (nT)
+   **/
+  void set_imf_bz(precision_t value);
+
+  /**************************************************************
+     \brief Set the Solar Wind Velocity for internal usage
+     \param value Value to assign to Solar wind velocity (km/s)
+   **/
+  void set_sw_v(precision_t value);
+
+  /**************************************************************
+     \brief Set the Solar Wind Density for internal usage
+     \param value Value to assign to Solar Wind Density (/cc)
+   **/
+  void set_sw_n(precision_t value);
+
+  /**************************************************************
+     \brief Set the Hemispheric Power for internal usage
+     \param value Value to assign to Hemispheric Power (GW)
+     \param
+   **/
+  void set_hp(precision_t value);
+
+  /**************************************************************
+     \brief Set the AU index for internal usage
+     \param value Value to assign to Auroral Upper Index (nT)
+   **/
+  void set_au(precision_t value);
+
+  /**************************************************************
+     \brief Set the AL index for internal usage
+     \param value Value to assign to Auroral Lower Index (nT)
+   **/
+  void set_al(precision_t value);
+
+  /**************************************************************
+     \brief Set the AE Index for internal usage
+     \param value Value to assign to Auroral Electrojet Index (nT)
+   **/
+  void set_ae(precision_t value);
+
+  /**************************************************************
+     \brief Set the Kp Index for internal usage
+     \param value Value to assign to Kp index
+   **/
+  void set_kp(precision_t value);
+  
+  /**************************************************************
+     \brief Get 2D electric potential on specified grid
+
+     This function returns the electric potential on the requested
+     grid at the requested time (with the requested indices, if
+     applicable)
+
+     This function does the following:
+     - creates an empty potential matrix ok, I see to return
+     - Loops through the grids in priority order calling set_values
+       with the potentials in the grids
+   **/
+  arma_cube get_potential(arma_cube magLat,
+			  arma_cube magLocalTime);
+
+  /**************************************************************
+     \brief Get 2D electron energy flux on specified grid
+
+     This function returns the electron energy flux on the requested
+     grid at the requested time (with the requested indices, if
+     applicable)
+
+     This function does the following:
+     - creates an empty eflux matrix to return
+     - Loops through the grids in priority order calling set_values
+       with the eflux in the grids
+   **/
+  arma_mat get_eflux(arma_cube magLat, arma_cube magLocalTime);
+
+  /**************************************************************
+     \brief Get 2D electron average energy on specified grid
+
+     This function returns the electron average energy on the requested
+     grid at the requested time (with the requested indices, if
+     applicable)
+
+     This function does the following:
+     - creates an empty avee matrix to return
+     - Loops through the grids in priority order calling set_values
+       with the avee in the grids
+   **/
+  arma_mat get_avee(arma_cube magLat, arma_cube magLocalTime);
+
+  /**************************************************************
+     \brief Get 2D ion energy flux on specified grid
+
+     This function returns the ion energy flux on the requested
+     grid at the requested time (with the requested indices, if
+     applicable)
+
+     This function does the following:
+     - creates an empty ion eflux matrix to return
+     - Loops through the grids in priority order calling set_values
+       with the ion eflux in the grids
+   **/
+  arma_mat get_ion_eflux();
+
+  /**************************************************************
+     \brief Get 2D ion average energy on specified grid
+
+     This function returns the ion average energy on the requested
+     grid at the requested time (with the requested indices, if
+     applicable)
+
+     This function does the following:
+     - creates an empty ion avee matrix to return
+     - Loops through the grids in priority order calling set_values
+       with the ion avee in the grids
+   **/
+  arma_mat get_ion_avee();
+  
+  /**********************************************************************
+     \brief Check to see if internal state of class is ok
+   **/
+  
+  bool is_ok();
+  
+ private:
+
+  /// This is the interpolation method for time:
+  int iTimeInterpolationMethod;
+  /// For all iteration methods, code should return first value if
+  /// before first time, last value if after last time.
+  /// Use the previous value:
+  const int iPrevious_ = 1;
+  /// Use the next value:
+  const int iNext_ = 2;
+  // Use the closest value:
+  const int iClosest_ = 3; 
+  /// Interpolate:
+  const int iInterp_ = 4;
+
+  /// The input file to read that contains the grid of electrodynamics:
+  std::string input_file;
+
+  ///
+  bool HaveElectrodynamicsFile;
+  bool HaveFortranIe;
+
+  /// Variables needed by user - all set by set_ functions:
+
+  /// This is the time needed:
+  double time_needed;
+
+  /// A 2d array of magnetic latitude needed. Can set interpolation
+  /// coefficients in all of the grids when this is called:
+  arma_mat lats_needed;
+
+  /// A 2d array of magnetic local times needed. Can set interpolation
+  /// coefficients in all of the grids when this is called:
+  arma_mat mlts_needed;
+  
+  /// These are all indices that may be needed by sub-models:
+  precision_t imf_bx_needed;
+  precision_t imf_by_needed;
+  precision_t imf_bz_needed;
+  precision_t sw_v_needed;
+  precision_t sw_n_needed;
+  precision_t hp_needed;
+  precision_t au_needed;
+  precision_t al_needed;
+  precision_t ae_needed;
+  precision_t kp_needed;
+
+  // In the coupling to the Fortran IE routines, we need some variables
+  // that are allocatable:
+  float *mlt2d;
+  float *lat2d;
+  float *pot2d;
+  float *eflux2d;
+  float *avee2d;
+  bool IsAllocated = false;
+
+  /// If we read in an electrodyanmics file, set this to 1. Otherwise,
+  /// set it to 0:
+  int iUseGridBasedModel;
+
+  /// If we don't read in an electrodynamics file, then this should be
+  /// set to an electric field model to use.  Need to add model types.
+  std::string efield_model_to_use;
+
+  /// If we don't read in an electrodynamics file, then this should be
+  /// set to an auroral model to use.  Need to add model types.
+  std::string auroral_model_to_use;
+  
+  /// Set the interpolation indices as a float. For each interpolation index,
+  /// the integer portion is the current index, and the decimal part is the 
+  /// percentage of the distance between the current index and the next
+  /// index.  For example, a distance midway between index 45 and 46 
+  /// would give an interpolation index of 45.5.
+  /// For time, we are assuming that all grids have the same times or that
+  /// there are no overlaps in time, I think.
+  precision_t time_index;
+
+  /**************************************************************
+   * input_electrodynamics_struct is a structure that contains
+   * information about the electrodynamics on a magnetic latitude /
+   * local time grid. It is assumed that the quantities are on a
+   * regular grid, in that the lat and mlt can be described with 1D
+   * arrays and the quantities can be described with 2D arrays.
+   * Time then makes these matrices into vectors. The quantities
+   * stored are energy flux, average energy, electric potential,
+   * ion energy flux, ion average energy.
+   **/
+  struct input_electrodynamics_struct {
+
+    /// Number of latitudes and magnetic local times:
+    int nLats;
+    int nMlts;
+
+    /// Vectors of magnetic latitudes and magnetic local times:
+    arma_vec mlats;
+    arma_vec mlts;
+
+    /// Vector of times (in seconds):
+    std::vector<double> times;
+
+    /// Vector of 2d electric potentials (in Volts):
+    std::vector<arma_mat> potential;
+
+    /// Potential at current time:
+    arma_mat potential_current;
+    
+    /// Vector of 2d electron energy flux (in ergs/cm2/s):
+    std::vector<arma_mat> energy_flux;
+    /// Said energy flux at the current time:
+    arma_mat energy_flux_current;
+    
+    /// Vector of 2d electron average energy (in keV):
+    std::vector<arma_mat> average_energy;
+    /// Average energy at current time:
+    arma_mat average_energy_current;
+    
+    /// Vector of 2d ion energy flux (in ergs/cm2/s):
+    std::vector<arma_mat> ion_energy_flux;
+    /// ion energy flux at current time:
+    arma_mat ion_energy_flux_current;
+    
+    /// Vector of 2d ion average energy (in keV):
+    std::vector<arma_mat> ion_average_energy;
+    /// ion average energy at current time:
+    arma_mat ion_average_energy_current;
+
+    /// Set to 1 if ion precipitation is included, else set to 0:
+    int DoesIncludeIonPrecip;
+    
+    /// This sets the priority of the grid. The higher the number, the
+    /// more important it is, so it should overwrite any regions of
+    /// a lower priority grid. For example, you could have a global
+    /// grid and a regional grid, whre the global grid is assigned a
+    /// priority of 1, and the regional grid is assigned a priority of 2,
+    /// so that the regions inside the regional grid will overwrite
+    /// the global grid:
+    int grid_priority;
+
+    /// interpolation indices for latitudes. If the requested latitude
+    /// is outside of the latitude range of the grid, then the
+    /// interpolation index should be set to -1:
+    arma_mat lats_indices;
+    /// interpolation indices for mlts. If the requested mlt
+    /// is outside of the mlt range of the grid, then the
+    /// interpolation index should be set to -1:
+    arma_mat mlts_indices;
+    
+  };
+  
+  /// As described above, a structure containing the grid-based
+  /// values of electrodynamics as a function of time.  This is
+  /// vector, because we can have nested grids, or, in theory, the
+  /// grid could change as a function of time. You can then search
+  /// for the apropriate grid in space and time.
+  std::vector<input_electrodynamics_struct> input_electrodynamics;
+  
+  /// Because each grid has a priority, we need to go through them in
+  /// priority order, this is the sorted indices list, so that
+  /// grid_order[0] points to the input_electrodynamics with the
+  /// lowest priority, grid_order[1] points to the 2nd lowest, etc.
+  std::vector<int> grid_order;
+  
+  /// Number of input grids for electrodynamics:
+  int nElectrodynamicsGrids;
+  
+  /// An internal variable to hold the state of the class
+  bool IsOk;
+  
+  /**************************************************************
+     \brief Reads a netcdf file that has the electrodynamics specification
+
+     Reads a netcdf file that contains at a minimum:
+     - Potential
+     - Auroral energy flux
+     - Auroral average energy
+     May contain:
+     - Ion energy flux
+     - Ion average energy
+
+     These are on a magnetic lat/mlt grid as a function of time, and
+     should be put into the input_electrodynamics structure.
+
+     \param filename
+   **/
+  void read_netcdf_electrodynamics_file(std::string filename);
+
+  /**************************************************************
+     \brief Takes the pot/eflux/avee/etc and interpolates to the grid
+
+     This function takes values from the input_electrodynamics
+     structure and interpolates the values onto the user specified
+     grid. The tricky bit is that there can be multiple overlapping
+     grids.  So, this needs to be called for each of the existing
+     grids, so that the values are overwritten. To keep it
+     "functional", we pass in the last round of values and those are
+     moved into the output values and then the overlapping region is
+     overwritten (e.g., in the get_potential function, the 
+     grids need to be cycled through calling get_values with the
+     potential on that grid and the interpolation indices for the grid.
+
+     \param values_current the pot/eflux/avee/etc from
+     input_electrodynamics grid
+ 
+     \param lats_indices the interpolation indices for the current
+     grid latitudes
+
+     \param mlts_indices the interpolation indices for the current
+     grid mlts
+
+     \param values_old the output of this function for the last grid
+  **/  
+  
+  arma_mat get_values(arma_mat matToInterpolateOn, int rows, int cols);
+
+  void set_all_indices_for_ie(Times time, Indices &indices);
+
+};
+
+#endif // INCLUDE_ELECTRODYNAMICS_H_

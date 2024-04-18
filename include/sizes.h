@@ -1,27 +1,18 @@
-// (c) 2020, the Aether Development Team (see doc/dev_team.md for members)
+// Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-#ifndef AETHER_INCLUDE_SIZES_H_
-#define AETHER_INCLUDE_SIZES_H_
+#ifndef INCLUDE_SIZES_H_
+#define INCLUDE_SIZES_H_
+
+// This is the file that defines the number of grid points in each
+// direction.  The entire code is based on these numbers, so you need
+// to recompile if you change these numbers.
+// 
+// These are temporary and will eventually be removed.
 
 // This is for the geographic grid:
 
 #define nGeoGhosts 2
-
-#define nGeoAlts 50
-#define nGeoAltsG nGeoGhosts + nGeoAlts + nGeoGhosts
-#define iGeoAltStart_ nGeoGhosts // Inclusive!!!
-#define iGeoAltEnd_ nGeoGhosts + nGeoAlts - 1 // Inclusive!!!
-
-#define nGeoLons 18
-#define nGeoLonsG nGeoGhosts + nGeoLons + nGeoGhosts
-#define iGeoLonStart_ nGeoGhosts // Inclusive!!!
-#define iGeoLonEnd_ nGeoGhosts + nGeoLons - 1 // Inclusive!!!
-
-#define nGeoLats 36
-#define nGeoLatsG nGeoGhosts + nGeoLats + nGeoGhosts
-#define iGeoLatStart_ nGeoGhosts // Inclusive!!!
-#define iGeoLatEnd_ nGeoGhosts + nGeoLats - 1 // Inclusive!!!
 
 // This is for the magnetic grid:
 
@@ -47,4 +38,4 @@
 #define nCharsShort 20
 #define nCharsLong 400
 
-#endif // AETHER_INCLUDE_SIZES_H_
+#endif  // INCLUDE_SIZES_H_

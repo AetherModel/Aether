@@ -1,0 +1,46 @@
+# Copyright 2020, the Aether Development Team (see doc/dev_team.md for members)
+# Full license can be found in License.md
+#
+# This is the default astyle file for the Aether project.
+
+# braces on the same lines as conditions etc (attached):
+--style=google
+
+# Indents are 2 spaces:
+-s2
+
+# Comments should be indented:
+--indent-col1-comments
+
+# Set the  maximum of # spaces to indent a continuation line:
+--max-continuation-indent=60
+
+# Pad empty lines around header blocks (e.g. 'if', 'for', 'while'...):
+--break-blocks
+
+# Add spaces around math operators:
+--pad-oper
+
+# Add a space after commas:
+--pad-comma
+
+# Insert space padding between a cond/loop statement and the following paren:
+--pad-header
+
+# Break one line cond/loops from a statement residing on the same line:
+--break-one-line-headers
+
+# In one line statements, don't bother with braces:
+--remove-braces
+
+# Have return type be on the same line as the function name:
+--attach-return-type
+
+# Change tabs to spaces
+--convert-tabs
+
+# Max line length:
+--max-code-length=80
+
+# Leave the && or || on the preceeding line, not the start of the next line:
+--break-after-logical
