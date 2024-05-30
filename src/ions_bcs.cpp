@@ -77,10 +77,11 @@ bool Ions::set_upper_bcs(Grid grid) {
                 species[iSpecies].temperature_scgc.slice(iAlt - 1);
 
             aveT = (species[iSpecies].temperature_scgc.slice(iAlt) + 
-                    electon_temperature_scgc.slice(iAlt));
+                    electron_temperature_scgc.slice(iAlt));
             // Calculate scale height for the species:
-            h = cKB * species[iSpecies].temperature_scgc.slice(iAlt) /
-                (species[iSpecies].mass % abs(grid.gravity_vcgc[2]));
+            h = cKB / species[iSpecies].mass * 
+                species[iSpecies].temperature_scgc.slice(iAlt) /
+                abs(grid.gravity_vcgc[2].slice(iAlt));
             // Assume each species falls of with (modified) hydrostatic:
             species[iSpecies].density_scgc.slice(iAlt) =
                 species[iSpecies].density_scgc.slice(iAlt - 1) %
@@ -96,7 +97,7 @@ bool Ions::set_upper_bcs(Grid grid) {
 // set lower boundary conditions for the ions
 //----------------------------------------------------------------------
 
-bool Ions::set_lower_bcs(Grid grid) {
+bool Ions::set_lower_bcs(Grid grid, Times time, Indices indices) {
 
     std::string function = "Ions::set_lower_bcs";
     static int iFunction = -1;
