@@ -20,7 +20,8 @@ void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
 
   heating_sources_total = heating_euv_scgc
                         + heating_chemical_scgc
-                        + heating_ion_collisions_scgc
+                        + heating_ion_friction_scgc
+                        //+ heating_ion_heat_transfer_scgc
                         - O_cool_scgc
                         - NO_cool_scgc;
   
