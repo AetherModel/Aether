@@ -159,6 +159,33 @@ arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
   return gradient;
 }
 
+
+// --------------------------------------------------------------------------
+// Calculate the 3rd order (on-sided) gradient in the altitudinal direction
+//   - this is only defined for the bottom ghostcells!
+// --------------------------------------------------------------------------
+
+arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
+
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+
+  arma_mat gradient(nLons, nLats), valueOut(nLons, nLats);
+  /*
+  gradient =
+      grid.MeshCoef1s3rdp1.slice(iAlt) % value.slice(iAlt + 1) +
+      grid.MeshCoef1s3rdp2.slice(iAlt) % value.slice(iAlt + 2) +
+      grid.MeshCoef1s3rdp3.slice(iAlt) % value.slice(iAlt + 3) +
+      grid.MeshCoef1s3rdp4.slice(iAlt) % value.slice(iAlt + 4) +
+      grid.MeshCoef1s3rdp5.slice(iAlt) % value.slice(iAlt + 5);
+  */
+  gradient = (value.slice(iAlt + 2) - value.slice(iAlt + 1)) / 
+      grid.dalt_lower_scgc.slice(iAlt + 2);
+
+  valueOut = value.slice(iAlt + 1) - gradient % grid.dalt_lower_scgc.slice(iAlt + 1);
+  return valueOut;
+}
+
 // --------------------------------------------------------------------------
 // Calculate the gradient in cubesphere spatial discretization
 // --------------------------------------------------------------------------
