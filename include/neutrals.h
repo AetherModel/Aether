@@ -207,7 +207,10 @@ class Neutrals {
   arma_cube heating_chemical_scgc;
 
   // Bulk neutral collisional heating with ions (K/s)
-  arma_cube heating_ion_collisions_scgc;
+  arma_cube heating_ion_friction_scgc;
+
+  // Bulk neutral collisional heating with ions (K/s)
+  arma_cube heating_ion_heat_transfer_scgc;
 
   // Total heating sources
   arma_cube heating_sources_total;
