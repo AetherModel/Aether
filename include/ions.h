@@ -107,9 +107,9 @@ class Ions {
   void fill_electrons();
   void calc_sound_speed();
   void calc_cMax();
-  void set_bcs(Grid grid);
-  void set_upper_bcs(Grid grid);
-  void set_lower_bcs(Grid grid);
+  bool set_bcs(Grid grid, Times time, Indices indices);
+  bool set_upper_bcs(Grid grid);
+  bool set_lower_bcs(Grid grid, Times time, Indices indices);
 
   int get_species_id(std::string name);
   void calc_efield(Grid grid);
