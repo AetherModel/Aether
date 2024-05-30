@@ -140,8 +140,10 @@ Neutrals::Neutrals(Grid grid,
   heating_chemical_scgc.zeros();
   heating_sources_total.set_size(nLons, nLats, nAlts);
   heating_sources_total.zeros();
-  heating_ion_collisions_scgc.set_size(nLons, nLats, nAlts);
-  heating_ion_collisions_scgc.zeros();
+  heating_ion_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_ion_friction_scgc.zeros();
+  heating_ion_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_ion_heat_transfer_scgc.zeros();  
   O_cool_scgc.set_size(nLons, nLats, nAlts);
   O_cool_scgc.zeros();
   NO_cool_scgc.set_size(nLons, nLats, nAlts);
