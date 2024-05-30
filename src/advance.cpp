@@ -47,7 +47,7 @@ bool advance(Planets &planet,
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
   neutrals.calc_viscosity();
-  neutrals.calc_cMax();
+  //neutrals.calc_cMax();
 
   ions.fill_electrons();
   ions.calc_sound_speed();
@@ -70,9 +70,12 @@ bool advance(Planets &planet,
  
   if (didWork)
     didWork = ions.set_bcs(gGrid, time, indices);
-  
+
+  if (input.get_nAltsGeo() > 1)
+    neutrals.advect_vertical(gGrid, time);
+
   neutrals.exchange_old(gGrid);
-  advect(gGrid, time, neutrals);
+  //advect(gGrid, time, neutrals);
 
   if (didWork & input.get_check_for_nans())
     didWork = neutrals.check_for_nonfinites("After Horizontal Advection");
@@ -120,9 +123,6 @@ bool advance(Planets &planet,
 
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
-
-    if (input.get_nAltsGeo() > 1)
-      neutrals.advect_vertical(gGrid, time);
 
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Advection");
