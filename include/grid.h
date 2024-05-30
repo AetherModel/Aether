@@ -114,6 +114,14 @@ public:
   arma_cube MeshCoefp1;
   arma_cube MeshCoefp2;
 
+  // This is for a one-sided 3rd order gradient for the bottom boundary:
+
+  arma_cube MeshCoef1s3rdp1;
+  arma_cube MeshCoef1s3rdp2;
+  arma_cube MeshCoef1s3rdp3;
+  arma_cube MeshCoef1s3rdp4;
+  arma_cube MeshCoef1s3rdp5;
+
   arma_cube dlon_center_scgc;
   arma_cube dlon_center_dist_scgc;
 
