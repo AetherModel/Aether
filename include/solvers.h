@@ -88,6 +88,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid);
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
 std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid);
+arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt);
 
 // interpolation in 1D
 precision_t linear_interpolation(const precision_t y0,
