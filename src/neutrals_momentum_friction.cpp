@@ -66,11 +66,9 @@ arma_vec Neutrals::calc_friction_one_cell(int64_t iLon, int64_t iLat, int64_t iA
   // Solve system of equations:
   arma_vec new_vels = arma::solve(matrix, vels, solve_opts::fast);
 
-  /*
   // put the new values into the velocity cubes:
   for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++)
     accs(iSpecies) = new_vels(iSpecies) - vels(iSpecies);
-  */
   report.exit(function);
   return new_vels;
 }
@@ -118,14 +116,14 @@ void Neutrals::calc_neutral_friction() {
                   species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt);
               }
 
-              //acc = neutral_friction_one_cell(iLon, iLat, iAlt, vels);
-              new_vels = calc_friction_one_cell(iLon, iLat, iAlt, vels);
+              // = neutral_friction_one_cell(iLon, iLat, iAlt, vels);
+              acc = calc_friction_one_cell(iLon, iLat, iAlt, vels);
 
               for (iSpecies = 0; iSpecies < nSpeciesAdvect; iSpecies++) {
                 iSpecies_ = species_to_advect[iSpecies];
-                species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt) = new_vels(iSpecies);
-                //species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
-                //  acc(iSpecies);
+                //species[iSpecies_].velocity_vcgc[iDir](iLon, iLat, iAlt) = new_vels(iSpecies);
+                species[iSpecies_].acc_neutral_friction[iDir](iLon, iLat, iAlt) =
+                  acc(iSpecies);
               } // iSpeciesAdvect
             //} // for direction
           } // for long
