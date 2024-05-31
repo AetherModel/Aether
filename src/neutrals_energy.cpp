@@ -57,9 +57,8 @@ void Neutrals::update_temperature(Grid grid, Times time) {
         rhocvr21d = rhocvr23d.tube(iLon, iLat);
         sources1d = heating_sources_total.tube(iLon, iLat);
 
-        temp1d = temp1d + dt * sources1d;
-        sources1d.zeros();
-
+        //temp1d = temp1d + dt * sources1d;
+        //sources1d.zeros();
 
         dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
         conduction1d.zeros();
