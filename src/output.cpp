@@ -247,10 +247,14 @@ bool output(const Neutrals &neutrals,
                                                     "Heating from Chemistry",
                                                     "K/s",
                                                     neutrals.heating_chemical_scgc);
-        AllOutputContainers[iOutput].store_variable("Heating_Collisions",
-                                                    "Heating from Ion Neutral Collisions",
+        AllOutputContainers[iOutput].store_variable("Heating_Transfer",
+                                                    "Heating from Ti- Tn Ion Neutral Collisions",
                                                     "K/s",
-                                                    neutrals.heating_ion_collisions_scgc);
+                                                    neutrals.heating_ion_heat_transfer_scgc);
+        AllOutputContainers[iOutput].store_variable("Heating_Ion_Friction",
+                                                    "Heating from Friction Ion Neutral Collisions",
+                                                    "K/s",
+                                                    neutrals.heating_ion_friction_scgc);
         AllOutputContainers[iOutput].store_variable("Conduction",
                                                     "Conduction",
                                                     "K/s",
@@ -296,9 +300,6 @@ bool output(const Neutrals &neutrals,
 
       if (type_output == "bfield")
         filename = "3DBFI_";
-
-      if (type_output == "moment")
-        filename = "3DMMT_";
 
       if (type_output == "gravity")
         filename = "3DGRA_";
