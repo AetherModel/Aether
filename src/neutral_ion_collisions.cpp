@@ -35,6 +35,9 @@ void calc_ion_collisions(Neutrals &neutrals,
   // If we are using the bulk (horizontal, primarily) neutral winds
   // then approximate some of the collisional quantities
 
+  neutrals.heating_ion_friction_scgc.zeros();
+  neutrals.heating_ion_heat_transfer_scgc.zeros();
+
   if (input.get_advection_neutrals_bulkwinds()) {
     for (iIon = 0; iIon < ions.nSpeciesAdvect; iIon++) {
       iIon_ = ions.species_to_advect[iIon];
@@ -49,7 +52,7 @@ void calc_ion_collisions(Neutrals &neutrals,
     // Now use the bulk quantities for the collisions
     // (beta is included in the last step)
     // heat transfer between ions and neutrals:
-    energy = 3 * cKB / ions.mean_major_mass_scgc %
+    neutrals.heating_ion_heat_transfer_scgc = 3 * cKB / ions.mean_major_mass_scgc %
       (ions.temperature_scgc - neutrals.temperature_scgc);
     for (iDir = 0; iDir < 3; iDir++) {
       // need the velocity difference for momentum and energy eqns:
@@ -58,12 +61,14 @@ void calc_ion_collisions(Neutrals &neutrals,
       neutrals.acc_ion_collisions[iDir] = 
         beta / neutrals.rho_scgc % vDiff;
       // Frictional heating between ions and neutrals:
-      energy = energy + vDiff % vDiff;
+      neutrals.heating_ion_friction_scgc = neutrals.heating_ion_friction_scgc + vDiff % vDiff;
     }
     // multiply by collision frequencies and convert
     // energy change to temperature change:
-    neutrals.heating_ion_collisions_scgc = 
-      beta % energy / (2 * neutrals.rho_scgc % neutrals.Cv_scgc);
+    neutrals.heating_ion_friction_scgc = 
+      beta % neutrals.heating_ion_friction_scgc / (2 * neutrals.rho_scgc % neutrals.Cv_scgc);
+    neutrals.heating_ion_heat_transfer_scgc = 
+      beta % neutrals.heating_ion_friction_scgc / (2 * neutrals.rho_scgc % neutrals.Cv_scgc);
   } else {
     energy.zeros();
 
@@ -87,27 +92,36 @@ void calc_ion_collisions(Neutrals &neutrals,
         //     Momentum = sum(B * (Vi - Vn))
         // Energy = sum_neutrals(sum__ions(B/(Mi + Mn) * (Ti - Tn) + Mi * (Vi-Vn)^2))
 
-        energy = energy + 3 * cKB * one_over_masses * 
+        neutrals.heating_ion_heat_transfer_scgc = 
+          neutrals.heating_ion_heat_transfer_scgc + 
+          3 * cKB * one_over_masses * 
           (ions.temperature_scgc - neutrals.temperature_scgc);
 
         for (iDir = 0; iDir < 3; iDir++) {
           vDiff = (advected_ion.par_velocity_vcgc[iDir] +
                    advected_ion.perp_velocity_vcgc[iDir] -
                    advected_neutral.velocity_vcgc[iDir]);
-          energy = energy + (advected_ion.mass * one_over_masses) * vDiff % vDiff;
+          neutrals.heating_ion_friction_scgc = 
+            neutrals.heating_ion_friction_scgc + 
+            (advected_ion.mass * one_over_masses) * vDiff % vDiff;
           momentum[iDir] = momentum[iDir] + beta % vDiff;
 
         } // for each ion
         // 
-        energy = energy % beta;
+        neutrals.heating_ion_friction_scgc = 
+          neutrals.heating_ion_friction_scgc % beta;
+        neutrals.heating_ion_heat_transfer_scgc = 
+          neutrals.heating_ion_heat_transfer_scgc % beta;
       } // for each ion
       // Divide by the mass density to get the acceleration
       for (iDir = 0; iDir < 3; iDir++)
         advected_neutral.acc_ion_drag[iDir] = momentum[iDir]/rho_n;
     } // for each neutral
-    // Only one heating needed for the neutrals:
-    neutrals.heating_ion_collisions_scgc = 
-      energy / (neutrals.rho_scgc % neutrals.Cv_scgc);
+    // Convert from energy into K/s:
+    neutrals.heating_ion_friction_scgc = 
+        neutrals.heating_ion_friction_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);
+    neutrals.heating_ion_heat_transfer_scgc = 
+        neutrals.heating_ion_heat_transfer_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);    
   } // bulk neutral winds
 
   report.exit(function);
