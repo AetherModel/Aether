@@ -232,10 +232,13 @@ void Neutrals::calc_scale_height(Grid grid) {
       (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
   }
 
+  iSpecies = 3;
+  std::cout << "scale_height : " << species[iSpecies].scale_height_scgc(10,10,2) << "\n";
+
   // If we have eddy diffusion, the scale-heights need to be adjusted,
   // since all of the scale heights should be the same in the region
   // where eddy diffusion is dominant.
-
+/*
   if (input.get_use_eddy_momentum()) {
     // We need the mean major mass in the bottom-most cell, which we
     // assume is the region where the atmosphere is well-mixed:
@@ -275,7 +278,7 @@ void Neutrals::calc_scale_height(Grid grid) {
         percentage % bulkH;
     }
   }
-
+*/
   return;
 }
 
@@ -374,7 +377,7 @@ void Neutrals::calc_cMax() {
   report.exit(function);
   return;
 }
-
+/*
 // ----------------------------------------------------------------------
 // Calculate dt primarily for the spherical grid
 // ----------------------------------------------------------------------
@@ -489,6 +492,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   report.exit(function);
   return dt;
 }
+*/
 
 //----------------------------------------------------------------------
 // Calculate the altitude integral of the different species for EUV
