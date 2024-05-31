@@ -26,10 +26,9 @@
 
     "Electrodynamics" : {
 	"Potential" : "Weimer05",
-	"DiffuseAurora" : "fta"},
+	"DiffuseAurora" : "fta",
+	"File" : "UA/inputs/b20110320n_omni.bin"},
 
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-    
     "Outputs" : {
 	"type" : ["states"],
 	"dt" : [900] },
