@@ -463,11 +463,11 @@ def get_core_file(filename):
     isEnsemble = False
     ensembleFile = ''
     ensembleNumber = -1
-    m = re.match('.*([0123]D.*)(_g\d*)(\..*)',filename)
+    m = re.match(r'.*([0123]D.*)(_g\d*)(\..*)',filename)
     if m:
         coreFile = m.group(1)
         # check if file is a member of an ensemble:
-        check = re.match('.*([0123]D.*)(_m)(\d*)',coreFile)
+        check = re.match(r'.*([0123]D.*)(_m)(\d*)',coreFile)
         if (check):
             ensembleFile = check.group(1)
             isEnsemble = True
