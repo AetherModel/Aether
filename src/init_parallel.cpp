@@ -98,7 +98,7 @@ bool init_parallel(Quadtree &quadtree) {
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
-    quadtree.build();
+    quadtree.build("GeoGrid");
 
   } else {
     if (iProc == 0) {
