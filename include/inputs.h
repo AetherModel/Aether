@@ -89,18 +89,22 @@ public:
     std::string alt_file;
     bool IsUniformAlt;
     precision_t alt_min;
+    // Only really needed for Mag Field grid, since this could be overconstrained:
+    precision_t alt_max;
     precision_t dalt;
     precision_t lat_min;
     precision_t lat_max;
     precision_t lon_min;
     precision_t lon_max;
+    // Only needed for Mag Field grid:
+    precision_t min_apex;
   };
 
-  grid_input_struct get_grid_inputs();
+  grid_input_struct get_grid_inputs(std::string gridtype);
 
-  int get_nLonsGeo();
-  int get_nLatsGeo();
-  int get_nAltsGeo();
+  int get_nLons(std::string gridtype);
+  int get_nLats(std::string gridtype);
+  int get_nAlts(std::string gridtype);
 
   int get_nBlocksLonGeo();
   int get_nBlocksLatGeo();
