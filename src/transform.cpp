@@ -45,9 +45,9 @@ int* copy_string_to_int(std::string inString) {
 // copy from c++ vector to c-native array
 // -----------------------------------------------------------------------
 
-void copy_vector_to_array(std::vector<float> vector_in,
+void copy_vector_to_array(std::vector<precision_t> vector_in,
                           int64_t nElements,
-                          float *array_out) {
+                          precision_t *array_out) {
 
   for (int64_t i = 0; i < nElements; i++)
     array_out[i] = vector_in[i];
@@ -58,7 +58,7 @@ void copy_vector_to_array(std::vector<float> vector_in,
 // -----------------------------------------------------------------------
 
 void copy_cube_to_array(arma_cube cube_in,
-                        float *array_out) {
+                        precision_t *array_out) {
 
   int64_t nX = cube_in.n_rows;
   int64_t nY = cube_in.n_cols;
@@ -80,7 +80,7 @@ void copy_cube_to_array(arma_cube cube_in,
 // -----------------------------------------------------------------------
 
 void copy_mat_to_array(arma_mat mat_in,
-                       float *array_out,
+                       precision_t *array_out,
                        bool isFortran) {
 
   int64_t nX = mat_in.n_rows;
@@ -109,7 +109,7 @@ void copy_mat_to_array(arma_mat mat_in,
 // If isFortran is set, the columns / rows are flipped
 // -----------------------------------------------------------------------
 
-void copy_array_to_mat(float *array_in,
+void copy_array_to_mat(precision_t *array_in,
                        arma_mat &mat_out,
                        bool isFortran) {
 
@@ -287,10 +287,10 @@ void transform_rot_y(precision_t xyz_in[3], precision_t angle_in,
 }
 
 // -----------------------------------------------------------------------
-// Simply move data from a vector to a C-native array (float)
+// Simply move data from a vector to a C-native array (precision_t)
 // -----------------------------------------------------------------------
 
-void transform_float_vector_to_array(std::vector<float> input,
+void transform_float_vector_to_array(std::vector<precision_t> input,
                                      precision_t output[3]) {
   for (int i = 0; i < 3; i++)
     output[i] = input[i];

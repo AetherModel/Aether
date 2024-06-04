@@ -31,8 +31,8 @@ void Grid::init_mag_grid(Planets planet) {
   // Longitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
-  fvec lon1d(nLons);
-  float dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
+  arma_vec lon1d(nLons);
+  precision_t dlon = (grid_input.lon_max - grid_input.lon_min) / (nLons-2*nGCs);
 
   for (iLon=0; iLon < nLons; iLon++)
     lon1d[iLon] = grid_input.lon_min + (iLon-nGCs+0.5) * dlon;
@@ -57,20 +57,20 @@ void Grid::init_mag_grid(Planets planet) {
   // Latitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
-  fvec lat1d(nLats);
+  arma_vec lat1d(nLats);
   
   //cout << "!!!!!!!!!!! HA1a "<<endl;
 
 
-  fvec lshell(nLats);
+  arma_vec lshell(nLats);
 
-  float dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats-2*nGCs);
+  precision_t dlat = (grid_input.lat_max - grid_input.lat_min) / (nLats-2*nGCs);
   
   lshell(0) = 1/pow(cos(grid_input.lat_min),2.0);
   
   lshell(nLats-1) = 1/pow(cos(grid_input.lat_max),2.0);
 
-  float dlshell = (lshell(nLats-1)-lshell(0))/nLats;
+  precision_t dlshell = (lshell(nLats-1)-lshell(0))/nLats;
   
   for (iLat=1; iLat < nLats; iLat++){
 
@@ -117,15 +117,15 @@ void Grid::init_mag_grid(Planets planet) {
   
   
   // fill along the field 
-  float qS;
-  float qN;
-  float Lshell;
-  float Lon;
-  float Gamma;
+  precision_t qS;
+  precision_t qN;
+  precision_t Lshell;
+  precision_t Lon;
+  precision_t Gamma;
   double q[nZ];  
 
   // set the min alt and gamma factor for filling line
-  float AltMin = grid_input.alt_min; 
+  precision_t AltMin = grid_input.alt_min; 
   Gamma = 2.0;
   
   
@@ -158,7 +158,7 @@ void Grid::init_mag_grid(Planets planet) {
   
 
   // fill x y z values
-  float Llr[3], Xyz[3];
+  precision_t Llr[3], Xyz[3];
   int iX, iY, iZ;
   
   for (iX=0; iX<nX; iX++){
@@ -172,8 +172,8 @@ void Grid::init_mag_grid(Planets planet) {
         auto rtheta =
           p_q_to_r_theta(magP_scgc(iX,iY,iZ), magQ_scgc(iX,iY,iZ));
         
-        float r = rtheta.first;
-        float theta = rtheta.second;
+        precision_t r = rtheta.first;
+        precision_t theta = rtheta.second;
      
         //cout << "i, q " << i << "  " << q[i] << endl;
         //cout << "i, x " << i << "  " << x[i] << endl;
@@ -319,34 +319,34 @@ void Grid::init_mag_grid(Planets planet) {
 // Routine to find q_N and q_S for a given L 
 // 
 // ----------------------------------------------------------------------
-std::pair<float,float> Grid::lshell_to_qn_qs(Planets planet, float Lshell, float Lon, float AltMin) {
+std::pair<precision_t,precision_t> Grid::lshell_to_qn_qs(Planets planet, precision_t Lshell, precision_t Lon, precision_t AltMin) {
   std::string function = "Grid::lshell_to_qn_qs";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  float qN,qS;
+  precision_t qN,qS;
   
-  float XyzDipoleLeft[3], XyzDipoleMid[3], XyzDipoleRight[3];
-  float XyzGeoLeft[3], XyzGeoMid[3], XyzGeoRight[3];
-  float rGeoLeft, rGeoMid, rGeoRight;
-  float LlrDipoleLeft[3], LlrDipoleMid[3], LlrDipoleRight[3];
-  float ThetaTilt, PhiTilt;
-  float Lat, Radius, rMin;
+  precision_t XyzDipoleLeft[3], XyzDipoleMid[3], XyzDipoleRight[3];
+  precision_t XyzGeoLeft[3], XyzGeoMid[3], XyzGeoRight[3];
+  precision_t rGeoLeft, rGeoMid, rGeoRight;
+  precision_t LlrDipoleLeft[3], LlrDipoleMid[3], LlrDipoleRight[3];
+  precision_t ThetaTilt, PhiTilt;
+  precision_t Lat, Radius, rMin;
   // Named dimension constants
   static int Lon_= 0, Lat_= 1, Radius_= 2;
  
   //bound vars for bisection search
-  float ThetaRight, ThetaLeft, ThetaMid;
-  float rDipoleLeft,rDipoleMid,rDipoleRight;
+  precision_t ThetaRight, ThetaLeft, ThetaMid;
+  precision_t rDipoleLeft,rDipoleMid,rDipoleRight;
   
   //Stopping condition for bisection search
-  float DeltaTheta;
-  float Tolerance = 1e-4;
+  precision_t DeltaTheta;
+  precision_t Tolerance = 1e-4;
     
   // status vars for bisection search
   int iStatusLeft, iStatusRight, iStatusMid;
   // note we normalize Lshell by equatorial radius
-  float RadiusEq = planet.get_radius(0.0);
+  precision_t RadiusEq = planet.get_radius(0.0);
 
 
   // loop for qN and qS
@@ -502,20 +502,20 @@ std::pair<float,float> Grid::lshell_to_qn_qs(Planets planet, float Lshell, float
 //  
 // -----------------------------------------------------------------------
 
-void Grid::convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzGeo[3]) {
-  float XyzRemoveShift[3];
-  float XyzRemoveTilt[3];
-  float XyzRemoveRot[3];
+void Grid::convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3], precision_t XyzGeo[3]) {
+  precision_t XyzRemoveShift[3];
+  precision_t XyzRemoveTilt[3];
+  precision_t XyzRemoveRot[3];
 
   // get planetary parameters, use radius at equator for Lshell reference
-  float magnetic_pole_tilt = planet.get_dipole_tilt();
-  float magnetic_pole_rotation = planet.get_dipole_rotation();
-  float radius = planet.get_radius(0.0);
+  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
+  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
+  precision_t radius = planet.get_radius(0.0);
 
   
   // get the dipole shift, but normalize it to equatorial radius 
-  float dipole_center[3];
-  std::vector<float> temp_dipole_center = planet.get_dipole_center();
+  precision_t dipole_center[3];
+  std::vector<precision_t> temp_dipole_center = planet.get_dipole_center();
   transform_float_vector_to_array(temp_dipole_center, dipole_center);
 
   dipole_center[0]=dipole_center[0]/radius;
@@ -545,7 +545,7 @@ void Grid::convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzG
 // Routine to fill in the q values for a particular L and lon
 // using equations 7-8 from Huba et al 2000
 // ----------------------------------------------------------------------
-void Grid::fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lshell, float Lon, double *q) {
+void Grid::fill_dipole_q_line(precision_t qN, precision_t qS, precision_t Gamma, int nZ, precision_t Lshell, precision_t Lon, double *q) {
   std::string function = "Grid::fill_dipole_q_line";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -554,7 +554,7 @@ void Grid::fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lsh
   double r[nZ];
   double theta[nZ];
   double Dx;
-  float Llr[3], Xyz[3];
+  precision_t Llr[3], Xyz[3];
   int DoTestLine = 0;
   
   //open test file for writing the grid data for plotting
@@ -570,7 +570,7 @@ void Grid::fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lsh
   // equal segments.
   //Dx = 2.0*(1.0-sinh(Gamma*qN))/((static_cast<float>(nZ)-1.0)*sinh(Gamma*qS));
 
-  Dx = (sinh(Gamma*qS)-sinh(Gamma*qN))/((static_cast<float>(nZ)-1.0)*sinh(Gamma*qS));
+  Dx = (sinh(Gamma*qS)-sinh(Gamma*qN))/((static_cast<precision_t>(nZ)-1.0)*sinh(Gamma*qS));
   
   //Dx = 2.0/(static_cast<float>(nZ)-1.0);
   //Dx = (static_cast<double>(qN)-static_cast<double>(qS))/(static_cast<double>(nZ)-1.0);
@@ -635,13 +635,13 @@ void Grid::fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lsh
 // note r here is normalized to planet radius. 
 // 
 // ----------------------------------------------------------------------
-std::pair<float,float> Grid::p_q_to_r_theta(float p, float q) {
+std::pair<precision_t,precision_t> Grid::p_q_to_r_theta(precision_t p, precision_t q) {
   //return quanties
-  float r, theta;
+  precision_t r, theta;
   // function value and derivative for NR method
-  float Func, dFunc;
+  precision_t Func, dFunc;
   // tolerance for root finding
-  float Tolerance = 0.00001;
+  precision_t Tolerance = 0.00001;
 
   // initial guess for r
   r = 100.0;

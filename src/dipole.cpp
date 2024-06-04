@@ -62,7 +62,7 @@ bfield_info_type get_dipole(precision_t lon,
   transform_llr_to_xyz(llr, xyz);
 
   precision_t dipole_center[3];
-  std::vector<float> temp_dipole_center = planet.get_dipole_center();
+  std::vector<precision_t> temp_dipole_center = planet.get_dipole_center();
   transform_float_vector_to_array(temp_dipole_center, dipole_center);
 
   precision_t delta_pos_to_center[3];

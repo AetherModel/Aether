@@ -142,7 +142,7 @@ public:
   void set_IsGeoGrid(bool value);
   void set_IsExperimental(bool value);
   bool get_IsExperimental();
-  
+
   int64_t get_nPointsInGrid();
 
   int64_t get_nX();
@@ -183,10 +183,10 @@ public:
 
   // Make mag-field grid:
   void init_mag_grid(Planets planet);
-  std::pair<float,float> lshell_to_qn_qs(Planets planet, float Lshell, float Lon, float AltMin);
-  void convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzGeo[3]);
-  void fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lshell, float Lon, double *q);
-  std::pair<float,float> p_q_to_r_theta(float p, float q);
+  std::pair<precision_t, precision_t> lshell_to_qn_qs(Planets planet, precision_t Lshell, precision_t Lon, precision_t AltMin);
+  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3], precision_t XyzGeo[3]);
+  void fill_dipole_q_line(precision_t qN, precision_t qS, precision_t Gamma, int nZ, precision_t Lshell, precision_t Lon, double *q);
+  std::pair<precision_t, precision_t> p_q_to_r_theta(precision_t p, precision_t q);
   arma_vec get_r3_spacing(precision_t lat, precision_t rMin, 
                         precision_t rMax, int64_t nPts, int64_t nGcs);
   void init_dipole_grid(Quadtree quadtree, Planets planet);
