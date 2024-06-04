@@ -32,7 +32,7 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
-    Quadtree quadtree;
+    Quadtree quadtree("GeoGrid");
 
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -75,9 +75,9 @@ int main() {
     MPI_Barrier(aether_comm);
 
     // Initialize Geographic grid:
-    Grid gGrid(input.get_nLonsGeo(),
-               input.get_nLatsGeo(),
-               input.get_nAltsGeo(),
+    Grid gGrid(input.get_nLons("GeoGrid"),
+               input.get_nLats("GeoGrid"),
+               input.get_nAlts("GeoGrid"),
                nGeoGhosts);
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
@@ -88,6 +88,19 @@ int main() {
     // Find interpolation coefs for the ghostcells if cubesphere grid
     didWork = find_ghostcell_interpolation_coefs(gGrid);
 
+    // Make another grid, just to test things:
+        // Initialize Geographic grid:
+    Grid testGrid(input.get_nLons("GeoGrid"),
+                input.get_nLats("GeoGrid"),
+                input.get_nAlts("GeoGrid"),
+                nGeoGhosts);
+    testGrid.set_IsExperimental(true);
+    didWork = testGrid.init_geo_grid(quadtree, planet);
+    MPI_Barrier(aether_comm);
+
+    if (!didWork)
+      throw std::string("init_geo_grid for test grid failed!");
+
     // Calculate centripetal acceleration, since this is a constant
     // vector on the grid:
     if (input.get_cent_acc())
@@ -95,12 +108,20 @@ int main() {
 
     // Initialize Magnetic grid:
     Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
+    mGrid.init_dipole_grid(quadtree, planet);
 
     // Initialize Neutrals on geographic grid:
     Neutrals neutrals(gGrid, planet, time, indices);
+    // Initialize Neutrals on magnetic grid:
+    //Neutrals neutralsMag(mGrid, planet, time, indices);
+    // Initialize Neutrals on experimental grid:
+    Neutrals neutralsTest(testGrid, planet, time, indices);
+
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
+    // Initialize Ions on magnetic grid:
+    Ions ionsTest(testGrid, planet);
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -131,6 +152,8 @@ int main() {
 
     // Initialize ion temperatures from neutral temperature
     ions.init_ion_temperature(neutrals, gGrid);
+    // Initialize ion temperatures from neutral temperature (on Mag Grid)
+    ionsTest.init_ion_temperature(neutralsTest, testGrid);
 
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
@@ -149,9 +172,10 @@ int main() {
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
-    if (time.check_time_gate(input.get_dt_output(0)))
+    if (time.check_time_gate(input.get_dt_output(0))) {
       didWork = output(neutrals, ions, gGrid, time, planet);
-
+      didWork = output(neutralsTest, ionsTest, testGrid, time, planet);
+    }
     if (!didWork)
       throw std::string("output failed!");
 
