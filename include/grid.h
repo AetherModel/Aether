@@ -68,6 +68,10 @@ public:
   arma_cube magAlt_scgc, magZ_scgc;
   arma_cube magLocalTime_scgc;
 
+  arma_cube magPhi_scgc;
+  arma_cube magP_scgc;
+  arma_cube magQ_scgc;
+
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;
@@ -133,10 +137,12 @@ public:
 
   Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
 
-  int get_IsGeoGrid();
+  bool get_IsGeoGrid();
   bool get_HasBField();
-  void set_IsGeoGrid(int value);
-
+  void set_IsGeoGrid(bool value);
+  void set_IsExperimental(bool value);
+  bool get_IsExperimental();
+  
   int64_t get_nPointsInGrid();
 
   int64_t get_nX();
@@ -174,6 +180,16 @@ public:
   bool write_restart(std::string dir);
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
+
+  // Make mag-field grid:
+  void init_mag_grid(Planets planet);
+  std::pair<float,float> lshell_to_qn_qs(Planets planet, float Lshell, float Lon, float AltMin);
+  void convert_dipole_geo_xyz(Planets planet, float XyzDipole[3], float XyzGeo[3]);
+  void fill_dipole_q_line(float qN, float qS, float Gamma, int nZ, float Lshell, float Lon, double *q);
+  std::pair<float,float> p_q_to_r_theta(float p, float q);
+  arma_vec get_r3_spacing(precision_t lat, precision_t rMin, 
+                        precision_t rMax, int64_t nPts, int64_t nGcs);
+  void init_dipole_grid(Quadtree quadtree, Planets planet);
 
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
@@ -268,8 +284,9 @@ public:
 
  private:
 
-  int IsGeoGrid;
+  bool IsGeoGrid;
   bool HasBField;
+  bool IsExperimental;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
