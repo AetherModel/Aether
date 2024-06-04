@@ -131,6 +131,36 @@ void copy_array_to_mat(float *array_in,
   return;
 }
 
+// -----------------------------------------------------------------------
+// Calculate the magnitude of a arma_cube vector
+// -----------------------------------------------------------------------
+arma_cube calc_magnitude(std::vector<arma_cube> xyz) {
+  arma_cube r = sqrt(xyz[0] % xyz[0] +
+                     xyz[1] % xyz[1] +
+                     xyz[2] % xyz[2]);
+  return r; 
+}
+
+// -----------------------------------------------------------------------
+// Transform X, Y, Z to 
+// Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2])
+// Use armidillo cubes
+// -----------------------------------------------------------------------
+
+std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz) {
+  std::vector<arma_cube> llr;
+  arma_cube xy, r, lon;
+  r = calc_magnitude(xyz);
+  xy = sqrt(xyz[0] % xyz[0] +
+            xyz[1] % xyz[1]);
+  lon = acos(xyz[0]/xy);
+  uvec ind_ = find(xyz[1] < 0.0);
+  lon.elem(ind_) = 2 * cPI - lon.elem(ind_);
+  llr.push_back(lon);
+  llr.push_back(asin(xyz[2] / r));
+  llr.push_back(r);
+  return llr;
+}
 
 // -----------------------------------------------------------------------
 // Transform Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2]) to
@@ -302,4 +332,14 @@ void vector_diff(precision_t vect_in_1[3],
                  precision_t vect_out[3]) {
   for (int i = 0; i < 3; i++)
     vect_out[i] = vect_in_1[i] - vect_in_2[i];
+}
+
+// -----------------------------------------------------------------------
+// Simple 3-element vector addition
+// -----------------------------------------------------------------------
+
+void vector_add(precision_t vect_in_1[3],
+                precision_t vect_in_2[3],
+                precision_t vect_out[3]) {
+  for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] + vect_in_2[i];
 }

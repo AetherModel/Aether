@@ -31,7 +31,9 @@ void copy_vector_to_array(std::vector<float> vector_in,
 // then in fortran copy them back into a character array.
 int* copy_string_to_int(std::string inString);
 
+arma_cube calc_magnitude(std::vector<arma_cube> xyz);
 std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr);
+std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz);
 std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
 std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
 std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in, precision_t angle);
@@ -53,6 +55,13 @@ void vector_diff(precision_t vect_in_1[3],
                  precision_t vect_in_2[3],
                  precision_t vect_out[3]);
 
+// -----------------------------------------------------------------------
+// Simple 3-element vector addition
+// -----------------------------------------------------------------------
+
+void vector_add(precision_t vect_in_1[3],
+                precision_t vect_in_2[3],
+                precision_t vect_out[3]);
 
 #endif  // INCLUDE_TRANSFORM_H_
 
