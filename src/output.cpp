@@ -13,13 +13,45 @@
 
  -------------------------------------------------------------------- */
 
+std::string get_filename_from_type(std::string type_output) {
+
+  std::string filename = "";
+
+  if (type_output == "neutrals")
+    filename = "3DNE";
+
+  if (type_output == "states")
+    filename = "3DAL";
+
+  if (type_output == "ions")
+    filename = "3DIO";
+
+  if (type_output == "bfield")
+    filename = "3DBF";
+
+  if (type_output == "moment")
+    filename = "3DMO";
+
+  if (type_output == "gravity")
+    filename = "3DGR";
+
+  if (type_output == "corners" || type_output == "grid")
+    filename = "3DCO";
+
+  if (type_output == "therm")
+    filename = "3DTH";
+
+  return filename;
+
+} 
+
 // -----------------------------------------------------------------------------
 //  Fills output containers and outputs them for common output types
 // -----------------------------------------------------------------------------
 
 bool output(const Neutrals &neutrals,
             const Ions &ions,
-            const Grid &grid,
+            Grid &grid,
             Times time,
             const Planets &planet) {
 
@@ -265,40 +297,18 @@ bool output(const Neutrals &neutrals,
       // ------------------------------------------------------------
       // Set output file names
 
-      std::string filename;
+      std::string filename = get_filename_from_type(type_output);
 
-      if (type_output == "neutrals")
-        filename = "3DNEU_";
-
-      if (type_output == "states")
-        filename = "3DALL_";
-
-      if (type_output == "ions")
-        filename = "3DION_";
-
-      if (type_output == "bfield")
-        filename = "3DBFI_";
-
-      if (type_output == "moment")
-        filename = "3DMMT_";
-
-      if (type_output == "gravity")
-        filename = "3DGRA_";
-
-      if (type_output == "moment")
-        filename = "3DMMT_";
-
-      if (type_output == "corners" || type_output == "grid")
-        filename = "3DCOR_";
-
-      if (type_output == "therm")
-        filename = "3DTHR_";
-
-      if (filename.length() < 5) {
+      if (filename.length() < 4) {
         report.print(0, "type_output : " + type_output);
         report.error("File output type not found!");
         didWork = false;
       } else {
+
+        if (grid.get_IsGeoGrid())
+          filename = filename + "G_";
+        else
+          filename = filename + "M_";
 
         if ((int64_t(input.get_dt_output(iOutput)) % 60) == 0)
           filename = filename + time.get_YMD_HM0();
