@@ -63,7 +63,7 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutrals.set_bcs(gGrid, time, indices);
 
-  if (input.get_nAltsGeo() > 1)
+  if (input.get_nAlts("GeoGrid") > 1)
     neutrals.advect_vertical(gGrid, time);
 
   if (didWork & input.get_check_for_nans())
