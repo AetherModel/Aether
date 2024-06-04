@@ -229,7 +229,7 @@ class OutputContainer {
 
 bool output(const Neutrals &neutrals,
 	    const Ions &ions,
-	    const Grid &grid,
+	    Grid &grid,
 	    Times time,
 	    const Planets &planet);
 
