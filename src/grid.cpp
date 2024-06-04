@@ -100,6 +100,10 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   magLat_scgc.set_size(nX, nY, nZ);
   magAlt_scgc.set_size(nX, nY, nZ);
 
+  magPhi_scgc.set_size(nX, nY, nZ);
+  magP_scgc.set_size(nX, nY, nZ);
+  magQ_scgc.set_size(nX, nY, nZ);
+
   magX_scgc.set_size(nX, nY, nZ);
   magY_scgc.set_size(nX, nY, nZ);
   magZ_scgc.set_size(nX, nY, nZ);
@@ -146,6 +150,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_south_gse.push_back(tmp_col);
 
   HasBField = 0;
+  IsExperimental = false;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
@@ -323,8 +328,16 @@ void Grid::report_grid_boundaries() {
 // Get whether the grid is a geographic grid (or magnetic - return 0)
 // --------------------------------------------------------------------------
 
-int Grid::get_IsGeoGrid() {
+bool Grid::get_IsGeoGrid() {
   return IsGeoGrid;
+}
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a experimental (return true for experimental)
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsExperimental() {
+  return IsExperimental;
 }
 
 // --------------------------------------------------------------------------
@@ -339,8 +352,16 @@ bool Grid::get_HasBField() {
 // Set whether the grid is a geographic grid (or magnetic - set to 0)
 // --------------------------------------------------------------------------
 
-void Grid::set_IsGeoGrid(int value) {
+void Grid::set_IsGeoGrid(bool value) {
   IsGeoGrid = value;
+}
+
+// --------------------------------------------------------------------------
+// Set whether the grid is an experimental grid 
+// --------------------------------------------------------------------------
+
+void Grid::set_IsExperimental(bool value) {
+  IsExperimental = value;
 }
 
 // --------------------------------------------------------------------------
