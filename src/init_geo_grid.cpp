@@ -748,7 +748,7 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs("GeoGrid");
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -972,11 +972,34 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate the radius (for spherical or non-spherical)
   fill_grid_radius(planet);
-
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
   if (input.get_is_cubesphere())
     correct_xy_grid(planet);
+
+  if (IsExperimental) {
+    std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
+    llr.push_back(geoLon_scgc);
+    llr.push_back(geoLat_scgc);
+    llr.push_back(radius_scgc);
+    xyz = transform_llr_to_xyz_3d(llr);
+
+    precision_t magnetic_pole_rotation = 265.0 * cDtoR;
+    precision_t magnetic_pole_tilt = 10.0 * cDtoR;
+
+    // Reverse our dipole rotations:
+    xyzRot1 = rotate_around_y_3d(xyz, magnetic_pole_tilt);
+    xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
+
+    // transform back to lon, lat, radius:
+    llr = transform_xyz_to_llr_3d(xyzRot2);
+
+    geoLon_scgc = llr[0];
+    geoLat_scgc = llr[1];
+    geoAlt_scgc = llr[2] - planet.get_radius(0.0);
+
+    IsGeoGrid = false;
+  }
 
   // Calculate grid spacing
   calc_grid_spacing(planet);
