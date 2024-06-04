@@ -30,7 +30,7 @@ bool Neutrals::set_bcs(Grid grid,
 
   bool didWork = true;
 
-  if (input.get_nAltsGeo() > 1) {
+  if (input.get_nAlts("GeoGrid") > 1) {
     didWork = set_lower_bcs(grid, time, indices);
 
     if (didWork)
