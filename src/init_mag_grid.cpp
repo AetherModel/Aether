@@ -278,6 +278,7 @@ void Grid::init_mag_grid(Planets planet) {
   gridfileslice.close();
 
   IsGeoGrid = false;
+  IsMagGrid = true;
   
   // Calculate the radius, etc:
   
@@ -694,17 +695,14 @@ arma_vec Grid::get_r3_spacing(precision_t lat, precision_t rMin,
   precision_t rMaxReal = rMax;
 
   precision_t lShell = get_lshell(lat, rMin);
-  if (lShell < rMaxReal) {
+  if (lShell < rMaxReal)
     rMaxReal = lShell;
-    std::cout << "Limiting rMaxReal from " << rMax << " to " << rMaxReal << "\n";
-  }
   precision_t rMin3 = pow(rMin, 1.0/3.0);
   precision_t rMax3 = pow(rMaxReal, 1.0/3.0);
   precision_t dr3 = (rMax3 - rMin3) / (nPts-nGcs*2);
   arma_vec r(nPts);
-  for (int64_t iPt = 0; iPt < nPts; iPt++) {
+  for (int64_t iPt = 0; iPt < nPts; iPt++)
     r(iPt) = pow(rMin3 + dr3 * (iPt - nGcs), 3);
-  }
   return r;
 }
 
@@ -722,6 +720,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   
 // turn the switch on! 
   IsGeoGrid = false;
+  IsMagGrid = true;
 
   int64_t iLon, iLat, iAlt;
 
@@ -766,7 +765,6 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
 
   precision_t dlat = size_up_norm(1) * cPI / (nLats - 2 * nGCs);
   precision_t lat0 = lower_left_norm(1) * cPI;
-
   arma_vec lat1d(nLats);
 
   // Latitudes:
@@ -774,14 +772,11 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   // - copy it into the 3d cube
   for (iLat = 0; iLat < nLats; iLat++) {
     lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
-    std::cout << "Original : " <<  lat1d(iLat) << " ";
     if (lat1d(iLat) >= 0) {
       lat1d(iLat) = min_lat + lat1d(iLat) * stretch;
     } else {
       lat1d(iLat) = -min_lat + lat1d(iLat) * stretch;
     }
-    std::cout << "Final : " <<  lat1d(iLat) << "\n";
-
   }
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -790,19 +785,18 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
 
   arma_vec rNorm1d, lat1dAlong;
   arma_cube r3d(nLons, nLats, nAlts);
-
   precision_t lShell;
+
+  rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   for (iLat = 0; iLat < nLats; iLat++) {
     lat0 = lat1d(iLat);
     if (lat0 > cPI/2) lat0 = cPI - lat0;
     if (lat0 < -cPI/2) lat0 = -cPI - lat0;
     lShell = get_lshell(lat0, min_r);
-    std::cout << "iLat : " << iLat << " " << nLats << "\n";
-    std::cout << "lShell : " << lat0 * cRtoD << " " << lShell << "\n";
-    std::cout << "min_r : " << min_r << " " << max_r << " " << nAlts << " " << nGCs << "\n";
     rNorm1d = get_r3_spacing(lat0, min_r, max_r, nAlts, nGCs);
     lat1dAlong = get_lat_from_r_and_lshell(rNorm1d, lShell);
+
     if (lat0 < 0)
       lat1dAlong = -1.0 * lat1dAlong;
     for (iLon = 0; iLon < nLons; iLon++) {
@@ -810,9 +804,34 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
       magLat_scgc.tube(iLon, iLat) = lat1dAlong;
     }
   }
-
   geoLat_scgc = magLat_scgc;
   magAlt_scgc = r3d - planetRadius;
+  geoAlt_scgc = magAlt_scgc;
+
+  // Calculate the radius, etc:
+  fill_grid_radius(planet);
+
+  // Figure out what direction is radial:
+  rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  for (int iV = 0; iV < 3; iV++) {
+    rad_unit_vcgc[iV].zeros();
+    gravity_vcgc[iV].zeros();
+  }
+
+  arma_cube br = 2 * sin(abs(magLat_scgc));
+  arma_cube bt = cos(magLat_scgc); 
+  arma_cube bm = sqrt(br % br + bt % bt);
+  // Latitudinal direction of radial:
+  rad_unit_vcgc[1] = bt / bm % sign(magLat_scgc);
+  rad_unit_vcgc[2] = - br / bm;
+
+  precision_t mu = planet.get_mu();
+  gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
+  gravity_vcgc[2] = mu * rad_unit_vcgc[2] % radius2i_scgc;
+  gravity_potential_scgc.set_size(nX, nY, nZ);
+  gravity_potential_scgc.zeros();
 
   std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
   llr.push_back(magLon_scgc);
@@ -833,19 +852,6 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   geoLon_scgc = llr[0];
   geoLat_scgc = llr[1];
   geoAlt_scgc = llr[2] - planetRadius;
-
-  // Calculate the radius, etc:
-  fill_grid_radius(planet);
-  calc_rad_unit(planet);
-  calc_gravity(planet);
-
-  std::cout << "magLon : " << magLon_scgc(12,10,5) * cRtoD << " "
-              << magLat_scgc(12,10,5) * cRtoD << " "
-              << magAlt_scgc(12,10,5) / 1000.0 << "\n";
-
-  std::cout << "geoLon : " << geoLon_scgc(12,10,5) * cRtoD << " "
-              << geoLat_scgc(12,10,5) * cRtoD << " "
-              << geoAlt_scgc(12,10,5) / 1000.0 << "\n";
 
   report.exit(function);
   return;
