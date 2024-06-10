@@ -260,11 +260,6 @@ void Grid::calc_rad_unit(Planets planet) {
   rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti);
   rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);
 
-  std::cout << "radius unit vector : " 
-    << rad_unit_vcgc[0](5,5,5) << " "
-    << rad_unit_vcgc[1](5,5,5) << " "
-    << rad_unit_vcgc[2](5,5,5) << "\n";
-
   report.exit(function);
   return;
 }
@@ -293,11 +288,6 @@ void Grid::calc_gravity(Planets planet) {
   gravity_vcgc[0] = - gravity_vcgc[0];
   gravity_vcgc[1] = - gravity_vcgc[1];
   gravity_vcgc[2] = - gravity_vcgc[2];
-
-  std::cout << "gravity vector : " 
-    << gravity_vcgc[0](5,5,5) << " "
-    << gravity_vcgc[1](5,5,5) << " "
-    << gravity_vcgc[2](5,5,5) << "\n";
 
   report.exit(function);
   return;
