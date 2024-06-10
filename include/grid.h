@@ -287,6 +287,7 @@ public:
   bool IsGeoGrid;
   bool HasBField;
   bool IsExperimental;
+  bool IsMagGrid;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
