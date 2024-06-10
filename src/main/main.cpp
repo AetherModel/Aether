@@ -115,13 +115,13 @@ int main() {
     // Initialize Neutrals on magnetic grid:
     //Neutrals neutralsMag(mGrid, planet, time, indices);
     // Initialize Neutrals on experimental grid:
-    Neutrals neutralsTest(testGrid, planet, time, indices);
+    Neutrals neutralsTest(mGrid, planet, time, indices);
 
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
     // Initialize Ions on magnetic grid:
-    Ions ionsTest(testGrid, planet);
+    Ions ionsTest(mGrid, planet);
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -174,7 +174,7 @@ int main() {
     // This is for the initial output.  If it is not a restart, this will go:
     if (time.check_time_gate(input.get_dt_output(0))) {
       didWork = output(neutrals, ions, gGrid, time, planet);
-      didWork = output(neutralsTest, ionsTest, testGrid, time, planet);
+      didWork = output(neutralsTest, ionsTest, mGrid, time, planet);
     }
     if (!didWork)
       throw std::string("output failed!");
