@@ -977,7 +977,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   if (input.get_is_cubesphere())
     correct_xy_grid(planet);
 
-  if (IsExperimental) {
+  if (IsMagGrid) {
     std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
     llr.push_back(geoLon_scgc);
     llr.push_back(geoLat_scgc);
