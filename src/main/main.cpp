@@ -88,40 +88,37 @@ int main() {
     // Find interpolation coefs for the ghostcells if cubesphere grid
     didWork = find_ghostcell_interpolation_coefs(gGrid);
 
-    // Make another grid, just to test things:
-        // Initialize Geographic grid:
-    Grid testGrid(input.get_nLons("GeoGrid"),
-                input.get_nLats("GeoGrid"),
-                input.get_nAlts("GeoGrid"),
-                nGeoGhosts);
-    testGrid.set_IsExperimental(true);
-    didWork = testGrid.init_geo_grid(quadtree, planet);
-    MPI_Barrier(aether_comm);
-
-    if (!didWork)
-      throw std::string("init_geo_grid for test grid failed!");
-
     // Calculate centripetal acceleration, since this is a constant
     // vector on the grid:
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
     // Initialize Magnetic grid:
-    Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
-    mGrid.init_dipole_grid(quadtree, planet);
+    Grid mGrid(input.get_nLons("MagGrid"),
+               input.get_nLats("MagGrid"),
+               input.get_nAlts("MagGrid"),
+               nMagGhosts);
 
+    if (input.get_setting_bool("MagGrid", "IsDipole")) {
+      std::cout << "Making Dipole Grid\n";
+      mGrid.set_IsDipole(true);
+      mGrid.init_dipole_grid(quadtree, planet);
+      mGrid.set_IsGeoGrid(false);
+    } else {
+      std::cout << "Making Spherical Magnetic Grid\n";
+      mGrid.set_IsDipole(false);
+      didWork = mGrid.init_geo_grid(quadtree, planet);
+      mGrid.set_IsGeoGrid(false);
+    }
     // Initialize Neutrals on geographic grid:
     Neutrals neutrals(gGrid, planet, time, indices);
     // Initialize Neutrals on magnetic grid:
-    //Neutrals neutralsMag(mGrid, planet, time, indices);
-    // Initialize Neutrals on experimental grid:
-    Neutrals neutralsTest(mGrid, planet, time, indices);
-
+    Neutrals neutralsMag(mGrid, planet, time, indices);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
     // Initialize Ions on magnetic grid:
-    Ions ionsTest(mGrid, planet);
+    Ions ionsMag(mGrid, planet);
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -143,17 +140,20 @@ int main() {
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions);
+    euv.pair_euv(neutralsMag, ionsMag);
 
     // Initialize Chemical scheme (including reading file):
     Chemistry chemistry(neutrals, ions);
+    Chemistry chemistryMag(neutralsMag, ionsMag);
 
     // Read in the collision frequencies and other diffusion coefficients:
     read_collision_file(neutrals, ions);
+    read_collision_file(neutralsMag, ionsMag);
 
     // Initialize ion temperatures from neutral temperature
     ions.init_ion_temperature(neutrals, gGrid);
     // Initialize ion temperatures from neutral temperature (on Mag Grid)
-    ionsTest.init_ion_temperature(neutralsTest, testGrid);
+    ionsMag.init_ion_temperature(neutralsMag, mGrid);
 
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
@@ -174,7 +174,7 @@ int main() {
     // This is for the initial output.  If it is not a restart, this will go:
     if (time.check_time_gate(input.get_dt_output(0))) {
       didWork = output(neutrals, ions, gGrid, time, planet);
-      didWork = output(neutralsTest, ionsTest, mGrid, time, planet);
+      didWork = output(neutralsMag, ionsMag, mGrid, time, planet);
     }
     if (!didWork)
       throw std::string("output failed!");
@@ -203,11 +203,15 @@ int main() {
       while (time.get_current() < time.get_intermediate()) {
         didWork = advance(planet,
                           gGrid,
+                          mGrid,
                           time,
                           euv,
                           neutrals,
+                          neutralsMag,
                           ions,
+                          ionsMag,
                           chemistry,
+                          chemistryMag,
                           electrodynamics,
                           indices,
                           logfile);
