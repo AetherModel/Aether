@@ -450,6 +450,9 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
     grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
     grid_specs.alt_max = grid_specs.alt_max * cKMtoM;
     grid_specs.min_apex = grid_specs.min_apex * cKMtoM;
+    grid_specs.IsDipole = check_settings(gridtype, "IsDipole");
+  } else {
+    grid_specs.IsDipole = false;
   }
 
   return grid_specs;
