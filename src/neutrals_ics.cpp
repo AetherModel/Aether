@@ -156,17 +156,12 @@ bool Neutrals::initial_conditions(Grid grid,
       } else
         temp1d = 200.0;
 
-      std::cout << "done with temps...\n";
-
       // Set the lower boundary condition:
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
           fill(species[iSpecies].lower_bc_density);
       }
-
-      std::cout << "done with fill...\n";
       calc_scale_height(grid);
-      std::cout << "done with scale height...\n";
       fill_with_hydrostatic(1, nAlts, grid);
     } // type = planet
   }
