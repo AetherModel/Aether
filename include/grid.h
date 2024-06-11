@@ -104,6 +104,7 @@ public:
   std::vector<arma_cube> rad_unit_vcgc;
   arma_cube gravity_potential_scgc;
   std::vector<arma_cube> gravity_vcgc;
+  arma_cube gravity_mag_scgc;
 
   std::vector<arma_cube> cent_acc_vcgc;
 
@@ -142,6 +143,9 @@ public:
   void set_IsGeoGrid(bool value);
   void set_IsExperimental(bool value);
   bool get_IsExperimental();
+
+  void set_IsDipole(bool value);
+  bool get_IsDipole();
 
   int64_t get_nPointsInGrid();
 
@@ -288,6 +292,7 @@ public:
   bool HasBField;
   bool IsExperimental;
   bool IsMagGrid;
+  bool IsDipole = false;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
