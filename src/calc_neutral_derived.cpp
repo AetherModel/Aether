@@ -181,7 +181,7 @@ void Neutrals::calc_scale_height(Grid grid) {
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * abs(grid.gravity_mag_scgc));
   }
 
   // If we have eddy diffusion, the scale-heights need to be adjusted,
@@ -213,7 +213,7 @@ void Neutrals::calc_scale_height(Grid grid) {
     // bulk scale height, assuming well mixed atmosphere:
     arma_cube bulkH =
       cKB * temperature_scgc /
-      (mmm * abs(grid.gravity_vcgc[2]));
+      (mmm * abs(grid.gravity_mag_scgc));
 
     // percentage will go from 1 = use bulk scale, to 0 = use individual
     arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
@@ -505,7 +505,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * grid.gravity_mag_scgc);
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
