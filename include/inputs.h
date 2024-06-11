@@ -88,6 +88,7 @@ public:
   struct grid_input_struct {
     std::string alt_file;
     bool IsUniformAlt;
+    bool IsDipole;
     precision_t alt_min;
     // Only really needed for Mag Field grid, since this could be overconstrained:
     precision_t alt_max;
