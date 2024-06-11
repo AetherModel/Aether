@@ -824,7 +824,10 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   arma_cube bt = cos(magLat_scgc); 
   arma_cube bm = sqrt(br % br + bt % bt);
   // Latitudinal direction of radial:
-  rad_unit_vcgc[1] = bt / bm % sign(magLat_scgc);
+  arma_cube s = sign(magLat_scgc);
+  s.elem( find(s == 0) ).ones();
+
+  rad_unit_vcgc[1] = bt / bm % s;
   rad_unit_vcgc[2] = - br / bm;
 
   precision_t mu = planet.get_mu();
@@ -832,6 +835,10 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   gravity_vcgc[2] = mu * rad_unit_vcgc[2] % radius2i_scgc;
   gravity_potential_scgc.set_size(nX, nY, nZ);
   gravity_potential_scgc.zeros();
+  gravity_mag_scgc = sqrt(
+    gravity_vcgc[0] % gravity_vcgc[0] + 
+    gravity_vcgc[1] % gravity_vcgc[1] + 
+    gravity_vcgc[2] % gravity_vcgc[2]);
 
   std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
   llr.push_back(magLon_scgc);
@@ -852,6 +859,8 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   geoLon_scgc = llr[0];
   geoLat_scgc = llr[1];
   geoAlt_scgc = llr[2] - planetRadius;
+
+  calc_alt_grid_spacing();
 
   report.exit(function);
   return;
