@@ -34,11 +34,15 @@
 
 bool advance(Planets &planet,
 	     Grid &gGrid,
+	     Grid &mGrid,
 	     Times &time,
 	     Euv &euv,
 	     Neutrals &neutrals,
+	     Neutrals &neutralsMag,
 	     Ions &ions,
+	     Ions &ionsMag,
 	     Chemistry &chemistry,
+	     Chemistry &chemistryMag,
 	     Electrodynamics &electrodynamics,
 	     Indices &indices,
 	     Logfile &logfile);
