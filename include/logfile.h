@@ -100,7 +100,7 @@ public:
    *    The logfile will output all indicies and specified neutrals and ions
    *    every dt time.
    */
-  Logfile(Indices &indices);
+  Logfile(Indices &indices, int64_t iLog);
   
   /**
    * \brief Close the file stream if not append
