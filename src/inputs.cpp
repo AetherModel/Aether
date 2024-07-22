@@ -64,6 +64,11 @@ Inputs::Inputs(Times &time) {
   // Now read the input file:
   isOk = read_inputs_json(time);
 
+  if (report.test_verbose(1)) {
+    std::cout << "Settings read in:\n";
+    std::cout << std::setw(2) << settings;
+  }
+
   if (!isOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
 }
