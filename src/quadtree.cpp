@@ -1,3 +1,15 @@
+// Copyright 2024, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
+// Need to allow more types of grids.  We have two axes of grids, really:
+//   - Neutral 
+//   - Ion
+// Within each of those, we can have several types of grids:
+//   - Cubesphere, this has 6 root nodes (2 polar, 4 equatorial)
+//   - Sphere, this has 1 root node (whole grid)
+//   - Sphere6, this is a spherical grid, but has 6 root nodes (2 lats, 3 lons)
+//   - Dipole, which may be the same as Sphere
+//   - Dipole4, which has 4 root nodes (4 lats, 1 lon)
 
 #include "aether.h"
 
