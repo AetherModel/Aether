@@ -32,12 +32,14 @@ void read_aurora(Neutrals &neutrals,
       //Set the auroral ion and neutral indices and coefficients
       int iNeutral_ = neutrals.get_species_id(csv[iLine][0]);
       int iIon_ = ions.get_species_id(csv[iLine][1]);
+      std::cout << "read_aurora : " << iLine << " " << iNeutral_ << "\n";
       neutrals.species[iNeutral_].iAuroraIonSpecies_.push_back(iIon_);
       neutrals.species[iNeutral_].nAuroraIonSpecies++;
       neutrals.species[iNeutral_].Aurora_Coef = stod(csv[iLine][2]);
     }
 
     myFile.close();
+    neutrals.auroraInitialized = true;
   }
 
 }
@@ -155,9 +157,14 @@ void calc_aurora(Grid grid,
   static arma_vec auroral_energy_widths(nBins);
   std::vector<precision_t> Ci;
 
-  if (IsFirstTime) {
+  if (!neutrals.auroraInitialized) {
     // Initialize the aurora using the auroral csv file
     read_aurora(neutrals, ions);
+  }
+
+  if (IsFirstTime) {
+    // Initialize the aurora using the auroral csv file
+    //read_aurora(neutrals, ions);
 
     precision_t lnE;
 
@@ -225,7 +232,7 @@ void calc_aurora(Grid grid,
   // loop through each altitude and calculate ionization
   for (iLon = 0; iLon < nLons ; iLon++) {
     for (iLat = 0; iLat < nLats ; iLat++) {
-
+      
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
       avee = ions.avee(iLon, iLat);  // in keV
 
@@ -312,7 +319,6 @@ void calc_aurora(Grid grid,
                 ions.species[iIon_].ionization_scgc.tube(iLon, iLat);
               ions.species[iIon_].ionization_scgc.tube(iLon, iLat) =
                 ionization_tube + ionization_species;
-
             }  // nAuroraIonSpecies
           }  // if nAuroraIonSpecies > 0
         }  // nSpecies
