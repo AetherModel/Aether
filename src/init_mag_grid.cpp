@@ -724,7 +724,8 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
 
   int64_t iLon, iLat, iAlt;
 
-  // This is just an example:  
+  report.print(0, "Creating Dipole Grid");
+
   report.print(3, "Getting mgrid_inputs inputs in dipole grid");
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs("MagGrid");
@@ -861,6 +862,9 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
   geoAlt_scgc = llr[2] - planetRadius;
 
   calc_alt_grid_spacing();
+
+  // Calculate magnetic field and magnetic coordinates:
+  fill_grid_bfield(planet);
 
   report.exit(function);
   return;
