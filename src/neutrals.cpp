@@ -74,6 +74,7 @@ Neutrals::Neutrals(Grid grid,
   int iErr;
   bool didWork = true;
   species_chars tmp;
+  auroraInitialized = false;
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
