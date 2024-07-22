@@ -25,6 +25,10 @@ Aether currently has three basic grid shapes: spherical, cubesphere, and dipole.
 
 The user needs to specify the shape of the grid, which specifies the grid shape and the number of root nodes. Shapes include: sphere (1 root node), sphere6 (6 root nodes), cubesphere (6 root nodes), dipole (1 root node), dipole4 (4 root nodes), and dipole6 (6 root nodes).
 
+### The Sphere Grid
+
+The sphere grid is a normal longitude, latitude, altitude grid.
+
 ### The Cubesphere Grid
 
 The cubesphere grid is composed of 6 different faces, similar to a cube, but where each cube "face" is pushed out to form a sphere.  The corners of the cube intersect the sphere, and all of the other grid points on the cube are pushed out to form the cube.  One cube face defines the southern polar region, one face defines the northern polar region, and the other four faces are spaced in longitude around the equatorial region. For the cubesphere grid, the (k) dimension is altitude.  The (i, j) system is set up so that (i) is considered left-right on the cube face, while (j) is up-down. For the four faces around the equator, (i, j) is roughly (lon, lat), but not exactly.  For the polar faces, the relationship between (i, j) and longitude, latitude is much more complex.
@@ -39,7 +43,7 @@ The transition from the "closed" field-line region to the "open" field-line regi
 
 ### Root Nodes
 
-A fundamental assumption with in Aether is that each processor does computation on one and only one block. This means that each processor does not deal with multiple blocks, and therefore the distribution of blocks across processors has to match exactly.  This document uses the words "block" and "node" somewhat interchangably.  Technically, a "block" is single (i, j, k) grid, while a "node" can be multiple "blocks" that make up a section of the globe.
+A fundamental assumption within Aether is that each processor does computation on one and only one block. This means that each processor does not deal with multiple blocks, and therefore the distribution of blocks across processors has to match exactly.  This document uses the words "block" and "node" somewhat interchangably.  Technically, a "block" is single (i, j, k) grid, while a "node" can be multiple "blocks" that make up a section of the globe.
 
 Aether uses a quadtree system to subdivide and distribute the grids (or blocks) across processors.  This means that when an additional level of refinement is desired, an individual block is split in 4 - the number of blocks is doubled in both (i) and (j). The question then is - how many blocks to start with?  These are the root nodes.
 
@@ -103,9 +107,13 @@ In addition, the number of grid points that should be used in each block are spe
 - nLats or nY - number of grid cells per block in the j direction
 - nAlts or nZ - total number of grid cells in the block in the k direction
 
+### Horizontal Resolution
+
 For some grid shapes (Sphere and Dipole), the total number of grid cells in the i and j direction can be determined by, for example, multiplying the number of blocks in the i direction by the number of cells in each block in the i direction. So, with a spherical grid with one root node, and 256 processors used, the number of blocks in the i and j direction is (256 = 4 * 4 * 4 * 4. breaking it into both directions - (2*2) * (2*2) * (2*2) * (2*2) or (2 * 2 * 2 * 2) * (2 * 2 * 2 * 2) or 16 x 16) 16 and 16. So, the total number of blocks in the i direction is 16 * nLons and in the j direction is 16 * nLats.
 
 For the cubesphere grid, the nX and nY are the number of grid cells in the i and j direction.  At this time, these have to be identical in order to have the grid cells match up along the boundaries to the top and bottom nodes. The resolution of the Cubesphere grid is roughly 360 deg / (4 * nX * sqrt(nProc/6)).  For example, if nX = 18, and 24 processors are requested, then the resolution = 360 / (4 * 18 * sqrt(4)) = 360 / (72 * 2) = 2.5 deg. As another example, to make a grid with 1 deg resolution, with 96 processors, nX would have to be 1 = 360 / (4 * nX * 4) = 22.5 / nX, so nX has to be around 22. (If nX were 22, and nProc = 96, then the resolution would be 1.02 deg).
+
+### Vertical Resolution
 
 In all grids, the nAlts or nZ are not parallelized, so the number of points in the k direction is what is specified. For the sphere and cubesphere grids, this is the number of altitude points.  On the dipole grid, this is the number of points along the dipole flux tube.
 
