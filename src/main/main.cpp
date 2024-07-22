@@ -100,7 +100,6 @@ int main() {
                nMagGhosts);
 
     if (input.get_setting_bool("MagGrid", "IsDipole")) {
-      std::cout << "Making Dipole Grid\n";
       mGrid.set_IsDipole(true);
       mGrid.init_dipole_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
@@ -191,7 +190,8 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
-    Logfile logfile(indices);
+    Logfile logfile(indices, 0);
+    Logfile logfileMag(indices, 1);
 
     time.set_start_time_loop();
 
@@ -214,7 +214,8 @@ int main() {
                           chemistryMag,
                           electrodynamics,
                           indices,
-                          logfile);
+                          logfile,
+                          logfileMag);
 
         if (!didWork)
           throw std::string("Error in advance!");
