@@ -9,7 +9,7 @@ Aether using root nodes, which specify the smallest number of processors that ca
 
 ## Grid Types Explained
 
-Aether has two types of grid systems - the neutral grid (NeuGrid) and the ion grid (IonGrid).  For each type of constituent (neutral or ion), their primary grid is the one where most of the equations are solved, and then they are passed to the other grid.  For example, the neutral winds are solved for on the NeuGrid, and then passed onto the IonGrid in order to calculate source terms for the ions.  As another example, the ion advection is solved for on the ion grid.  The ion densities are then passed to the neutral grid, where the source terms for the neutrals are calculated.
+Aether has two types of grid systems - the neutral grid (neuGrid) and the ion grid (ionGrid).  For each type of constituent (neutral or ion), their primary grid is the one where most of the equations are solved, and then they are passed to the other grid.  For example, the neutral winds are solved for on the NeuGrid, and then passed onto the IonGrid in order to calculate source terms for the ions.  As another example, the ion advection is solved for on the ion grid.  The ion densities are then passed to the neutral grid, where the source terms for the neutrals are calculated.
 
 These grids can be identical or nearly identical. If they are, then it is best to have them on a neutral type of grid, since the stability of the neutrals along the 3rd dimension (where gravity is prime) is hard to achieve.
 
@@ -118,17 +118,36 @@ For the cubesphere grid, the nX and nY are the number of grid cells in the i and
 In all grids, the nAlts or nZ are not parallelized, so the number of points in the k direction is what is specified. For the sphere and cubesphere grids, this is the number of altitude points.  On the dipole grid, this is the number of points along the dipole flux tube.
 
 
-
+```bash
+    "neuGrid" : {
+        "Shape" : "sphere",
+	    "LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	    "LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 50,
+	    "MinAlt" : 100.0,
+	    "dAltkm" : 5.0,
+        "dAltScale" : 0.25,
+	    "IsUniformAlt" : true,
+        "AltFile" : ""},
+```
 
 ```bash
-    "NeuGrid" : {
-        "Shape" : 
-	    "MinLat" : -90.0,
-	    "MaxLat" :  90.0,
-	    "MinLon" :   0.0,
-	    "MaxLon" : 360.0,
-	    "MinAlt" : 100.0,
-	    "dAlt"   : 5.0,
-        "AltFile" : "",
-	    "IsUniformAlt" : true},
+    "ionGrid" : {
+        "Shape" : "dipole",
+	    "LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	    "LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 200,
+	    "MinAlt" : 80.0,
+        "MinApex" : 120.0,
+        "MaxAlt" : 5000.0},
 ```
+
+The dipole grid has both open field-lines and closed field-lines.  The closed field-lines are near the equator, while the open field-lines are near the poles.  The variable "MaxAlt" sets where this differentiation occurs - if the apex of the field-line is above this altitude, then it is open. All field-lines in Aether start are the "MinAlt" and rise along a dipolar shape until they either encounter the equatorial plane or "MaxAlt". In the south, these field-lines tilt towards the north (from MinAlt to MaxAlt) and in the north, the field-lines tilt towards the south (from MinAlt to MaxAlt).  
+- The spacing is uniform in longitude. 
+- The spacing along the field-line has non-uniform spacing.
+- The spacing in latitude is non-uniform.
+
