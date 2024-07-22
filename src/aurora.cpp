@@ -32,7 +32,6 @@ void read_aurora(Neutrals &neutrals,
       //Set the auroral ion and neutral indices and coefficients
       int iNeutral_ = neutrals.get_species_id(csv[iLine][0]);
       int iIon_ = ions.get_species_id(csv[iLine][1]);
-      std::cout << "read_aurora : " << iLine << " " << iNeutral_ << "\n";
       neutrals.species[iNeutral_].iAuroraIonSpecies_.push_back(iIon_);
       neutrals.species[iNeutral_].nAuroraIonSpecies++;
       neutrals.species[iNeutral_].Aurora_Coef = stod(csv[iLine][2]);
