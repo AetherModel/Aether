@@ -580,6 +580,32 @@ std::string Inputs::get_logfile() {
 }
 
 // -----------------------------------------------------------------------
+// Return log file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_logfile(int64_t iLog) {
+  std::string logfile = "log.txt";
+  if (check_settings("Logfile", "name")) {
+    int64_t nLogs = settings.at("Logfile").at("name").size();
+    if (nLogs == 1) {
+      logfile = settings.at("Logfile").at("name").at(iLog);
+      //logfile = get_setting_str("Logfile", "name");
+    } else {
+      if (iLog > nLogs-1) {
+        report.error("Error in getting logfile name!");
+        logfile = settings.at("Logfile").at("name").at(nLogs-1);
+      } else {
+        logfile = settings.at("Logfile").at("name").at(iLog);
+      }
+    }
+  }
+  if (nMembers > 1)
+    logfile = add_cmember(logfile);
+
+  return logfile;
+}
+
+// -----------------------------------------------------------------------
 // Return the name of specified variables as a vector
 // -----------------------------------------------------------------------
 
