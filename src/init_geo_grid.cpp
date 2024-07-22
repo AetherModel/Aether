@@ -942,13 +942,15 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   bool DidWork = true;
 
   IsGeoGrid = 1;
-
   IsCubeSphereGrid = input.get_is_cubesphere();
 
-  if (input.get_is_cubesphere())
+  if (input.get_is_cubesphere()) {
+    report.print(0, "Creating Cubesphere Grid");
     create_cubesphere_connection(quadtree);
-  else
+  } else {
+    report.print(0, "Creating Spherical Grid");
     create_sphere_connection(quadtree);
+  }
 
   if (input.get_do_restart() & !input.get_is_cubesphere()) {
     report.print(1, "Restarting! Reading grid files!");
@@ -978,6 +980,7 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     correct_xy_grid(planet);
 
   if (IsMagGrid) {
+    report.print(0, "--> Grid is Magnetic, so rotating");
     std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
     llr.push_back(geoLon_scgc);
     llr.push_back(geoLat_scgc);
