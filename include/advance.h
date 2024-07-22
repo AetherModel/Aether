@@ -45,6 +45,7 @@ bool advance(Planets &planet,
 	     Chemistry &chemistryMag,
 	     Electrodynamics &electrodynamics,
 	     Indices &indices,
-	     Logfile &logfile);
+	     Logfile &logfile,
+	     Logfile &logfileMag);
 
 #endif // INCLUDE_ADVANCE_H_
