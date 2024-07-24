@@ -23,7 +23,12 @@
 	"nLatsPerBlock" : 22,
 	"nAlts" : 40,
         "dAltScale" : 0.25,
-        "IsUniformAlt" : false},    
+        "IsUniformAlt" : false},
+    
+    "ionGrid" : {
+        "AltFile" : "",
+        "IsUniformAlt" : false,
+        "dAltScale" : 0.5},    
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
