@@ -216,6 +216,10 @@ class Neutrals {
   std::string temperature_name = "Temperature";
   std::string temperature_unit = "K";
 
+  // Keep track of whether the aurora species have been initialized:
+  bool auroraInitialized = false;
+
+
   // --------------------------------------------------------------------
   // Functions:
 

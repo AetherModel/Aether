@@ -21,16 +21,16 @@
 	"type" : "Planet"},
 
     "Advection" : {
-		"Neutrals" : {
-	    	"Vertical" : "rusanov",
-	    	"Horizontal" : "default"},
-		"Ions" : {
-	    	"Along" : "rusanov",
-	    	"Across" : "default"} },
+	"Neutrals" : {
+	"Vertical" : "rusanov",
+	"Horizontal" : "default"},
+	"Ions" : {
+	"Along" : "rusanov",
+	"Across" : "default"} },
     
     "Student" : {
-		"name" : "",
-		"is" : false },
+	"name" : "",
+	"is" : false },
 
     "Planet" : {
         "name" : "earth",
@@ -39,18 +39,18 @@
     "BField" : "dipole",
 
     "Electrodynamics" : {
-		"Potential" : "weimer",
-		"DiffuseAurora" : "fta",
-		"Dir" : "UA/inputs/ext/ie/",
-		"File" : ""},
+	"Potential" : "weimer",
+	"DiffuseAurora" : "fta",
+	"Dir" : "UA/inputs/ext/ie/",
+	"File" : ""},
 
     "Euv" : {
-		"doUse" : true,
-		"Model" : "euvac",
-		"File" : "UA/inputs/euv.csv",
-		"IncludePhotoElectrons" : true,
-		"HeatingEfficiency" : 0.05,
-		"dt" : 60.0},
+	"doUse" : true,
+	"Model" : "euvac",
+	"File" : "UA/inputs/euv.csv",
+	"IncludePhotoElectrons" : true,
+	"HeatingEfficiency" : 0.05,
+	"dt" : 60.0},
 
     "DoCalcBulkIonTemp" : false,
     
@@ -64,40 +64,29 @@
     "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
-    "GeoBlockSize" : {
-	    "nLons" : 36,
-	    "nLats" : 36,
-	    "nAlts" : 50},
+    "neuGrid" : {
+        "Shape" : "sphere",
+	"LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	"LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 50,
+	"MinAlt" : 100.0,
+	"dAltkm" : 5.0,
+        "dAltScale" : 0.25,
+	"IsUniformAlt" : true,
+        "AltFile" : ""},
 
-    "GeoGrid" : {
-	    "MinLat" : -90.0,
-	    "MaxLat" :  90.0,
-	    "MinLon" :   0.0,
-	    "MaxLon" : 360.0,
-	    "MinAlt" : 100.0,
-	    "dAlt"   : 5.0,
-        "AltFile" : "",
-	    "IsUniformAlt" : true},
-
-    "MagBlockSize" : {
-	    "nLons" : 18,
-	    "nLats" : 20,
-	    "nAlts" : 200},
-
-    "MagGrid" : {
-	    "MinLat" : -90.0,
-	    "MaxLat" :  90.0,
-	    "MinLon" :   0.0,
-	    "MaxLon" : 360.0,
-	    "MinAlt" : 100.0,
-		"MaxAlt" : 5000.0,
-		"MinApex" : 120.0,
-	    "dAlt"   : 5.0,
-        "AltFile" : "",
-	    "IsUniformAlt" : true},
-
-    "CubeSphere" : {
-	    "is" : false},
+    "ionGrid" : {
+        "Shape" : "sphere",
+	"LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	"LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 200,
+	"MinAlt" : 80.0,
+        "MinApex" : 120.0,
+        "MaxAlt" : 5000.0},
 
     "Oblate" : {
 	"isOblate" : false,
@@ -125,7 +114,7 @@
     "OnmiwebFile" : [""],
     
     "Logfile" : {
-	"name" : "UA/output/log.txt",
+	"name" : ["UA/output/log_geo.txt", "UA/output/log_mag.txt"],
 	"append" : false,
 	"dt" : 10.0,
 	"species" : ["O2", "O2+"]},

@@ -18,8 +18,11 @@
         "nLats" : 18,
         "nAlts" : 50},
 
-    "GeoGrid" : {
-        "dAlt"   : 0.25,
+    "neuGrid" : {
+	"nLonsPerBlock" : 24,
+	"nLatsPerBlock" : 22,
+	"nAlts" : 40,
+        "dAltScale" : 0.25,
         "IsUniformAlt" : false},    
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],

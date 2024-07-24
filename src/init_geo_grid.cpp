@@ -748,11 +748,12 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("GeoGrid");
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs("neuGrid");
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
-      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
+      // Convert km to m:
+      alt1d(iAlt) = (grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.daltKm) * cKMtoM;
   } else {
 
     json neutrals = planet.get_neutrals();
@@ -775,16 +776,17 @@ void Grid::create_altitudes(Planets planet) {
 
     report.print(1, "Making non-uniform altitude grid!");
 
-    if (grid_input.dalt > 0.5) {
+    if (grid_input.daltScale > 0.5) {
       if (report.test_verbose(0)) {
         std::cout << "-----------------------------------------------------\n";
-        std::cout << "WARNING: dAlt is set to > 0.5, with non-uniform grid!\n";
-        std::cout << "   dAlt = " << grid_input.dalt << "\n";
+        std::cout << "WARNING: daltScale is set to > 0.5, with non-uniform grid!\n";
+        std::cout << "   daltScale = " << grid_input.daltScale << "\n";
         std::cout << "-----------------------------------------------------\n";
       }
     }
 
-    double alt = grid_input.alt_min;
+    // Convert to km
+    double alt = grid_input.alt_min * cKMtoM;
     radius = planet.get_radius(0.0) + alt;
     precision_t mu = planet.get_mu();
     gravity = mu / (radius * radius);
@@ -806,13 +808,13 @@ void Grid::create_altitudes(Planets planet) {
     mass = mass / density;
     scale_height = cKB * temperature / (mass * gravity);
 
-    precision_t dalt = scale_height * grid_input.dalt;
+    precision_t dalt = scale_height * grid_input.daltScale;
     precision_t dAltLimiter = dalt * 10.0;
 
     // Fills bottom ghost cells with constant dAlt
     // Fills bottom cell with actual desired bottom altitude
     for (iAlt = 0; iAlt <= nGeoGhosts; iAlt++) {
-      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * dalt;
+      alt1d(iAlt) = grid_input.alt_min * cKMtoM + (iAlt - nGeoGhosts) * dalt;
 
       if (report.test_verbose(1))
         std::cout << "iAlt : " << iAlt
@@ -839,7 +841,7 @@ void Grid::create_altitudes(Planets planet) {
       mass = mass / density;
       scale_height = cKB * temperature / (mass * gravity);
 
-      dalt = scale_height * grid_input.dalt;
+      dalt = scale_height * grid_input.daltScale;
 
       if (dalt > dAltLimiter)
         dalt = dAltLimiter;
@@ -943,18 +945,21 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   IsGeoGrid = 1;
 
-  IsCubeSphereGrid = input.get_is_cubesphere();
-
-  if (input.get_is_cubesphere())
+  if (iGridShape_ == iCubesphere_) {
+    report.print(0, "Creating Cubesphere Grid");
     create_cubesphere_connection(quadtree);
-  else
+    IsCubeSphereGrid = true;
+  } else {
+    report.print(0, "Creating Spherical Grid");
     create_sphere_connection(quadtree);
+    IsCubeSphereGrid = false;
+  }
 
-  if (input.get_do_restart() & !input.get_is_cubesphere()) {
+  if (input.get_do_restart() & iGridShape_ != iCubesphere_) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
-    if (input.get_is_cubesphere()) {
+    if (iGridShape_ == iCubesphere_) {
       if (input.get_do_restart())
         report.print(0, "Not restarting the grid - it is too complicated!");
 
@@ -974,10 +979,11 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   fill_grid_radius(planet);
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
-  if (input.get_is_cubesphere())
+  if (iGridShape_ == iCubesphere_)
     correct_xy_grid(planet);
 
   if (IsMagGrid) {
+    report.print(0, "--> Grid is Magnetic, so rotating");
     std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
     llr.push_back(geoLon_scgc);
     llr.push_back(geoLat_scgc);

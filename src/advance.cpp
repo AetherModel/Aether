@@ -23,7 +23,8 @@ bool advance(Planets &planet,
              Chemistry &chemistryMag,
              Electrodynamics &electrodynamics,
              Indices &indices,
-             Logfile &logfile) {
+             Logfile &logfile,
+             Logfile &logfileMag) {
 
   bool didWork = true;
 
@@ -83,7 +84,7 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
-  if (input.get_nAlts("GeoGrid") > 1)
+  if (gGrid.get_nAlts(false) > 1)
     neutrals.advect_vertical(gGrid, time);
 
   if (didWork & input.get_check_for_nans())
@@ -132,6 +133,8 @@ bool advance(Planets &planet,
 
     // Calculate some neutral source terms:
     neutrals.calc_conduction(gGrid, time);
+
+    // Calculate chemistry on both grids:
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
     chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
 
@@ -153,10 +156,7 @@ bool advance(Planets &planet,
     ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
     ionsMag.calc_electron_temperature(neutralsMag, mGrid);
 
-    if (input.get_is_cubesphere())
-      neutrals.exchange_old(gGrid);
-    else
-      neutrals.exchange_old(gGrid);
+    neutrals.exchange_old(gGrid);
 
     time.increment_time();
 
@@ -178,6 +178,8 @@ bool advance(Planets &planet,
 
   if (didWork)
     didWork = logfile.write_logfile(indices, neutrals, ions, gGrid, time);
+  if (didWork)
+    didWork = logfileMag.write_logfile(indices, neutralsMag, ionsMag, mGrid, time);
 
   if (!didWork)
     report.error("Error in Advance!");

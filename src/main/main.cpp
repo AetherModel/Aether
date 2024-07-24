@@ -32,7 +32,10 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
-    Quadtree quadtree("GeoGrid");
+    // For now, the number of processors and blocks are set by the 
+    // neutral grid shape, since this could be sphere (1 root) or
+    // cubesphere (6 root)
+    Quadtree quadtree(input.get_grid_shape("neuGrid"));
 
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -75,10 +78,7 @@ int main() {
     MPI_Barrier(aether_comm);
 
     // Initialize Geographic grid:
-    Grid gGrid(input.get_nLons("GeoGrid"),
-               input.get_nLats("GeoGrid"),
-               input.get_nAlts("GeoGrid"),
-               nGeoGhosts);
+    Grid gGrid("neuGrid");
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
 
@@ -94,13 +94,9 @@ int main() {
       gGrid.calc_cent_acc(planet);
 
     // Initialize Magnetic grid:
-    Grid mGrid(input.get_nLons("MagGrid"),
-               input.get_nLats("MagGrid"),
-               input.get_nAlts("MagGrid"),
-               nMagGhosts);
+    Grid mGrid("ionGrid");
 
-    if (input.get_setting_bool("MagGrid", "IsDipole")) {
-      std::cout << "Making Dipole Grid\n";
+    if (mGrid.iGridShape_ == mGrid.iDipole_) {
       mGrid.set_IsDipole(true);
       mGrid.init_dipole_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
@@ -191,7 +187,8 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
-    Logfile logfile(indices);
+    Logfile logfile(indices, 0);
+    Logfile logfileMag(indices, 1);
 
     time.set_start_time_loop();
 
@@ -214,7 +211,8 @@ int main() {
                           chemistryMag,
                           electrodynamics,
                           indices,
-                          logfile);
+                          logfile,
+                          logfileMag);
 
         if (!didWork)
           throw std::string("Error in advance!");

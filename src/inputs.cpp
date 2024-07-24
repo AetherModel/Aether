@@ -29,8 +29,8 @@ Inputs::Inputs(Times &time) {
   // Grid Defaults:
   geo_grid_input.alt_file = "";
   geo_grid_input.IsUniformAlt = true;
-  geo_grid_input.alt_min = 100.0 * 1000.0;
-  geo_grid_input.dalt = 5.0 * 1000.0;
+  geo_grid_input.alt_min = 100.0;
+  geo_grid_input.daltKm = 5.0;
 
   nLonsGeo = 12;
   nLatsGeo = 20;
@@ -63,6 +63,11 @@ Inputs::Inputs(Times &time) {
   // ------------------------------------------------
   // Now read the input file:
   isOk = read_inputs_json(time);
+
+  if (report.test_verbose(1)) {
+    std::cout << "Settings read in:\n";
+    std::cout << std::setw(2) << settings;
+  }
 
   if (!isOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
@@ -162,6 +167,22 @@ std::vector<int> Inputs::get_setting_intarr(std::string key1) {
 
     for (int i = 0; i < nPts; i++)
       value.push_back(settings.at(key1).at(i));
+  } else
+    isOk = false;
+
+  return value;
+}
+
+std::vector<int> Inputs::get_setting_intarr(std::string key1,
+                                            std::string key2) {
+  std::vector<int> value;
+
+  if (check_settings(key1, key2)) {
+    int nPts = settings.at(key1).at(key2).size();
+    isOk = true;
+
+    for (int i = 0; i < nPts; i++)
+      value.push_back(settings.at(key1).at(key2).at(i));
   } else
     isOk = false;
 
@@ -409,50 +430,39 @@ precision_t Inputs::check_settings_pt(std::string key1,
 
 // -----------------------------------------------------------------------
 // Return characteristics of the grid that are entered by the user
-// gridtype needs to be "GeoGrid" or "MagGrid"
+// gridtype needs to be "neuGrid" or "ionGrid"
 // -----------------------------------------------------------------------
 
 Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
 
   Inputs::grid_input_struct grid_specs;
 
-  // First Get Values:
-  grid_specs.alt_file = check_settings_str(gridtype, "AltFile");
+  grid_specs.shape = check_settings_str(gridtype, "Shape");
 
-  if (check_settings(gridtype, "IsUniformAlt")) {
-    bool reality = get_setting_bool(gridtype, "IsUniformAlt");
-    grid_specs.IsUniformAlt = get_setting_bool(gridtype, "IsUniformAlt");
-  } else
-    grid_specs.IsUniformAlt = true;
+  grid_specs.nX = get_setting_int(gridtype, "nLonsPerBlock");
+  grid_specs.nY = get_setting_int(gridtype, "nLatsPerBlock");
+  grid_specs.nZ = get_setting_int(gridtype, "nAlts");
 
   grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
-  grid_specs.dalt = check_settings_pt(gridtype, "dAlt");
-  grid_specs.lat_min = check_settings_pt(gridtype, "MinLat");
-  grid_specs.lat_max = check_settings_pt(gridtype, "MaxLat");
-  grid_specs.lon_min = check_settings_pt(gridtype, "MinLon");
-  grid_specs.lon_max = check_settings_pt(gridtype, "MaxLon");
-
-  // Second Change Units
-  grid_specs.alt_min = grid_specs.alt_min * cKMtoM;
-  grid_specs.lat_min = grid_specs.lat_min * cDtoR;
-  grid_specs.lat_max = grid_specs.lat_max * cDtoR;
-  grid_specs.lon_min = grid_specs.lon_min * cDtoR;
-  grid_specs.lon_max = grid_specs.lon_max * cDtoR;
-
-  // If the grid is uniform, dalt is in km, else it is in fractions of
-  // scale height:
-  if (grid_specs.IsUniformAlt)
-    grid_specs.dalt = grid_specs.dalt * cKMtoM;
+  std::vector<int> min_max;
+  min_max = get_setting_intarr(gridtype, "LatRange");
+  grid_specs.lat_min = min_max[0] * cDtoR;
+  grid_specs.lat_max = min_max[1] * cDtoR;
+  min_max = get_setting_intarr(gridtype, "LonRange");
+  grid_specs.lon_min = min_max[0] * cDtoR;
+  grid_specs.lon_max = min_max[1] * cDtoR;
 
   // These are only needed if the gridtype if magnetic:
-  if (gridtype == "MagGrid") {
+  if (grid_specs.shape == "dipole") {
     grid_specs.alt_max = check_settings_pt(gridtype, "MaxAlt");
     grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
-    grid_specs.alt_max = grid_specs.alt_max * cKMtoM;
-    grid_specs.min_apex = grid_specs.min_apex * cKMtoM;
-    grid_specs.IsDipole = check_settings(gridtype, "IsDipole");
   } else {
-    grid_specs.IsDipole = false;
+    grid_specs.alt_file = check_settings_str(gridtype, "AltFile");
+    grid_specs.IsUniformAlt = get_setting_bool(gridtype, "IsUniformAlt");
+    if (grid_specs.IsUniformAlt)
+      grid_specs.daltKm = check_settings_pt(gridtype, "dAltkm");
+    else
+      grid_specs.daltScale = check_settings_pt(gridtype, "dAltScale");
   }
 
   return grid_specs;
@@ -573,6 +583,32 @@ int Inputs::get_updated_seed() {
 std::string Inputs::get_logfile() {
   std::string logfile = get_setting_str("Logfile", "name");
 
+  if (nMembers > 1)
+    logfile = add_cmember(logfile);
+
+  return logfile;
+}
+
+// -----------------------------------------------------------------------
+// Return log file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_logfile(int64_t iLog) {
+  std::string logfile = "log.txt";
+  if (check_settings("Logfile", "name")) {
+    int64_t nLogs = settings.at("Logfile").at("name").size();
+    if (nLogs == 1) {
+      logfile = settings.at("Logfile").at("name").at(iLog);
+      //logfile = get_setting_str("Logfile", "name");
+    } else {
+      if (iLog > nLogs-1) {
+        report.error("Error in getting logfile name!");
+        logfile = settings.at("Logfile").at("name").at(nLogs-1);
+      } else {
+        logfile = settings.at("Logfile").at("name").at(iLog);
+      }
+    }
+  }
   if (nMembers > 1)
     logfile = add_cmember(logfile);
 
@@ -862,40 +898,23 @@ int Inputs::get_original_seed() {
 }
 
 // -----------------------------------------------------------------------
-// Return number of longitudes, latitudes, and altitudes in Geo grid
+// Return number of longitudes, latitudes, and altitudes in grid
 // -----------------------------------------------------------------------
 
 int Inputs::get_nLons(std::string gridtype) {
-  if (gridtype == "GeoGrid")
-    return check_settings_pt("GeoBlockSize", "nLons");
-  else
-    return check_settings_pt("MagBlockSize", "nLons");
+  return get_setting_int(gridtype, "nLonsPerBlock");
 }
 
 int Inputs::get_nLats(std::string gridtype) {
-  if (gridtype == "GeoGrid")
-    return check_settings_pt("GeoBlockSize", "nLats");
-  else
-    return check_settings_pt("MagBlockSize", "nLats");
+  return get_setting_int(gridtype, "nLatsPerBlock");
 }
 
 int Inputs::get_nAlts(std::string gridtype) {
-  if (gridtype == "GeoGrid")
-    return check_settings_pt("GeoBlockSize", "nAlts");
-  else
-    return check_settings_pt("MagBlockSize", "nAlts");
+  return get_setting_int(gridtype, "nAlts");
 }
 
-// -----------------------------------------------------------------------
-// Return number of Blocks of longitudes and latitudes in Geo grid
-// -----------------------------------------------------------------------
-
-int Inputs::get_nBlocksLonGeo() {
-  return check_settings_pt("GeoBlockSize", "nBlocksLon");
-}
-
-int Inputs::get_nBlocksLatGeo() {
-  return check_settings_pt("GeoBlockSize", "nBlocksLat");
+std::string Inputs::get_grid_shape(std::string gridtype) {
+  return mklower(get_setting_str(gridtype, "Shape"));
 }
 
 // -----------------------------------------------------------------------
