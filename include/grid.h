@@ -15,6 +15,11 @@ class Grid {
 
 public:
 
+  const int iSphere_ = 1;
+  const int iCubesphere_ = 2;
+  const int iDipole_ = 3;
+  int iGridShape_ = -1;
+
   // Armidillo Cube Versions:
   // Cell Center Coordinates
   arma_cube geoLon_scgc, geoX_scgc;
@@ -136,7 +141,8 @@ public:
   arma_cube bfield_mag_scgc;
   std::vector<arma_cube> bfield_unit_vcgc;
 
-  Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
+  Grid(std::string gridtype);
+  void set_variable_sizes();
 
   bool get_IsGeoGrid();
   bool get_HasBField();
@@ -152,10 +158,17 @@ public:
   int64_t get_nX();
   int64_t get_nY();
   int64_t get_nZ();
+  int64_t get_nX(bool includeGCs);
+  int64_t get_nY(bool includeGCs);
+  int64_t get_nZ(bool includeGCs);
 
   int64_t get_nLons();
   int64_t get_nLats();
   int64_t get_nAlts();
+
+  int64_t get_nLons(bool includeGCs);
+  int64_t get_nLats(bool includeGCs);
+  int64_t get_nAlts(bool includeGCs);
 
   int64_t get_nGCs();
 

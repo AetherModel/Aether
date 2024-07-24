@@ -9,15 +9,26 @@
 // Initialize Grid class
 // --------------------------------------------------------------------------
 
-Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
+Grid::Grid(std::string gridtype) {
 
-  nX = nX_in + nGCs_in * 2;
+  // At this point, we only need 2 ghostcells.  Hardcode this:
+  nGCs = 2;
+
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  nX = grid_input.nX + nGCs * 2;
   nLons = nX;
-  nY = nY_in + nGCs_in * 2;
+  nY = grid_input.nY + nGCs * 2;
   nLats = nY;
-  nZ = nZ_in + nGCs_in * 2;
+  nZ = grid_input.nZ + nGCs * 2;
   nAlts = nZ;
-  nGCs = nGCs_in;
+
+  if (mklower(grid_input.shape) == "sphere") 
+    iGridShape_ = iSphere_;
+  if (mklower(grid_input.shape) == "cubesphere") 
+    iGridShape_ = iCubesphere_;
+  if (mklower(grid_input.shape) == "dipole") 
+    iGridShape_ = iDipole_;
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
@@ -153,11 +164,20 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   IsExperimental = false;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-
   for (int i = 0; i < 3; i++)
     cent_acc_vcgc[i].zeros();
 
 }
+
+// --------------------------------------------------------------------------
+// Set Variable Sizes
+// --------------------------------------------------------------------------
+
+void Grid::set_variable_sizes() {
+
+  return;
+}
+
 
 // --------------------------------------------------------------------------
 // write restart out files for the grid
@@ -396,6 +416,25 @@ int64_t Grid::get_nZ() {
   return nZ;
 }
 
+int64_t Grid::get_nX(bool includeGCs) {
+  if (includeGCs)
+    return nX;
+  else
+    return nX - 2*nGCs;
+}
+int64_t Grid::get_nY(bool includeGCs) {
+  if (includeGCs)
+    return nY;
+  else
+    return nY - 2*nGCs;
+}
+int64_t Grid::get_nZ(bool includeGCs) {
+  if (includeGCs)
+    return nZ;
+  else
+    return nZ - 2*nGCs;
+}
+
 int64_t Grid::get_nLons() {
   return nLons;
 }
@@ -404,6 +443,25 @@ int64_t Grid::get_nLats() {
 }
 int64_t Grid::get_nAlts() {
   return nAlts;
+}
+
+int64_t Grid::get_nLons(bool includeGCs) {
+  if (includeGCs)
+    return nLons;
+  else
+    return nLons - 2*nGCs;
+}
+int64_t Grid::get_nLats(bool includeGCs) {
+  if (includeGCs)
+    return nLats;
+  else
+    return nLats - 2*nGCs;
+}
+int64_t Grid::get_nAlts(bool includeGCs) {
+  if (includeGCs)
+    return nAlts;
+  else
+    return nAlts - 2*nGCs;
 }
 
 int64_t Grid::get_nGCs() {

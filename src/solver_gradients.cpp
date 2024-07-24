@@ -11,7 +11,7 @@ std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
   std::vector<arma_cube> gradient_vcgc;
 
-  if (input.get_is_cubesphere())
+  if (grid.iGridShape_ == grid.iCubesphere_)
     gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
 
   else {

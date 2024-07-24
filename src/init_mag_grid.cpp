@@ -22,7 +22,7 @@ void Grid::init_mag_grid(Planets planet) {
   set_IsGeoGrid(false);
 
   // This is just an example:  
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("MagGrid");
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
   
   int64_t iLon, iLat, iAlt;
   
@@ -728,12 +728,13 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet) {
 
   report.print(3, "Getting mgrid_inputs inputs in dipole grid");
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("MagGrid");
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
 
   report.print(3, "Setting inputs in dipole grid");
-  precision_t min_apex = grid_input.min_apex;
-  precision_t min_alt = grid_input.alt_min;
-  precision_t max_alt = grid_input.alt_max;
+  // Convert altitudes from km to m:
+  precision_t min_apex = grid_input.min_apex * cKMtoM;
+  precision_t min_alt = grid_input.alt_min * cKMtoM;
+  precision_t max_alt = grid_input.alt_max * cKMtoM;
   precision_t planetRadius = planet.get_radius(0.0);
   precision_t min_lshell = (min_apex + planetRadius)/planetRadius;
   precision_t min_r = (min_alt + planetRadius)/planetRadius;

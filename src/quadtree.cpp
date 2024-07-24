@@ -15,8 +15,8 @@
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree(std::string gridtype) {
-  if (gridtype == "GeoGrid" & input.get_is_cubesphere())
+Quadtree::Quadtree(std::string shape) {
+  if (shape == "cubesphere")
     nRootNodes = 6;
   else
     nRootNodes = 1;
@@ -40,12 +40,21 @@ void Quadtree::build(std::string gridtype) {
   arma_mat rights;
   arma_mat ups;
 
-  if (gridtype == "GeoGrid" & input.get_is_cubesphere()) {
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  if (grid_input.shape == "cubesphere") {
     origins = CubeSphere::ORIGINS;
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
     IsCubeSphere = true;
-  } else {
+  } 
+  if (grid_input.shape == "sphere") {
+    origins = Sphere::ORIGINS;
+    rights = Sphere::RIGHTS;
+    ups = Sphere::UPS;
+    IsSphere = true;
+  }
+  if (grid_input.shape == "dipole") {
     origins = Sphere::ORIGINS;
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
@@ -76,8 +85,6 @@ void Quadtree::build(std::string gridtype) {
   // Before we build the quadtree, we need to allow the user to
   // restrict the domain.  This will only work for the spherical
   // grid so far:
-
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
 
   if (grid_input.lon_min > 0.0 ||
       grid_input.lon_max < 2.0 * cPI ||

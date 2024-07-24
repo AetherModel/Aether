@@ -339,7 +339,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   precision_t dt;
 
-  if (input.get_is_cubesphere())
+  if (grid.iGridShape_ == grid.iCubesphere_)
     dt = calc_dt_cubesphere(grid);
   else {
     int iDir;
@@ -353,7 +353,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
     arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
     dta(1) = dty.min();
 
-    if (input.get_nAlts("GeoGrid") > 1) {
+    if (grid.get_nAlts(false) > 1) {
       arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
       dta(2) = dtz.min();
     } else
@@ -422,7 +422,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   dta(0) = dtx.min();
   dta(1) = dty.min();
 
-  if (input.get_nAlts("GeoGrid") > 1) {
+  if (grid.get_nAlts(false) > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
   } else

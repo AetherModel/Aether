@@ -84,7 +84,7 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
-  if (input.get_nAlts("GeoGrid") > 1)
+  if (gGrid.get_nAlts(false) > 1)
     neutrals.advect_vertical(gGrid, time);
 
   if (didWork & input.get_check_for_nans())
@@ -156,10 +156,7 @@ bool advance(Planets &planet,
     ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
     ionsMag.calc_electron_temperature(neutralsMag, mGrid);
 
-    if (input.get_is_cubesphere())
-      neutrals.exchange_old(gGrid);
-    else
-      neutrals.exchange_old(gGrid);
+    neutrals.exchange_old(gGrid);
 
     time.increment_time();
 

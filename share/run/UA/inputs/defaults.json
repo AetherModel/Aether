@@ -64,41 +64,29 @@
     "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
-    "GeoBlockSize" : {
-	"nLons" : 36,
-	"nLats" : 36,
-	"nAlts" : 50},
-
-    "GeoGrid" : {
-	"MinLat" : -90.0,
-	"MaxLat" :  90.0,
-	"MinLon" :   0.0,
-	"MaxLon" : 360.0,
+    "neuGrid" : {
+        "Shape" : "sphere",
+	"LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	"LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 50,
 	"MinAlt" : 100.0,
-	"dAlt"   : 5.0,
-        "AltFile" : "",
-	"IsUniformAlt" : true},
+	"dAltkm" : 5.0,
+        "dAltScale" : 0.25,
+	"IsUniformAlt" : true,
+        "AltFile" : ""},
 
-    "MagBlockSize" : {
-        "nLons" : 20,
-        "nLats" : 20,
-        "nAlts" : 80},
-    
-    "MagGrid" : {
-	"MinLat" : -90.0,
-	"MaxLat" :  90.0,
-	"MinLon" :   0.0,
-	"MaxLon" : 360.0,
-	"MinAlt" : 100.0,
-	"MaxAlt" : 5000.0,
-	"MinApex" : 120.0,
-	"dAlt"   : 5.0,
-        "AltFile" : "",
-	"IsDipole" : true,
-	"IsUniformAlt" : false},
-
-    "CubeSphere" : {
-	"is" : false},
+    "ionGrid" : {
+        "Shape" : "sphere",
+	"LatRange" : [-90.0, 90.0],
+        "nLatsPerBlock" : 18,
+	"LonRange" : [0.0, 360.0],
+        "nLonsPerBlock" : 36,
+        "nAlts" : 200,
+	"MinAlt" : 80.0,
+        "MinApex" : 120.0,
+        "MaxAlt" : 5000.0},
 
     "Oblate" : {
 	"isOblate" : false,
