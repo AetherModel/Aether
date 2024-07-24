@@ -28,8 +28,10 @@ Contents within `doc`:
 - Usage
   - [Running Aether](usage/running_aether.md)
   - [Debugging](usage/debug.md)
-  - [Ensembles](usage/ensembles.md)
-  - [Indices](usage/indices.md)
+- Aether Internals
+  - [Ensembles](internals/ensembles.md)
+  - [Indices](internals/indices.md)
+  - [The Grid](internals/grid.md)
 - [Doxyfile](Doxyfile)
 - [README (this page)](README.md)
 - [Citations](citations.md)

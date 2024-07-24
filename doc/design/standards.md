@@ -4,7 +4,8 @@ Aether Coding and Design Standards Document
 Overall Design Philosophy
 -------------------------
 
-## Files
+Files
+----
 
 Directory Structure:
 
