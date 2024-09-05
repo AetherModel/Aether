@@ -629,62 +629,27 @@ void Grid::fill_dipole_q_line(precision_t qN, precision_t qS, precision_t Gamma,
 
 
 // ----------------------------------------------------------------------
-// Routine to convert p and q to r and theta. Appraoch is to first solve
-// for r using eq 4 from Huba et al 2000. q^2*r^4+1/q*r-1=0
-// This is solved numerically using Newton-Raphson (NR) technique.
-// Once we know r we can reover theta from p=r*1/(sin theta)^2.
-// note r here is normalized to planet radius. 
+// Routine to convert p and q to r and theta. Can be solved iteratively,
+// or with approach from (swisdak, 2006) 
+// who solved it analytically: 
+//  https://arxiv.org/pdf/physics/0606044
 // 
 // ----------------------------------------------------------------------
 std::pair<precision_t,precision_t> Grid::p_q_to_r_theta(precision_t p, precision_t q) {
   //return quanties
   precision_t r, theta;
   // function value and derivative for NR method
-  precision_t Func, dFunc;
-  // tolerance for root finding
-  precision_t Tolerance = 0.00001;
-
-  // initial guess for r
-  r = 100.0;
-
-  Func= pow(q,2.0) * pow(r,4.0) + 1.0/p*r-1;
-  dFunc= 4.0*pow(q,2.0) * pow(r,3.0) + 1.0/p;
+  precision_t term0, term1, term2, term3;
   
-  // cout<< "p,q="<<p<<" "<<q << endl;
-  // cout<< Func<<" "<<dFunc;
-  // cout<<endl;
-
-  int itr=0;
-  int maxItr=100;
-
-  // apply NR iterations to get 
-  while( abs(Func/dFunc) > Tolerance) { 
-    try {
-      Func= pow(q,2.0) * pow(r,4.0) + 1.0/p*r-1;
-      dFunc= 4.0*pow(q,2.0) * pow(r,3.0) + 1.0/p;
-      
-      // in NR method r(i+1)=r(i)-f/f' for each iteration
-      
-      r = r - Func/dFunc;
-
-      if (++itr > maxItr){ throw(itr);}
-    }
-    catch (int itr){
-        cout<<"WARN: exceeded max #iterations.. exiting ";
-        exit(10);
-    }
-    // cout << r << " " << Func << " "<< dFunc << endl;
-  }
+  double term0 = 256.0 / 27.0 * pow(q, 2.0) * pow(p, 4.0);
+  double term1 = pow((1.0 + sqrt(1.0 + term0)), 2.0 / 3.0);
+  double term2 = pow(term0, 1.0 / 3.0);
+  double term3 = 0.5 * pow(((pow(term1,2) + term1 * term2 + pow(term2,2)) / term1), 3.0 / 2.0);
+  double r = p * (4.0 * term3) / (1.0 + term3) / (1.0 + sqrt(2.0 * term3 - 1.0));
   
   // now that r is determined we can solve for theta
   //theta = asin(sqrt(r/p));
   theta = acos(q*pow(r,2.0));
-  
-  
-  //cout << "for p,q = " << p <<" "<< q << endl;
-  //cout << "  r     = " << r << endl;
-  //cout << "  theta = " << theta << endl;
-  //cout << endl;
   
   return {r,theta};
 }
