@@ -638,14 +638,15 @@ void Grid::fill_dipole_q_line(precision_t qN, precision_t qS, precision_t Gamma,
 std::pair<precision_t,precision_t> Grid::p_q_to_r_theta(precision_t p, precision_t q) {
   //return quanties
   precision_t r, theta;
-  // function value and derivative for NR method
+  // Intermediate quantities:
   precision_t term0, term1, term2, term3;
   
-  double term0 = 256.0 / 27.0 * pow(q, 2.0) * pow(p, 4.0);
-  double term1 = pow((1.0 + sqrt(1.0 + term0)), 2.0 / 3.0);
-  double term2 = pow(term0, 1.0 / 3.0);
-  double term3 = 0.5 * pow(((pow(term1,2) + term1 * term2 + pow(term2,2)) / term1), 3.0 / 2.0);
-  double r = p * (4.0 * term3) / (1.0 + term3) / (1.0 + sqrt(2.0 * term3 - 1.0));
+  term0 = 256.0 / 27.0 * pow(q, 2.0) * pow(p, 4.0);
+  term1 = pow((1.0 + sqrt(1.0 + term0)), 2.0 / 3.0);
+  term2 = pow(term0, 1.0 / 3.0);
+  term3 = 0.5 * pow(((pow(term1,2) + term1 * term2 + pow(term2,2)) / term1), 3.0 / 2.0);
+  
+  r = p * (4.0 * term3) / (1.0 + term3) / (1.0 + sqrt(2.0 * term3 - 1.0));
   
   // now that r is determined we can solve for theta
   //theta = asin(sqrt(r/p));
