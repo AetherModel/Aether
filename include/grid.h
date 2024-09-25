@@ -172,6 +172,14 @@ public:
 
   int64_t get_nGCs();
 
+  bool get_HasXdim();
+  bool get_HasYdim();
+  bool get_HasZdim();
+  bool get_Is0D();
+  bool get_Is1Dx();
+  bool get_Is1Dy();
+  bool get_Is1Dz();
+
   void fill_grid(Planets planet);
   void correct_xy_grid(Planets planet);
   void calc_sza(Planets planet, Times time);
@@ -310,6 +318,19 @@ public:
   int64_t nX, nLons;
   int64_t nY, nLats;
   int64_t nZ, nAlts;
+
+  // These logicals define the dimensionality of the grid:
+  bool Is0D = false;
+  bool Is1Dx = false;
+  bool Is1Dy = false;
+  bool Is1Dz = false;
+  bool Is2Dxy = false;
+  bool Is2Dxz = false;
+  bool Is2Dyz = false;
+  bool Is3D = false;
+  bool HasXdim = true;
+  bool HasYdim = true;
+  bool HasZdim = true;
 
   int nGCs; // number of ghostcells
 
