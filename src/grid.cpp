@@ -23,6 +23,28 @@ Grid::Grid(std::string gridtype) {
   nZ = grid_input.nZ + nGCs * 2;
   nAlts = nZ;
 
+  // No set all of the logicals to make the flow a bit easier:
+
+  if (grid_input.nX == 1 &
+      grid_input.nY == 1 &
+      grid_input.nZ == 1)
+    Is0D = true;
+  else {
+    if (grid_input.nY == 1 & grid_input.nZ == 1) Is1Dx = true;
+    if (grid_input.nX == 1 & grid_input.nZ == 1) Is1Dy = true;
+    if (grid_input.nX == 1 & grid_input.nY == 1) Is1Dz = true;
+    if (!Is1Dx & !Is1Dy & !Is1Dz) {
+      if (grid_input.nX == 1) Is2Dyz = true;
+      if (grid_input.nY == 1) Is2Dxz = true;
+      if (grid_input.nZ == 1) Is2Dxy = true;
+      if (!Is2Dyz & !Is2Dxz & !Is2Dxy) Is3D = true;
+    }
+  }
+
+  if (grid_input.nX == 1) HasXdim = false;
+  if (grid_input.nY == 1) HasYdim = false;
+  if (grid_input.nZ == 1) HasZdim = false;
+
   if (mklower(grid_input.shape) == "sphere") 
     iGridShape_ = iSphere_;
   if (mklower(grid_input.shape) == "cubesphere") 
@@ -192,8 +214,9 @@ bool Grid::write_restart(std::string dir) {
     try {
       OutputContainer RestartContainer;
       RestartContainer.set_directory(dir);
-      RestartContainer.set_version(0.1);
+      RestartContainer.set_version(aether_version);
       RestartContainer.set_time(0.0);
+      RestartContainer.set_nGhostCells(nGCs);
 
       // Output Cell Centers
       RestartContainer.set_filename("grid_" + cGrid);
@@ -280,7 +303,7 @@ bool Grid::read_restart(std::string dir) {
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_directory(dir);
-    RestartContainer.set_version(0.1);
+    RestartContainer.set_version(aether_version);
     // Cell Centers:
     RestartContainer.set_filename("grid_" + cGrid);
     RestartContainer.read();
@@ -400,6 +423,38 @@ int64_t Grid::get_nPointsInGrid() {
   int64_t nPoints;
   nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
+}
+
+// --------------------------------------------------------------------------
+// Get some grid definition things
+// --------------------------------------------------------------------------
+
+bool Grid::get_HasXdim() {
+  return HasXdim;
+}
+
+bool Grid::get_HasYdim() {
+  return HasYdim;
+}
+
+bool Grid::get_HasZdim() {
+  return HasZdim;
+}
+
+bool Grid::get_Is0D() {
+  return Is0D;
+}
+
+bool Grid::get_Is1Dx() {
+  return Is1Dx;
+}
+
+bool Grid::get_Is1Dy() {
+  return Is1Dy;
+}
+
+bool Grid::get_Is1Dz() {
+  return Is1Dz;
 }
 
 // --------------------------------------------------------------------------
