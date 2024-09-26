@@ -10,7 +10,8 @@
 // transform string to lower case
 // -----------------------------------------------------------------------
 
-std::string mklower(std::string inString) {
+std::string mklower(std::string inString)
+{
   std::string outString = inString;
   int64_t nChars = outString.length();
 
@@ -26,10 +27,11 @@ std::string mklower(std::string inString) {
 //   - then in fortran, we convert back
 // -----------------------------------------------------------------------
 
-int* copy_string_to_int(std::string inString) {
+int *copy_string_to_int(std::string inString)
+{
   const int length = inString.length();
   // declaring character array
-  int* outArray = new int[400];
+  int *outArray = new int[400];
 
   for (int i = 0; i < length; i++)
     outArray[i] = inString[i];
@@ -40,14 +42,14 @@ int* copy_string_to_int(std::string inString) {
   return outArray;
 }
 
-
 // -----------------------------------------------------------------------
 // copy from c++ vector to c-native array
 // -----------------------------------------------------------------------
 
 void copy_vector_to_array(std::vector<precision_t> vector_in,
                           int64_t nElements,
-                          precision_t *array_out) {
+                          precision_t *array_out)
+{
 
   for (int64_t i = 0; i < nElements; i++)
     array_out[i] = vector_in[i];
@@ -58,16 +60,20 @@ void copy_vector_to_array(std::vector<precision_t> vector_in,
 // -----------------------------------------------------------------------
 
 void copy_cube_to_array(arma_cube cube_in,
-                        precision_t *array_out) {
+                        precision_t *array_out)
+{
 
   int64_t nX = cube_in.n_rows;
   int64_t nY = cube_in.n_cols;
   int64_t nZ = cube_in.n_slices;
   int64_t iX, iY, iZ, index;
 
-  for (iX = 0; iX < nX; iX++) {
-    for (iY = 0; iY < nY; iY++) {
-      for (iZ = 0; iZ < nZ; iZ++) {
+  for (iX = 0; iX < nX; iX++)
+  {
+    for (iY = 0; iY < nY; iY++)
+    {
+      for (iZ = 0; iZ < nZ; iZ++)
+      {
         index = iX * nY * nZ + iY * nZ + iZ;
         array_out[index] = cube_in(iX, iY, iZ);
       }
@@ -81,14 +87,17 @@ void copy_cube_to_array(arma_cube cube_in,
 
 void copy_mat_to_array(arma_mat mat_in,
                        precision_t *array_out,
-                       bool isFortran) {
+                       bool isFortran)
+{
 
   int64_t nX = mat_in.n_rows;
   int64_t nY = mat_in.n_cols;
   int64_t iX, iY, index;
 
-  for (iX = 0; iX < nX; iX++) {
-    for (iY = 0; iY < nY; iY++) {
+  for (iX = 0; iX < nX; iX++)
+  {
+    for (iY = 0; iY < nY; iY++)
+    {
       if (isFortran)
         index = iY * nX + iX;
       else
@@ -111,14 +120,17 @@ void copy_mat_to_array(arma_mat mat_in,
 
 void copy_array_to_mat(precision_t *array_in,
                        arma_mat &mat_out,
-                       bool isFortran) {
+                       bool isFortran)
+{
 
   int64_t nX = mat_out.n_rows;
   int64_t nY = mat_out.n_cols;
   int64_t iX, iY, index;
 
-  for (iX = 0; iX < nX; iX++) {
-    for (iY = 0; iY < nY; iY++) {
+  for (iX = 0; iX < nX; iX++)
+  {
+    for (iY = 0; iY < nY; iY++)
+    {
       if (isFortran)
         index = iY * nX + iX;
       else
@@ -134,28 +146,32 @@ void copy_array_to_mat(precision_t *array_in,
 // -----------------------------------------------------------------------
 // Calculate the magnitude of a arma_cube vector
 // -----------------------------------------------------------------------
-arma_cube calc_magnitude(std::vector<arma_cube> xyz) {
+arma_cube calc_magnitude(std::vector<arma_cube> xyz)
+{
   arma_cube r = sqrt(xyz[0] % xyz[0] +
                      xyz[1] % xyz[1] +
                      xyz[2] % xyz[2]);
-  return r; 
+  return r;
 }
 
 // -----------------------------------------------------------------------
-// Transform X, Y, Z to 
+// Transform X, Y, Z to
 // Longitude (llr[0]), Latitude (llr[1]), Radius (llr[2])
 // Use armidillo cubes
 // -----------------------------------------------------------------------
 
-std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz) {
+std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz)
+{
   std::vector<arma_cube> llr;
   arma_cube xy, r, lon;
   r = calc_magnitude(xyz);
   xy = sqrt(xyz[0] % xyz[0] +
             xyz[1] % xyz[1]);
-  lon = acos(xyz[0]/xy);
+  lon = acos(xyz[0] / xy);
   uvec ind_ = find(xyz[1] < 0.0);
   lon.elem(ind_) = 2 * cPI - lon.elem(ind_);
+  ind_ = find(xyz[1] > 2 * cPI);
+  lon.elem(ind_) = lon.elem(ind_) + 2 * cPI;
   llr.push_back(lon);
   llr.push_back(asin(xyz[2] / r));
   llr.push_back(r);
@@ -168,7 +184,8 @@ std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz) {
 // Use armidillo cubes
 // -----------------------------------------------------------------------
 
-std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr) {
+std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr)
+{
   std::vector<arma_cube> xyz;
   xyz.push_back(llr[2] % cos(llr[1]) % cos(llr[0]));
   xyz.push_back(llr[2] % cos(llr[1]) % sin(llr[0]));
@@ -180,7 +197,8 @@ std::vector<arma_cube> transform_llr_to_xyz_3d(std::vector<arma_cube> llr) {
 // Transform Longitude, Latitude, Radius to X, Y, Z
 // -----------------------------------------------------------------------
 
-void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3]) {
+void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3])
+{
   // llr_in[0] = longitude (in radians)
   // llr_in[1] = latitude (in radians)
   // llr_in[2] = radius
@@ -195,7 +213,8 @@ void transform_llr_to_xyz(precision_t llr_in[3], precision_t xyz_out[3]) {
 // -----------------------------------------------------------------------
 
 std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in,
-                                          precision_t angle) {
+                                          precision_t angle)
+{
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -205,7 +224,7 @@ std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in,
   precision_t ca = cos(angle);
   precision_t sa = sin(angle);
 
-  XYZ_out.push_back( X * ca + Y * sa);
+  XYZ_out.push_back(X * ca + Y * sa);
   XYZ_out.push_back(-X * sa + Y * ca);
   XYZ_out.push_back(Z);
 
@@ -218,7 +237,8 @@ std::vector<arma_cube> rotate_around_z_3d(std::vector<arma_cube> XYZ_in,
 // -----------------------------------------------------------------------
 
 std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in,
-                                          precision_t angle) {
+                                          precision_t angle)
+{
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -241,7 +261,8 @@ std::vector<arma_cube> rotate_around_y_3d(std::vector<arma_cube> XYZ_in,
 // -----------------------------------------------------------------------
 
 std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in,
-                                          precision_t angle) {
+                                          precision_t angle)
+{
 
   arma_cube X = XYZ_in[0];
   arma_cube Y = XYZ_in[1];
@@ -252,7 +273,7 @@ std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in,
   precision_t sa = sin(angle);
 
   XYZ_out.push_back(X);
-  XYZ_out.push_back( Y * ca + Z * sa);
+  XYZ_out.push_back(Y * ca + Z * sa);
   XYZ_out.push_back(-Y * sa + Z * ca);
 
   return XYZ_out;
@@ -264,12 +285,13 @@ std::vector<arma_cube> rotate_around_x_3d(std::vector<arma_cube> XYZ_in,
 // -----------------------------------------------------------------------
 
 void transform_rot_z(precision_t xyz_in[3], precision_t angle_in,
-                     precision_t xyz_out[3]) {
+                     precision_t xyz_out[3])
+{
   precision_t ca = cos(angle_in);
   precision_t sa = sin(angle_in);
-  xyz_out[0] =  xyz_in[0] * ca + xyz_in[1] * sa;
+  xyz_out[0] = xyz_in[0] * ca + xyz_in[1] * sa;
   xyz_out[1] = -xyz_in[0] * sa + xyz_in[1] * ca;
-  xyz_out[2] =  xyz_in[2];
+  xyz_out[2] = xyz_in[2];
 }
 
 // -----------------------------------------------------------------------
@@ -278,7 +300,8 @@ void transform_rot_z(precision_t xyz_in[3], precision_t angle_in,
 // -----------------------------------------------------------------------
 
 void transform_rot_y(precision_t xyz_in[3], precision_t angle_in,
-                     precision_t xyz_out[3]) {
+                     precision_t xyz_out[3])
+{
   precision_t ca = cos(angle_in);
   precision_t sa = sin(angle_in);
   xyz_out[0] = xyz_in[0] * ca - xyz_in[2] * sa;
@@ -291,7 +314,8 @@ void transform_rot_y(precision_t xyz_in[3], precision_t angle_in,
 // -----------------------------------------------------------------------
 
 void transform_float_vector_to_array(std::vector<precision_t> input,
-                                     precision_t output[3]) {
+                                     precision_t output[3])
+{
   for (int i = 0; i < 3; i++)
     output[i] = input[i];
 }
@@ -303,14 +327,15 @@ void transform_float_vector_to_array(std::vector<precision_t> input,
 void transform_vector_xyz_to_env(precision_t xyz_in[3],
                                  precision_t lon,
                                  precision_t lat,
-                                 precision_t env_out[3]) {
+                                 precision_t env_out[3])
+{
 
-  env_out[2] =   xyz_in[0] * cos(lat) * cos(lon) +
-                 xyz_in[1] * cos(lat) * sin(lon) + xyz_in[2] * sin(lat);
+  env_out[2] = xyz_in[0] * cos(lat) * cos(lon) +
+               xyz_in[1] * cos(lat) * sin(lon) + xyz_in[2] * sin(lat);
   env_out[1] = -(xyz_in[0] * sin(lat) * cos(lon) +
                  xyz_in[1] * sin(lat) * sin(lon) -
                  xyz_in[2] * cos(lat));
-  env_out[0] = - xyz_in[0] * sin(lon) +
+  env_out[0] = -xyz_in[0] * sin(lon) +
                xyz_in[1] * cos(lon);
 }
 
@@ -329,7 +354,8 @@ void transform_vector_xyz_to_env(precision_t xyz_in[3],
 
 void vector_diff(precision_t vect_in_1[3],
                  precision_t vect_in_2[3],
-                 precision_t vect_out[3]) {
+                 precision_t vect_out[3])
+{
   for (int i = 0; i < 3; i++)
     vect_out[i] = vect_in_1[i] - vect_in_2[i];
 }
@@ -340,6 +366,8 @@ void vector_diff(precision_t vect_in_1[3],
 
 void vector_add(precision_t vect_in_1[3],
                 precision_t vect_in_2[3],
-                precision_t vect_out[3]) {
-  for (int i = 0; i < 3; i++) vect_out[i] = vect_in_1[i] + vect_in_2[i];
+                precision_t vect_out[3])
+{
+  for (int i = 0; i < 3; i++)
+    vect_out[i] = vect_in_1[i] + vect_in_2[i];
 }
