@@ -72,7 +72,8 @@ bool output(const Neutrals &neutrals,
     OutputContainer DummyOutputContainer;
     std::string output_dir = "UA/output/";
     DummyOutputContainer.set_directory(output_dir);
-    DummyOutputContainer.set_version(0.1);
+    DummyOutputContainer.set_version(aether_version);
+    DummyOutputContainer.set_nGhostCells(grid.get_nGCs());
 
     for (int iOutput = 0; iOutput < nOutputs; iOutput++)
       AllOutputContainers.push_back(DummyOutputContainer);

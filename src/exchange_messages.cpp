@@ -896,6 +896,10 @@ bool exchange_one_var(Grid &grid,
                       arma_cube &var_to_pass,
                       bool doReverseSignAcrossPole) {
 
+  // This function is only needed if we do interpolation, which only happens in
+  // the horizontal directions
+  if (!grid.get_HasXdim() & !grid.get_HasYdim()) return true;
+
   std::string function = "exchange_one_var";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -1191,6 +1195,10 @@ arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid) {
 // -----------------------------------------------------------------------------
 
 bool find_ghostcell_interpolation_coefs(Grid &grid) {
+
+  // This function is only needed if we do interpolation, which only happens in
+  // the horizontal directions
+  if (!grid.get_HasXdim() & !grid.get_HasYdim()) return true;
 
   std::string function = "find_ghostcell_interpolation_coefs";
   static int iFunction = -1;
