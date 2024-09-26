@@ -412,6 +412,18 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   // lShells and baseLats are currently set for southern hemisphere then mirrored
   arma_vec Lshells(nF), baseLats(nF);
 
+  // now make sure the user used 1 or an even number for nLats
+  if (nLats % 2 != 0)
+  {
+    if (nLats == 1)
+    {
+        report.print(0, ">> Running in 1D. Experinental!!");
+      nF = 1;
+    }
+    else
+      report.error("Cannot use odd nLats with dipole grid!");
+  }
+
   blat_min_ = cos(pow(min_lat, 1.0 / LatStretch));
   blat_max_ = cos(pow(max_lat, 1.0 / LatStretch));
   del_lat = (blat_max_ - blat_min_) / (nF - nGCs * 2.0);
