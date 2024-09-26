@@ -18,20 +18,19 @@ again, 16 processors are needed, etc. However, in the altitude/radial direction,
 the number of points that are specified in the aether.json is unchanged, as it
 does not rely on the number of processors used.
 
-- [Grids in Aether](#grids-in-aether)
-  - [Grid Types Explained](#grid-types-explained)
-  - [Grid Shapes Explained](#grid-shapes-explained)
-    - [TL;DR](#tldr)
-    - [The Sphere Grid](#the-sphere-grid)
-    - [The Cubesphere Grid](#the-cubesphere-grid)
-    - [The Dipole Grid](#the-dipole-grid)
-    - [Root Nodes](#root-nodes)
-      - [Sphere](#sphere)
-      - [Cubesphere](#cubesphere)
-      - [Specifying Root Nodes](#specifying-root-nodes)
-  - [Specifying the Grid](#specifying-the-grid)
-    - [Horizontal Resolution](#horizontal-resolution)
-    - [Vertical Resolution](#vertical-resolution)
+- [Grid Types Explained](#grid-types-explained)
+- [Grid Shapes Explained](#grid-shapes-explained)
+  - [TL;DR](#tldr)
+  - [The Sphere Grid](#the-sphere-grid)
+  - [The Cubesphere Grid](#the-cubesphere-grid)
+  - [The Dipole Grid](#the-dipole-grid)
+  - [Root Nodes](#root-nodes)
+    - [Sphere](#sphere)
+    - [Cubesphere](#cubesphere)
+    - [Specifying Root Nodes](#specifying-root-nodes)
+- [Specifying the Grid](#specifying-the-grid)
+  - [Horizontal Resolution](#horizontal-resolution)
+  - [Vertical Resolution](#vertical-resolution)
 
 ## Grid Types Explained
 
@@ -115,24 +114,24 @@ bottom of the field-line. Each fieldline starts at the lowest modeled altitude
 and curves towards the equator. In the northern hemisphere, this means that the
 fieldlines curve south, while in the southern hemisphere they curve north.
 
-The latitudinal spacing is such that there is a dependence on the L-shell (i.e.,
-the equatorial radial extent of the field-line). Along the `k` dimension,
-field-lines either terminate when they reach the equatorial plane, forming half
-of a full field-line, or they terminate at the highest point specified in the
-aether.json file, forming an open field line. Any grid point with an L-shell
-less than the peak altitude will terminate in the equatorial plane, while any
-field-line that has an L-shell above the peak altitude will simply terminate.
-Field-lines that terminate in the equatorial plane have corresponding
-field-lines in the other hemisphere, so ghostcells are used to pass information
-back and forth. Field-lines that terminate at the maximum altitude have
-vertical boundary conditions set in the ghost cells.
+The latitudinal spacing is determined by the `LatStretch` factor in the settings.
+The base latitudes are then scaled in such a way that **higher** `LatStretch` leads to
+more points near the equator, 1.0 is roughly linear, and then values less than 1.0 will
+distribute more points near the poles. The exact spacing is calculated where the
+difference between successive values is proportional to:
+`cos(lat_max)^(1/LatStretch)`. Using an even number of latitudes is required.
 
-The transition from the "closed" field-line region to the "open" field-line
-region is a natural break point in the grid. The transition between these
-regions can be handled with ghostcells in the "latitudinal" direction.
-Therefore it makes the most sense to have have 4 distinct regions in "latitude":
-south open, south closed, north closed, north open. The message passing is
-treated differently at the boundaries between each of these regions.
+Along the `k` dimension, field lines terminate after a specified number of points.
+When using the Dipole grid option, there is not an option to set the maximum altitude.
+Rather, points are laid down from the pole towards the equator, stopping when the field
+line reaches the equator. Ghost cells are then used to pass information across the
+equator. The spacing of points along each field line is the same as
+[(Huba, Joyce & Fedder, 2000)](https://doi.org/10.1029/2000JA000035).
+Using an even number of points along the `k` dimension (`nAlts`) means that no points
+will lie on the magnetic equator and thus the field lines from the high latitude
+regions will not reach beyond the plasmasphere. See
+[the dipole script in edu/examples](../../edu/examples/Dipole/dipole.py) to
+experiment with the available options.
 
 ### Root Nodes
 
