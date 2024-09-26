@@ -650,6 +650,10 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
 
+  // if we are not doing anything in the lon direction, then set dlon to
+  // something reasonable:
+  if (!HasXdim) dlon = 1.0 * cDtoR;
+
   // Longitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
@@ -664,6 +668,10 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   precision_t dlat = size_up_norm(1) * cPI / (nLats - 2 * nGCs);
   precision_t lat0 = lower_left_norm(1) * cPI;
   arma_vec lat1d(nLats);
+
+  // if we are not doing anything in the lat direction, then set dlat to
+  // something reasonable:
+  if (!HasYdim) dlat = 1.0 * cDtoR;
 
   // Latitudes:
   // - Make a 1d vector
@@ -947,11 +955,11 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   if (iGridShape_ == iCubesphere_) {
     report.print(0, "Creating Cubesphere Grid");
-    create_cubesphere_connection(quadtree);
+    if (!Is0D & !Is1Dz) create_cubesphere_connection(quadtree);
     IsCubeSphereGrid = true;
   } else {
     report.print(0, "Creating Spherical Grid");
-    create_sphere_connection(quadtree);
+    if (!Is0D & !Is1Dz) create_sphere_connection(quadtree);
     IsCubeSphereGrid = false;
   }
 
