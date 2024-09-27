@@ -11,10 +11,10 @@
 // Grid class
 // ----------------------------------------------------------------------------
 
-class Grid {
+class Grid
+{
 
 public:
-
   const int iSphere_ = 1;
   const int iCubesphere_ = 2;
   const int iDipole_ = 3;
@@ -194,7 +194,7 @@ public:
   void calc_rad_unit(Planets planet);
   void calc_gravity(Planets planet);
   bool init_geo_grid(Quadtree quadtree,
-		     Planets planet);
+                     Planets planet);
   void create_sphere_connection(Quadtree quadtree);
   void create_sphere_grid(Quadtree quadtree);
   void create_cubesphere_connection(Quadtree quadtree);
@@ -207,15 +207,21 @@ public:
   void calc_cent_acc(Planets planet);
 
   // Make mag-field grid:
-  void init_mag_grid(Planets planet);
-  std::pair<precision_t, precision_t> lshell_to_qn_qs(Planets planet, precision_t Lshell, precision_t Lon, precision_t AltMin);
-  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3], precision_t XyzGeo[3]);
-  void fill_dipole_q_line(precision_t qN, precision_t qS, precision_t Gamma, int nZ, precision_t Lshell, precision_t Lon, double *q);
-  std::pair<precision_t, precision_t> p_q_to_r_theta(precision_t p, precision_t q);
-  arma_vec get_r3_spacing(precision_t lat, precision_t rMin, 
-                        precision_t rMax, int64_t nPts, int64_t nGcs);
+  std::pair<precision_t, precision_t> lshell_to_qn_qs(Planets planet,
+                                                      precision_t Lshell,
+                                                      precision_t Lon,
+                                                      precision_t AltMin);
+  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
+                              precision_t XyzGeo[3]);
+  std::pair<arma_vec, arma_vec> fill_dipole_q_line(precision_t qN_,
+                                                   precision_t qS_,
+                                                   precision_t Gamma_,
+                                                   int64_t nZ_,
+                                                   precision_t Lshell_,
+                                                   precision_t min_alt_);
+  std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q, precision_t p);
   void init_dipole_grid(Quadtree quadtree, Planets planet);
-
+  arma_vec rNorm1d, lat1dalong;
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
 
@@ -245,7 +251,8 @@ public:
   int64_t iRootYp;
   int64_t iRootYm;
 
-  struct messages_struct {
+  struct messages_struct
+  {
     int64_t iFace;
     int64_t iProc_to;
     int64_t iSizeTotal;
@@ -257,8 +264,8 @@ public:
 
     /// Variables needed for asynchronous message passing
     MPI_Request requests;
-    precision_t* buffer;
-    precision_t* rbuffer;
+    precision_t *buffer;
+    precision_t *rbuffer;
 
     // For cubesphere. these are needed for interpolation
     // when the cells go onto a different face:
@@ -271,13 +278,13 @@ public:
   bool gcInterpolationSet = false;
 
   messages_struct make_new_interconnection(int64_t iDir,
-					   int64_t nVars,
-					   int64_t iProc_to,
-					   arma_vec edge_center,
-					   bool IsPole,
-					   bool DoReverseX,
-					   bool DoReverseY,
-					   bool XbecomesY);
+                                           int64_t nVars,
+                                           int64_t iProc_to,
+                                           arma_vec edge_center,
+                                           bool IsPole,
+                                           bool DoReverseX,
+                                           bool DoReverseY,
+                                           bool XbecomesY);
 
   bool send_one_face(int64_t iFace);
   bool send_one_var_one_face(int64_t iFace);
@@ -307,8 +314,7 @@ public:
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 
- private:
-
+private:
   bool IsGeoGrid;
   bool HasBField;
   bool IsExperimental;
@@ -336,7 +342,8 @@ public:
 
   // interpolation members
   // The struct representing the range of a spherical grid
-  struct sphere_range {
+  struct sphere_range
+  {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -347,7 +354,8 @@ public:
     precision_t alt_max;
   };
   // The struct representing the range of a cubesphere grid
-  struct cubesphere_range {
+  struct cubesphere_range
+  {
     // The minimum value and delta change of row and col
     // We don't use row_max and col_max because they are not promised to be
     // greater than min, for example the right norm of suface 2 expands along
@@ -378,7 +386,8 @@ public:
   // Each point is processed by the function set_interpolation_coefs and stored
   // in the form of this structure.
   // If the point is out of the grid, in_grid = false and all other members are undefined
-  struct interp_coef_t {
+  struct interp_coef_t
+  {
     // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
     uint64_t iRow;
     uint64_t iCol;
@@ -415,7 +424,8 @@ public:
   // Initialize connections between processors
   void init_connection();
   // Used for message exchange
-  struct idx2d_t {
+  struct idx2d_t
+  {
     // Index of row and column
     int64_t ilon;
     int64_t ilat;
@@ -430,4 +440,4 @@ public:
   MPI_Comm grid_comm;
 };
 
-#endif  // INCLUDE_GRID_H_
+#endif // INCLUDE_GRID_H_
