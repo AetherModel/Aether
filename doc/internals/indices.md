@@ -1,5 +1,5 @@
 
-Supported Indices within Aether (with internal id):
+# Supported Indices within Aether (with internal id)
 
 F10.7: Solar index (f107)
 
@@ -26,4 +26,3 @@ AE: Auroral electrojet index in nT (ae)
 AU: Auroral electrojet upper index in nT (au)
 
 AL: Auroral electrojet lower index in nT (al)
-

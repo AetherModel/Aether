@@ -74,6 +74,7 @@ Neutrals::Neutrals(Grid grid,
   int iErr;
   bool didWork = true;
   species_chars tmp;
+  auroraInitialized = false;
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -358,7 +359,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
     if (DoRead)
       RestartContainer.read();
     else {
-      RestartContainer.set_version(0.1);
+      RestartContainer.set_version(aether_version);
       RestartContainer.set_time(0.0);
     }
 

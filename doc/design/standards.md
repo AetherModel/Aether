@@ -4,7 +4,8 @@ Aether Coding and Design Standards Document
 Overall Design Philosophy
 -------------------------
 
-### Files
+Files
+----
 
 Directory Structure:
 
@@ -14,7 +15,5 @@ Directory Structure:
 - Names should be short but descriptive (less than 25 characters)
 - Source term files should start with `calc`
   
-
 Variable naming
 ---------------
-

@@ -24,7 +24,7 @@ void read_collision_file(Neutrals &neutrals,
   std::string hash;
   int iErr = 0;
 
-  report.print(1, "Reading Collision File : " + input.get_collision_file());
+  report.print(0, "Reading Collision File : " + input.get_collision_file());
 
   infile_ptr.open(input.get_collision_file());
 

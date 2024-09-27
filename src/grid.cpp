@@ -9,15 +9,48 @@
 // Initialize Grid class
 // --------------------------------------------------------------------------
 
-Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
+Grid::Grid(std::string gridtype) {
 
-  nX = nX_in + nGCs_in * 2;
+  // At this point, we only need 2 ghostcells.  Hardcode this:
+  nGCs = 2;
+
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  nX = grid_input.nX + nGCs * 2;
   nLons = nX;
-  nY = nY_in + nGCs_in * 2;
+  nY = grid_input.nY + nGCs * 2;
   nLats = nY;
-  nZ = nZ_in + nGCs_in * 2;
+  nZ = grid_input.nZ + nGCs * 2;
   nAlts = nZ;
-  nGCs = nGCs_in;
+
+  // No set all of the logicals to make the flow a bit easier:
+
+  if (grid_input.nX == 1 &
+      grid_input.nY == 1 &
+      grid_input.nZ == 1)
+    Is0D = true;
+  else {
+    if (grid_input.nY == 1 & grid_input.nZ == 1) Is1Dx = true;
+    if (grid_input.nX == 1 & grid_input.nZ == 1) Is1Dy = true;
+    if (grid_input.nX == 1 & grid_input.nY == 1) Is1Dz = true;
+    if (!Is1Dx & !Is1Dy & !Is1Dz) {
+      if (grid_input.nX == 1) Is2Dyz = true;
+      if (grid_input.nY == 1) Is2Dxz = true;
+      if (grid_input.nZ == 1) Is2Dxy = true;
+      if (!Is2Dyz & !Is2Dxz & !Is2Dxy) Is3D = true;
+    }
+  }
+
+  if (grid_input.nX == 1) HasXdim = false;
+  if (grid_input.nY == 1) HasYdim = false;
+  if (grid_input.nZ == 1) HasZdim = false;
+
+  if (mklower(grid_input.shape) == "sphere") 
+    iGridShape_ = iSphere_;
+  if (mklower(grid_input.shape) == "cubesphere") 
+    iGridShape_ = iCubesphere_;
+  if (mklower(grid_input.shape) == "dipole") 
+    iGridShape_ = iDipole_;
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
@@ -100,6 +133,10 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   magLat_scgc.set_size(nX, nY, nZ);
   magAlt_scgc.set_size(nX, nY, nZ);
 
+  magPhi_scgc.set_size(nX, nY, nZ);
+  magP_scgc.set_size(nX, nY, nZ);
+  magQ_scgc.set_size(nX, nY, nZ);
+
   magX_scgc.set_size(nX, nY, nZ);
   magY_scgc.set_size(nX, nY, nZ);
   magZ_scgc.set_size(nX, nY, nZ);
@@ -146,13 +183,23 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_south_gse.push_back(tmp_col);
 
   HasBField = 0;
+  IsExperimental = false;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-
   for (int i = 0; i < 3; i++)
     cent_acc_vcgc[i].zeros();
 
 }
+
+// --------------------------------------------------------------------------
+// Set Variable Sizes
+// --------------------------------------------------------------------------
+
+void Grid::set_variable_sizes() {
+
+  return;
+}
+
 
 // --------------------------------------------------------------------------
 // write restart out files for the grid
@@ -167,8 +214,9 @@ bool Grid::write_restart(std::string dir) {
     try {
       OutputContainer RestartContainer;
       RestartContainer.set_directory(dir);
-      RestartContainer.set_version(0.1);
+      RestartContainer.set_version(aether_version);
       RestartContainer.set_time(0.0);
+      RestartContainer.set_nGhostCells(nGCs);
 
       // Output Cell Centers
       RestartContainer.set_filename("grid_" + cGrid);
@@ -255,7 +303,7 @@ bool Grid::read_restart(std::string dir) {
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_directory(dir);
-    RestartContainer.set_version(0.1);
+    RestartContainer.set_version(aether_version);
     // Cell Centers:
     RestartContainer.set_filename("grid_" + cGrid);
     RestartContainer.read();
@@ -323,8 +371,16 @@ void Grid::report_grid_boundaries() {
 // Get whether the grid is a geographic grid (or magnetic - return 0)
 // --------------------------------------------------------------------------
 
-int Grid::get_IsGeoGrid() {
+bool Grid::get_IsGeoGrid() {
   return IsGeoGrid;
+}
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a experimental (return true for experimental)
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsExperimental() {
+  return IsExperimental;
 }
 
 // --------------------------------------------------------------------------
@@ -339,8 +395,24 @@ bool Grid::get_HasBField() {
 // Set whether the grid is a geographic grid (or magnetic - set to 0)
 // --------------------------------------------------------------------------
 
-void Grid::set_IsGeoGrid(int value) {
+void Grid::set_IsGeoGrid(bool value) {
   IsGeoGrid = value;
+}
+
+// --------------------------------------------------------------------------
+// Set whether the grid is an experimental grid 
+// --------------------------------------------------------------------------
+
+void Grid::set_IsExperimental(bool value) {
+  IsExperimental = value;
+}
+
+// --------------------------------------------------------------------------
+// Set whether the grid is a dipole grid 
+// --------------------------------------------------------------------------
+
+void Grid::set_IsDipole(bool value) {
+  IsDipole = value;
 }
 
 // --------------------------------------------------------------------------
@@ -351,6 +423,38 @@ int64_t Grid::get_nPointsInGrid() {
   int64_t nPoints;
   nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
+}
+
+// --------------------------------------------------------------------------
+// Get some grid definition things
+// --------------------------------------------------------------------------
+
+bool Grid::get_HasXdim() {
+  return HasXdim;
+}
+
+bool Grid::get_HasYdim() {
+  return HasYdim;
+}
+
+bool Grid::get_HasZdim() {
+  return HasZdim;
+}
+
+bool Grid::get_Is0D() {
+  return Is0D;
+}
+
+bool Grid::get_Is1Dx() {
+  return Is1Dx;
+}
+
+bool Grid::get_Is1Dy() {
+  return Is1Dy;
+}
+
+bool Grid::get_Is1Dz() {
+  return Is1Dz;
 }
 
 // --------------------------------------------------------------------------
@@ -367,6 +471,25 @@ int64_t Grid::get_nZ() {
   return nZ;
 }
 
+int64_t Grid::get_nX(bool includeGCs) {
+  if (includeGCs)
+    return nX;
+  else
+    return nX - 2*nGCs;
+}
+int64_t Grid::get_nY(bool includeGCs) {
+  if (includeGCs)
+    return nY;
+  else
+    return nY - 2*nGCs;
+}
+int64_t Grid::get_nZ(bool includeGCs) {
+  if (includeGCs)
+    return nZ;
+  else
+    return nZ - 2*nGCs;
+}
+
 int64_t Grid::get_nLons() {
   return nLons;
 }
@@ -375,6 +498,25 @@ int64_t Grid::get_nLats() {
 }
 int64_t Grid::get_nAlts() {
   return nAlts;
+}
+
+int64_t Grid::get_nLons(bool includeGCs) {
+  if (includeGCs)
+    return nLons;
+  else
+    return nLons - 2*nGCs;
+}
+int64_t Grid::get_nLats(bool includeGCs) {
+  if (includeGCs)
+    return nLats;
+  else
+    return nLats - 2*nGCs;
+}
+int64_t Grid::get_nAlts(bool includeGCs) {
+  if (includeGCs)
+    return nAlts;
+  else
+    return nAlts - 2*nGCs;
 }
 
 int64_t Grid::get_nGCs() {

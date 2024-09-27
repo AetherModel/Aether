@@ -32,7 +32,10 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
-    Quadtree quadtree;
+    // For now, the number of processors and blocks are set by the 
+    // neutral grid shape, since this could be sphere (1 root) or
+    // cubesphere (6 root)
+    Quadtree quadtree(input.get_grid_shape("neuGrid"));
 
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
@@ -75,10 +78,7 @@ int main() {
     MPI_Barrier(aether_comm);
 
     // Initialize Geographic grid:
-    Grid gGrid(input.get_nLonsGeo(),
-               input.get_nLatsGeo(),
-               input.get_nAltsGeo(),
-               nGeoGhosts);
+    Grid gGrid("neuGrid");
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
 
@@ -94,13 +94,27 @@ int main() {
       gGrid.calc_cent_acc(planet);
 
     // Initialize Magnetic grid:
-    Grid mGrid(nMagLonsG, nMagLatsG, nMagAltsG, nMagGhosts);
+    Grid mGrid("ionGrid");
 
+    if (mGrid.iGridShape_ == mGrid.iDipole_) {
+      mGrid.set_IsDipole(true);
+      mGrid.init_dipole_grid(quadtree, planet);
+      mGrid.set_IsGeoGrid(false);
+    } else {
+      std::cout << "Making Spherical Magnetic Grid\n";
+      mGrid.set_IsDipole(false);
+      didWork = mGrid.init_geo_grid(quadtree, planet);
+      mGrid.set_IsGeoGrid(false);
+    }
     // Initialize Neutrals on geographic grid:
     Neutrals neutrals(gGrid, planet, time, indices);
+    // Initialize Neutrals on magnetic grid:
+    Neutrals neutralsMag(mGrid, planet, time, indices);
 
     // Initialize Ions on geographic grid:
     Ions ions(gGrid, planet);
+    // Initialize Ions on magnetic grid:
+    Ions ionsMag(mGrid, planet);
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -122,15 +136,20 @@ int main() {
 
     // Once EUV, neutrals, and ions have been defined, pair cross sections
     euv.pair_euv(neutrals, ions);
+    euv.pair_euv(neutralsMag, ionsMag);
 
     // Initialize Chemical scheme (including reading file):
     Chemistry chemistry(neutrals, ions);
+    Chemistry chemistryMag(neutralsMag, ionsMag);
 
     // Read in the collision frequencies and other diffusion coefficients:
     read_collision_file(neutrals, ions);
+    read_collision_file(neutralsMag, ionsMag);
 
     // Initialize ion temperatures from neutral temperature
     ions.init_ion_temperature(neutrals, gGrid);
+    // Initialize ion temperatures from neutral temperature (on Mag Grid)
+    ionsMag.init_ion_temperature(neutralsMag, mGrid);
 
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
@@ -149,9 +168,10 @@ int main() {
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
-    if (time.check_time_gate(input.get_dt_output(0)))
+    if (time.check_time_gate(input.get_dt_output(0))) {
       didWork = output(neutrals, ions, gGrid, time, planet);
-
+      didWork = output(neutralsMag, ionsMag, mGrid, time, planet);
+    }
     if (!didWork)
       throw std::string("output failed!");
 
@@ -167,7 +187,8 @@ int main() {
     // then a loop around that goes to the end time.  Then, the code can
     // be made into a library and run externally.
 
-    Logfile logfile(indices);
+    Logfile logfile(indices, 0);
+    Logfile logfileMag(indices, 1);
 
     time.set_start_time_loop();
 
@@ -179,14 +200,19 @@ int main() {
       while (time.get_current() < time.get_intermediate()) {
         didWork = advance(planet,
                           gGrid,
+                          mGrid,
                           time,
                           euv,
                           neutrals,
+                          neutralsMag,
                           ions,
+                          ionsMag,
                           chemistry,
+                          chemistryMag,
                           electrodynamics,
                           indices,
-                          logfile);
+                          logfile,
+                          logfileMag);
 
         if (!didWork)
           throw std::string("Error in advance!");

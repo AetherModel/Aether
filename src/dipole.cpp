@@ -7,6 +7,26 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------------
+// get the l-shell given latitude (in radians) and normalized radius
+// -----------------------------------------------------------------------------
+
+precision_t get_lshell(precision_t lat, precision_t rNorm) {
+  precision_t cosLat = cos(lat);
+  precision_t lshell = rNorm / (cosLat * cosLat);
+  return lshell;
+}
+
+precision_t get_lat_from_r_and_lshell(precision_t r, precision_t lshell) {
+  precision_t cosLat = sqrt(r / lshell);
+  if (cosLat < -1.0) cosLat = -1.0;
+  if (cosLat > 1.0) cosLat = 1.0;
+  precision_t lat = acos(cosLat);
+  return lat;
+}
+
+
+
+// -----------------------------------------------------------------------------
 // Calculate a tilted offset dipole field given the planetary
 // characteristics
 // -----------------------------------------------------------------------------
@@ -35,7 +55,7 @@ bfield_info_type get_dipole(precision_t lon,
   transform_llr_to_xyz(llr, xyz);
 
   precision_t dipole_center[3];
-  std::vector<float> temp_dipole_center = planet.get_dipole_center();
+  std::vector<precision_t> temp_dipole_center = planet.get_dipole_center();
   transform_float_vector_to_array(temp_dipole_center, dipole_center);
 
   precision_t delta_pos_to_center[3];

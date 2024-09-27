@@ -30,7 +30,7 @@ bool Neutrals::set_bcs(Grid grid,
 
   bool didWork = true;
 
-  if (input.get_nAltsGeo() > 1) {
+  if (grid.get_nAlts(false) > 1) {
     didWork = set_lower_bcs(grid, time, indices);
 
     if (didWork)
@@ -248,7 +248,7 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
 
   int64_t nX = grid.get_nX(), iX;
   int64_t nY = grid.get_nY(), iY;
-  int64_t nAlts = grid.get_nAlts(), iAlt;
+  int64_t nAlts = grid.get_nAlts(true), iAlt;
   int64_t nGCs = grid.get_nGCs();
   int64_t iV;
 

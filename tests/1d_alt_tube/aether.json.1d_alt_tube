@@ -7,11 +7,12 @@
         "iVerbose" : 0,
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
+	"TimingPercent" : 10.0,
         "dt" : 10.0,
         "check_for_nans" : false
     },
 
-    "EndTime" : [2011, 3, 20, 0, 10, 0],
+    "EndTime" : [2011, 3, 20, 2, 0, 0],
 
     "GeoBlockSize" : {
         "nLons" : 18,
@@ -19,22 +20,31 @@
         "nAlts" : 50},
 
     "neuGrid" : {
-	"nLonsPerBlock" : 24,
-	"nLatsPerBlock" : 22,
-	"nAlts" : 40,
+        "Shape" : "sphere",
+	"LatRange" : [10.0, 10.0],
+        "nLatsPerBlock" : 1,
+	"LonRange" : [20.0, 20.0],
+        "nLonsPerBlock" : 1,
+        "nAlts" : 50,
+	"MinAlt" : 100.0,
+	"dAltkm" : 5.0,
         "dAltScale" : 0.25,
-        "IsUniformAlt" : false},
-    
-    "ionGrid": {
-        "dAltScale": 0.2,
-        "LatStretch": 6,
-        "Shape": "dipole",
-        "nLatsPerBlock" : 22,
-        "nAlts":159,
-        "LatMax":88,
-        "MinAlt":100.0,
-        "MinApex":150.0
-        },
+	"IsUniformAlt" : false,
+        "AltFile" : ""},
+
+    "ionGrid" : {
+        "Shape" : "sphere",
+	"LatRange" : [10.0, 10.0],
+        "nLatsPerBlock" : 1,
+	"LonRange" : [20.0, 20.0],
+        "nLonsPerBlock" : 1,
+        "nAlts" : 200,
+	"MinAlt" : 80.0,
+        "MinApex" : 120.0,
+        "MaxAlt" : 1000.0,
+	"IsUniformAlt" : true,
+	"dAltkm" : 5.0,
+	"AltFile" : ""},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
@@ -45,7 +55,7 @@
     
     "Outputs" : {
         "type" : ["states", "grid"],
-        "dt" : [900, -1] },
+        "dt" : [600, -1] },
 
     "DoCalcBulkIonTemp" : false,
     

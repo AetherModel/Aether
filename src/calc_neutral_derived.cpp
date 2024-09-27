@@ -181,7 +181,7 @@ void Neutrals::calc_scale_height(Grid grid) {
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * abs(grid.gravity_mag_scgc));
   }
 
   // If we have eddy diffusion, the scale-heights need to be adjusted,
@@ -213,7 +213,7 @@ void Neutrals::calc_scale_height(Grid grid) {
     // bulk scale height, assuming well mixed atmosphere:
     arma_cube bulkH =
       cKB * temperature_scgc /
-      (mmm * abs(grid.gravity_vcgc[2]));
+      (mmm * abs(grid.gravity_mag_scgc));
 
     // percentage will go from 1 = use bulk scale, to 0 = use individual
     arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
@@ -339,7 +339,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   precision_t dt;
 
-  if (input.get_is_cubesphere())
+  if (grid.iGridShape_ == grid.iCubesphere_)
     dt = calc_dt_cubesphere(grid);
   else {
     int iDir;
@@ -353,7 +353,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
     arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
     dta(1) = dty.min();
 
-    if (input.get_nAltsGeo() > 1) {
+    if (grid.get_nAlts(false) > 1) {
       arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
       dta(2) = dtz.min();
     } else
@@ -422,7 +422,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   dta(0) = dtx.min();
   dta(1) = dty.min();
 
-  if (input.get_nAltsGeo() > 1) {
+  if (grid.get_nAlts(false) > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
   } else
@@ -505,7 +505,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * grid.gravity_mag_scgc);
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);

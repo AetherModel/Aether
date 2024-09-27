@@ -650,6 +650,10 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
 
+  // if we are not doing anything in the lon direction, then set dlon to
+  // something reasonable:
+  if (!HasXdim) dlon = 1.0 * cDtoR;
+
   // Longitudes:
   // - Make a 1d vector
   // - copy it into the 3d cube
@@ -664,6 +668,10 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   precision_t dlat = size_up_norm(1) * cPI / (nLats - 2 * nGCs);
   precision_t lat0 = lower_left_norm(1) * cPI;
   arma_vec lat1d(nLats);
+
+  // if we are not doing anything in the lat direction, then set dlat to
+  // something reasonable:
+  if (!HasYdim) dlat = 1.0 * cDtoR;
 
   // Latitudes:
   // - Make a 1d vector
@@ -748,11 +756,12 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs("neuGrid");
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
-      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.dalt;
+      // Convert km to m:
+      alt1d(iAlt) = (grid_input.alt_min + (iAlt - nGeoGhosts) * grid_input.daltKm) * cKMtoM;
   } else {
 
     json neutrals = planet.get_neutrals();
@@ -775,16 +784,17 @@ void Grid::create_altitudes(Planets planet) {
 
     report.print(1, "Making non-uniform altitude grid!");
 
-    if (grid_input.dalt > 0.5) {
+    if (grid_input.daltScale > 0.5) {
       if (report.test_verbose(0)) {
         std::cout << "-----------------------------------------------------\n";
-        std::cout << "WARNING: dAlt is set to > 0.5, with non-uniform grid!\n";
-        std::cout << "   dAlt = " << grid_input.dalt << "\n";
+        std::cout << "WARNING: daltScale is set to > 0.5, with non-uniform grid!\n";
+        std::cout << "   daltScale = " << grid_input.daltScale << "\n";
         std::cout << "-----------------------------------------------------\n";
       }
     }
 
-    double alt = grid_input.alt_min;
+    // Convert to km
+    double alt = grid_input.alt_min * cKMtoM;
     radius = planet.get_radius(0.0) + alt;
     precision_t mu = planet.get_mu();
     gravity = mu / (radius * radius);
@@ -806,13 +816,13 @@ void Grid::create_altitudes(Planets planet) {
     mass = mass / density;
     scale_height = cKB * temperature / (mass * gravity);
 
-    precision_t dalt = scale_height * grid_input.dalt;
+    precision_t dalt = scale_height * grid_input.daltScale;
     precision_t dAltLimiter = dalt * 10.0;
 
     // Fills bottom ghost cells with constant dAlt
     // Fills bottom cell with actual desired bottom altitude
     for (iAlt = 0; iAlt <= nGeoGhosts; iAlt++) {
-      alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * dalt;
+      alt1d(iAlt) = grid_input.alt_min * cKMtoM + (iAlt - nGeoGhosts) * dalt;
 
       if (report.test_verbose(1))
         std::cout << "iAlt : " << iAlt
@@ -839,7 +849,7 @@ void Grid::create_altitudes(Planets planet) {
       mass = mass / density;
       scale_height = cKB * temperature / (mass * gravity);
 
-      dalt = scale_height * grid_input.dalt;
+      dalt = scale_height * grid_input.daltScale;
 
       if (dalt > dAltLimiter)
         dalt = dAltLimiter;
@@ -943,18 +953,21 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   IsGeoGrid = 1;
 
-  IsCubeSphereGrid = input.get_is_cubesphere();
+  if (iGridShape_ == iCubesphere_) {
+    report.print(0, "Creating Cubesphere Grid");
+    if (!Is0D & !Is1Dz) create_cubesphere_connection(quadtree);
+    IsCubeSphereGrid = true;
+  } else {
+    report.print(0, "Creating Spherical Grid");
+    if (!Is0D & !Is1Dz) create_sphere_connection(quadtree);
+    IsCubeSphereGrid = false;
+  }
 
-  if (input.get_is_cubesphere())
-    create_cubesphere_connection(quadtree);
-  else
-    create_sphere_connection(quadtree);
-
-  if (input.get_do_restart() & !input.get_is_cubesphere()) {
+  if (input.get_do_restart() & iGridShape_ != iCubesphere_) {
     report.print(1, "Restarting! Reading grid files!");
     DidWork = read_restart(input.get_restartin_dir());
   } else {
-    if (input.get_is_cubesphere()) {
+    if (iGridShape_ == iCubesphere_) {
       if (input.get_do_restart())
         report.print(0, "Not restarting the grid - it is too complicated!");
 
@@ -972,11 +985,35 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate the radius (for spherical or non-spherical)
   fill_grid_radius(planet);
-
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
-  if (input.get_is_cubesphere())
+  if (iGridShape_ == iCubesphere_)
     correct_xy_grid(planet);
+
+  if (IsMagGrid) {
+    report.print(0, "--> Grid is Magnetic, so rotating");
+    std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
+    llr.push_back(geoLon_scgc);
+    llr.push_back(geoLat_scgc);
+    llr.push_back(radius_scgc);
+    xyz = transform_llr_to_xyz_3d(llr);
+
+    precision_t magnetic_pole_rotation = 265.0 * cDtoR;
+    precision_t magnetic_pole_tilt = 10.0 * cDtoR;
+
+    // Reverse our dipole rotations:
+    xyzRot1 = rotate_around_y_3d(xyz, magnetic_pole_tilt);
+    xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
+
+    // transform back to lon, lat, radius:
+    llr = transform_xyz_to_llr_3d(xyzRot2);
+
+    geoLon_scgc = llr[0];
+    geoLat_scgc = llr[1];
+    geoAlt_scgc = llr[2] - planet.get_radius(0.0);
+
+    IsGeoGrid = false;
+  }
 
   // Calculate grid spacing
   calc_grid_spacing(planet);
