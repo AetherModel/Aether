@@ -170,8 +170,6 @@ std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz)
   lon = acos(xyz[0] / xy);
   uvec ind_ = find(xyz[1] < 0.0);
   lon.elem(ind_) = 2 * cPI - lon.elem(ind_);
-  ind_ = find(xyz[1] > 2 * cPI);
-  lon.elem(ind_) = lon.elem(ind_) + 2 * cPI;
   llr.push_back(lon);
   llr.push_back(asin(xyz[2] / r));
   llr.push_back(r);
