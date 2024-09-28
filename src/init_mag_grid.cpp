@@ -408,7 +408,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   // - nF=nLats/2 (so nLarts MUST be even)
   // - nZ=nAlts
   // - nZby2 = nZ/2
-  int64_t nF = nLats / 2, nZ = nAlts, nZby2 = nAlts / 2;
+  int64_t nF = nLats / 2, nZ = nAlts*2, nZby2 = nAlts;
   // lShells and baseLats are currently set for southern hemisphere then mirrored
   arma_vec Lshells(nF), baseLats(nF);
 
@@ -462,7 +462,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   // temp holding of results from q,p -> r,theta conversion:
   std::pair<precision_t, precision_t> r_theta;
 
-  for (int i = 0; i < nZ; i++)
+  for (int i = 0; i < nAlts; i++)
     exp_q_dist(i) = Gamma + (1 - Gamma) * exp(-pow(((i - nZby2) / (nZ / 10.0)), 2.0));
 
   for (int i_nF = 0; i_nF < nF; i_nF++)
@@ -474,7 +474,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
     // calculate const. stride similar to sami2/3 (huba & joyce 2000)
     // ==  >>   sinh(gamma*qi)/sinh(gamma*q_S)  <<  ==
     // inlo loop thru southern hemisphere, mirror in  north.
-    for (int i_nZ = 0; i_nZ < nZ; i_nZ++)
+    for (int i_nZ = 0; i_nZ < nAlts; i_nZ++)
     {
       // Should be using lshell_to_qn_qs, but it wasn't working right.
       // This does the same, but won't work for offset dipoles.
