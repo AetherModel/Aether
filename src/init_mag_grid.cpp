@@ -7,306 +7,6 @@
 #include "../include/aether.h"
 
 // ----------------------------------------------------------------------
-// Routine to find q_N and q_S for a given L
-//
-// ----------------------------------------------------------------------
-std::pair<precision_t, precision_t> Grid::lshell_to_qn_qs(Planets planet,
-                                                          precision_t Lshell,
-                                                          precision_t Lon,
-                                                          precision_t AltMin)
-{
-  std::string function = "Grid::lshell_to_qn_qs";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t qN, qS;
-
-  precision_t XyzDipoleLeft[3], XyzDipoleMid[3], XyzDipoleRight[3];
-  precision_t XyzGeoLeft[3], XyzGeoMid[3], XyzGeoRight[3];
-  precision_t rGeoLeft, rGeoMid, rGeoRight;
-  precision_t LlrDipoleLeft[3], LlrDipoleMid[3], LlrDipoleRight[3];
-  precision_t ThetaTilt, PhiTilt;
-  precision_t Lat, Radius, rMin;
-  // Named dimension constants
-  static int Lon_ = 0, Lat_ = 1, Radius_ = 2;
-
-  // bound vars for bisection search
-  precision_t ThetaRight, ThetaLeft, ThetaMid;
-  precision_t rDipoleLeft, rDipoleMid, rDipoleRight;
-
-  // Stopping condition for bisection search
-  precision_t DeltaTheta;
-  precision_t Tolerance = 1e-4;
-
-  // status vars for bisection search
-  int iStatusLeft, iStatusRight, iStatusMid;
-  // note we normalize Lshell by equatorial radius
-  precision_t RadiusEq = planet.get_radius(0.0);
-
-  // loop for qN and qS
-  for (int iQ = 0; iQ < 2; iQ++)
-  {
-
-    if (iQ == 0)
-    {
-      // set initial left, mid, right bounds for bisection search for qN
-      ThetaRight = 0.5 * cPI;
-      ThetaLeft = 1.0 * cDtoR;
-      ThetaMid = 0.5 * (ThetaRight + ThetaLeft);
-    }
-    else
-    {
-      // set initial left, mid, right bounds for bisection search for qS
-      ThetaLeft = 0.5 * cPI;
-      ThetaRight = 179.0 * cDtoR;
-      ThetaMid = 0.5 * (ThetaRight + ThetaLeft);
-    }
-
-    // Initial stopping condition stopping condition
-    DeltaTheta = abs(ThetaLeft - ThetaRight);
-
-    // start bisection search for qN
-    while (DeltaTheta > Tolerance)
-    {
-
-      // find rDipole that cooresponds to these Left,Mid,Right
-      // ThetaDipole values
-      rDipoleLeft = Lshell * pow(sin(ThetaLeft), 2.0);
-      rDipoleMid = Lshell * pow(sin(ThetaMid), 2.0);
-      rDipoleRight = Lshell * pow(sin(ThetaRight), 2.0);
-
-      // Compute XyzDipole for left, mid,right states
-      LlrDipoleLeft[Lon_] = Lon;
-      LlrDipoleLeft[Lat_] = 0.5 * cPI - ThetaLeft;
-      LlrDipoleLeft[Radius_] = rDipoleLeft;
-      transform_llr_to_xyz(LlrDipoleLeft, XyzDipoleLeft);
-
-      LlrDipoleMid[Lon_] = Lon;
-      LlrDipoleMid[Lat_] = 0.5 * cPI - ThetaMid;
-      LlrDipoleMid[Radius_] = rDipoleMid;
-      transform_llr_to_xyz(LlrDipoleMid, XyzDipoleMid);
-
-      LlrDipoleRight[Lon_] = Lon;
-      LlrDipoleRight[Lat_] = 0.5 * cPI - ThetaRight;
-      LlrDipoleRight[Radius_] = rDipoleRight;
-      transform_llr_to_xyz(LlrDipoleRight, XyzDipoleRight);
-
-      // Transform to XyzGeo and unnormalize
-      convert_dipole_geo_xyz(planet, XyzDipoleLeft, XyzGeoLeft);
-      convert_dipole_geo_xyz(planet, XyzDipoleMid, XyzGeoMid);
-      convert_dipole_geo_xyz(planet, XyzDipoleRight, XyzGeoRight);
-
-      // cout << "XyzGeoLeft[0]" << XyzGeoLeft[0] << endl;
-      // cout << "XyzGeoLeft[1]" << XyzGeoLeft[1] << endl;
-      // cout << "XyzGeoLeft[2]" << XyzGeoLeft[2] << endl;
-
-      XyzGeoLeft[0] = XyzGeoLeft[0] * RadiusEq;
-      XyzGeoLeft[1] = XyzGeoLeft[1] * RadiusEq;
-      XyzGeoLeft[2] = XyzGeoLeft[2] * RadiusEq;
-
-      // abort;
-
-      XyzGeoMid[0] = XyzGeoMid[0] * RadiusEq;
-      XyzGeoMid[1] = XyzGeoMid[1] * RadiusEq;
-      XyzGeoMid[2] = XyzGeoMid[2] * RadiusEq;
-
-      XyzGeoRight[0] = XyzGeoRight[0] * RadiusEq;
-      XyzGeoRight[1] = XyzGeoRight[1] * RadiusEq;
-      XyzGeoRight[2] = XyzGeoRight[2] * RadiusEq;
-
-      // Compute radius in geo coordinate for comparison to rmin
-      rGeoLeft = sqrt(pow(XyzGeoLeft[0], 2) + pow(XyzGeoLeft[1], 2) + pow(XyzGeoLeft[2], 2));
-      rGeoMid = sqrt(pow(XyzGeoMid[0], 2) + pow(XyzGeoMid[1], 2) + pow(XyzGeoMid[2], 2));
-      rGeoRight = sqrt(pow(XyzGeoRight[0], 2) + pow(XyzGeoRight[1], 2) + pow(XyzGeoRight[2], 2));
-
-      // get rmin for given latitude. Radius is lat dependent in general.
-      // also find status in (0) or out (1) of rMin
-      Lat = 0.5 * cPI - acos(XyzGeoLeft[2] / rGeoLeft);
-      Radius = planet.get_radius(Lat);
-      rMin = Radius + AltMin;
-      if (rGeoLeft < rMin)
-      {
-        iStatusLeft = 0;
-      }
-      else
-      {
-        iStatusLeft = 1;
-      }
-
-      Lat = 0.5 * cPI - acos(XyzGeoMid[2] / rGeoMid);
-      Radius = planet.get_radius(Lat);
-      rMin = Radius + AltMin;
-      if (rGeoMid < rMin)
-      {
-        iStatusMid = 0;
-      }
-      else
-      {
-        iStatusMid = 1;
-      }
-
-      Lat = 0.5 * cPI - acos(XyzGeoRight[2] / rGeoRight);
-      Radius = planet.get_radius(Lat);
-      rMin = Radius + AltMin;
-      if (rGeoRight < rMin)
-      {
-        iStatusRight = 0;
-      }
-      else
-      {
-        iStatusRight = 1;
-      }
-
-      // Use status values to update left, right and mid values of theta
-      if (iStatusMid == 0)
-      {
-        if (iStatusRight == 1)
-        {
-          // Mid becomes left and right stays right
-          ThetaLeft = ThetaMid;
-          ThetaMid = 0.5 * (ThetaLeft + ThetaRight);
-        }
-        else
-        {
-          // Mid becomes right and left stays left
-          ThetaRight = ThetaMid;
-          ThetaMid = 0.5 * (ThetaLeft + ThetaRight);
-        }
-      }
-      else
-      {
-        if (iStatusRight == 0)
-        {
-          // Mid becomes left and right stays right
-          ThetaLeft = ThetaMid;
-          ThetaMid = 0.5 * (ThetaLeft + ThetaRight);
-        }
-        else
-        {
-          // Mid becomes right and left stays left
-          ThetaRight = ThetaMid;
-          ThetaMid = 0.5 * (ThetaLeft + ThetaRight);
-        }
-      }
-      // Update stopping condition
-      DeltaTheta = abs(ThetaLeft - ThetaRight);
-    }
-
-    // set the q value
-    rDipoleMid = Lshell * pow(sin(ThetaMid), 2.0);
-    if (iQ == 0)
-    {
-      qN = pow(rDipoleMid, -2.0) * cos(ThetaMid);
-      // cout << "!!! For L = " << Lshell << endl;
-      // cout << "!!! qN = " << qN << endl;
-      // cout << "!!! ThetaMid = " << ThetaMid*cRtoD << endl;
-    }
-    else
-    {
-      qS = pow(rDipoleMid, -2.0) * cos(ThetaMid);
-      // cout << "!!! qS = " << qS << endl;
-    }
-  }
-
-  report.exit(function);
-  return {qN, qS};
-}
-
-// -----------------------------------------------------------------------
-// Convert XyzDipole to XyzGeo
-//
-// -----------------------------------------------------------------------
-
-void Grid::convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3], precision_t XyzGeo[3])
-{
-  precision_t XyzRemoveShift[3];
-  precision_t XyzRemoveTilt[3];
-  precision_t XyzRemoveRot[3];
-
-  // get planetary parameters, use radius at equator for Lshell reference
-  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
-  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
-  precision_t radius = planet.get_radius(0.0);
-
-  // get the dipole shift, but normalize it to equatorial radius
-  precision_t dipole_center[3];
-  std::vector<precision_t> temp_dipole_center = planet.get_dipole_center();
-  transform_float_vector_to_array(temp_dipole_center, dipole_center);
-
-  dipole_center[0] = dipole_center[0] / radius;
-  dipole_center[1] = dipole_center[1] / radius;
-  dipole_center[2] = dipole_center[2] / radius;
-
-  // Remove Tilt
-  transform_rot_y(XyzDipole, magnetic_pole_tilt, XyzRemoveTilt);
-
-  // Remove Rot
-  transform_rot_z(XyzRemoveTilt, magnetic_pole_rotation, XyzRemoveRot);
-
-  // Remove Shift
-  vector_add(XyzRemoveRot, dipole_center, XyzGeo);
-
-  //  cout << "XyzDipole[0]" << XyzDipole[0] << endl;
-  //  cout << "XyzDipole[1]" << XyzDipole[1] << endl;
-  //  cout << "XyzDipole[2]" << XyzDipole[2] << endl;
-  //
-  //  cout << "XyzGeo[0]" << XyzGeo[0] << endl;
-  //  cout << "XyzGeo[1]" << XyzGeo[1] << endl;
-  //  cout << "XyzGeo[2]" << XyzGeo[2] << endl;
-}
-
-// ----------------------------------------------------------------------
-// Routine to fill in the q values for a particular L and lon
-// using equations 7-8 from Huba et al 2000
-// ----------------------------------------------------------------------
-std::pair<arma_vec, arma_vec> Grid::fill_dipole_q_line(precision_t qN_,
-                                                       precision_t qS_,
-                                                       precision_t Gamma_,
-                                                       int64_t nZ_,
-                                                       precision_t lShell_,
-                                                       precision_t min_alt_)
-
-{
-
-  std::string function = "Grid::fill_dipole_q_line";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t r, theta;
-  precision_t Dx;
-  precision_t Llr[3], Xyz[3], q[nZ_];
-  // precision_t Radius, rMin, alt_min, , delqp, qp0, fb0, ft;
-  precision_t delqp, qp0, fb0, ft, delq;
-  int64_t nZby2 = nZ_ / 2;
-  arma_vec exp_q_dist(nZ_), r_vals(nZ_), lat_vals(nZ_);
-
-  for (int i = 0; i < nZ_; i++)
-  {
-    exp_q_dist(i) = Gamma_ + (1 - Gamma_) * exp(-pow(((i - nZby2) / (nZ_ / 10.0)), 2.0));
-  }
-  for (int i_nZ = 0; i_nZ < nZ_; i_nZ++)
-  {
-    delqp = (qN_ - qS_) / nZ_;
-    qp0 = qS_ + i_nZ * (delqp);
-    delqp = min_alt_ * delqp;
-    fb0 = (1 - exp_q_dist(i_nZ)) / exp(-qS_ / delqp - 1);
-    ft = exp_q_dist(i_nZ) - fb0 + fb0 * exp(-(qp0 - qS_) / delqp);
-
-    delq = qp0 - qS_;
-    q[i_nZ] = qS_ + ft * delq;
-
-    auto rtheta = qp_to_r_theta(-q[i_nZ], lShell_);
-    r_vals[i_nZ] = rtheta.first;
-    // r_vals[i_nZ + nZby2] = rtheta.first;
-    lat_vals[i_nZ] = rtheta.second;
-    // lat_vals[i_nZ + nZby2] = -rtheta.second;
-  }
-
-  report.exit(function);
-  return {r_vals, lat_vals};
-}
-
-// ----------------------------------------------------------------------
 // Routine to convert p and q to r and theta. Can be solved iteratively,
 // or with approach from (Swisdak, 2006), who solved it analytically:
 //  https://arxiv.org/pdf/physics/0606044
@@ -359,6 +59,9 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
 
+  // Number of ghost cells:
+  int64_t nGCs = get_nGCs();
+
   // Get inputs
   report.print(3, "Setting inputs in dipole grid");
   precision_t min_apex = grid_input.min_apex * cKMtoM;
@@ -385,6 +88,11 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   precision_t dlon = size_right_norm(0) * cPI / (nLons - 2 * nGCs);
   precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
+
+  // Quick 1D check for longitudes:
+  // Same as geo_grid here...
+  if (!HasXdim) dlon = 1.0 * cDtoR;
+
   for (iLon = 0; iLon < nLons; iLon++)
     lon1d(iLon) = lon0 + (iLon - nGCs + 0.5) * dlon;
 
@@ -396,7 +104,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
 
   geoLon_scgc = magLon_scgc;
 
-  // LATITUDES
+  // LATITUDES:
 
   // min_latitude calculated from min_lshell (min_apex input)
   precision_t min_lat = get_lat_from_r_and_lshell(1.0, min_lshell);
@@ -405,38 +113,44 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   // some intermediates:
   precision_t del_lat, blat_min_, blat_max_, tmp_lat;
   // Integers for field-line loops:
-  // - nF=nLats/2 (so nLarts MUST be even)
-  // - nZ=nAlts
-  // - nZby2 = nZ/2
-  int64_t nF = nLats / 2, nZ = nAlts, nZby2 = nAlts / 2;
+  // - nF=nLats/2 (so nLats MUST be even)
+  // - nZ=nAlts*2 - (we fill up HALF field lines)
+  // - nZby2 = nAlts
+  // -> Plus, experinemtal support for altitude ghost cells...
+  int64_t nF = (nLats) / 2 , nZ = (nAlts) * 2, nZby2 = (nAlts);
   // lShells and baseLats are currently set for southern hemisphere then mirrored
   arma_vec Lshells(nF), baseLats(nF);
+
+  blat_min_ = cos(pow(min_lat, 1.0 / LatStretch));
+  blat_max_ = cos(pow(max_lat, 1.0 / LatStretch));
+  del_lat = (blat_max_ - blat_min_) / (nF - nGCs * 2.0);
 
   // now make sure the user used 1 or an even number for nLats
   if (nLats % 2 != 0)
   {
-    if (nLats == 1)
+    if (!HasYdim) 
     {
-        report.print(0, ">> Running in 1D. Experinental!!");
+      del_lat = 1.0 * cDtoR;
+      report.print(0, "Running in single latitude dimension. Experinental!!");
       nF = 1;
     }
     else
       report.error("Cannot use odd nLats with dipole grid!");
   }
 
-  blat_min_ = cos(pow(min_lat, 1.0 / LatStretch));
-  blat_max_ = cos(pow(max_lat, 1.0 / LatStretch));
-  del_lat = (blat_max_ - blat_min_) / (nF - nGCs * 2.0);
-
+  // loop over all cells - everything including the ghost cells
+  // -> This means some points will go over the pole (baseLat > +- 90 degrees)
+  //    They're taken care of in the conversion to geographic coordinates.
   for (int i = 0; i < nF; i++)
   {
     // first put down "linear" spacing
     tmp_lat = blat_min_ + del_lat * (i - nGCs + 0.5);
-    // then scale it according to the exponent & acos it
+    // then scale it according to the exponent & acos
     tmp_lat = pow(acos(tmp_lat), LatStretch);
     // place values in array backwards, South pole -> equator.
     baseLats(nF - i - 1) = -tmp_lat;
   }
+  report.print(3, "Done setting base latitudes for dipole grid.");
 
   // Find L-Shell for each baseLat
   // using L=R/sin2(theta), where theta is from north pole
@@ -462,7 +176,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   // temp holding of results from q,p -> r,theta conversion:
   std::pair<precision_t, precision_t> r_theta;
 
-  for (int i = 0; i < nZ; i++)
+  for (int i = 0; i < nAlts; i++)
     exp_q_dist(i) = Gamma + (1 - Gamma) * exp(-pow(((i - nZby2) / (nZ / 10.0)), 2.0));
 
   for (int i_nF = 0; i_nF < nF; i_nF++)
@@ -474,10 +188,9 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
     // calculate const. stride similar to sami2/3 (huba & joyce 2000)
     // ==  >>   sinh(gamma*qi)/sinh(gamma*q_S)  <<  ==
     // inlo loop thru southern hemisphere, mirror in  north.
-    for (int i_nZ = 0; i_nZ < nZ; i_nZ++)
+    for (int i_nZ = 0; i_nZ < nAlts; i_nZ++)
     {
-      // Should be using lshell_to_qn_qs, but it wasn't working right.
-      // This does the same, but won't work for offset dipoles.
+      // This won't work for offset dipoles.
       // Doesn't have any lat/lon dependence.
       delqp = (q_N - q_S) / (nZ + 1);
       qp0 = q_S + i_nZ * (delqp);
@@ -494,6 +207,7 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
       bLats(i_nF, i_nZ) = r_theta.second;
     }
   }
+  report.print(3, "Done generating q-spacing for dipole grid.");
 
   arma_vec rNorm1d(nAlts), lat1dAlong(nAlts);
   arma_cube r3d(nLons, nLats, nAlts);
@@ -518,11 +232,13 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
       magLat_scgc.tube(iLon, nLats - iLat - 1) = -lat1dAlong;
     }
   }
+  report.print(3, "Done generating symmetric latitude & altitude spacing in dipole.");
 
   geoLat_scgc = magLat_scgc;
   magAlt_scgc = r3d - planetRadius;
   geoAlt_scgc = magAlt_scgc;
 
+  report.print(4, "Beginning coordinate transformations of the dipole grid.");
   // Calculate the radius, of planet
   fill_grid_radius(planet);
 
@@ -556,6 +272,8 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
       gravity_vcgc[1] % gravity_vcgc[1] +
       gravity_vcgc[2] % gravity_vcgc[2]);
 
+  report.print(4, "Done gravity calculations for the dipole grid.");
+
   std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
   llr.push_back(magLon_scgc);
   llr.push_back(magLat_scgc);
@@ -575,11 +293,14 @@ void Grid::init_dipole_grid(Quadtree quadtree, Planets planet)
   geoLon_scgc = llr[0];
   geoLat_scgc = llr[1];
   geoAlt_scgc = llr[2] - planetRadius;
+  report.print(4, "Done dipole -> geographic transformations for the dipole grid.");
 
   calc_alt_grid_spacing();
+  report.print(4, "Done altitude spacing for the dipole grid.");
 
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
+  report.print(4, "Done filling dipole grid with b-field!");
 
   report.exit(function);
   return;
