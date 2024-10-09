@@ -83,6 +83,11 @@ public:
   double get_current();
 
   /**************************************************************
+     \brief Sets the start time at the start of the time loop
+   **/
+  void set_start_time_loop();
+
+  /**************************************************************
      \brief Returns the end time in seconds since ref date
    **/
   double get_end();
@@ -95,6 +100,13 @@ public:
      \param useSeconds if false, replace seconds with 0
    **/
   std::string get_YMD_HMS(bool useSeconds);
+
+  /**************************************************************
+     \brief Returns the current time as a string (year, month...)
+
+     Returns the current time as a string of format YYYYMMDD_HHMM00
+   **/
+  std::string get_YMD_HM0();
 
   /**************************************************************
      \brief Returns the intermediate time in seconds since ref date
@@ -229,13 +241,16 @@ private:
   std::string sYMD_HMS;
 
   /// represented as YYYYMMDD_HHMM00
-  std::string sYMD_HM0;  
+  std::string sYMD_HM0;
 
   // -------------------------------------------------------------
   // Keeping track of walltime for the run:
 
   /// This is the system time at the start of the simulation
   time_t sys_time_start;
+
+  /// This is the system time at the start of time loop
+  time_t sys_time_start_time_loop;
 
   /// This is the current system time of the simulation
   time_t sys_time_current;

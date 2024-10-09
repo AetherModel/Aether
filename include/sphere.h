@@ -8,7 +8,7 @@
 #include <memory>
 
 /*************************************************
- * \brief A namespace with all quad sphere grid logic.
+ * \brief A namespace with all (1-root) sphere grid logic.
  *************************************************/
 namespace Sphere {
 
@@ -28,5 +28,44 @@ namespace Sphere {
   };
 
 };
+
+/*************************************************
+ * \brief A namespace with all (6-root) sphere grid logic.
+ *************************************************/
+namespace Sphere6 {
+
+/// The normalized origins of each face of the cube (i.e. corner)
+static const arma_mat ORIGINS = {
+    {    0.0, -0.5, 0.0},
+    {2.0/3.0, -0.5, 0.0},
+    {4.0/3.0, -0.5, 0.0},
+    {    0.0, 0.0, 0.0},
+    {2.0/3.0, 0.0, 0.0},
+    {3.0/3.0, 0.0, 0.0}
+};
+
+/// Normalized right steps in cube
+static const arma_mat RIGHTS = {
+		{ 2.0/3.0,  0.0, 0.0},
+		{ 2.0/3.0,  0.0, 0.0},
+		{ 2.0/3.0,  0.0, 0.0},
+		{ 2.0/3.0,  0.0, 0.0},
+		{ 2.0/3.0,  0.0, 0.0},
+		{ 2.0/3.0,  0.0, 0.0}
+};
+
+/// Normalized right steps in cube
+static const arma_mat UPS = {
+		{ 0.0, 0.5, 0.0},
+		{ 0.0, 0.5, 0.0},
+		{ 0.0, 0.5, 0.0},
+		{ 0.0, 0.5, 0.0},
+		{ 0.0, 0.5, 0.0},
+		{ 0.0, 0.5, 0.0}
+};
+
+} // CubeSphere::
+
+
 
 #endif  // INCLUDE_SPHERE_H_

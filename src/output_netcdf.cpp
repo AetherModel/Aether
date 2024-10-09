@@ -65,10 +65,10 @@ void output_netcdf_3d(std::vector<size_t> count_start,
 // read contents of a netcdf file into an output container
 // -----------------------------------------------------------------------------
 
-int OutputContainer::read_container_netcdf() {
+bool OutputContainer::read_container_netcdf() {
 
-  int iErr = 0;
-  std::string whole_filename = directory + "/" + filename + ".nc";
+  bool didWork = true;
+  std::string whole_filename = directory  + filename + ".nc";
   std::string UNITS = "units";
 
   try {
@@ -148,10 +148,10 @@ int OutputContainer::read_container_netcdf() {
   } catch (...) {
     std::cout << "Error reading netcdf file : "
               << whole_filename << "\n";
-    iErr = 1;
+    didWork = false;
   }
 
-  return iErr;
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------
@@ -161,17 +161,17 @@ int OutputContainer::read_container_netcdf() {
 bool OutputContainer::write_container_netcdf() {
 
   bool didWork = true;
-  std::string whole_filename = directory + "/" + filename + ".nc";
+  std::string whole_filename = directory+ filename + ".nc";
   std::string UNITS = "units";
   std::string LONG_NAME = "long_name";
 
   try {
     NcFile ncdf_file(whole_filename, NcFile::replace);
     // Add dimensions:
-    NcDim xDim = ncdf_file.addDim("x", elements[0].value.n_rows);
-    NcDim yDim = ncdf_file.addDim("y", elements[0].value.n_cols);
-    NcDim zDim = ncdf_file.addDim("z", elements[0].value.n_slices);
-    NcDim tDim = ncdf_file.addDim("time", 1);
+    NcDim xDim = ncdf_file.addDim("n_x", elements[0].value.n_rows);
+    NcDim yDim = ncdf_file.addDim("n_y", elements[0].value.n_cols);
+    NcDim zDim = ncdf_file.addDim("n_z", elements[0].value.n_slices);
+    NcDim tDim = ncdf_file.addDim("n_time", 1);
 
     // Define the netCDF variables for the 3D data.
     // First create a vector of dimensions:
@@ -219,10 +219,10 @@ bool OutputContainer::write_container_netcdf() {
 
  -------------------------------------------------------------------- */
 
-int OutputContainer::read_container_netcdf() {
-  int iErr = 1;
+bool OutputContainer::read_container_netcdf() {
+  bool didWork = false;
   std::cout << "read_container_netcdf is not working!\n";
-  return iErr;
+  return didWork;
 }
 
 bool OutputContainer::write_container_netcdf() {

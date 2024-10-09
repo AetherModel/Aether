@@ -102,12 +102,12 @@ public:
   /**********************************************************************
      \brief Initializes the quadtree
    **/
-  Quadtree();
+  Quadtree(std::string gridtype);
 
   /**********************************************************************
      \brief Builds the quadtree
    **/
-  void build(); 
+  void build(std::string gridtype); 
 
   /**********************************************************************
      \brief Makes a new node on the quadtree, recursively

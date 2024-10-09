@@ -1,10 +1,22 @@
+// Copyright 2024, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
+// Need to allow more types of grids.  We have two axes of grids, really:
+//   - Neutral 
+//   - Ion
+// Within each of those, we can have several types of grids:
+//   - Cubesphere, this has 6 root nodes (2 polar, 4 equatorial)
+//   - Sphere, this has 1 root node (whole grid)
+//   - Sphere6, this is a spherical grid, but has 6 root nodes (2 lats, 3 lons)
+//   - Dipole, which may be the same as Sphere
+//   - Dipole4, which has 4 root nodes (4 lats, 1 lon)
 
 #include "aether.h"
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree() {
-  if (input.get_is_cubesphere())
+Quadtree::Quadtree(std::string shape) {
+  if (shape == "cubesphere")
     nRootNodes = 6;
   else
     nRootNodes = 1;
@@ -22,18 +34,27 @@ bool Quadtree::is_ok() {
 // build quadtree
 // --------------------------------------------------------------------------
 
-void Quadtree::build() {
+void Quadtree::build(std::string gridtype) {
 
   arma_mat origins;
   arma_mat rights;
   arma_mat ups;
 
-  if (input.get_is_cubesphere()) {
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  if (grid_input.shape == "cubesphere") {
     origins = CubeSphere::ORIGINS;
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
     IsCubeSphere = true;
-  } else {
+  } 
+  if (grid_input.shape == "sphere") {
+    origins = Sphere::ORIGINS;
+    rights = Sphere::RIGHTS;
+    ups = Sphere::UPS;
+    IsSphere = true;
+  }
+  if (grid_input.shape == "dipole") {
     origins = Sphere::ORIGINS;
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
@@ -64,8 +85,6 @@ void Quadtree::build() {
   // Before we build the quadtree, we need to allow the user to
   // restrict the domain.  This will only work for the spherical
   // grid so far:
-
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
   if (grid_input.lon_min > 0.0 ||
       grid_input.lon_max < 2.0 * cPI ||

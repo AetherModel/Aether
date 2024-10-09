@@ -393,9 +393,9 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
   try {
     if (DoRead)
-      RestartContainer.read_container_netcdf();
+      RestartContainer.read();
     else {
-      RestartContainer.set_version(0.1);
+      RestartContainer.set_version(aether_version);
       RestartContainer.set_time(0.0);
     }
 

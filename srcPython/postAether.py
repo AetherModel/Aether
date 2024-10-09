@@ -16,6 +16,32 @@ import json
 from struct import unpack
 
 # ----------------------------------------------------------------------
+# Function to parse input arguments
+# ----------------------------------------------------------------------
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(description = 'Post process Aether files')
+    parser.add_argument('-hdf5', \
+                        help='output HDF5 files', \
+                        action="store_true")
+    parser.add_argument('-rm', \
+                        help='removes processed files', \
+                        action="store_true")
+    parser.add_argument('-alt', default = -1, type = int, \
+                        help='altitude to plot (-1 for no plot!)')
+    parser.add_argument('-v', \
+                        help='turn on verbose mode', \
+                        action="store_true")
+    parser.add_argument('-oned', \
+                        help='strip 1d files of ghostcells and store in one file', \
+                        action="store_true")
+
+    args = parser.parse_args()
+
+    return args
+
+# ----------------------------------------------------------------------
 # Want to eliminate need for aetherpy to be installed for ease of use.
 # Therefore a bunch of this stuff is from aetherpy.
 # ----------------------------------------------------------------------
@@ -111,6 +137,7 @@ def read_aether_headers(filelist, finds=None, filetype="netcdf"):
         nlons - number of longitude grids
         nlats - number of latitude grids
         nalts - number of altitude grids
+        ngcs - number of ghost cells
         vars - list of data variable names
         time - list of datetimes for the processed file start times
         filename - list of the input filenames
@@ -271,6 +298,7 @@ def read_aether_json_header(filename):
         nlons - number of longitude grids
         nlats - number of latitude grids
         nalts - number of altitude grids
+        ngcs - number of ghost cells
         nvars - number of data variable names
         time - datetime for the file
         vars - variables in the file
@@ -349,7 +377,7 @@ def read_aether_one_binary_file(header, ifile, vars_to_read, isVerbose = True):
 
     data = {hkey: header[hkey] for hkey in ["version",
                                             "nlons", "nlats",
-                                            "nalts", "nvars", "vars",
+                                            "nalts", "ngcs", "nvars", "vars",
                                             "units", "long_name"]}
     data["time"] = header["time"][0]
     with open(file_to_read, 'rb') as fin:
@@ -431,28 +459,6 @@ def read_aether_file(filename, file_vars=None, epoch_name='time'):
 
     return data
 
-# ----------------------------------------------------------------------
-# Function to parse input arguments
-# ----------------------------------------------------------------------
-
-def parse_args():
-
-    parser = argparse.ArgumentParser(description = 'Post process Aether files')
-    parser.add_argument('-hdf5', \
-                        help='output HDF5 files', \
-                        action="store_true")
-    parser.add_argument('-rm', \
-                        help='removes processed files', \
-                        action="store_true")
-    parser.add_argument('-alt', default = 2, type = int, \
-                        help='altitude to plot (-1 for no plot!)')
-    parser.add_argument('-v', \
-                        help='turn on verbose mode', \
-                        action="store_true")
-
-    args = parser.parse_args()
-
-    return args
 
 #----------------------------------------------------------------------------
 # This returns the core of the filename without the _g????.nc
@@ -463,11 +469,11 @@ def get_core_file(filename):
     isEnsemble = False
     ensembleFile = ''
     ensembleNumber = -1
-    m = re.match(r'.*([0123]D.*)(_g\d*)(\..*)',filename)
+    m = re.match(r'.*([0123]D.*)(_g[0-9]*)(\..*)',filename)
     if m:
         coreFile = m.group(1)
         # check if file is a member of an ensemble:
-        check = re.match(r'.*([0123]D.*)(_m)(\d*)',coreFile)
+        check = re.match('.*([0123]D.*)(_m)([0-9]*)',coreFile)
         if (check):
             ensembleFile = check.group(1)
             isEnsemble = True
@@ -595,10 +601,6 @@ def plot_block(data, varToPlot, altToPlot, ax, mini, maxi, i):
     alts = data[iAlt][0][0] / 1000.0  # Convert from m to km
 
     # Change to 2d representation:
-
-    #lons = data[iLon][2:-2, 2:-2, 0]
-    #lats = data[iLat][2:-2, 2:-2, 0]
-    #v = data[iVar][2:-2, 2:-2, altToPlot]
     lons = data[iLon][:, :, 0]
     lats = data[iLat][:, :, 0]
     v = data[iVar][:, :, altToPlot]
@@ -934,7 +936,7 @@ def write_and_plot_data(dataToWrite,
         print('  --> Outputting hdf5 file : ', hdf5File)
         write_hdf5(dataToWrite, hdf5File, isVerbose = isVerbose)
 
-    if (iAlt > -1):
+    if ((iAlt > -1) & (len(dataToWrite) > 1)):
         plotFile = fileStart + fileAddon + '.png'
         var = dataToWrite[0]['vars'][iVar]
         plot_all_blocks(dataToWrite, var, iAlt, plotFile)

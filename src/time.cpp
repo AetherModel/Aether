@@ -31,6 +31,14 @@ Times::Times() {
 }
 
 // -----------------------------------------------------------------------------
+// This sets the end of the initialization time
+// -----------------------------------------------------------------------------
+
+void Times::set_start_time_loop() {
+  time(&sys_time_start_time_loop);
+}
+
+// -----------------------------------------------------------------------------
 // This is for restarting the code. Either write or read the time.
 // -----------------------------------------------------------------------------
 
@@ -147,6 +155,15 @@ std::string Times::get_YMD_HMS(bool useSeconds) {
 }
 
 // -----------------------------------------------------------------------------
+// Get the current time as a string, with seconds as 00
+// -----------------------------------------------------------------------------
+
+std::string Times::get_YMD_HM0() {
+  return sYMD_HM0;
+}
+
+
+// -----------------------------------------------------------------------------
 // Get the intermediate stopping time
 // -----------------------------------------------------------------------------
 
@@ -231,10 +248,10 @@ void Times::increment_time() {
 
   char tmp[100];
   snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
-          year, month, day, hour, minute, second);
+           year, month, day, hour, minute, second);
   sYMD_HMS = std::string(tmp);
   snprintf(tmp, 100, "%04d%02d%02d_%02d%02d%02d",
-          year, month, day, hour, minute, 0);
+           year, month, day, hour, minute, 0);
   sYMD_HM0 = std::string(tmp);
   snprintf(tmp, 100, "%04d%02d%02d", year, month, day);
   sYMD = std::string(tmp);
@@ -281,7 +298,7 @@ void Times::display() {
   time(&sys_time_current);
   walltime =
     static_cast<double>(sys_time_current) -
-    static_cast<double>(sys_time_start);
+    static_cast<double>(sys_time_start_time_loop);
 
   double elapsed_simulation_time = current - restart;
   double total_simulation_time = end - restart;

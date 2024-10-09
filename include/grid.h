@@ -11,9 +11,14 @@
 // Grid class
 // ----------------------------------------------------------------------------
 
-class Grid {
+class Grid
+{
 
 public:
+  const int iSphere_ = 1;
+  const int iCubesphere_ = 2;
+  const int iDipole_ = 3;
+  int iGridShape_ = -1;
 
   // Armidillo Cube Versions:
   // Cell Center Coordinates
@@ -30,6 +35,7 @@ public:
   arma_cube A11_inv_scgc, A12_inv_scgc, A21_inv_scgc, A22_inv_scgc;
   arma_cube g11_upper_scgc, g12_upper_scgc, g21_upper_scgc, g22_upper_scgc;
   arma_cube sqrt_g_scgc;
+  arma_cube refx_angle, refy_angle;
 
   // Edge/Corner coordinates
   arma_cube geoLon_Left;
@@ -52,6 +58,8 @@ public:
   arma_cube A11_inv_Left, A12_inv_Left, A21_inv_Left, A22_inv_Left;
   arma_cube g11_upper_Left, g12_upper_Left, g21_upper_Left, g22_upper_Left;
   arma_cube sqrt_g_Left;
+  arma_mat refx_angle_Left, refy_angle_Left;
+  arma_mat refx_angle_Down, refy_angle_Down;
 
   arma_cube A11_Down, A12_Down, A21_Down, A22_Down;
   arma_cube A11_inv_Down, A12_inv_Down, A21_inv_Down, A22_inv_Down;
@@ -64,6 +72,10 @@ public:
   arma_cube magLat_scgc, magY_scgc;
   arma_cube magAlt_scgc, magZ_scgc;
   arma_cube magLocalTime_scgc;
+
+  arma_cube magPhi_scgc;
+  arma_cube magP_scgc;
+  arma_cube magQ_scgc;
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
@@ -97,6 +109,7 @@ public:
   std::vector<arma_cube> rad_unit_vcgc;
   arma_cube gravity_potential_scgc;
   std::vector<arma_cube> gravity_vcgc;
+  arma_cube gravity_mag_scgc;
 
   std::vector<arma_cube> cent_acc_vcgc;
 
@@ -151,23 +164,44 @@ public:
   arma_cube bfield_mag_scgc;
   std::vector<arma_cube> bfield_unit_vcgc;
 
-  Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in);
+  Grid(std::string gridtype);
+  void set_variable_sizes();
 
-  int get_IsGeoGrid();
+  bool get_IsGeoGrid();
   bool get_HasBField();
-  void set_IsGeoGrid(int value);
+  void set_IsGeoGrid(bool value);
+  void set_IsExperimental(bool value);
+  bool get_IsExperimental();
+
+  void set_IsDipole(bool value);
+  bool get_IsDipole();
 
   int64_t get_nPointsInGrid();
 
   int64_t get_nX();
   int64_t get_nY();
   int64_t get_nZ();
+  int64_t get_nX(bool includeGCs);
+  int64_t get_nY(bool includeGCs);
+  int64_t get_nZ(bool includeGCs);
 
   int64_t get_nLons();
   int64_t get_nLats();
   int64_t get_nAlts();
 
+  int64_t get_nLons(bool includeGCs);
+  int64_t get_nLats(bool includeGCs);
+  int64_t get_nAlts(bool includeGCs);
+
   int64_t get_nGCs();
+
+  bool get_HasXdim();
+  bool get_HasYdim();
+  bool get_HasZdim();
+  bool get_Is0D();
+  bool get_Is1Dx();
+  bool get_Is1Dy();
+  bool get_Is1Dz();
 
   void fill_grid(Planets planet);
   void correct_xy_grid(Planets planet);
@@ -183,7 +217,7 @@ public:
   void calc_rad_unit(Planets planet);
   void calc_gravity(Planets planet);
   bool init_geo_grid(Quadtree quadtree,
-		     Planets planet);
+                     Planets planet);
   void create_sphere_connection(Quadtree quadtree);
   void create_sphere_grid(Quadtree quadtree);
   void create_cubesphere_connection(Quadtree quadtree);
@@ -195,6 +229,22 @@ public:
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
 
+  // Make mag-field grid:
+  std::pair<precision_t, precision_t> lshell_to_qn_qs(Planets planet,
+                                                      precision_t Lshell,
+                                                      precision_t Lon,
+                                                      precision_t AltMin);
+  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
+                              precision_t XyzGeo[3]);
+  std::pair<arma_vec, arma_vec> fill_dipole_q_line(precision_t qN_,
+                                                   precision_t qS_,
+                                                   precision_t Gamma_,
+                                                   int64_t nZ_,
+                                                   precision_t Lshell_,
+                                                   precision_t min_alt_);
+  std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q, precision_t p);
+  void init_dipole_grid(Quadtree quadtree, Planets planet);
+  arma_vec rNorm1d, lat1dalong;
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
 
@@ -224,7 +274,8 @@ public:
   int64_t iRootYp;
   int64_t iRootYm;
 
-  struct messages_struct {
+  struct messages_struct
+  {
     int64_t iFace;
     int64_t iProc_to;
     int64_t iSizeTotal;
@@ -236,23 +287,32 @@ public:
 
     /// Variables needed for asynchronous message passing
     MPI_Request requests;
-    precision_t* buffer;
-    precision_t* rbuffer;
+    precision_t *buffer;
+    precision_t *rbuffer;
+
+    // For cubesphere. these are needed for interpolation
+    // when the cells go onto a different face:
+    arma_mat index;
+    arma_mat ratio;
   };
 
   std::vector<messages_struct> interchanges;
+  std::vector<messages_struct> interchangesOneVar;
+  bool gcInterpolationSet = false;
 
   messages_struct make_new_interconnection(int64_t iDir,
-					   int64_t nVars,
-					   int64_t iProc_to,
-					   arma_vec edge_center,
-					   bool IsPole,
-					   bool DoReverseX,
-					   bool DoReverseY,
-					   bool XbecomesY);
+                                           int64_t nVars,
+                                           int64_t iProc_to,
+                                           arma_vec edge_center,
+                                           bool IsPole,
+                                           bool DoReverseX,
+                                           bool DoReverseY,
+                                           bool XbecomesY);
 
   bool send_one_face(int64_t iFace);
+  bool send_one_var_one_face(int64_t iFace);
   bool receive_one_face(int64_t iFace);
+  bool receive_one_var_one_face(int64_t iFace);
 
   /**
    * \brief Set the interpolation coefficients
@@ -277,20 +337,36 @@ public:
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 
- private:
-
-  int IsGeoGrid;
+private:
+  bool IsGeoGrid;
   bool HasBField;
+  bool IsExperimental;
+  bool IsMagGrid;
+  bool IsDipole = false;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
   int64_t nZ, nAlts;
 
+  // These logicals define the dimensionality of the grid:
+  bool Is0D = false;
+  bool Is1Dx = false;
+  bool Is1Dy = false;
+  bool Is1Dz = false;
+  bool Is2Dxy = false;
+  bool Is2Dxz = false;
+  bool Is2Dyz = false;
+  bool Is3D = false;
+  bool HasXdim = true;
+  bool HasYdim = true;
+  bool HasZdim = true;
+
   int nGCs; // number of ghostcells
 
   // interpolation members
   // The struct representing the range of a spherical grid
-  struct sphere_range {
+  struct sphere_range
+  {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -301,7 +377,8 @@ public:
     precision_t alt_max;
   };
   // The struct representing the range of a cubesphere grid
-  struct cubesphere_range {
+  struct cubesphere_range
+  {
     // The minimum value and delta change of row and col
     // We don't use row_max and col_max because they are not promised to be
     // greater than min, for example the right norm of suface 2 expands along
@@ -332,7 +409,8 @@ public:
   // Each point is processed by the function set_interpolation_coefs and stored
   // in the form of this structure.
   // If the point is out of the grid, in_grid = false and all other members are undefined
-  struct interp_coef_t {
+  struct interp_coef_t
+  {
     // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
     uint64_t iRow;
     uint64_t iCol;
@@ -369,7 +447,8 @@ public:
   // Initialize connections between processors
   void init_connection();
   // Used for message exchange
-  struct idx2d_t {
+  struct idx2d_t
+  {
     // Index of row and column
     int64_t ilon;
     int64_t ilat;
@@ -384,4 +463,4 @@ public:
   MPI_Comm grid_comm;
 };
 
-#endif  // INCLUDE_GRID_H_
+#endif // INCLUDE_GRID_H_

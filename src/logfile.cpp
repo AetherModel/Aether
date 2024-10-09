@@ -233,7 +233,7 @@ void Satellite::print() {
 // Initialize the Logfile
 //-------------------------------------------------------------
 
-Logfile::Logfile(Indices &indices) {
+Logfile::Logfile(Indices &indices, int64_t iLog) {
 
   // Read the settings for general log file and satellites
   // Write the header to the general logfile
@@ -244,7 +244,7 @@ Logfile::Logfile(Indices &indices) {
   report.enter(function, iFunction);
 
   // Read the inputs
-  logfileName = input.get_logfile();
+  logfileName = input.get_logfile(iLog);
   species = input.get_species_vector();
   dt = input.get_logfile_dt();
   doAppend = input.get_logfile_append();

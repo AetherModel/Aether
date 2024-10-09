@@ -1,11 +1,20 @@
-Contributing
-============
-
-Code
-----
+# Contributing
 
 Please read the [standards document](doc/design/standards) before
 contributing.
+
+- [Contributing](#contributing)
+  - [Code](#code)
+    - [Development](#development)
+      - [Using AStyle](#using-astyle)
+      - [Linting](#linting)
+  - [Commit Styling](#commit-styling)
+  - [Pull Requests](#pull-requests)
+  - [Issues](#issues)
+
+---
+
+## Code
 
 ### Development
 
@@ -16,15 +25,14 @@ you have something that works.
 #### Using AStyle
 
 We have started using astyle to format the code.  Please see
-http://astyle.sourceforge.net/. There is a style file in the root directory
-of Aether, called .astylerc.  To run this, do:
+<http://astyle.sourceforge.net/>. There is a style file in the root directory of
+Aether, called .astylerc.  To run this, do:
 
 AStyle --project=.astylerc src/*.cpp
 
 on WSL with Ubuntu, the command seems to be:
 
 astyle --options=.astylerc src/*.cpp
-
 
 #### Linting
 
@@ -44,13 +52,13 @@ python3 -m pip cpplint
 python3 -m pip --user cpplint
 ```
 
-Using a linter in an editor is a good supplement, but not a replacement for the static linters. 
-The linter in the 'atom' editor requires that you install the `linter` and `gcc-linter` packages. 
-Atom also has additional packages `whitespaces` and `tabs-to-spaces`
-to automatically remove whitespaces at the end of the lines, and
-convert tabs to spaces.
+Using a linter in an editor is a good supplement, but not a replacement for the
+static linters. The linter in the 'atom' editor requires that you install the
+`linter` and `gcc-linter` packages. Atom also has additional packages
+`whitespaces` and `tabs-to-spaces` to automatically remove whitespaces at the
+end of the lines, and convert tabs to spaces.
 
-### Commit Styling
+## Commit Styling
 
 The first line of the commit must be *at most* ~50 characters long and
 should start with either.
@@ -74,25 +82,24 @@ For example,
 
 *do:*
 
-```
+```github
 FEAT: Hydrostatic density implementation.
 ```
 
 *don't:*
 
-```
+```github
 Implemented hydrostatic density. (feature)
 ```
 
-### Pull Requests
+## Pull Requests
 
 Make sure you have linted and checked your code before asking for a
 pull request. Before requesting a review, ensure the pull request
 check list has been completed.  Another member must check the code and
 approve it before merge.
 
-Issues
-------
+## Issues
 
 *Issues* are reporting bugs, feature requests, or goals for the
 project. In order to submit an issue make sure it follows the [issue

@@ -38,18 +38,14 @@ bool Neutrals::initial_conditions(Grid grid,
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading neutral files!");
     didWork = restart_file(input.get_restartin_dir(), DoRead);
-
-    if (!didWork) {
+    if (!didWork)
       report.error("Reading Restart for Neutrals Failed!!!");
-      \
-    }
   } else {
 
     json ics = input.get_initial_condition_types();
     std::string icsType = mklower(ics["type"]);
 
     if (icsType == "msis") {
-
       report.print(2, "Using MSIS for Initial Conditions");
 
       Msis msis;
@@ -102,6 +98,7 @@ bool Neutrals::initial_conditions(Grid grid,
     } // type = msis
 
     if (icsType == "planet") {
+      report.print(2, "Using planet for Initial Conditions");
 
       didWork = true;
 
@@ -121,35 +118,40 @@ bool Neutrals::initial_conditions(Grid grid,
 
       arma_mat H2d(nLons, nLats);
 
-      alt1d = grid.geoAlt_scgc.tube(0, 0);
-
       if (nInitial_temps > 0) {
-        for (iAlt = 0; iAlt < nAlts; iAlt++) {
-          alt = alt1d(iAlt);
+        for (iLon = 0; iLon < nLons; iLon++) {
+          for (iLat = 0; iLat < nLats; iLat++) {
+            alt1d = grid.geoAlt_scgc.tube(iLon, iLat);
 
-          // Find temperatures:
-          if (alt <= initial_altitudes[0])
-            temp1d[iAlt] = initial_temperatures[0];
+            for (iAlt = 0; iAlt < nAlts; iAlt++) {
+              alt = alt1d(iAlt);
 
-          else {
-            if (alt >= initial_altitudes[nInitial_temps - 1])
-              temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
+              // Find temperatures:
+              if (alt <= initial_altitudes[0])
+                temp1d[iAlt] = initial_temperatures[0];
 
-            else {
-              // Linear interpolation!
-              iA = 0;
+              else {
+                if (alt >= initial_altitudes[nInitial_temps - 1])
+                  temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
 
-              while (alt > initial_altitudes[iA])
-                iA++;
+                else {
+                  // Linear interpolation!
+                  iA = 0;
 
-              iA--;
-              // alt will be between iA and iA+1:
-              r = (alt - initial_altitudes[iA]) /
-                  (initial_altitudes[iA + 1] - initial_altitudes[iA]);
-              temp1d[iAlt] =
-                (1.0 - r) * initial_temperatures[iA] +
-                (r) * initial_temperatures[iA + 1];
+                  while (alt > initial_altitudes[iA])
+                    iA++;
+
+                  iA--;
+                  // alt will be between iA and iA+1:
+                  r = (alt - initial_altitudes[iA]) /
+                      (initial_altitudes[iA + 1] - initial_altitudes[iA]);
+                  temp1d[iAlt] =
+                    (1.0 - r) * initial_temperatures[iA] +
+                    (r) * initial_temperatures[iA + 1];
+               }
+              }
             }
+            temperature_scgc.tube(iLon, iLat) = temp1d;
           }
         }
       } else
@@ -163,6 +165,11 @@ bool Neutrals::initial_conditions(Grid grid,
 
       // Make the initial condition in the lower ghost cells to be consistent
       // with the actual lowwer BC:
+      // Set the lower boundary condition:
+      for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        species[iSpecies].density_scgc.slice(0).
+          fill(species[iSpecies].lower_bc_density);
+      }
       calc_scale_height(grid);
       set_lower_bcs(grid, time, indices);
 

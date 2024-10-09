@@ -61,7 +61,7 @@ bool Inputs::read_inputs_json(Times &time) {
 
     //change planet file to the one specified on aether.json:
     if (isOk)
-      settings["PlanetSpeciesFile"] = get_setting_str("PlanetFile");
+      settings["PlanetSpeciesFile"] = get_setting_str("Planet", "file");
 
     std::string planet_filename = get_setting_str("PlanetSpeciesFile");
     report.print(1, "Using planet file : " + planet_filename);

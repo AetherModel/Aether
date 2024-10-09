@@ -120,6 +120,12 @@ class OutputContainer {
   void set_version(float in_version);
 
   /**********************************************************************
+     \brief set the number of ghost cells in Aether
+     \param in_nGCs the number of ghostcells in the grid
+   **/
+  void set_nGhostCells(int in_nGCs);
+
+  /**********************************************************************
      \brief write a file with the information in the container
    **/
   bool write();
@@ -133,7 +139,12 @@ class OutputContainer {
      \brief write a binary file with the information in the container
    **/
   bool write_container_binary();
-  
+
+  /**********************************************************************
+     \brief read a binary file with the information into a container
+   **/
+  bool read_container_binary();
+
   /**********************************************************************
      \brief write a netcdf file with the information in the container
    **/
@@ -142,7 +153,7 @@ class OutputContainer {
   /**********************************************************************
      \brief read from a file an load into the container
    **/
-  void read();
+  bool read();
   
   /**********************************************************************
      \brief display information contained in the container
@@ -152,7 +163,7 @@ class OutputContainer {
   /**********************************************************************
      \brief read a netcdf file - put the information in the container
    **/
-  int read_container_netcdf();
+  bool read_container_netcdf();
   
   /**********************************************************************
      \brief clears the vector of variables 
@@ -186,8 +197,12 @@ class OutputContainer {
 
   /// The time of the data
   std::vector<int> itime;
+
   /// The version of the code / data / whatever:
   float version;
+
+  /// The number of Ghost Cells:
+  int nGCs;
 
   /// The frequency of the output for this particular container:
   float dt_output;
@@ -224,7 +239,7 @@ class OutputContainer {
 
 bool output(const Neutrals &neutrals,
 	    const Ions &ions,
-	    const Grid &grid,
+	    Grid &grid,
 	    Times time,
 	    const Planets &planet);
 

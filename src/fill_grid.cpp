@@ -288,6 +288,10 @@ void Grid::calc_gravity(Planets planet) {
   gravity_vcgc[0] = - gravity_vcgc[0];
   gravity_vcgc[1] = - gravity_vcgc[1];
   gravity_vcgc[2] = - gravity_vcgc[2];
+  gravity_mag_scgc = sqrt(
+    gravity_vcgc[0] % gravity_vcgc[0] + 
+    gravity_vcgc[1] % gravity_vcgc[1] + 
+    gravity_vcgc[2] % gravity_vcgc[2]);
 
   report.exit(function);
   return;

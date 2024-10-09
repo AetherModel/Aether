@@ -2,21 +2,6 @@
 
 rm -rf run.halves run.whole
 
-cp -R ../../share/run ./run.whole
-cd run.whole
-cp ../aether.whole.json ./aether.json
-./aether
-# plot the output
-cd UA/output
-# [O]:
-run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.nc
-# Tn:
-run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.nc
-# [e-]
-run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.nc
-
-cd ../../..
-
 cp -R ../../share/run ./run.halves
 cd run.halves
 # first part of the run
@@ -28,12 +13,30 @@ cp ../aether.second.json ./aether.json
 ./aether
 # plot the output
 cd UA/output
+../../../../../srcPython/postAether.py -alt=-1 -rm
+
 # [O]:
-run_plot_model_results.py -var=3 -alt=250 3DALL_20110320_010000.nc
+aether_plot_simple.py -var=density_O -alt=250 3DALL_20110320_003000.nc
 # Tn:
-run_plot_model_results.py -var=14 -alt=250 3DALL_20110320_010000.nc
+aether_plot_simple.py -var=Temperature_neutral -alt=250 3DALL_20110320_003000.nc
 # [e-]
-run_plot_model_results.py -var=23 -alt=250 3DALL_20110320_010000.nc
+aether_plot_simple.py -var=density_e- -alt=250 3DALL_20110320_003000.nc
+
+cd ../../..
+
+cp -R ../../share/run ./run.whole
+cd run.whole
+cp ../aether.whole.json ./aether.json
+./aether
+# plot the output
+cd UA/output
+../../../../../srcPython/postAether.py -alt=-1 -rm
+# [O]:
+aether_plot_simple.py -var=density_O -alt=250 3DALL_20110320_003000.nc
+# Tn:
+aether_plot_simple.py -var=Temperature_neutral -alt=250 3DALL_20110320_003000.nc
+# [e-]
+aether_plot_simple.py -var=density_e- -alt=250 3DALL_20110320_003000.nc
 
 cd ../../..
 
