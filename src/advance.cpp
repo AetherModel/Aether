@@ -141,9 +141,6 @@ bool advance(Planets &planet,
     calc_aurora(gGrid, neutrals, ions);
     calc_aurora(mGrid, neutralsMag, ionsMag);
 
-    // Calculate some neutral source terms:
-    neutrals.calc_conduction(gGrid, time);
-
     // Calculate chemistry on both grids:
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
     chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
