@@ -128,7 +128,7 @@ int main() {
     }
 
     if (input.get_check_for_nans()) {
-      didWork = neutrals.check_for_nonfinites();
+      didWork = neutrals.check_for_nonfinites("After Inputs");
       didWork = ions.check_for_nonfinites();
     }
 
