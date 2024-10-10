@@ -725,6 +725,13 @@ bool Neutrals::exchange_really_old(Grid &grid) {
       set_horizontal_bcs(iDir, grid);
   }
 
+  for (int i = 0; i < nSpecies; ++i)
+    fill_corners(species[i].density_scgc, nG);
+  
+  fill_corners(temperature_scgc, nG);
+  for (int iDir = 0; iDir < 3; iDir++)
+    fill_corners(velocity_vcgc[iDir], nG);
+  
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
 

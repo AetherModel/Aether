@@ -152,6 +152,12 @@ Grid::Grid(std::string gridtype) {
   dalt_ratio_scgc.set_size(nX, nY, nZ);
   dalt_ratio_sq_scgc.set_size(nX, nY, nZ);
 
+  MeshCoef1s3rdp1.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp2.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp3.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp4.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp5.set_size(nX, nY, nGCs);
+
   dlat_center_scgc.set_size(nX, nY, nZ);
   dlat_center_dist_scgc.set_size(nX, nY, nZ);
 

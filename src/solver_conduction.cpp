@@ -6,7 +6,10 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------
-// This code solves the conduction equation in 1D.
+// This code solves the laplace equation in 1D:
+//
+// dV/dt = 1/front d/dx lambda dV/dx + source
+//
 // Some assumptions:
 //  - Assume that lambda and front are scaled by radius squared!
 //  - The spacing can be non-uniform.
@@ -18,8 +21,11 @@
 arma_vec solver_conduction(arma_vec value,
                            arma_vec lambda,
                            arma_vec front,
+                           arma_vec source,
+                           arma_vec dx,
                            precision_t dt,
-                           arma_vec dx) {
+                           int64_t nGCs,
+                           bool return_diff) {
 
   int64_t nPts = value.n_elem;
 
@@ -43,24 +49,24 @@ arma_vec solver_conduction(arma_vec value,
 
   int64_t i;
 
-  for (i = 2; i < nPts - 2; i++)
+  for (i = nGCs; i < nPts - nGCs; i++)
     dl(i) = di(i + 1) - di(i - 1) * r(i) * r(i) - di(i) * (1.0 - r(i) * r(i));
 
   arma_vec a = di / du22 % r - dl / du12 % r % r;
   arma_vec c = di / du22 + dl / du12;
   arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r);
-  arma_vec d = -1.0 * value / m;
+  arma_vec d = -1.0 * (value / m + source % front * dt);
 
   // Lower BCs (fixed value):
-  a(1) = 0.0;
-  b(1) = -1.0;
-  c(1) = 0.0;
-  d(1) = -1.0 * value(1);
+  a(nGCs-1) = 0.0;
+  b(nGCs-1) = -1.0;
+  c(nGCs-1) = 0.0;
+  d(nGCs-1) = -1.0 * value(nGCs-1);
 
   // Upper BCs:
   // This assumes a constant-gradient BC (need to change for ion and ele temps.
 
-  i = nPts - 2;
+  i = nPts - nGCs;
   a(i) = 1.0 * (r(i) * (1.0 + r(i)) * di(i) * m(i) / du22(i));
   b(i) = -1.0 * (1.0 + r(i) * (1 + r(i)) * di(i) * m(i) / du22(i));
   c(i) = 0.0;
@@ -70,26 +76,34 @@ arma_vec solver_conduction(arma_vec value,
   arma_vec dp(nPts, fill::zeros);
   arma_vec result(nPts, fill::zeros);
 
-  cp(1) = c(1) / b(1);
+  cp(nGCs - 1) = c(nGCs - 1) / b(nGCs - 1);
 
-  for (i = 2; i <= nPts - 2; i++)
+  for (i = nGCs; i <= nPts - nGCs; i++)
     cp(i) = c(i) / (b(i) - cp(i - 1) * a(i));
 
-  dp(1) = d(1) / b(1);
+  dp(nGCs - 1) = d(nGCs - 1) / b(nGCs - 1);
 
-  for (i = 2; i <= nPts - 2; i++)
+  for (i = nGCs; i <= nPts - nGCs; i++)
     dp(i) = (d(i) - dp(i - 1) * a(i)) / (b(i) - cp(i - 1) * a(i));
 
-  result(nPts - 2) = dp(nPts - 2);
+  result(nPts - nGCs) = dp(nPts - nGCs);
 
-  for (i = nPts - 3; i > 0; i--)
+  for (i = nPts - nGCs - 1; i > nGCs - 1; i--)
     result(i) = dp(i) - cp(i) * result(i + 1);
 
-  conduction = result - value;
-  conduction(0) = 0.0;
-  conduction(1) = 0.0;
-  conduction(nPts - 2) = 0.0;
-  conduction(nPts - 1) = 0.0;
+  if (return_diff) {
+    conduction = result - value;
+    for (i = 0; i < nGCs; i++) {
+      conduction(i) = 0.0;
+      conduction(nPts - i - 1) = 0.0;
+    }
+  } else {
+    conduction = result;
+    for (i = 0; i < nGCs; i++) {
+      conduction(i) = value(i);
+      conduction(nPts - nGCs + i) = conduction(nPts - nGCs - 1);
+    }
+  }
 
   return conduction;
 }

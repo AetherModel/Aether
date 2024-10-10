@@ -110,7 +110,6 @@ void calc_ionization_heating(Euv euv,
                   neutrals.species[iSpecies].chapman_scgc.slice(iAlt);
         }
       }
-
       intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
 
       for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
@@ -146,7 +145,8 @@ void calc_ionization_heating(Euv euv,
             if (neutrals.species[iSpecies].iEuvIonSpecies_[iPei] ==
                 neutrals.species[iSpecies].iEuvIonSpecies_[iIonization]) {
               j_ = neutrals.species[iSpecies].iEuvIonId_[iPei];
-              ionization2d[iWave] *= (1 + euv.waveinfo[j_].values[iWave]);
+              ionization2d *= (1 + euv.waveinfo[j_].values[iWave]);
+              std::cout << "here in the ipei loop\n";
             }
           }
 
@@ -156,6 +156,7 @@ void calc_ionization_heating(Euv euv,
           iIon = neutrals.species[iSpecies].iEuvIonSpecies_[iIonization];
           ions.species[iIon].ionization_scgc.slice(iAlt) =
             ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
+
         }  // iIonization
       }  // iSpecies
     }  // iWave

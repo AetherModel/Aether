@@ -189,26 +189,43 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
     report.print(2, "setting lower bcs to planet");
 
-    // Set the lower boundary condition:
+    // Set the lower boundary condition in the last ghost cell:
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      species[iSpecies].density_scgc.slice(0).
+      species[iSpecies].density_scgc.slice(nGCs - 1).
       fill(species[iSpecies].lower_bc_density);
     }
 
-    temperature_scgc.slice(0).fill(initial_temperatures[0]);
+    temperature_scgc.slice(nGCs - 1).fill(initial_temperatures[0]);
     didWork = true;
   }
 
   // fill the second+ grid cells with the bottom temperature:
-  for (iAlt = 1; iAlt < nGCs; iAlt++)
-    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+  for (iAlt = nGCs - 2; iAlt >= 0; iAlt--)
+    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt + 1);
 
-  // fill the second+ grid cells with a hydrostatic solution:
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    fill_with_hydrostatic(iSpecies, 1, nGCs, grid);
+  arma_mat sh_ave;
+  // fill the lower ghost cells with a hydrostatic solution:
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    for (iAlt = nGCs - 2; iAlt >= 0; iAlt--) {
+      sh_ave = 
+        (species[iSpecies].scale_height_scgc.slice(iAlt) + 
+         species[iSpecies].scale_height_scgc.slice(iAlt + 1))/2;
 
+      species[iSpecies].density_scgc.slice(iAlt) = 
+        temperature_scgc.slice(iAlt + 1) /
+        temperature_scgc.slice(iAlt) %
+        species[iSpecies].density_scgc.slice(iAlt + 1) %
+        exp(grid.dalt_lower_scgc.slice(iAlt) / sh_ave);
+    }
+    for (iAlt = nGCs - 1; iAlt >= 0; iAlt--) {
+      //std::cout << "before project : " << iAlt << " " << iSpecies << " "
+      //  << species[iSpecies].velocity_vcgc[2](10,10,2) << "\n";
+      species[iSpecies].velocity_vcgc[2].slice(iAlt) = 
+        project_onesided_alt_3rd(species[iSpecies].velocity_vcgc[2], grid, iAlt);
+    }
+  }
   // Force vertical velocities to be zero in the ghost cells:
-  for (iDir = 0; iDir < 3; iDir++) {
+  for (iDir = 0; iDir < 2; iDir++) {
     for (iAlt = 0; iAlt < nGCs; iAlt++) {
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         // species velocity:
@@ -216,9 +233,11 @@ bool Neutrals::set_lower_bcs(Grid grid,
       }
 
       // bulk velocity:
-      velocity_vcgc[iDir].slice(iAlt).zeros();
+      //velocity_vcgc[iDir].slice(iAlt).zeros();
     }
   }
+
+  calc_bulk_velocity();
 
   if (!didWork) {
     report.error("issue with lower BCs!");
@@ -318,7 +337,7 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
     }
   }
 
-  // iDir = 2 is left BC:
+  // iDir = 3 is lower BC:
   if (iDir == 3) {
     for (iX = 0; iX < nX; iX++) {
       for (iY = nGCs - 1; iY >= 0; iY--) {

@@ -22,8 +22,9 @@
 
     "Advection" : {
 	"Neutrals" : {
-	"Vertical" : "rusanov",
-	"Horizontal" : "default"},
+	    "Vertical" : "rusanov",
+	    "Horizontal" : "default",
+		"useBulkWinds" : true},
 	"Ions" : {
 	"Along" : "rusanov",
 	"Across" : "default"} },
@@ -104,7 +105,8 @@
 
     "Sources" : {
 	"Grid" : {
-	    "Cent_acc" : true },
+	    "Centripetal" : true,
+		"Coriolis" : true },
 	"Neutrals" : {
 	    "NO_cool" : false,
 	    "O_cool": false } },

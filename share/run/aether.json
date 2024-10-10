@@ -42,7 +42,6 @@
         "Potential" : "Weimer05",
         "DiffuseAurora" : "fta",
         "File": "UA/inputs/b20110320n_omni.bin"},
-    
     "Outputs" : {
         "type" : ["states", "grid"],
         "dt" : [900, -1] },

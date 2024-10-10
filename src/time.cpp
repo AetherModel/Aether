@@ -115,7 +115,7 @@ int Times::check_time_gate(precision_t dt_check) {
 void Times::calc_dt(precision_t dtNeutral,
                     precision_t dtIon) {
   dt = end - current;
-  double cfl = 0.5;
+  double cfl = 0.1;
 
   if (cfl * dtNeutral < dt)
     dt = cfl * dtNeutral;
@@ -190,6 +190,14 @@ precision_t Times::get_orbittime() {
 
 double Times::get_julian_day() {
   return julian_day;
+}
+
+// -----------------------------------------------------------------------------
+// Get the current simulation time (in sec since start of run)
+// -----------------------------------------------------------------------------
+
+double Times::get_simulation_time() {
+  return simulation;
 }
 
 // -----------------------------------------------------------------------------

@@ -438,13 +438,23 @@ public:
    **/
   bool get_O_cooling();
 
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
+  bool get_use_centripetal();
+  
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
+  bool get_use_coriolis();
   
   /**********************************************************************
      \brief returns settings["
      \param 
    **/
   bool get_cent_acc();
-
   
   /**********************************************************************
      \brief returns settings["
@@ -477,6 +487,7 @@ public:
      \param 
    **/
   std::string get_advection_neutrals_vertical();
+  bool get_advection_neutrals_bulkwinds();
 
   
   /**********************************************************************

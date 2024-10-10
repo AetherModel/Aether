@@ -20,6 +20,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 
   // Constants:
   tmp.DoAdvect = 0;
+  tmp.vibe = 5;
 
   tmp.density_scgc.set_size(nLons, nLats, nAlts);
   tmp.density_scgc.fill(1e10);
@@ -35,10 +36,12 @@ Ions::species_chars Ions::create_species(Grid grid) {
 
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   for (int iDir = 0; iDir < 3; iDir++) {
     tmp.par_velocity_vcgc[iDir].zeros();
     tmp.perp_velocity_vcgc[iDir].zeros();
+    tmp.velocity_vcgc[iDir].zeros();
   }
 
   // The collision frequencies need the neutrals, so those are
@@ -87,14 +90,26 @@ Ions::Ions(Grid grid, Planets planet) {
   density_scgc.set_size(nLons, nLats, nAlts);
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
-  for (int iDir = 0; iDir < 3; iDir++)
+  gamma_scgc.set_size(nLons, nLats, nAlts);
+  gamma_scgc.ones();
+  sound_scgc.set_size(nLons, nLats, nAlts);
+  sound_scgc.ones();
+
+  for (int iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
+    cMax_vcgc[iDir].ones();
+  }
 
   temperature_scgc.set_size(nLons, nLats, nAlts);
   temperature_scgc.fill(200.0);
   electron_temperature_scgc.set_size(nLons, nLats, nAlts);
   electron_temperature_scgc.fill(200);
+
+  rho_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.set_size(nLons, nLats, nAlts);
+  mean_major_mass_scgc.ones();
 
   tmp.sources_scgc.set_size(nLons, nLats, nAlts);
   tmp.sources_scgc.zeros();
@@ -152,6 +167,7 @@ int Ions::read_planet_file(Planets planet) {
     species[iSpecies].mass = mass * cAMU;
     species[iSpecies].charge = ions["charge"][iSpecies];
     species[iSpecies].DoAdvect = ions["advect"][iSpecies];
+    species[iSpecies].vibe = ions["vibration"][iSpecies];
   }
 
   // account for advected ions:
@@ -234,6 +250,78 @@ void Ions::set_floor() {
   return;
 }
 
+// ----------------------------------------------------------------------
+// Calculate a bunch of derived products:
+//   - Gamma
+//   - Speed of sound
+// ----------------------------------------------------------------------
+
+void Ions::calc_sound_speed() {
+
+  int64_t iSpecies;
+
+  std::string function = "Ion::calc_sound_speed";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  gamma_scgc.zeros();
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    gamma_scgc = gamma_scgc +
+                 species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
+  }
+  gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
+
+  sound_scgc = sqrt(cKB *
+                    gamma_scgc %
+                    temperature_scgc /
+                    mean_major_mass_scgc);
+
+  if (report.test_verbose(2)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+    std::cout << "max gamma : " << gamma_scgc.max() << "\n";
+    if (!all_finite(sound_scgc, "sound speed")) {
+      std::cout << "sound speed has nans!\n";
+      report.report_errors();
+    }
+  }
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+// Calculate cMax, which is the sound speed + velocity in each
+// direction
+// ----------------------------------------------------------------------
+
+void Ions::calc_cMax() {
+
+  std::string function = "Ions::calc_cMax";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int iDir;
+
+  // just take the bulk value for now:
+
+  if (report.test_verbose(3)) {
+    std::cout << "max sound speed : " << sound_scgc.max() << "\n";
+
+    for (iDir = 0; iDir < 3; iDir++) {
+      arma_cube tmp = abs(velocity_vcgc[iDir]);
+      std::cout << "min velocity : " << tmp.min() << "\n";
+      std::cout << "max velocity : " << tmp.max() << "\n";
+    }
+  }
+
+  for (iDir = 0; iDir < 3; iDir++)
+    cMax_vcgc[iDir] = sound_scgc + abs(velocity_vcgc[iDir]);
+
+  report.exit(function);
+  return;
+}
+
+
 // -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
 // -----------------------------------------------------------------------------
@@ -247,12 +335,16 @@ void Ions::fill_electrons() {
   report.enter(function, iFunction);
 
   species[nSpecies].density_scgc.zeros();
+  rho_scgc.zeros();
 
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[nSpecies].density_scgc =
       species[nSpecies].density_scgc + species[iSpecies].density_scgc;
-
+    rho_scgc = rho_scgc + 
+      species[iSpecies].mass * species[iSpecies].density_scgc;
+  }
   density_scgc = species[nSpecies].density_scgc;
+  mean_major_mass_scgc = rho_scgc / density_scgc;
 
   report.exit(function);
   return;

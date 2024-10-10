@@ -837,8 +837,19 @@ bool Inputs::get_O_cooling()
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
-bool Inputs::get_cent_acc()
-{
+bool Inputs::get_use_centripetal() {
+  return get_setting_bool("Sources", "Grid", "Centripetal");
+}
+
+// -----------------------------------------------------------------------
+// Return coriolis acceleration
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_coriolis() {
+  return get_setting_bool("Sources", "Grid", "Coriolis");
+}
+
+bool Inputs::get_cent_acc() {
   return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
@@ -1196,8 +1207,7 @@ bool Inputs::get_use_eddy_energy()
 //
 // -----------------------------------------------------------------------
 
-json Inputs::get_perturb_values()
-{
+json Inputs::get_perturb_values() {
   return get_setting_json("Perturb");
 }
 
@@ -1268,6 +1278,11 @@ std::string Inputs::get_advection_neutrals_vertical()
 {
   return get_setting_str("Advection", "Neutrals", "Vertical");
 }
+
+bool Inputs::get_advection_neutrals_bulkwinds() {
+  return get_setting_bool("Advection", "Neutrals", "useBulkWinds");
+}
+
 
 // --------------------------------------------------------------------------
 // check to see if class is ok

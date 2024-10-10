@@ -45,6 +45,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
   tmp.ionization_scgc.zeros();
 
   tmp.concentration_scgc.set_size(nLons, nLats, nAlts);
+  tmp.mass_concentration_scgc.set_size(nLons, nLats, nAlts);
 
   tmp.density_scgc.ones();
   tmp.chapman_scgc.ones();
@@ -101,10 +102,6 @@ Neutrals::Neutrals(Grid grid,
   temperature_scgc.ones();
   newTemperature_scgc.set_size(nLons, nLats, nAlts);
   newTemperature_scgc.ones();
-  O_cool_scgc.set_size(nLons, nLats, nAlts);
-  O_cool_scgc.zeros();
-  NO_cool_scgc.set_size(nLons, nLats, nAlts);
-  NO_cool_scgc.zeros();
 
   // Derived quantities:
 
@@ -133,11 +130,35 @@ Neutrals::Neutrals(Grid grid,
   kappa_eddy_scgc.set_size(nLons, nLats, nAlts);
   kappa_eddy_scgc.zeros();
 
+  viscosity_scgc.set_size(nLons, nLats, nAlts);
+  viscosity_scgc.zeros();
+
   conduction_scgc.set_size(nLons, nLats, nAlts);
+  conduction_scgc.zeros();
   heating_euv_scgc.set_size(nLons, nLats, nAlts);
+  heating_euv_scgc.zeros();
   heating_chemical_scgc.set_size(nLons, nLats, nAlts);
+  heating_chemical_scgc.zeros();
+  heating_sources_total.set_size(nLons, nLats, nAlts);
+  heating_sources_total.zeros();
+  heating_ion_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_ion_friction_scgc.zeros();
+  heating_ion_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_ion_heat_transfer_scgc.zeros();  
+  O_cool_scgc.set_size(nLons, nLats, nAlts);
+  O_cool_scgc.zeros();
+  NO_cool_scgc.set_size(nLons, nLats, nAlts);
+  NO_cool_scgc.zeros();
 
   heating_efficiency = input.get_euv_heating_eff_neutrals();
+
+  // bulk ion_neutral collisional acceleration:
+  acc_ion_collisions = make_cube_vector(nLons, nLats, nAlts, 3);
+  // bulk coriolis acceleration:
+  acc_coriolis = make_cube_vector(nLons, nLats, nAlts, 3);
+  
+  // bulk ion_neutral collisional acceleration:
+  acc_sources_total = make_cube_vector(nLons, nLats, nAlts, 3);
 
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(planet);
@@ -202,15 +223,18 @@ int Neutrals::read_planet_file(Planets planet) {
 }
 
 //----------------------------------------------------------------------
-// Fill With Hydrostatic Solution (all species)
+// Fill With Hydrostatic Solution (all ADVECTED species)
 //   - iEnd is NOT included (python style)!
+//   - only do advected, since others are probably chemistry dominated
 //----------------------------------------------------------------------
 
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
                                      int64_t iEnd,
                                      Grid grid) {
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+  int64_t iNeutral, iSpecies;
+  for (iNeutral = 0; iNeutral < nSpeciesAdvect; iNeutral++) {
+    iSpecies = species_to_advect[iNeutral];
     // Integrate with hydrostatic equilibrium up:
     for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
       species[iSpecies].density_scgc.slice(iAlt) =
@@ -286,31 +310,55 @@ void Neutrals::nan_test(std::string variable) {
 // Checks for nans and +/- infinities in density, temp, and velocity
 //----------------------------------------------------------------------
 
-bool Neutrals::check_for_nonfinites() {
+bool Neutrals::check_for_nonfinites(std::string location) {
   bool isBad = false;
   bool didWork = true;
 
   isBad = !all_finite(density_scgc, "density_scgc");
-
   if (isBad) {
     report.error("non-finite found in neutral density!");
+    report.error("from location : " + location);
     didWork = false;
   }
 
+  int64_t iSpecies;
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    isBad = !all_finite(species[iSpecies].density_scgc,
+			species[iSpecies].cName + " density");
+    if (isBad) {
+      report.error("non-finite found in " +
+		   species[iSpecies].cName + " density!");
+      report.error("from location : " + location);
+      didWork = false;
+    }
+  }
+  
   isBad = !all_finite(temperature_scgc, "temperature_scgc");
-
   if (isBad) {
     report.error("non-finite found in neutral temperature!");
+    report.error("from location : " + location);
     didWork = false;
   }
 
   isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
-
   if (isBad) {
     report.error("non-finite found in neutral velocity!");
+    report.error("from location : " + location);
     didWork = false;
   }
+  didWork = sync_across_all_procs(didWork);
 
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    isBad = !all_finite(species[iSpecies].velocity_vcgc,
+			species[iSpecies].cName + " velocity!");
+    if (isBad) {
+      report.error("non-finite found in " + 
+		   species[iSpecies].cName + " velocity!");
+      report.error("from location : " + location);
+      didWork = false;
+    }
+  }
+  
   return didWork;
 }
 

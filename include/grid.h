@@ -127,6 +127,14 @@ public:
   arma_cube MeshCoefp1;
   arma_cube MeshCoefp2;
 
+  // This is for a one-sided 3rd order gradient for the bottom boundary:
+
+  arma_cube MeshCoef1s3rdp1;
+  arma_cube MeshCoef1s3rdp2;
+  arma_cube MeshCoef1s3rdp3;
+  arma_cube MeshCoef1s3rdp4;
+  arma_cube MeshCoef1s3rdp5;
+
   arma_cube dlon_center_scgc;
   arma_cube dlon_center_dist_scgc;
 
@@ -136,6 +144,21 @@ public:
   // dx dy for reference grid system
   // Vector of dx dy of different altitudes
   arma_vec drefx, drefy;
+
+  /// These are switching to the LR and DU directions for generalized coords
+  /// They are also in radians
+
+  arma_cube x_Center, y_Center;
+  arma_cube x_Left, y_Down;
+
+  /// these are center-to-center distances in the LR (X) and DU (Y) directions:
+  arma_cube dx_Center, dy_Center;
+  /// need dx on the lower / upper edges, don't need them on the left/right
+  arma_cube dx_Down;
+  /// need dy on the left / right edges:
+  arma_cube dy_Left;
+  /// cell area (in radians^2)
+  arma_cube cell_area;
 
   std::vector<arma_cube> bfield_vcgc;
   arma_cube bfield_mag_scgc;
