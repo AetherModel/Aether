@@ -307,6 +307,9 @@ precision_t Indices::get_index(double time, int index) {
 
   int64_t iLow, iMid, iHigh;
 
+  if (all_indices_arrays[index].nValues <= 0)
+    return -1.0e32;
+
   iLow = 0;
   iHigh = all_indices_arrays[index].nValues - 1;
   iMid = (iHigh + iLow) / 2;

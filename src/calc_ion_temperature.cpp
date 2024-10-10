@@ -45,12 +45,14 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
 
   arma_vec temp1d(nAlts);
   arma_vec lambda1d(nAlts);
   arma_vec front1d(nAlts);
   arma_vec dalt1d(nAlts);
   arma_vec conduction1d(nAlts);
+  arma_vec sources1d(nAlts);
 
   arma_cube tempT(nLons, nLats, nAlts);
   arma_cube tempD(nLons, nLats, nAlts);
@@ -58,12 +60,12 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Get the time step size
   precision_t dt = time.get_dt();
 
-  for (iIon = 0; iIon < nSpecs; iIon++)
-    species[iIon].temperature_scgc =
-      neutrals.temperature_scgc;
+  temperature_scgc = 200.0 + sqrt(grid.geoAlt_scgc/1000.0 - 90.0) * 60.0;
 
-  temperature_scgc = neutrals.temperature_scgc;
-
+  for (iIon = 0; iIon < nSpecies; iIon++)
+    species[iIon].temperature_scgc = temperature_scgc;
+    //species[iIon].temperature_scgc = neutrals.temperature_scgc;
+  
   report.exit(function);
   return;
 
@@ -89,17 +91,16 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         // Calculate heat flux (conduction) in 1D; loop over all lat,lon
         // ---------------------------------------------------------------------
         temp1d   = species[iIon].temperature_scgc.tube(iLon, iLat);
-        lambda1d = 25.0 * pow(cKB, 2) * pow(temp1d, 2.5) / species[iIon].mass
-                   / species[iIon].nu_ion_ion[iIon] / 8.0;
         lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
                    / species[iIon].nu_ion_ion[iIon] / 8.0;
         front1d  = 2.0 / species[iIon].density_scgc.tube(iLon, iLat)
                    / cKB / 3.0;
         dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+        sources1d.zeros();
 
         conduction1d.zeros();    // reset temp variable to zero
 
-        conduction1d = solver_conduction(temp1d, lambda1d, front1d, dt, dalt1d);
+        conduction1d = solver_conduction(temp1d, lambda1d, front1d, sources1d, dalt1d, dt, nGCs, true);
 
         // The conduction solver gives Tnew-Told, so divide by dt
         conduction_scgc.tube(iLon, iLat) = conduction1d / dt;

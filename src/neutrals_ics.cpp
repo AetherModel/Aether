@@ -31,6 +31,7 @@ bool Neutrals::initial_conditions(Grid grid,
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
   int64_t nAlts = grid.get_nZ();
+  int64_t nGCs = grid.get_nGCs();
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -156,13 +157,25 @@ bool Neutrals::initial_conditions(Grid grid,
       } else
         temp1d = 200.0;
 
+      // spread the 1D temperature across the globe:
+      for (iLon = 0; iLon < nLons; iLon++) {
+        for (iLat = 0; iLat < nLats; iLat++)
+          temperature_scgc.tube(iLon, iLat) = temp1d;
+      }
+
+      // Make the initial condition in the lower ghost cells to be consistent
+      // with the actual lowwer BC:
       // Set the lower boundary condition:
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
           fill(species[iSpecies].lower_bc_density);
       }
       calc_scale_height(grid);
-      fill_with_hydrostatic(1, nAlts, grid);
+      set_lower_bcs(grid, time, indices);
+
+      for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+	fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
+      
     } // type = planet
   }
 

@@ -61,7 +61,9 @@ public:
     bool IsUniformAlt;
 
     // Only needed for Mag Field grid:
-    precision_t min_apex;
+    // min_apex (not used) and LatStretch is used 
+    // as lat = min_lat + dlat where dlat = acos(cos(lat^stretch))^(1/stretch)
+    precision_t min_apex, LatStretch, FieldLineStretch, max_lat_dipole;
 
     // Some grid shapes allow specification of altitudes based on a file:
     std::string alt_file;
@@ -436,13 +438,23 @@ public:
    **/
   bool get_O_cooling();
 
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
+  bool get_use_centripetal();
+  
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
+  bool get_use_coriolis();
   
   /**********************************************************************
      \brief returns settings["
      \param 
    **/
   bool get_cent_acc();
-
   
   /**********************************************************************
      \brief returns settings["
@@ -475,6 +487,7 @@ public:
      \param 
    **/
   std::string get_advection_neutrals_vertical();
+  bool get_advection_neutrals_bulkwinds();
 
   
   /**********************************************************************

@@ -1,0 +1,58 @@
+
+{
+    "Debug" : {
+	"iVerbose" : 0,
+        "iFunctionVerbose" : {
+            "Grid::create_altitudes": 0},	
+	"dt" : 10.0,
+	"check_for_nans" : true
+    },
+
+    "Planet" : {
+        "name" : "acheron",
+        "file": "UA/inputs/acheron.in"},
+    
+    "PlanetFile" : "UA/inputs/acheron.in",
+    
+    "ChemistryFile" : "UA/inputs/chemistry_acheron.csv",
+
+    "Electrodynamics" : {
+	"Potential" : "zero",
+	"DiffuseAurora" : "none"},
+
+    "Logfile" : {
+	"species" : ["O", "O+"]},
+    
+    "AuroraFile" : "UA/inputs/aurora_acheron.csv",
+
+    "Advection" : {
+	"Neutrals" : {
+	    "Vertical" : "hydro",
+	    "Horizontal" : "default"}},
+    
+    "Sources" : {
+	"Grid" : {
+	    "Cent_acc" : false }},
+
+    "EndTime" : [2011, 3, 21, 0, 0, 0],
+
+    "CubeSphere" : {
+	"is" : false},
+
+    "GeoBlockSize" : {
+	"nLons" : 144,
+	"nLats" : 72,
+	"nAlts" : 1},
+
+    "GeoGrid" : {
+	"MinAlt" : 1000.0,
+	"dAlt"   : 0.25,
+	"IsUniformAlt" : false},    
+
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [900] },
+    
+    "DoCalcBulkIonTemp" : false
+    
+}

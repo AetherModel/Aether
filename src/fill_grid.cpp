@@ -361,6 +361,34 @@ void Grid::calc_alt_grid_spacing() {
 
   // Need the square of the ratio:
   dalt_ratio_sq_scgc = dalt_ratio_scgc % dalt_ratio_scgc;
+
+  // Calculate the one-sided 3rd order gradient coefficients for the lower BC:
+
+  arma_mat h1, h2, h3, h4, MeshH1, MeshH2, MeshH3, MeshH4;
+
+  for (iAlt = 0; iAlt < nGCs; iAlt++) {
+    h1 = dalt_lower_scgc.slice(iAlt + 2);
+    h2 = dalt_lower_scgc.slice(iAlt + 3);
+    h3 = dalt_lower_scgc.slice(iAlt + 4);
+    h4 = dalt_lower_scgc.slice(iAlt + 5);
+    MeshH1 = h1;
+    MeshH2 = h1 + h2;
+    MeshH3 = h1 + h2 + h3;
+    MeshH4 = h1 + h2 + h3 + h4;
+    MeshCoef1s3rdp1.slice(iAlt) = 
+        -1.0*( MeshH2 % MeshH3 % MeshH4 + MeshH1 % MeshH3 % MeshH4 + 
+               MeshH1 % MeshH2 % MeshH4 + MeshH1 % MeshH2 % MeshH3)/
+              (MeshH1 % MeshH2 % MeshH3 % MeshH4);
+    MeshCoef1s3rdp2.slice(iAlt) =  
+        1.0*( MeshH2 % MeshH3 % MeshH4)/(h1 % h2 % (h2 + h3) % (h2 + h3 + h4));
+    MeshCoef1s3rdp3.slice(iAlt) = 
+        -1.0*( MeshH1 % MeshH3 % MeshH4)/(MeshH2 % h2 % h3 % (h3+h4));
+    MeshCoef1s3rdp4.slice(iAlt) =  
+        1.0*( MeshH1 % MeshH2 % MeshH4)/(MeshH3 % (h3+h2) % h3 % h4);
+    MeshCoef1s3rdp5.slice(iAlt) = 
+        -1.0*( MeshH1 % MeshH2 % MeshH3)/(MeshH4 % (h2+h3+h4) % (h3+h4) % h4);
+  }
+
 }
 
 // ---------------------------------------

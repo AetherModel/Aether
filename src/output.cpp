@@ -270,6 +270,26 @@ bool output(const Neutrals &neutrals,
 
       // Thermal:
       if (type_output == "therm") {
+        AllOutputContainers[iOutput].store_variable("Heating_EUV",
+                                                    "Heating from EUV",
+                                                    "K/s",
+                                                    neutrals.heating_euv_scgc);
+        AllOutputContainers[iOutput].store_variable("Heating_Chemistry",
+                                                    "Heating from Chemistry",
+                                                    "K/s",
+                                                    neutrals.heating_chemical_scgc);
+        AllOutputContainers[iOutput].store_variable("Heating_Transfer",
+                                                    "Heating from Ti- Tn Ion Neutral Collisions",
+                                                    "K/s",
+                                                    neutrals.heating_ion_heat_transfer_scgc);
+        AllOutputContainers[iOutput].store_variable("Heating_Ion_Friction",
+                                                    "Heating from Friction Ion Neutral Collisions",
+                                                    "K/s",
+                                                    neutrals.heating_ion_friction_scgc);
+        AllOutputContainers[iOutput].store_variable("Conduction",
+                                                    "Conduction",
+                                                    "K/s",
+                                                    neutrals.conduction_scgc);
         AllOutputContainers[iOutput].store_variable("O Rad Cooling",
                                                     "[O] Radiative Cooling",
                                                     "K/s",
@@ -305,7 +325,6 @@ bool output(const Neutrals &neutrals,
         report.error("File output type not found!");
         didWork = false;
       } else {
-
         if (grid.get_IsGeoGrid())
           filename = filename + "G_";
         else

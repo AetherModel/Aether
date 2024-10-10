@@ -23,7 +23,18 @@
 	"nLatsPerBlock" : 22,
 	"nAlts" : 40,
         "dAltScale" : 0.25,
-        "IsUniformAlt" : false},    
+        "IsUniformAlt" : false},
+    
+    "ionGrid": {
+        "dAltScale": 0.2,
+        "LatStretch": 6,
+        "Shape": "dipole",
+        "nLatsPerBlock" : 22,
+        "nAlts":159,
+        "LatMax":88,
+        "MinAlt":100.0,
+        "MinApex":150.0
+        },
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
@@ -31,7 +42,6 @@
         "Potential" : "Weimer05",
         "DiffuseAurora" : "fta",
         "File": "UA/inputs/b20110320n_omni.bin"},
-    
     "Outputs" : {
         "type" : ["states", "grid"],
         "dt" : [900, -1] },
