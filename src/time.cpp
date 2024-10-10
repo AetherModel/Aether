@@ -147,11 +147,8 @@ double Times::get_end() {
 // Get the current time as a string
 // -----------------------------------------------------------------------------
 
-std::string Times::get_YMD_HMS(bool useSeconds) {
-  if (useSeconds)
-    return sYMD_HMS;
-  else 
-    return sYMD_HM0;
+std::string Times::get_YMD_HMS() {
+  return sYMD_HMS;
 }
 
 // -----------------------------------------------------------------------------
