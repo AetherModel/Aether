@@ -99,7 +99,7 @@ public:
 
      \param useSeconds if false, replace seconds with 0
    **/
-  std::string get_YMD_HMS(bool useSeconds);
+  std::string get_YMD_HMS();
 
   /**************************************************************
      \brief Returns the current time as a string (year, month...)
