@@ -376,17 +376,17 @@ void Grid::calc_alt_grid_spacing() {
     MeshH3 = h1 + h2 + h3;
     MeshH4 = h1 + h2 + h3 + h4;
     MeshCoef1s3rdp1.slice(iAlt) = 
-        -1.0*( MeshH2*MeshH3*MeshH4 + MeshH1*MeshH3*MeshH4 + 
-               MeshH1*MeshH2*MeshH4 + MeshH1*MeshH2*MeshH3)/
-              (MeshH1*MeshH2*MeshH3*MeshH4);
+        -1.0*( MeshH2 % MeshH3 % MeshH4 + MeshH1 % MeshH3 % MeshH4 + 
+               MeshH1 % MeshH2 % MeshH4 + MeshH1 % MeshH2 % MeshH3)/
+              (MeshH1 % MeshH2 % MeshH3 % MeshH4);
     MeshCoef1s3rdp2.slice(iAlt) =  
-        1.0*( MeshH2*MeshH3*MeshH4)/(h1*h2*(h2 + h3)*(h2 + h3 + h4));
+        1.0*( MeshH2 % MeshH3 % MeshH4)/(h1 % h2 % (h2 + h3) % (h2 + h3 + h4));
     MeshCoef1s3rdp3.slice(iAlt) = 
-        -1.0*( MeshH1*MeshH3*MeshH4)/(MeshH2*h2*h3*(h3+h4));
+        -1.0*( MeshH1 % MeshH3 % MeshH4)/(MeshH2 % h2 % h3 % (h3+h4));
     MeshCoef1s3rdp4.slice(iAlt) =  
-        1.0*( MeshH1*MeshH2*MeshH4)/(MeshH3*(h3+h2)*h3*h4);
+        1.0*( MeshH1 % MeshH2 % MeshH4)/(MeshH3 % (h3+h2) % h3 % h4);
     MeshCoef1s3rdp5.slice(iAlt) = 
-        -1.0*( MeshH1*MeshH2*MeshH3)/(MeshH4*(h2+h3+h4)*(h3+h4)*h4);
+        -1.0*( MeshH1 % MeshH2 % MeshH3)/(MeshH4 % (h2+h3+h4) % (h3+h4) % h4);
   }
 
 }
