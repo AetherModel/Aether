@@ -138,7 +138,7 @@ precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc) {
     report.enter(function, iFunction);
 
     precision_t dt;
-    if (input.get_nAltsGeo() > 1) {
+    if (grid.get_nZ(false) > 1) {
         arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
         dt = dtz.min();
     } else
