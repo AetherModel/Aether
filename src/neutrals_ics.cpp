@@ -30,7 +30,7 @@ bool Neutrals::initial_conditions(Grid grid,
 
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
-  int64_t nAlts = grid.get_nZ();
+  int64_t nAlts = grid.get_nZ(true);
   int64_t nGCs = grid.get_nGCs();
 
   report.print(3, "Creating Neutrals initial_condition");
@@ -172,7 +172,6 @@ bool Neutrals::initial_conditions(Grid grid,
       }
       calc_scale_height(grid);
       set_lower_bcs(grid, time, indices);
-
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
 	fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
       
