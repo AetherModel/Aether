@@ -232,9 +232,6 @@ void Neutrals::calc_scale_height(Grid grid) {
       (species[iSpecies].mass * abs(grid.gravity_mag_scgc));
   }
 
-  iSpecies = 3;
-  std::cout << "scale_height : " << species[iSpecies].scale_height_scgc(10,10,2) << "\n";
-
   // If we have eddy diffusion, the scale-heights need to be adjusted,
   // since all of the scale heights should be the same in the region
   // where eddy diffusion is dominant.
