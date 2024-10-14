@@ -221,7 +221,8 @@ bool Neutrals::set_lower_bcs(Grid grid,
       //std::cout << "before project : " << iAlt << " " << iSpecies << " "
       //  << species[iSpecies].velocity_vcgc[2](10,10,2) << "\n";
       species[iSpecies].velocity_vcgc[2].slice(iAlt) = 
-        project_onesided_alt_3rd(species[iSpecies].velocity_vcgc[2], grid, iAlt);
+        species[iSpecies].velocity_vcgc[2].slice(iAlt+1);
+        //project_onesided_alt_3rd(species[iSpecies].velocity_vcgc[2], grid, iAlt);
     }
   }
   // Force vertical velocities to be zero in the ghost cells:
