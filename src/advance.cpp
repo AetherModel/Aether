@@ -56,7 +56,7 @@ bool advance(Planets &planet,
   neutrals.calc_bulk_velocity();
   neutrals.calc_kappa_eddy();
   neutrals.calc_viscosity();
-  //neutrals.calc_cMax();
+  neutrals.calc_cMax();
 
   ions.fill_electrons();
   ions.calc_sound_speed();
