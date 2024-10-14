@@ -60,8 +60,11 @@ class Neutrals {
     std::vector<arma_cube> velocity_vcgc;
     std::vector<arma_cube> newVelocity_vcgc;
 
-    /// Acceleration of each species (m/s^2)
+    /// Acceleration of each species (m/s^2) due to friction term
     std::vector<arma_cube> acc_neutral_friction;
+
+    /// Coefficient for the friction term (sum of friction coefs with others)
+    arma_cube neutral_friction_coef;
       
     /// Acceleration of each species based on Eddy contribution.
     /// Only in vertical direction.
@@ -528,10 +531,13 @@ class Neutrals {
   bool advect_vertical(Grid grid, Times time);
 
   arma_vec calc_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
-				   arma_vec &vels);
+				   precision_t dt, arma_vec &vels);
 
-  void calc_neutral_friction();  
-  
+  arma_vec calc_friction_one_cell_v2(int64_t iLon, int64_t iLat, int64_t iAlt,
+                                     arma_vec &vels);
+
+  void calc_neutral_friction(precision_t dt);  
+  void calc_neutral_friction_coefs();    
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
