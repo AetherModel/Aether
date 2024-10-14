@@ -16,7 +16,7 @@ precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 
     precision_t dt;
 
-    if (input.get_is_cubesphere())
+    if (grid.iGridShape_ == grid.iCubesphere_)
         dt = calc_dt_cubesphere(grid, cMax_vcgc);
     else
         dt = calc_dt_sphere(grid, cMax_vcgc);
