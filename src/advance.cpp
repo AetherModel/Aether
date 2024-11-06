@@ -93,8 +93,10 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
-  if (gGrid.get_nAlts(false) > 1)
+  if (gGrid.get_nAlts(false) > 1) {
     neutrals.advect_vertical(gGrid, time);
+    ions.advect_vertical(gGrid, time);
+  }
 
   neutrals.exchange_old(gGrid);
   advect(gGrid, time, neutrals);

@@ -110,6 +110,7 @@ class Ions {
   bool set_bcs(Grid grid, Times time, Indices indices);
   bool set_upper_bcs(Grid grid);
   bool set_lower_bcs(Grid grid, Times time, Indices indices);
+  bool advect_vertical(Grid grid, Times time);
 
   int get_species_id(std::string name);
   void calc_efield(Grid grid);

@@ -487,7 +487,8 @@ public:
   bool get_advection_neutrals_bulkwinds();
   bool get_advection_neutrals_implicitfriction();
 
-  
+  std::string get_advection_ions_along();
+
   /**********************************************************************
      \brief returns settings["
      \param 

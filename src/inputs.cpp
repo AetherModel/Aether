@@ -1154,6 +1154,10 @@ std::string Inputs::get_advection_neutrals_vertical() {
   return get_setting_str("Advection", "Neutrals", "Vertical");
 }
 
+std::string Inputs::get_advection_ions_along() {
+  return get_setting_str("Advection", "Ions", "Along");
+}
+
 bool Inputs::get_advection_neutrals_bulkwinds() {
   return get_setting_bool("Advection", "Neutrals", "useBulkWinds");
 }
