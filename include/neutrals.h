@@ -47,7 +47,7 @@ class Neutrals {
     precision_t vibe;
 
     /// Advect this species? (1 = yes, 0 = no)
-    int DoAdvect;
+    bool DoAdvect;
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
