@@ -1,7 +1,7 @@
 // Copyright 2023, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 //
-// initial version - A. Ridley - July 28, 2023
+// initial version - A. Ridley - Nov. 1, 2024
 
 #include "aether.h"
 
