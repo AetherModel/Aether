@@ -180,10 +180,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         for (int64_t iComp = 0; iComp < 3; iComp++) {
           top = rho_nuin % a_perp[iComp] + Nie % a_x_b[iComp];
           species[iIon].perp_velocity_vcgc[iComp] = top / bottom;
-        }
-      } else {
-        // No Planetary Magnetic field
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+
           a_par[iComp] = total_forcing[iComp];
           // Steady state:
           species[iIon].par_velocity_vcgc[iComp] =
@@ -191,6 +188,24 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           //species[iIon].par_velocity_vcgc[iComp] =
           //  (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt / rho) /
           //  (1 + nuin_sum * dt);
+          species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
+/*
+          std::cout << iComp << " " << iIon << " " << a_par[iComp](2,2,20) << " " << rho(2,2,20) << " "
+          << nuin_sum(2,2,20) << " "
+          << species[iIon].par_velocity_vcgc[iComp](2,2,20) << "\n"; */
+        }
+      } else {
+        // No Planetary Magnetic field
+        for (int64_t iComp = 0; iComp < 3; iComp++) {
+          a_par[iComp] = total_forcing[iComp];
+          // Steady state:
+          //species[iIon].par_velocity_vcgc[iComp] =
+          //  a_par[iComp] / rho / nuin_sum;
+          species[iIon].par_velocity_vcgc[iComp] =
+            (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt / rho) /
+            (1 + nuin_sum * dt);
+          species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
+
         }
       }
 
