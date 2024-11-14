@@ -198,6 +198,7 @@ int Neutrals::read_planet_file(Planets planet) {
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
+  int doAdvect;
 
   report.print(3, "In read_planet_file for Neutrals");
 
@@ -213,7 +214,11 @@ int Neutrals::read_planet_file(Planets planet) {
     species[iSpecies].vibe = neutrals["vibration"][iSpecies];
     species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
     species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
-    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    doAdvect = neutrals["advect"][iSpecies];
+    if (doAdvect == 0) 
+      species[iSpecies].DoAdvect = false;
+    else
+      species[iSpecies].DoAdvect = true;    
     species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
   }
 
