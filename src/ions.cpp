@@ -154,6 +154,7 @@ int Ions::read_planet_file(Planets planet) {
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
+  int doAdvect;
 
   report.print(3, "In read_planet_file for Ions");
 
@@ -166,7 +167,11 @@ int Ions::read_planet_file(Planets planet) {
     double mass = ions["mass"][iSpecies];
     species[iSpecies].mass = mass * cAMU;
     species[iSpecies].charge = ions["charge"][iSpecies];
-    species[iSpecies].DoAdvect = ions["advect"][iSpecies];
+    doAdvect = ions["advect"][iSpecies];
+    if (doAdvect == 0) 
+      species[iSpecies].DoAdvect = false;
+    else
+      species[iSpecies].DoAdvect = true;    
     species[iSpecies].vibe = ions["vibration"][iSpecies];
   }
 
