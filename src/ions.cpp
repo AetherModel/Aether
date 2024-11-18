@@ -34,6 +34,19 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
 
+  tmp.heating_neutral_friction_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_neutral_friction_scgc.zeros();
+  tmp.heating_electron_friction_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_electron_friction_scgc.zeros();
+  tmp.heating_neutral_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_neutral_heat_transfer_scgc.zeros();
+  tmp.heating_electron_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_electron_heat_transfer_scgc.zeros();
+  tmp.heating_sources_total.set_size(nLons, nLats, nAlts);
+  tmp.heating_sources_total.zeros();
+  tmp.Cv_scgc.set_size(nLons, nLats, nAlts);
+  tmp.Cv_scgc.zeros();
+
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
@@ -92,6 +105,8 @@ Ions::Ions(Grid grid, Planets planet) {
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
+  Cv_scgc.set_size(nLons, nLats, nAlts);
+  Cv_scgc.zeros();
   gamma_scgc.set_size(nLons, nLats, nAlts);
   gamma_scgc.ones();
   sound_scgc.set_size(nLons, nLats, nAlts);
@@ -329,6 +344,42 @@ void Ions::calc_cMax() {
   return;
 }
 
+// ----------------------------------------------------------------------
+// Calculate a bunch of derived products:
+//   - Specific Heat at Constant Volume (Cv)
+// ----------------------------------------------------------------------
+
+void Ions::calc_specific_heat() {
+
+  int64_t iSpecies;
+
+  std::string function = "Ions::calc_specific_heat";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  Cv_scgc.zeros();
+  gamma_scgc.zeros();
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // individual Cv for individual temperatures:
+    species[iSpecies].Cv_scgc = 
+      (species[iSpecies].vibe - 2) * cKB / species[iSpecies].mass / 2;
+    // Bulk Cv for the bulk temperature:
+    Cv_scgc = Cv_scgc +
+              (species[iSpecies].vibe - 2) *
+              species[iSpecies].density_scgc *
+              cKB / species[iSpecies].mass;
+    gamma_scgc = gamma_scgc +
+                 species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
+  }
+  // Bulk Cv and gamma are the density-weighted Cv and gamma
+  Cv_scgc = Cv_scgc / (2 * density_scgc);
+  gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
+
+  report.exit(function);
+  return;
+}
+
 
 // -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
@@ -346,13 +397,17 @@ void Ions::fill_electrons() {
   rho_scgc.zeros();
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // Electron density is the last species:
     species[nSpecies].density_scgc =
       species[nSpecies].density_scgc + species[iSpecies].density_scgc;
+    // While we are at it, calculate the mass density too:
     rho_scgc = rho_scgc +
                species[iSpecies].mass * species[iSpecies].density_scgc;
   }
 
+  // The electron density is also stored as the bulk density:
   density_scgc = species[nSpecies].density_scgc;
+  // We can now calculate the mean major mass for ions too:
   mean_major_mass_scgc = rho_scgc / density_scgc;
 
   report.exit(function);
