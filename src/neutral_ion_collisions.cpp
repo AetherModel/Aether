@@ -28,7 +28,7 @@ void calc_ion_collisions(Neutrals &neutrals,
   arma_cube vDiff(nX, nY, nZ);
   // momentum so we can divide by the mass density later
   std::vector<arma_cube> momentum;
-  momentum =  make_cube_vector(nX, nY, nZ, 3);
+  momentum = make_cube_vector(nX, nY, nZ, 3);
 
   beta.zeros();
 
@@ -67,14 +67,32 @@ void calc_ion_collisions(Neutrals &neutrals,
                                            % vDiff;
     }
 
-    // multiply by collision frequencies and convert
-    // energy change to temperature change:
+    // multiply by collision frequencies divide by two. The two is because we
+    // assumed that the ion and neutral masses (not rho) were the same above,
+    // and the bottom term has Mi + Mn and not just Mn.
     neutrals.heating_ion_friction_scgc =
-      beta % neutrals.heating_ion_friction_scgc / (2 * neutrals.rho_scgc %
-                                                   neutrals.Cv_scgc);
+      beta % neutrals.heating_ion_friction_scgc / 2;
     neutrals.heating_ion_heat_transfer_scgc =
-      beta % neutrals.heating_ion_friction_scgc / (2 * neutrals.rho_scgc %
-                                                   neutrals.Cv_scgc);
+      beta % neutrals.heating_ion_heat_transfer_scgc / 2;
+
+    // The ions get the same amount of energy:
+    ions.heating_neutral_friction_scgc = 100*neutrals.heating_ion_friction_scgc;
+    // Temperature difference is reversed (ions giving energy to neutrals):
+    ions.heating_neutral_heat_transfer_scgc = - neutrals.heating_ion_heat_transfer_scgc;
+
+    // convert energy change to temperature change:
+    neutrals.heating_ion_friction_scgc =
+      neutrals.heating_ion_friction_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);
+    neutrals.heating_ion_heat_transfer_scgc =
+      neutrals.heating_ion_heat_transfer_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);
+    std::cout << "ion heat : " << ions.heating_neutral_friction_scgc(2,2,25) << " "
+      << ions.heating_neutral_heat_transfer_scgc(2,2,25) << " "
+      << vDiff(2,2,25) << "\n";
+    //ions.heating_neutral_friction_scgc = 
+    //  ions.heating_neutral_friction_scgc / (ions.rho_scgc % ions.Cv_scgc);
+    //ions.heating_neutral_heat_transfer_scgc = 
+    //  ions.heating_neutral_heat_transfer_scgc / (ions.rho_scgc % ions.Cv_scgc);
+
   } else {
     energy.zeros();
 
