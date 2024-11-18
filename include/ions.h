@@ -102,6 +102,22 @@ class Ions {
     /// Total chemical sources and losses:
     arma_cube sources_scgc;
     arma_cube losses_scgc;
+
+    // Heating terms:
+    /// Bulk collisional heating with neutrals and electrons (K/s)
+    arma_cube heating_neutral_friction_scgc;
+    arma_cube heating_electron_friction_scgc;
+
+    /// Bulk collisional heating with neutrals and electrons (K/s)
+    arma_cube heating_neutral_heat_transfer_scgc;
+    arma_cube heating_electron_heat_transfer_scgc;
+
+    /// Total heating sources
+    arma_cube heating_sources_total;
+
+    /// Specific heat (constant volume):
+    arma_cube Cv_scgc;
+
   };
 
   // bulk quantities (states):
@@ -137,6 +153,21 @@ class Ions {
 
   // This is the vector that will contain all of the different species:
   std::vector<species_chars> species;
+
+  // Heating terms:
+  /// Bulk collisional heating with neutrals and electrons (K/s)
+  arma_cube heating_neutral_friction_scgc;
+  arma_cube heating_electron_friction_scgc;
+
+  /// Bulk collisional heating with neutrals and electrons (K/s)
+  arma_cube heating_neutral_heat_transfer_scgc;
+  arma_cube heating_electron_heat_transfer_scgc;
+
+  /// Total heating sources
+  arma_cube heating_sources_total;
+
+  /// Specific heat (constant volume):
+  arma_cube Cv_scgc;
 
   // Electrodynamics:
   /// Electric potential:
@@ -223,6 +254,11 @@ class Ions {
      \param none
    **/
   void calc_cMax();
+
+  /**********************************************************************
+     \brief Calculate the individual and bulk specific heats
+   **/
+  void calc_specific_heat();
 
   /**********************************************************************
      \brief Sets the boundary conditions of the ions
