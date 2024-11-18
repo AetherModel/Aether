@@ -111,10 +111,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
     for (int64_t iComp = 0; iComp < 3; iComp++) {
       species[iIon].perp_velocity_vcgc[iComp].zeros();
-      species[iIon].par_velocity_vcgc[iComp].zeros();
     }
 
     if (species[iIon].DoAdvect) {
+      nuin_sum.zeros();
 
       // Need mass density for the current ion species:
       rho = species[iIon].mass * species[iIon].density_scgc;
@@ -126,10 +126,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
-      for (iDim = 0; iDim < 3; iDim ++)
+      for (iDim = 0; iDim < 3; iDim ++) {
         gravity_vcgc[iDim] = species[iIon].mass *
                              grid.gravity_vcgc[iDim] % species[iIon].density_scgc;
-
+      }
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
 
@@ -188,6 +188,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
             (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt / rho) /
             (1 + nuin_sum * dt);
           species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
+
+        //std::cout << "par_vel : " << iIon << " " << iComp << " " << species[iIon].par_velocity_vcgc[iComp](2,2,10) 
+        //<< " " << a_par[iComp](2,2,10) * dt / rho(2,2,10)<< "\n";
+
         }
       } else {
         // No Planetary Magnetic field
