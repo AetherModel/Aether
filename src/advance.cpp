@@ -61,6 +61,7 @@ bool advance(Planets &planet,
   ions.fill_electrons();
   ions.calc_sound_speed();
   ions.calc_cMax();
+  ions.calc_specific_heat();
 
   precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
   precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
@@ -174,8 +175,8 @@ bool advance(Planets &planet,
 
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
-    ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
-    ionsMag.calc_electron_temperature(neutralsMag, mGrid);
+    //ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
+    //ionsMag.calc_electron_temperature(neutralsMag, mGrid);
 
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Advection");
