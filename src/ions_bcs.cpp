@@ -69,12 +69,16 @@ bool Ions::set_upper_bcs(Grid grid) {
 
   for (iAlt = nAlts - nGCs; iAlt < nAlts; iAlt++) {
     // Bulk Quantities:
-    temperature_scgc.slice(iAlt) = temperature_scgc.slice(iAlt - 1);
+    // Constant gradient (ignoring grid spacing...)
+    temperature_scgc.slice(iAlt) = 
+      2 * temperature_scgc.slice(iAlt - 1) - temperature_scgc.slice(iAlt - 2);
 
     // For each species:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+      // Constant gradient (ignoring grid spacing...)
       species[iSpecies].temperature_scgc.slice(iAlt) =
-        species[iSpecies].temperature_scgc.slice(iAlt - 1);
+        2 * species[iSpecies].temperature_scgc.slice(iAlt - 1) -
+        species[iSpecies].temperature_scgc.slice(iAlt - 2);
 
       aveT = (species[iSpecies].temperature_scgc.slice(iAlt) +
               electron_temperature_scgc.slice(iAlt));
@@ -84,8 +88,11 @@ bool Ions::set_upper_bcs(Grid grid) {
           abs(grid.gravity_vcgc[2].slice(iAlt));
       // Assume each species falls of with (modified) hydrostatic:
       species[iSpecies].density_scgc.slice(iAlt) =
+        species[iSpecies].temperature_scgc.slice(iAlt) / 
+        species[iSpecies].temperature_scgc.slice(iAlt-1) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
         exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
+      species[iSpecies].velocity_vcgc[2].slice(iAlt).zeros();
     }
   }
 
