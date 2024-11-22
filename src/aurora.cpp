@@ -220,6 +220,7 @@ void calc_aurora(Grid grid,
   precision_t avee;
   arma_vec diff_num_flux;
   arma_vec diff_energy_flux;
+  arma_vec b1d;
   bool DoDebug = false;
 
   report.print(4, "aurora - starting main loop!");
@@ -228,6 +229,7 @@ void calc_aurora(Grid grid,
   for (iLon = 0; iLon < nLons ; iLon++) {
     for (iLat = 0; iLat < nLats ; iLat++) {
       
+      // CHANGE
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
       avee = ions.avee(iLon, iLat);  // in keV
 
@@ -235,11 +237,12 @@ void calc_aurora(Grid grid,
 
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
+        b1d = abs(grid.bfield_unit_vcgc[2].tube(iLon,iLat));
 
         for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
-          rhoH1d = rhoH1d + rho_tube;
+          rhoH1d = rhoH1d + rho_tube / b1d;
         }
 
         // Step 2: Calculate the distribution function:
@@ -270,7 +273,8 @@ void calc_aurora(Grid grid,
         }
 
         // /cm3 -> /m3
-        ionization1d = ionization1d * pcm3topm3;
+        // CHANGE!!!!
+        ionization1d = ionization1d * pcm3topm3/100.0;
 
         // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the
