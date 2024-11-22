@@ -73,6 +73,9 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  // CHANGE !!!
+  dt = dt / 10.0;
+
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
   int64_t nZ = grid.get_nZ();
@@ -87,8 +90,9 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   calc_exb_drift(grid);
 
   std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> wind_forcing = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> wind_acc = make_cube_vector(nX, nY, nZ, 3);
   std::vector<arma_cube> total_forcing = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> efield_acc = make_cube_vector(nX, nY, nZ, 3);
 
   int64_t iIon, iNeutral, iDim;
 
@@ -114,7 +118,6 @@ void Ions::calc_ion_drift(Neutrals neutrals,
     }
 
     if (species[iIon].DoAdvect) {
-      nuin_sum.zeros();
 
       // Need mass density for the current ion species:
       rho = species[iIon].mass * species[iIon].density_scgc;
@@ -127,22 +130,23 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
       for (iDim = 0; iDim < 3; iDim ++) {
-        gravity_vcgc[iDim] = species[iIon].mass *
-                             grid.gravity_vcgc[iDim] % species[iIon].density_scgc;
+        gravity_vcgc[iDim] = grid.gravity_vcgc[iDim];
+        grad_Pi_plus_Pe[iDim] = grad_Pi_plus_Pe[iDim] / rho;
+        efield_acc[iDim] = Nie % efield_vcgc[iDim] / rho;
       }
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
 
       for (int64_t iComp = 0; iComp < 3; iComp++)
-        wind_forcing[iComp].zeros();
-
+        wind_acc[iComp].zeros();
+      nuin_sum.zeros();
       for (iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
-        rho_nuin = rho % species[iIon].nu_ion_neutral_vcgc[iNeutral];
+        rho_nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
         nuin_sum = nuin_sum + species[iIon].nu_ion_neutral_vcgc[iNeutral];
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
-          wind_forcing[iComp] = wind_forcing[iComp] +
-                                rho_nuin % neutrals.velocity_vcgc[iComp];
+          wind_acc[iComp] = wind_acc[iComp] +
+                            rho_nuin % neutrals.velocity_vcgc[iComp];
         }
       }
 
@@ -151,8 +155,8 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         total_forcing[iComp] =
           - grad_Pi_plus_Pe[iComp]
           + gravity_vcgc[iComp]
-          + wind_forcing[iComp]
-          + Nie % efield_vcgc[iComp];
+          + wind_acc[iComp]
+          + efield_acc[iComp];
       }
 
       std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
@@ -178,15 +182,25 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         bottom.clamp(1e-32, 1e32);
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
+          // I redefined A to be an acceleration instead of a force, which
+          // then changes the definition of top
           top = rho_nuin % a_perp[iComp] + Nie % a_x_b[iComp];
-          species[iIon].perp_velocity_vcgc[iComp] = top / bottom;
+          species[iIon].perp_velocity_vcgc[iComp] = rho_nuin % top / bottom;
 
           // Steady state:
           //species[iIon].par_velocity_vcgc[iComp] =
           //  a_par[iComp] / rho / nuin_sum;
           species[iIon].par_velocity_vcgc[iComp] =
-            (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt / rho) /
+            (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt) /
             (1 + nuin_sum * dt);
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ-1).zeros();
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ-2).zeros();
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ-3) = species[iIon].par_velocity_vcgc[iComp].slice(nZ-4);
+//          if (iIon == 0 && iComp == 2) 
+//            std::cout << "par : " << species[iIon].par_velocity_vcgc[iComp](2,2,25) << ' ' <<
+//            a_par[iComp](2,2,25) << ' ' <<
+//            nuin_sum(2,2,25) << ' ' <<
+//            rho(2,2,25) << '\n';
           species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
 
         //std::cout << "par_vel : " << iIon << " " << iComp << " " << species[iIon].par_velocity_vcgc[iComp](2,2,10) 
