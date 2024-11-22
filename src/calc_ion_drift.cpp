@@ -91,13 +91,13 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
   std::vector<arma_cube> wind_acc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> total_forcing = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> total_acc = make_cube_vector(nX, nY, nZ, 3);
   std::vector<arma_cube> efield_acc = make_cube_vector(nX, nY, nZ, 3);
 
   int64_t iIon, iNeutral, iDim;
 
   std::vector<arma_cube> grad_Pi_plus_Pe;
-  arma_cube rho, rho_nuin, nuin_sum, Nie, sum_rho;
+  arma_cube rho, nuin, nuin_sum, Nie, sum_rho;
   arma_cube top, bottom;
 
   nuin_sum.set_size(nX, nY, nZ);
@@ -110,6 +110,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp].zeros();
+
+  std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> a_perp = make_cube_vector(nX, nY, nZ, 3);
+  std::vector<arma_cube> a_x_b;
 
   for (iIon = 0; iIon < nSpecies; iIon++) {
 
@@ -141,35 +145,31 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         wind_acc[iComp].zeros();
       nuin_sum.zeros();
       for (iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
-        rho_nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
+        nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
         nuin_sum = nuin_sum + species[iIon].nu_ion_neutral_vcgc[iNeutral];
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
           wind_acc[iComp] = wind_acc[iComp] +
-                            rho_nuin % neutrals.velocity_vcgc[iComp];
+                            nuin % neutrals.velocity_vcgc[iComp];
         }
       }
 
       // Total Forcing (sum everything - this is A_s):
       for (int64_t iComp = 0; iComp < 3; iComp++) {
-        total_forcing[iComp] =
+        total_acc[iComp] =
           - grad_Pi_plus_Pe[iComp]
           + gravity_vcgc[iComp]
           + wind_acc[iComp]
           + efield_acc[iComp];
       }
 
-      std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
-      std::vector<arma_cube> a_perp = make_cube_vector(nX, nY, nZ, 3);
-      std::vector<arma_cube> a_x_b;
-
       if (grid.get_HasBField()) {
         // With a Planetary Magnetic field
-        arma_cube a_dot_b = dot_product(total_forcing, grid.bfield_unit_vcgc);
+        arma_cube a_dot_b = dot_product(total_acc, grid.bfield_unit_vcgc);
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = a_dot_b % grid.bfield_unit_vcgc[iComp];
-          a_perp[iComp] = total_forcing[iComp] - a_par[iComp];
+          a_perp[iComp] = total_acc[iComp] - a_par[iComp];
         }
 
         a_x_b = cross_product(a_perp, grid.bfield_vcgc);
@@ -177,15 +177,15 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         // With floats, this can become 0, which then makes the
         // velocity a nan, so the clamp ensures that the bottom is not 0
         bottom =
-          rho_nuin % rho_nuin +
+          rho % rho % nuin % nuin +
           Nie % Nie % grid.bfield_mag_scgc % grid.bfield_mag_scgc;
         bottom.clamp(1e-32, 1e32);
 
         for (int64_t iComp = 0; iComp < 3; iComp++) {
           // I redefined A to be an acceleration instead of a force, which
           // then changes the definition of top
-          top = rho_nuin % a_perp[iComp] + Nie % a_x_b[iComp];
-          species[iIon].perp_velocity_vcgc[iComp] = rho_nuin % top / bottom;
+          top = rho % nuin % a_perp[iComp] + Nie % a_x_b[iComp];
+          species[iIon].perp_velocity_vcgc[iComp] = rho % top / bottom;
 
           // Steady state:
           //species[iIon].par_velocity_vcgc[iComp] =
@@ -196,21 +196,13 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           species[iIon].par_velocity_vcgc[iComp].slice(nZ-1).zeros();
           species[iIon].par_velocity_vcgc[iComp].slice(nZ-2).zeros();
           species[iIon].par_velocity_vcgc[iComp].slice(nZ-3) = species[iIon].par_velocity_vcgc[iComp].slice(nZ-4);
-//          if (iIon == 0 && iComp == 2) 
-//            std::cout << "par : " << species[iIon].par_velocity_vcgc[iComp](2,2,25) << ' ' <<
-//            a_par[iComp](2,2,25) << ' ' <<
-//            nuin_sum(2,2,25) << ' ' <<
-//            rho(2,2,25) << '\n';
           species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
-
-        //std::cout << "par_vel : " << iIon << " " << iComp << " " << species[iIon].par_velocity_vcgc[iComp](2,2,10) 
-        //<< " " << a_par[iComp](2,2,10) * dt / rho(2,2,10)<< "\n";
 
         }
       } else {
         // No Planetary Magnetic field
         for (int64_t iComp = 0; iComp < 3; iComp++) {
-          a_par[iComp] = total_forcing[iComp];
+          a_par[iComp] = total_acc[iComp];
           // Steady state:
           //species[iIon].par_velocity_vcgc[iComp] =
           //  a_par[iComp] / rho / nuin_sum;
