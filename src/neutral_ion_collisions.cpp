@@ -76,7 +76,7 @@ void calc_ion_collisions(Neutrals &neutrals,
       beta % neutrals.heating_ion_heat_transfer_scgc / 2;
 
     // The ions get the same amount of energy:
-    ions.heating_neutral_friction_scgc = 100*neutrals.heating_ion_friction_scgc;
+    ions.heating_neutral_friction_scgc = neutrals.heating_ion_friction_scgc;
     // Temperature difference is reversed (ions giving energy to neutrals):
     ions.heating_neutral_heat_transfer_scgc = - neutrals.heating_ion_heat_transfer_scgc;
 
@@ -85,14 +85,9 @@ void calc_ion_collisions(Neutrals &neutrals,
       neutrals.heating_ion_friction_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);
     neutrals.heating_ion_heat_transfer_scgc =
       neutrals.heating_ion_heat_transfer_scgc / (neutrals.rho_scgc % neutrals.Cv_scgc);
-    std::cout << "ion heat : " << ions.heating_neutral_friction_scgc(2,2,25) << " "
-      << ions.heating_neutral_heat_transfer_scgc(2,2,25) << " "
-      << vDiff(2,2,25) << "\n";
-    //ions.heating_neutral_friction_scgc = 
-    //  ions.heating_neutral_friction_scgc / (ions.rho_scgc % ions.Cv_scgc);
-    //ions.heating_neutral_heat_transfer_scgc = 
-    //  ions.heating_neutral_heat_transfer_scgc / (ions.rho_scgc % ions.Cv_scgc);
-
+    //std::cout << "ion heat : " << ions.heating_neutral_friction_scgc(2,2,25) << " "
+    //  << ions.heating_neutral_heat_transfer_scgc(2,2,25) << " "
+    //  << vDiff(2,2,25) << "\n";
   } else {
     energy.zeros();
 
