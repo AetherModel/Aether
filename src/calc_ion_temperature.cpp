@@ -63,7 +63,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Get the time step size
   precision_t dt = time.get_dt();
 
-  //temperature_scgc = 200.0 + sqrt(grid.geoAlt_scgc / 1000.0 - 90.0) * 100.0;
+  //temperature_scgc = 200.0 + sqrt(grid.geoAlt_scgc / 1000.0 - 90.0) * 50.0;
 
   //for (iIon = 0; iIon < nSpecies; iIon++)
   //  species[iIon].temperature_scgc = temperature_scgc;
@@ -116,6 +116,8 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         temp1d(1) = neutrals.temperature_scgc(iLon, iLat, 1);
         lambda1d = 3.1e6 / sqrt(Mi) / pow(species[iIon].charge, 4) *
            pow(temp1d, 2.5) % (1 + 1.75 * ratios) * cE;
+        lambda1d(1) = lambda1d(2);
+        lambda1d(0) = lambda1d(2);
         //lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
         //           / species[iIon].nu_ion_ion[iIon] / 8.0;
         front1d  = 3.0 / 2.0 * cKB * species[iIon].density_scgc.tube(iLon, iLat);
@@ -172,7 +174,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   }
 */
 
-  std::cout << "ion temp : " << temperature_scgc(2,2,20) << " " << neutrals.temperature_scgc(2,2,20) << "\n";
+  //std::cout << "ion temp : " << temperature_scgc(2,2,5) << " " << neutrals.temperature_scgc(2,2,5) << "\n";
   report.exit(function);
   return;
 }
