@@ -118,6 +118,9 @@ class Ions {
     /// Specific heat (constant volume):
     arma_cube Cv_scgc;
 
+    /// Heat Conduction:
+    arma_cube lambda;
+
   };
 
   // bulk quantities (states):
@@ -168,6 +171,9 @@ class Ions {
 
   /// Specific heat (constant volume):
   arma_cube Cv_scgc;
+
+  /// Head Conduction (bulk):
+  arma_cube lambda;
 
   // Electrodynamics:
   /// Electric potential:
@@ -259,6 +265,11 @@ class Ions {
      \brief Calculate the individual and bulk specific heats
    **/
   void calc_specific_heat();
+
+  /**********************************************************************
+     \brief Calculate the individual and bulk thermal conductivities
+   **/
+  void calc_lambda();
 
   /**********************************************************************
      \brief Sets the boundary conditions of the ions

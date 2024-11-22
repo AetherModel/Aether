@@ -46,6 +46,8 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.heating_sources_total.zeros();
   tmp.Cv_scgc.set_size(nLons, nLats, nAlts);
   tmp.Cv_scgc.zeros();
+  tmp.lambda.set_size(nLons, nLats, nAlts);
+  tmp.lambda.zeros();
 
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
@@ -107,6 +109,8 @@ Ions::Ions(Grid grid, Planets planet) {
 
   Cv_scgc.set_size(nLons, nLats, nAlts);
   Cv_scgc.zeros();
+  lambda.set_size(nLons, nLats, nAlts);
+  lambda.zeros();
   gamma_scgc.set_size(nLons, nLats, nAlts);
   gamma_scgc.ones();
   sound_scgc.set_size(nLons, nLats, nAlts);
@@ -345,8 +349,61 @@ void Ions::calc_cMax() {
 }
 
 // ----------------------------------------------------------------------
-// Calculate a bunch of derived products:
-//   - Specific Heat at Constant Volume (Cv)
+// Calculate thermal conduction (lambda)
+// ----------------------------------------------------------------------
+
+void Ions::calc_lambda() {
+
+  int64_t iIon, jIon;
+
+  std::string function = "Ions::calc_specific_heat";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  lambda.zeros();
+  precision_t Mi, Mj;
+  arma_cube density_ratio, ratios;
+
+  // This sets the size:
+  ratios = density_scgc;
+
+  for (iIon = 0; iIon < nSpecies; iIon++) {
+
+    Mi = species[iIon].mass / cAMU;
+    ratios.zeros();
+
+    for (jIon = 0; jIon < nSpecies; jIon++) {
+      if (jIon != iIon) {
+        Mj = species[jIon].mass / cAMU;
+        density_ratio = species[jIon].density_scgc / 
+          species[iIon].density_scgc;
+        density_ratio.clamp(0.001, 1000.0);
+        ratios = ratios + density_ratio * 
+          (species[jIon].charge * species[jIon].charge / 
+           species[iIon].charge / species[iIon].charge) *
+           sqrt(Mj / (Mi + Mj)) *
+          (3 * Mi * Mi + 1.6 * Mi * Mj + 1.3 * Mj * Mj)/
+          ((Mi + Mj) * (Mi + Mj));
+      }
+    species[iIon].lambda = 
+      3.1e6 / sqrt(Mi) / pow(species[iIon].charge, 4) *
+      pow(species[iIon].temperature_scgc, 2.5) % (1 + 1.75 * ratios) * cE;
+    }
+    lambda = lambda + species[iIon].lambda % species[iIon].density_scgc;
+  }
+  lambda = lambda / density_scgc;
+
+  //lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
+  //           / species[iIon].nu_ion_ion[iIon] / 8.0;
+
+
+  report.exit(function);
+  return;
+}
+
+
+// ----------------------------------------------------------------------
+// Calculate Specific Heat at Constant Volume (Cv)
 // ----------------------------------------------------------------------
 
 void Ions::calc_specific_heat() {
