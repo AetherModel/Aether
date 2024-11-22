@@ -475,7 +475,8 @@ void Ions::solver_vertical_rusanov(Grid grid,
     if (species[iSpecies].DoAdvect) {
 
       // Log(number density):
-      log_s = log(species[iSpecies].density_scgc);
+      //log_s = log(species[iSpecies].density_scgc);
+      log_s = species[iSpecies].density_scgc;
 
       calc_grad_and_diff_alts_rusanov(grid,
                                       log_s,
@@ -508,11 +509,13 @@ void Ions::solver_vertical_rusanov(Grid grid,
 
       // densities:
       log_s =
-        log(species[iSpecies].density_scgc)
-        - dt * (divVertVel_s[iSpecies] +
+        species[iSpecies].density_scgc
+        //log(species[iSpecies].density_scgc)
+        - dt * (//divVertVel_s[iSpecies] +
                 species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
         + dt * diffLogN_s[iSpecies];
-      species[iSpecies].newDensity_scgc = exp(log_s);
+      //species[iSpecies].newDensity_scgc = exp(log_s);
+      species[iSpecies].newDensity_scgc = log_s;
 
     } else
       species[iSpecies].newDensity_scgc = species[iSpecies].density_scgc;
