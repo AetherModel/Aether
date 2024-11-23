@@ -106,6 +106,7 @@ bool advance(Planets &planet,
   // we have those dimensions:
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
+    ions.exchange_old(gGrid);
     advect(gGrid, time, neutrals);
   }
   if (didWork & input.get_check_for_nans())
