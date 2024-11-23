@@ -116,6 +116,19 @@ Ions::Ions(Grid grid, Planets planet) {
   sound_scgc.set_size(nLons, nLats, nAlts);
   sound_scgc.ones();
 
+  heating_neutral_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_neutral_friction_scgc.zeros();
+  heating_electron_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_electron_friction_scgc.zeros();
+  heating_neutral_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_neutral_heat_transfer_scgc.zeros();
+  heating_electron_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_electron_heat_transfer_scgc.zeros();
+  heating_sources_total.set_size(nLons, nLats, nAlts);
+  heating_sources_total.zeros();
+
+
+
   for (int iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
     cMax_vcgc[iDir].ones();
