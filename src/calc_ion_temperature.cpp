@@ -63,21 +63,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   // Get the time step size
   precision_t dt = time.get_dt();
 
-  //temperature_scgc = 200.0 + sqrt(grid.geoAlt_scgc / 1000.0 - 90.0) * 50.0;
-
-  //for (iIon = 0; iIon < nSpecies; iIon++)
-  //  species[iIon].temperature_scgc = temperature_scgc;
-
-  //species[iIon].temperature_scgc = neutrals.temperature_scgc;
-
-  //report.exit(function);
-  //return;
-
-  // Loop over all species or assume only bulk calculation
-//  if (input.get_do_calc_bulk_ion_temp())
-//    // First ion species only, currently is O+
-//    nSpecs = 1;
-//  else
   nSpecs = nSpecies;
 
   if (report.test_verbose(4)) {
@@ -88,6 +73,9 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   calc_lambda();
 
+  // -------------------------------------------------
+  // This is for calculating the bulk temperature:
+  // -------------------------------------------------
   if (input.get_do_calc_bulk_ion_temp()) {
     for (iLon = nGCs; iLon < nLons - nGCs; iLon++) {
       for (iLat = nGCs; iLat < nLats - nGCs; iLat++) {
@@ -119,8 +107,11 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
 
   } else {
 
-    // Loop over all species or assume only bulk calculation
-    for (iIon = 0; iIon < nSpecs; iIon++) {
+    // -------------------------------------------------
+    // This is for calculating the individual temperature:
+    // -------------------------------------------------
+
+    for (iIon = 0; iIon < nSpecies; iIon++) {
       for (iLon = nGCs; iLon < nLons - nGCs; iLon++) {
         for (iLat = nGCs; iLat < nLats - nGCs; iLat++) {
           temp1d = species[iIon].temperature_scgc.tube(iLon, iLat);
