@@ -371,6 +371,13 @@ class Ions {
   bool restart_file(std::string dir, bool DoRead);
 
   /**********************************************************************
+     \brief Exchange messages between processors
+     \param grid The grid to define the ions on
+   **/
+  // bool exchange(Grid &grid);
+  bool exchange_old(Grid &grid);
+
+  /**********************************************************************
      \brief Vertical advection solver - Rusanov 
      \param grid The grid to define the neutrals on
      \param time contains information about the current time

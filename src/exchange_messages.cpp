@@ -4,35 +4,9 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------------
-// This is where all of the exchange messages routines will sit.
-//
-// Notes:
-//   - We are going to try to do asynchronous communications, which means we
-//     need to do the following:
-//      - pack all variables for all four faces
-//      - send all messages
-//      - receive all messages
-//      - unpack all four faces
-//   - To do this, we need to make send and receive buffers which can't be
-//     touched until everything is complete, so we will build a structure
-//     that contains both the send and receive buffers.
-//
-//   - Direction standard:
-//     iDir == 0 => face 0 => right
-//     iDir == 1 => face 1 = up
-//     iDir == 2 => face 2 = left
-//     iDir == 3 => face 3 = down
-//     This is the side we are dealing with for the process.  For example,
-//       iDir == 0 in sending could be iDir == 2 in receiving for blocks
-//       near the equator.
-// -----------------------------------------------------------------------------
-
-
-// -----------------------------------------------------------------------------
 // This is the main exchange messages for the neutrals.
 //   We are exchanging densities, temperatures, and velocities
 // -----------------------------------------------------------------------------
-
 
 bool Neutrals::exchange_old(Grid &grid) {
 
@@ -62,6 +36,63 @@ bool Neutrals::exchange_old(Grid &grid) {
   return DidWork;
 }
 
+// -----------------------------------------------------------------------------
+// This is the main exchange messages for the neutrals.
+//   We are exchanging densities, temperatures, and velocities
+// -----------------------------------------------------------------------------
+
+bool Ions::exchange_old(Grid &grid) {
+
+  std::string function = "Ions::exchange";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  bool DidWork = true;
+  int64_t nGCs = grid.get_nGCs();
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
+  }
+
+  DidWork = exchange_one_var(grid, temperature_scgc, false);
+  DidWork = exchange_one_var(grid, electron_temperature_scgc, false);
+
+  // velocity components:
+  // reverse east across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
+  // reverse north across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
+  // don't reverse vertical across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
+
+  report.exit(function);
+  return DidWork;
+}
+
+
+// -----------------------------------------------------------------------------
+// This is where all of the exchange messages routines will sit.
+//
+// Notes:
+//   - We are going to try to do asynchronous communications, which means we
+//     need to do the following:
+//      - pack all variables for all four faces
+//      - send all messages
+//      - receive all messages
+//      - unpack all four faces
+//   - To do this, we need to make send and receive buffers which can't be
+//     touched until everything is complete, so we will build a structure
+//     that contains both the send and receive buffers.
+//
+//   - Direction standard:
+//     iDir == 0 => face 0 => right
+//     iDir == 1 => face 1 = up
+//     iDir == 2 => face 2 = left
+//     iDir == 3 => face 3 = down
+//     This is the side we are dealing with for the process.  For example,
+//       iDir == 0 in sending could be iDir == 2 in receiving for blocks
+//       near the equator.
+// -----------------------------------------------------------------------------
 
 
 // -----------------------------------------------------------------------------
@@ -343,9 +374,7 @@ bool pack_one_var_on_one_face(arma_cube var_scgc,
   // Current PE is the sender, so check if receiver exists:
   if (iReceiver > -1) {
     iP = 0;
-
     DidWork = pack_border(var_scgc, buffer, &iP, nG, iDir);
-
   }
 
   return DidWork;
