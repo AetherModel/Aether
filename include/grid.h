@@ -73,10 +73,37 @@ public:
   arma_cube magAlt_scgc, magZ_scgc;
   arma_cube magLocalTime_scgc;
 
+  // Dipole coordinates:
+  // Phi => Longitude
+  // P   => L-shell
+  // Q   => Distance along field line
   arma_cube magPhi_scgc;
   arma_cube magP_scgc;
   arma_cube magQ_scgc;
 
+  // And the corners/edges for the magnetic grid:
+  arma_cube magLon_Left;
+  arma_cube magLon_Corner;
+
+  arma_cube magLat_Down;
+  arma_cube magLat_Below;
+  arma_cube magLat_Corner;
+
+  arma_cube magAlt_Down;
+  arma_cube magAlt_Below;
+  arma_cube magAlt_Corner;
+
+  //For easier interpolation:
+  arma_vec baseLats_down;
+
+  // these need to be stored in (p,q) coords for a bit, its messy:
+  arma_cube magP_Down;
+  arma_cube magP_Below;
+  arma_cube magQ_Down;
+  arma_cube magQ_Below;
+  arma_cube magP_Corner;
+  arma_cube magQ_Corner;
+  
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;
@@ -213,6 +240,7 @@ public:
   void calc_alt_grid_spacing();
   void calc_lat_grid_spacing();
   void calc_long_grid_spacing();
+
   void fill_grid_radius(Planets planet);
   void calc_rad_unit(Planets planet);
   void calc_gravity(Planets planet);
@@ -230,21 +258,33 @@ public:
   void calc_cent_acc(Planets planet);
 
   // Make mag-field grid:
-  std::pair<precision_t, precision_t> lshell_to_qn_qs(Planets planet,
-                                                      precision_t Lshell,
-                                                      precision_t Lon,
-                                                      precision_t AltMin);
   void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
                               precision_t XyzGeo[3]);
-  std::pair<arma_vec, arma_vec> fill_dipole_q_line(precision_t qN_,
-                                                   precision_t qS_,
-                                                   precision_t Gamma_,
-                                                   int64_t nZ_,
-                                                   precision_t Lshell_,
-                                                   precision_t min_alt_);
-  std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q, precision_t p);
-  void init_dipole_grid(Quadtree quadtree, Planets planet);
-  arma_vec rNorm1d, lat1dalong;
+
+  bool init_dipole_grid(Quadtree quadtree_ion, Planets planet);
+  // Support functions:
+  void calc_dipole_grid_spacing(Planets planet);
+  void calc_alt_dipole_grid_spacing();
+  void calc_lat_dipole_grid_spacing();
+  void calc_long_dipole_grid_spacing();
+  void fill_field_lines(arma_vec baseLats, precision_t min_altRe,
+                        precision_t Gamma, Planets planet,
+                        bool isCorner);
+  void dipole_alt_edges(Planets planet, precision_t min_altRe);
+  // get the latitude spacing given the quadtree start & size, and the latitude limits
+  // extent: quadtree up
+  // origin: quadtree origin
+  // upper_lim: upper latitude limit (input)
+  // lower_lim: lower latitude limit (from min_apex)
+  // nLats: number of latitudes (nY)
+  // spacing_factor: (not supported yet), so always 1.0. Will adjust baselat spacing, eventually.
+  arma_vec baselat_spacing(precision_t extent,
+                          precision_t origin,
+                          precision_t upper_lim,
+                          precision_t lower_lim,
+                          // int16_t nLats,
+                          precision_t spacing_factor);
+
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
 

@@ -26,11 +26,12 @@
         "IsUniformAlt" : false},
     
     "ionGrid": {
-        "dAltScale": 0.2,
-        "LatStretch": 6,
+        "dAltStretch": 0.6,
+        "LatStretch": 1,
         "Shape": "dipole",
-        "nLatsPerBlock" : 22,
-        "nAlts":159,
+        "nLonsPerBlock": 36,
+        "nLatsPerBlock" : 18,
+        "nAlts":36,
         "LatMax":88,
         "MinAlt":100.0,
         "MinApex":150.0
