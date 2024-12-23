@@ -23,7 +23,8 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-bool init_parallel(Quadtree &quadtree) {
+bool init_parallel(Quadtree &quadtree,
+Quadtree &quadtree_ion) {
 
   bool DidWork = true;
 
@@ -99,6 +100,8 @@ bool init_parallel(Quadtree &quadtree) {
       std::cout << "seed : " << seed << "\n";
 
     quadtree.build("neuGrid");
+    // #TODO
+    quadtree_ion.build("ionGrid");
 
   } else {
     if (iProc == 0) {

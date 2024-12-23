@@ -34,7 +34,7 @@ extern MPI_Comm aether_comm;
 /**********************************************************************
   \brief initialize mpi and figure out ensembles and grid blocks
 **/
-bool init_parallel(Quadtree &quadtree);
+bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion);
 
 /**********************************************************************
   \brief Pack variables for message passing

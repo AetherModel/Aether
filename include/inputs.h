@@ -63,7 +63,7 @@ public:
     // Only needed for Mag Field grid:
     // min_apex (not used) and LatStretch is used 
     // as lat = min_lat + dlat where dlat = acos(cos(lat^stretch))^(1/stretch)
-    precision_t min_apex, LatStretch, FieldLineStretch, max_lat_dipole;
+    precision_t min_apex, LatStretch, FieldLineStretch, max_blat;
 
     // Some grid shapes allow specification of altitudes based on a file:
     std::string alt_file;
