@@ -159,7 +159,7 @@ bool Electrodynamics::update(Planets planet,
   ions.eflux.zeros();
   ions.avee.ones();
 
-  if (HaveElectrodynamicsFile  || HaveFortranIe) {
+  if (HaveElectrodynamicsFile || HaveFortranIe) {
     set_time(time.get_current());
     gGrid.calc_sza(planet, time);
     gGrid.calc_gse(planet, time);
@@ -171,11 +171,15 @@ bool Electrodynamics::update(Planets planet,
       report.print(3, "Using Fortran Electrodynamics!");
       set_all_indices_for_ie(time, indices);
 
+      // Need to do this every time step, since we are switching between geo and mag grids.
+      int nXs = gGrid.get_nX();
+      int nYs = gGrid.get_nY();
+      int64_t nZs = gGrid.get_nZ();
+      ie_set_nxs(&nXs);
+      ie_set_nys(&nYs);
+
       if (!IsAllocated) {
-        int nXs = gGrid.get_nX();
-        ie_set_nxs(&nXs);
-        int nYs = gGrid.get_nY();
-        ie_set_nys(&nYs);
+        report.print(4, "Allocating variables in electrodynamics");
         int64_t iTotal = nXs * nYs;
         mlt2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
         lat2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
@@ -185,14 +189,13 @@ bool Electrodynamics::update(Planets planet,
         IsAllocated = true;
       }
 
-      int64_t nZs = gGrid.get_nZ();
       int64_t iZ;
       int iError;
 
       for (iZ = 0; iZ < nZs; iZ++) {
+        report.print(5, "Looping through Altitudes...");
         copy_mat_to_array(gGrid.magLocalTime_scgc.slice(iZ), mlt2d, true);
         copy_mat_to_array(gGrid.magLat_scgc.slice(iZ), lat2d, true);
-
         ie_set_mlts(mlt2d, &iError);
 
         if (iError != 0) {
@@ -228,6 +231,7 @@ bool Electrodynamics::update(Planets planet,
         copy_array_to_mat(pot2d, ions.potential_scgc.slice(iZ), true);
 
         if (iZ == nZs - 1) {
+          report.print(5, "Getting Aurora...");
           if (didWork) {
             ie_get_electron_diffuse_aurora(eflux2d, avee2d, &iError);
 
@@ -236,7 +240,9 @@ bool Electrodynamics::update(Planets planet,
               report.error("Error in ie_get_electron_diffuse_aurora");
               std::cout << "ie_get_electron_diffuse_aurora iError : " << iError << "\n";
             } else {
+              report.print(5, "Copying avee2d...");
               copy_array_to_mat(avee2d, ions.avee, true);
+              report.print(5, "Copying eflux2d...");
               copy_array_to_mat(eflux2d, ions.eflux, true);
 
               if (report.test_verbose(3)) {
