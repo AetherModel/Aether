@@ -22,6 +22,7 @@ bool advance(Planets &planet,
              Chemistry &chemistry,
              Chemistry &chemistryMag,
              Electrodynamics &electrodynamics,
+             Electrodynamics &electrodynamicsMag,
              Indices &indices,
              Logfile &logfile,
              Logfile &logfileMag) {
@@ -109,8 +110,10 @@ bool advance(Planets &planet,
     ions.exchange_old(gGrid);
     advect(gGrid, time, neutrals);
   }
-  if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites("After Horizontal Advection");
+  if (didWork & input.get_check_for_nans()) {
+    didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
+    didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Horizontal Advection");
+  }
 
   // ------------------------------------
   // Calculate source terms next:
@@ -141,23 +144,22 @@ bool advance(Planets &planet,
                                      ions);
 
   if (didWork)
-    didWork = electrodynamics.update(planet,
-                                     mGrid,
-                                     time,
-                                     indices,
-                                     ionsMag);
-
+    didWork = electrodynamicsMag.update(planet,
+                                        mGrid,
+                                        time,
+                                        indices,
+                                        ionsMag);
 
   if (didWork) {
     calc_ion_neutral_coll_freq(neutrals, ions);
     ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
 
     calc_aurora(gGrid, neutrals, ions);
-    calc_aurora(mGrid, neutralsMag, ionsMag);
+    //calc_aurora(mGrid, neutralsMag, ionsMag);
 
     // Calculate chemistry on both grids:
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
-    chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
+    //chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
 
     if (input.get_O_cooling())
       neutrals.calc_O_cool();
@@ -168,11 +170,12 @@ bool advance(Planets &planet,
     calc_ion_collisions(neutrals, ions);
 
     neutrals.add_sources(time, planet, gGrid);
+    //neutralsMag.add_sources(time, planet, mGrid);
 
-    if (didWork & input.get_check_for_nans())
-      didWork = neutrals.check_for_nonfinites("After Add Sources");
-
-    neutralsMag.add_sources(time, planet, mGrid);
+    if (didWork & input.get_check_for_nans()) {
+      didWork = neutrals.check_for_nonfinites("Geo Grid: After Add Sources");
+      didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Add Sources");
+    }
 
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);

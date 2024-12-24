@@ -156,9 +156,11 @@ int main() {
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
     Electrodynamics electrodynamics(time);
-
     if (!electrodynamics.is_ok())
-      throw std::string("electrodynamics initialization failed!");
+      throw std::string("electrodynamics on geo grid initialization failed!");
+    Electrodynamics electrodynamicsMag(time);
+    if (!electrodynamicsMag.is_ok())
+      throw std::string("electrodynamics on mag grid initialization failed!");
 
     // If the user wants to restart, then get the time of the restart
     if (input.get_do_restart()) {
@@ -212,6 +214,7 @@ int main() {
                           chemistry,
                           chemistryMag,
                           electrodynamics,
+                          electrodynamicsMag,
                           indices,
                           logfile,
                           logfileMag);

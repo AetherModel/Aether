@@ -44,6 +44,7 @@ bool advance(Planets &planet,
 	     Chemistry &chemistry,
 	     Chemistry &chemistryMag,
 	     Electrodynamics &electrodynamics,
+	     Electrodynamics &electrodynamicsMag,
 	     Indices &indices,
 	     Logfile &logfile,
 	     Logfile &logfileMag);
