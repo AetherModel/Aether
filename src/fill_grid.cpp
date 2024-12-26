@@ -528,10 +528,8 @@ void Grid::calc_alt_dipole_grid_spacing()
   // arma_vec alt_spacing;
   precision_t planetRadius;
 
-  for (int64_t iLat = 1; iLat < nLats; iLat++)
-  {
-    for (iAlt = 1; iAlt < nAlts - 1; iAlt++)
-    {
+  //for (int64_t iLat = 1; iLat < nLats; iLat++) {
+    for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
 
       dalt_center_scgc.slice(iAlt) =
           abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1)) 
@@ -545,7 +543,7 @@ void Grid::calc_alt_dipole_grid_spacing()
               - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
               % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
     }
-  }
+  //}
 
   dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1);
   dalt_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
