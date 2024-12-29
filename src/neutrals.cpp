@@ -215,10 +215,12 @@ int Neutrals::read_planet_file(Planets planet) {
     species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
     species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
     doAdvect = neutrals["advect"][iSpecies];
-    if (doAdvect == 0) 
+
+    if (doAdvect == 0)
       species[iSpecies].DoAdvect = false;
     else
-      species[iSpecies].DoAdvect = true;    
+      species[iSpecies].DoAdvect = true;
+
     species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
   }
 
@@ -266,6 +268,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
             species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
+
   calc_mass_density();
   return;
 }
@@ -289,6 +292,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       exp(-grid.dr_lower_scgc.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
+
   calc_mass_density();
   return;
 }

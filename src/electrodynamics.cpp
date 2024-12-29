@@ -232,6 +232,7 @@ bool Electrodynamics::update(Planets planet,
 
         if (iZ == nZs - 1) {
           report.print(5, "Getting Aurora...");
+
           if (didWork) {
             ie_get_electron_diffuse_aurora(eflux2d, avee2d, &iError);
 

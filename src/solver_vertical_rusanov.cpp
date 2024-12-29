@@ -311,17 +311,17 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                 species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
         + dt * diffLogN_s[iSpecies];
       species[iSpecies].newDensity_scgc = exp(log_s);
-/*
-      std::cout << iSpecies << " " << log_s(2,2,19) << " "
-      << dt << " "
-      << divVertVel_s[iSpecies](2,2,19) << " "
-      << species[iSpecies].velocity_vcgc[2](2,2,19) << " "
-      << gradLogN_s[iSpecies](2,2,19) << " "
-      << species[iSpecies].velocity_vcgc[2](2,2,19) * gradLogN_s[iSpecies](2,2,19) << " "
-      << diffLogN_s[iSpecies](2,2,19) << " "
-      << species[iSpecies].density_scgc(2,2,19) << " "
-      << species[iSpecies].newDensity_scgc(2,2,19) << "\n";
-*/
+      /*
+            std::cout << iSpecies << " " << log_s(2,2,19) << " "
+            << dt << " "
+            << divVertVel_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].velocity_vcgc[2](2,2,19) << " "
+            << gradLogN_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].velocity_vcgc[2](2,2,19) * gradLogN_s[iSpecies](2,2,19) << " "
+            << diffLogN_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].density_scgc(2,2,19) << " "
+            << species[iSpecies].newDensity_scgc(2,2,19) << "\n";
+      */
       accTotal =
         dt * grid.gravity_vcgc[2]
         - dt * temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
@@ -512,7 +512,7 @@ void Ions::solver_vertical_rusanov(Grid grid,
         species[iSpecies].density_scgc
         //log(species[iSpecies].density_scgc)
         - dt * (//divVertVel_s[iSpecies] +
-                species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
+          species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
         + dt * diffLogN_s[iSpecies];
       //species[iSpecies].newDensity_scgc = exp(log_s);
       species[iSpecies].newDensity_scgc = log_s;

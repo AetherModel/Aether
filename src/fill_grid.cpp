@@ -484,18 +484,17 @@ void Grid::calc_cent_acc(Planets planet) {
 //  Calaculate Grid Spacing for Dipole Grid
 // -----------------------------------------------------------------------------
 
-void Grid::calc_dipole_grid_spacing(Planets planet)
-{
+void Grid::calc_dipole_grid_spacing(Planets planet) {
 
   int64_t iLon, iLat, iAlt;
 
   report.print(3, "starting calc_grid_spacing");
-  
-  // This is close, but may need to be adjusted later. 
+
+  // This is close, but may need to be adjusted later.
   // These quantities are obtained from integrating the scale factor (h)
   // The along-field-line distance (alt) should be right, but the lat distance
   // is the shortest distance from a point to the adjacent field line, not the adjacent cell.
-  
+
   report.print(3, "starting alt");
   calc_alt_dipole_grid_spacing();
   report.print(3, "starting lat");
@@ -518,12 +517,12 @@ void Grid::calc_dipole_grid_spacing(Planets planet)
 }
 
 // for sanity (only marginally helpful):
-inline arma_mat delTm(arma_mat theta){
+inline arma_mat delTm(arma_mat theta) {
   return (sqrt(3 * cos(theta) % cos(theta) + 1));
-  }
-inline arma_cube delTc(arma_cube theta){
+}
+inline arma_cube delTc(arma_cube theta) {
   return (sqrt(3 * cos(theta) % cos(theta) + 1));
-  }
+}
 
 // -----------------------------------------------------------------------------
 // Grid spacing for altitude:
@@ -538,16 +537,16 @@ void Grid::calc_alt_dipole_grid_spacing() {
   for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
 
     dalt_center_scgc.slice(iAlt) =
-        abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1)) 
-            % (1 / delTm(magLat_scgc.slice(iAlt + 1))) 
-            - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
-            % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
+      abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1))
+          % (1 / delTm(magLat_scgc.slice(iAlt + 1)))
+          - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1))
+          % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
 
     dalt_lower_scgc.slice(iAlt) =
-        abs(magAlt_scgc.slice(iAlt) % sin(magLat_scgc.slice(iAlt))
-            % (1 / delTm(magLat_scgc.slice(iAlt))) 
-            - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
-            % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
+      abs(magAlt_scgc.slice(iAlt) % sin(magLat_scgc.slice(iAlt))
+          % (1 / delTm(magLat_scgc.slice(iAlt)))
+          - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1))
+          % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
     dr_lower_scgc.slice(iAlt) =
       radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
   }
@@ -559,9 +558,9 @@ void Grid::calc_alt_dipole_grid_spacing() {
   dr_lower_scgc.slice(0) = dr_lower_scgc.slice(1);
   iAlt = nAlts - 1;
   dalt_lower_scgc.slice(iAlt) =
-      geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
+    geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
   dr_lower_scgc.slice(iAlt) =
-      radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
+    radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
 
   // For a stretched grid, calculate some useful quantities:
   // lower is defined for the current cell, which
@@ -569,7 +568,7 @@ void Grid::calc_alt_dipole_grid_spacing() {
   // ratio = upper / lower
   for (iAlt = 0; iAlt < nAlts - 1; iAlt++)
     dalt_ratio_scgc.slice(iAlt) =
-        dalt_lower_scgc.slice(iAlt + 1) / dalt_lower_scgc.slice(iAlt);
+      dalt_lower_scgc.slice(iAlt + 1) / dalt_lower_scgc.slice(iAlt);
 
   iAlt = nAlts - 1;
   dalt_ratio_scgc.slice(iAlt) = dalt_ratio_scgc.slice(iAlt - 1);
@@ -584,28 +583,26 @@ void Grid::calc_alt_dipole_grid_spacing() {
 //  - uhoh, might not be right. not actually perpendicular to q-p, but no way around that, i think.
 // ---------------------------------------
 
-void Grid::calc_lat_dipole_grid_spacing()
-{
+void Grid::calc_lat_dipole_grid_spacing() {
 
   int64_t iLat;
 
-  for (iLat = 1; iLat < nLats - 1; iLat++)
-  {
+  for (iLat = 1; iLat < nLats - 1; iLat++) {
     dlat_center_scgc.col(iLat) =
-        abs(magAlt_scgc.col(iLat + 1) % sin(magLat_scgc.col(iLat + 1)) 
-            % (1 / delTc(magLat_scgc.col(iLat + 1))) 
-            - magAlt_scgc.col(iLat - 1) % sin(magLat_scgc.col(iLat - 1)) 
-              % (1 / delTc(magLat_scgc.col(iLat - 1)))) * 2;
+      abs(magAlt_scgc.col(iLat + 1) % sin(magLat_scgc.col(iLat + 1))
+          % (1 / delTc(magLat_scgc.col(iLat + 1)))
+          - magAlt_scgc.col(iLat - 1) % sin(magLat_scgc.col(iLat - 1))
+          % (1 / delTc(magLat_scgc.col(iLat - 1)))) * 2;
   }
 
   // Bottom (one sided):
   iLat = 0;
   dlat_center_scgc.col(iLat) =
-      geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat);
+    geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat);
   // Top (one sided):
   iLat = nLats - 1;
   dlat_center_scgc.col(iLat) =
-      geoLat_scgc.col(iLat) - geoLat_scgc.col(iLat - 1);
+    geoLat_scgc.col(iLat) - geoLat_scgc.col(iLat - 1);
 
   // Make this into a distance:
   dlat_center_dist_scgc = dlat_center_scgc % radius_scgc;
@@ -615,27 +612,27 @@ void Grid::calc_lat_dipole_grid_spacing()
 // Grid spacing for longitude:
 // ---------------------------------------
 
-void Grid::calc_long_dipole_grid_spacing()
-{
+void Grid::calc_long_dipole_grid_spacing() {
 
   int64_t iLon;
 
   for (iLon = 1; iLon < nLons - 1; iLon++)
     dlon_center_scgc.row(iLon) =
-        (magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon - 1)) / 2.0;
+      (magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon - 1)) / 2.0;
+
   // this might be fine for the dipole, if it works for the geo grid...
 
   // Bottom (one sided):
   iLon = 0;
   dlon_center_scgc.row(iLon) =
-      magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon);
+    magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon);
   // Top (one sided):
   iLon = nLons - 1;
   dlon_center_scgc.row(iLon) =
-      magLon_scgc.row(iLon) - magLon_scgc.row(iLon - 1);
+    magLon_scgc.row(iLon) - magLon_scgc.row(iLon - 1);
 
   // Make this into a distance:
   dlon_center_dist_scgc =
-      // dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
-      dlon_center_scgc % magAlt_scgc % cos(magLat_scgc);
+    // dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
+    dlon_center_scgc % magAlt_scgc % cos(magLat_scgc);
 }

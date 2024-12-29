@@ -115,18 +115,21 @@ bool advance(Planets &planet,
   // advect in the 3rd dimension (vertical), but only if we have it:
   if (gGrid.get_nAlts(false) > 1) {
     neutrals.advect_vertical(gGrid, time);
+
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Neutral Advection");
+
     ions.advect_vertical(gGrid, time);
   }
 
-  // advect in the 1st and 2nd dimensions (horizontal), but only if 
+  // advect in the 1st and 2nd dimensions (horizontal), but only if
   // we have those dimensions:
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
     advect(gGrid, time, neutrals);
   }
+
   if (didWork & input.get_check_for_nans()) {
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Horizontal Advection");

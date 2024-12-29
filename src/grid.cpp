@@ -68,7 +68,7 @@ Grid::Grid(std::string gridtype) {
 
   if (mklower(grid_input.shape) == "cubesphere")
     iGridShape_ = iCubesphere_;
-  
+
   //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
   if (mklower(grid_input.shape).find("dipole") != std::string::npos)
     iGridShape_ = iDipole_;

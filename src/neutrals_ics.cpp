@@ -173,6 +173,7 @@ bool Neutrals::initial_conditions(Grid grid,
       set_lower_bcs(grid, time, indices);
 
       report.print(2, "Filling with hydrostatic");
+
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
         fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
 

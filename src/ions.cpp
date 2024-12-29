@@ -200,10 +200,12 @@ int Ions::read_planet_file(Planets planet) {
     species[iSpecies].mass = mass * cAMU;
     species[iSpecies].charge = ions["charge"][iSpecies];
     doAdvect = ions["advect"][iSpecies];
-    if (doAdvect == 0) 
+
+    if (doAdvect == 0)
       species[iSpecies].DoAdvect = false;
     else
-      species[iSpecies].DoAdvect = true;    
+      species[iSpecies].DoAdvect = true;
+
     species[iSpecies].vibe = ions["vibration"][iSpecies];
   }
 
@@ -388,22 +390,25 @@ void Ions::calc_lambda() {
     for (jIon = 0; jIon < nSpecies; jIon++) {
       if (jIon != iIon) {
         Mj = species[jIon].mass / cAMU;
-        density_ratio = species[jIon].density_scgc / 
-          species[iIon].density_scgc;
+        density_ratio = species[jIon].density_scgc /
+                        species[iIon].density_scgc;
         density_ratio.clamp(0.001, 1000.0);
-        ratios = ratios + density_ratio * 
-          (species[jIon].charge * species[jIon].charge / 
-           species[iIon].charge / species[iIon].charge) *
-           sqrt(Mj / (Mi + Mj)) *
-          (3 * Mi * Mi + 1.6 * Mi * Mj + 1.3 * Mj * Mj)/
-          ((Mi + Mj) * (Mi + Mj));
+        ratios = ratios + density_ratio *
+                 (species[jIon].charge * species[jIon].charge /
+                  species[iIon].charge / species[iIon].charge) *
+                 sqrt(Mj / (Mi + Mj)) *
+                 (3 * Mi * Mi + 1.6 * Mi * Mj + 1.3 * Mj * Mj) /
+                 ((Mi + Mj) * (Mi + Mj));
       }
-    species[iIon].lambda = 
-      3.1e6 / sqrt(Mi) / pow(species[iIon].charge, 4) *
-      pow(species[iIon].temperature_scgc, 2.5) % (1 + 1.75 * ratios) * cE;
+
+      species[iIon].lambda =
+        3.1e6 / sqrt(Mi) / pow(species[iIon].charge, 4) *
+        pow(species[iIon].temperature_scgc, 2.5) % (1 + 1.75 * ratios) * cE;
     }
+
     lambda = lambda + species[iIon].lambda % species[iIon].density_scgc;
   }
+
   lambda = lambda / density_scgc;
 
   //lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
@@ -432,7 +437,7 @@ void Ions::calc_specific_heat() {
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     // individual Cv for individual temperatures:
-    species[iSpecies].Cv_scgc = 
+    species[iSpecies].Cv_scgc =
       (species[iSpecies].vibe - 2) * cKB / species[iSpecies].mass / 2;
     // Bulk Cv for the bulk temperature:
     Cv_scgc = Cv_scgc +
@@ -442,6 +447,7 @@ void Ions::calc_specific_heat() {
     gamma_scgc = gamma_scgc +
                  species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
   }
+
   // Bulk Cv and gamma are the density-weighted Cv and gamma
   Cv_scgc = Cv_scgc / (2 * density_scgc);
   gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;

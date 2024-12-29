@@ -59,9 +59,9 @@ void Neutrals::clamp_density() {
   report.enter(function, iFunction);
 
   int64_t iSpecies;
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     species[iSpecies].density_scgc.clamp(1.0, 1e32);
-  }
 
   report.exit(function);
   return;
@@ -201,6 +201,7 @@ void Neutrals::calc_bulk_velocity() {
 
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_advected;
   }
+
   report.exit(function);
   return;
 }
@@ -592,10 +593,10 @@ void Neutrals::calc_chapman(Grid grid) {
       integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
                                species[iSpecies].density_scgc.slice(iAlt) %
                                grid.dr_lower_scgc.slice(iAlt + 1);
-      species[iSpecies].rho_alt_int_scgc.slice(iAlt) = 
-          species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
-          species[iSpecies].density_scgc.slice(iAlt) %
-          grid.dalt_lower_scgc.slice(iAlt + 1);
+      species[iSpecies].rho_alt_int_scgc.slice(iAlt) =
+        species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
+        species[iSpecies].density_scgc.slice(iAlt) %
+        grid.dalt_lower_scgc.slice(iAlt + 1);
     }
 
     erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
@@ -623,6 +624,7 @@ void Neutrals::calc_chapman(Grid grid) {
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
         H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
+
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
           // This is on the dayside:
           if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {

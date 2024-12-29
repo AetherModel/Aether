@@ -361,9 +361,9 @@ bool Euv::euvac(Times time,
       std::cout << "     " << iWave << " "
                 << wavelengths_short[iWave] << " "
                 << wavelengths_long[iWave] << " "
-                << wavelengths_intensity_1au[iWave]/1e12 << " "
+                << wavelengths_intensity_1au[iWave] / 1e12 << " "
                 << euvac_afac[iWave] * 100.0 << " "
-                << euvac_f74113[iWave]/1e9 << " "
+                << euvac_f74113[iWave] / 1e9 << " "
                 << slope << "\n";
   }
 

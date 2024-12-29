@@ -86,22 +86,23 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         front1d  = 3.0 / 2.0 * cKB * density_scgc.tube(iLon, iLat);
         dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
         sources1d = (heating_neutral_friction_scgc.tube(iLon, iLat) +
-                    heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
+                     heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
         sources1d = sources1d / front1d;
         conduction1d.zeros();    // reset temp variable to zero
-        conduction1d = solver_conduction(temp1d, 
-                                         lambda1d, 
-                                         front1d, 
-                                         sources1d, 
+        conduction1d = solver_conduction(temp1d,
+                                         lambda1d,
+                                         front1d,
+                                         sources1d,
                                          dalt1d,
-                                         dt/10., 
-                                         nGCs, 
+                                         dt / 10.,
+                                         nGCs,
                                          false);
         // The conduction solver gives Tnew-Told, so divide by dt
         conduction1d.clamp(200, 5000);
         temperature_scgc.tube(iLon, iLat) = conduction1d;
       }
     }
+
     for (iIon = 0; iIon < nSpecies; iIon++)
       species[iIon].temperature_scgc = temperature_scgc;
 
@@ -123,17 +124,17 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
           front1d  = 3.0 / 2.0 * cKB * species[iIon].density_scgc.tube(iLon, iLat);
           dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
           sources1d = (species[iIon].heating_neutral_friction_scgc.tube(iLon, iLat) +
-                      species[iIon].heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
+                       species[iIon].heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
           sources1d = sources1d / front1d;
 
           conduction1d.zeros();    // reset temp variable to zero
-          conduction1d = solver_conduction(temp1d, 
-                                           lambda1d, 
-                                           front1d, 
-                                           sources1d, 
+          conduction1d = solver_conduction(temp1d,
+                                           lambda1d,
+                                           front1d,
+                                           sources1d,
                                            dalt1d,
-                                           dt/10., 
-                                           nGCs, 
+                                           dt / 10.,
+                                           nGCs,
                                            false);
 
           // The conduction solver gives Tnew-Told, so divide by dt
@@ -142,6 +143,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         } // Lats
       } // Lons
     } // Ions
+
     tempT.zeros();
     tempD.zeros();
 

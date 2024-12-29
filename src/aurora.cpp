@@ -193,6 +193,7 @@ void calc_aurora(Grid grid,
 
       CiArray.push_back(Ci);
     }
+
     IsFirstTime = false;
     report.print(4, "aurora - done with init!");
   }
@@ -229,7 +230,7 @@ void calc_aurora(Grid grid,
   // loop through each altitude and calculate ionization
   for (iLon = nGcs; iLon < nLons - nGcs; iLon++) {
     for (iLat = nGcs; iLat < nLats - nGcs ; iLat++) {
-      
+
       // CHANGE
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
       avee = ions.avee(iLon, iLat);  // in keV
@@ -238,13 +239,14 @@ void calc_aurora(Grid grid,
 
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
-        b1d = abs(grid.bfield_unit_vcgc[2].tube(iLon,iLat));
+        b1d = abs(grid.bfield_unit_vcgc[2].tube(iLon, iLat));
 
         for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
           rhoH1d = rhoH1d + rho_tube / b1d;
         }
+
         // Step 2: Calculate the distribution function:
         diff_num_flux = calculate_maxwellian(eflux,
                                              avee,
@@ -274,7 +276,7 @@ void calc_aurora(Grid grid,
 
         // /cm3 -> /m3
         // CHANGE!!!!
-        ionization1d = ionization1d * pcm3topm3/100.0;
+        ionization1d = ionization1d * pcm3topm3 / 100.0;
 
         // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the

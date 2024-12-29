@@ -50,9 +50,8 @@ bool Ions::exchange_old(Grid &grid) {
   bool DidWork = true;
   int64_t nGCs = grid.get_nGCs();
 
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
-  }
 
   DidWork = exchange_one_var(grid, temperature_scgc, false);
   DidWork = exchange_one_var(grid, electron_temperature_scgc, false);

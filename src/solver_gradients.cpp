@@ -56,6 +56,7 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
       (value.row(iLon) - value.row(iLon - 1)) /
       grid.dlon_center_dist_scgc.row(iLon);
   }
+
   return gradient;
 }
 
@@ -92,6 +93,7 @@ arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
       (value.col(iLat) - value.col(iLat - 1)) /
       grid.dlat_center_dist_scgc.col(iLat);
   }
+
   return gradient;
 }
 
@@ -112,14 +114,15 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
 
   if (grid.get_HasZdim()) {
     arma_cube one_minus_r2 = 1.0 - grid.dalt_ratio_sq_scgc;
+
     // Central part
     for (iAlt = 1; iAlt < nAlts - 1; iAlt++)
       gradient.slice(iAlt) =
         (value.slice(iAlt + 1)
-        - one_minus_r2.slice(iAlt) % value.slice(iAlt)
-        - grid.dalt_ratio_sq_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
+         - one_minus_r2.slice(iAlt) % value.slice(iAlt)
+         - grid.dalt_ratio_sq_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
         (grid.dalt_lower_scgc.slice(iAlt + 1) %
-        (1.0 + grid.dalt_ratio_scgc.slice(iAlt)));
+         (1.0 + grid.dalt_ratio_scgc.slice(iAlt)));
 
     // lower boundary
     iAlt = 0;
@@ -133,6 +136,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
       (value.slice(iAlt) - value.slice(iAlt - 1)) /
       grid.dalt_lower_scgc.slice(iAlt);
   }
+
   return gradient;
 }
 

@@ -456,8 +456,7 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
   // The rest of the settings are different for mag/geo grids,
   // First take the magnetic options, then "else" should be (cube-)sphere
 
-  if (grid_specs.shape.find("dipole") != std::string::npos)
-  {
+  if (grid_specs.shape.find("dipole") != std::string::npos) {
     // Latitude range (base of field line) is specified with max lat & min apex.
     grid_specs.max_blat = check_settings_pt(gridtype, "LatMax") * cDtoR;
     grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
@@ -465,9 +464,7 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
     grid_specs.LatStretch = check_settings_pt(gridtype, "LatStretch");
     // controls the spacing of points along field line, <<1 for more pts at low alts
     grid_specs.FieldLineStretch = check_settings_pt(gridtype, "dAltStretch");
-  }
-  else
-  {
+  } else {
     min_max = get_setting_intarr(gridtype, "LatRange");
     grid_specs.lat_min = min_max[0] * cDtoR;
     grid_specs.lat_max = min_max[1] * cDtoR;

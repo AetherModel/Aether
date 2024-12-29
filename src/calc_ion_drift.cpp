@@ -117,9 +117,8 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   for (iIon = 0; iIon < nSpecies; iIon++) {
 
-    for (int64_t iComp = 0; iComp < 3; iComp++) {
+    for (int64_t iComp = 0; iComp < 3; iComp++)
       species[iIon].perp_velocity_vcgc[iComp].zeros();
-    }
 
     if (species[iIon].DoAdvect) {
 
@@ -138,12 +137,15 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         grad_Pi_plus_Pe[iDim] = grad_Pi_plus_Pe[iDim] / rho;
         efield_acc[iDim] = Nie % efield_vcgc[iDim] / rho;
       }
+
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
 
       for (int64_t iComp = 0; iComp < 3; iComp++)
         wind_acc[iComp].zeros();
+
       nuin_sum.zeros();
+
       for (iNeutral = 0; iNeutral < neutrals.nSpecies; iNeutral++) {
         nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
         nuin_sum = nuin_sum + species[iIon].nu_ion_neutral_vcgc[iNeutral];
@@ -193,9 +195,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           species[iIon].par_velocity_vcgc[iComp] =
             (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt) /
             (1 + nuin_sum * dt);
-          species[iIon].par_velocity_vcgc[iComp].slice(nZ-1).zeros();
-          species[iIon].par_velocity_vcgc[iComp].slice(nZ-2).zeros();
-          species[iIon].par_velocity_vcgc[iComp].slice(nZ-3) = species[iIon].par_velocity_vcgc[iComp].slice(nZ-4);
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ - 1).zeros();
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ - 2).zeros();
+          species[iIon].par_velocity_vcgc[iComp].slice(nZ - 3) =
+            species[iIon].par_velocity_vcgc[iComp].slice(nZ - 4);
           species[iIon].par_velocity_vcgc[iComp].clamp(-100, 100);
 
         }
