@@ -57,6 +57,25 @@ std::pair<arma_cube, arma_cube> qp_to_r_theta(arma_cube q, arma_cube p) {
   return {r, theta};
 }
 
+// ----------------------------------------------------------------------
+// The general idea here is to make the physical cells within the
+// upper and lower limits.  The cell EDGES will be these limits, so
+// that the cell CENTERS (which this function calculates) will be 
+// 1/2 dlat away from these locations.  
+// The two limits coming in are the lowest northern latitude field line
+// and the highest northern latitude field line (i.e., they are both
+// positive values and are over half the domain.)
+// If the block is touching the equator boundaries or the polar 
+// boundaries, then these ghost cells extend beyond these boundaries and
+// the EDGES go to [-88, -1, 1, or 88] degrees latitude, depending on
+// the boundary. This function deals with CENTERS, though, so the 
+// centers are selected so the the edges will be correct when calculated
+// down stream.
+// If we are running on 1 processor only, then this is all thrown out
+// the window and code puts the centers are the +/- upper_lim. It first
+// builds the southern hemisphere with nLats/2 points, then mirrors them.
+// ----------------------------------------------------------------------
+
 arma_vec Grid::baselat_spacing(precision_t extent,
                                precision_t origin,
                                precision_t upper_lim,
@@ -66,10 +85,15 @@ arma_vec Grid::baselat_spacing(precision_t extent,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  if (report.test_verbose(3))
+    std::cout << "inputs : " << iProc << " " <<  extent << " " << origin << " " 
+              << lower_lim * cRtoD << " " << lower_lim * cRtoD << "\n";
+
   // intermediate latitude values
   precision_t lat_low, lat_high, lat_low0, lat_high0;
   // intermediate calculation values
   precision_t dlat, bb, aa, ang0, angq, nLats_here, extent_here;
+  precision_t dlat0, dlatLower, dLatUpper;
 
   // Now we can allocate the return array,
   arma_vec Lats(nLats);
@@ -77,59 +101,123 @@ arma_vec Grid::baselat_spacing(precision_t extent,
   // Noting the special case of 1 root node & 1 processor...
   bool DO_FLIPBACK = false;
 
+  int64_t iStart, iEnd;
+
   if (extent > 0.5) {
+    // This is when running on 1 processor:
     DO_FLIPBACK = true;
     nLats_here = nLats / 2;
     extent_here = 0.5;
-  } else
-    nLats_here = nLats;
+    iStart = 0;
+    iEnd = nLats_here;
+  } else {
+    // Span only physical cells with extent:
+    nLats_here = nLats - 2 * nGCs;
+    extent_here = extent;
+    // Want to fill in only physical cells, then do ghostcells later:
+    iStart = nGCs;
+    iEnd = nLats - nGCs;
+  }
 
   // get the upper & lower latitude bounds for our division of the quadree
   if (origin < 0) {
-    // negative origin: lat_high <=> lat_low
+    // negative origin == Southern hemisphere: lat_high <=> lat_low
     lat_low, lat_high = -upper_lim, -lower_lim;
     lat_low0 = lat_low;
-    lat_low = lat_low - (lat_high - lat_low) * (origin / 0.5);
-    lat_high = lat_low0 - (lat_high - lat_low0) * (extent_here / .5 + origin / 0.5);
+    lat_low = -lower_lim + (upper_lim - lower_lim) * (origin / 0.5);
+    lat_high = lat_low + (upper_lim - lower_lim) * (extent_here / 0.5);
   } else {
+    // Northern hemisphere:
+    lat_low, lat_high = lower_lim, upper_lim;
     lat_low0 = lower_lim;
-    lat_low = lat_low + (lat_high - lat_low) * (origin / 0.5);
-    lat_high = lat_low0 + (lat_high - lat_low0) * (extent_here / .5 + origin / 0.5);
+    lat_low = lower_lim + (upper_lim - lower_lim) * (origin / 0.5);
+    lat_high = lat_low + (upper_lim - lower_lim) * (extent_here / 0.5);
   }
-
+  if (report.test_verbose(3))
+    std::cout << "lat_low, lat_high : " 
+              << lat_low*cRtoD << " " << lat_high*cRtoD << " " << lower_lim << " " << upper_lim << "\n";
   // normalized spacing in latitude
   // NOTE: spacing factor != 1 will not work yet. but framework is here...
   bb = (lat_high - lat_low) / (pow(lat_high, spacing_factor) - pow(lat_low,
                                spacing_factor));
   aa = lat_high - bb * pow(lat_high, spacing_factor);
-  dlat = (lat_high - lat_low) / (nLats_here + 1);
-  report.print(4, "baselats laydown!");
+  dlat = (lat_high - lat_low) / (nLats_here);
+  // Save dlat so that we can use it in ghostcells if they are interior:
+  dlat0 = dlat;
 
-  // edge case for 1-D
-  // In 1-D, the base latitudes will be 1/2 way between LatMax & minApex,
-  // dlat is adjustable if it doesn't suit your needs.
   if (!HasYdim) {
+    // edge case for 1-D (or no latitudinal extent, really)
+    // In 1-D, the base latitudes will be 1/2 way between LatMax & minApex,
+    // dlat is adjustable if it doesn't suit your needs.
     DO_FLIPBACK = false;
     dlat = 1.0 * cDtoR;
     nLats_here = nLats + 1;
   }
 
-  for (int64_t j = 0; j < nLats_here; j++) {
-    ang0 = lat_low + (j + 1) * dlat;
+  // Fill in physical cell centers:
+  for (int64_t j = iStart; j < iEnd; j++) {
+    ang0 = lat_low + (float(j - iStart) + 0.5) * dlat;
     angq = aa + bb * pow(ang0, spacing_factor);
     Lats[j] = angq;
   }
 
-  report.print(5, "baselats flipback!");
-
-  // In the flipback case (single processor, global sim), we want baselats
-  // to be strictly increasing, same as geo grid!
-  if (DO_FLIPBACK)
+  if (DO_FLIPBACK) {
+    // In the flipback case (single processor, global sim), we want baselats
+    // to be strictly increasing, same as geo grid!
+    // remember : nLats_here = nLats / 2
     for (int64_t j = 0; j < nLats_here; j++)
+      // mirror south to north:
       Lats[j + nLats_here] = -1 * Lats[nLats_here - j - 1];
-
-  report.print(4, "baselats flipback done!");
-
+  } else {
+    // Here we are filling ghostcells, first the lower GCs, then the upper GCs.
+    // If they are interior GCs, use the default dlat.  If they are exterior GCs
+    // (i.e., poleward of max lat or equatorward of min lat), then adjust the dlat
+    // to force the last cell edges to be at [-89.9, -1, 1, 89.9] depending on cells.
+    // Do the lower ghostcells:
+    // If the GCs are interior, leave dlat alone.
+    dlat = dlat0;
+    // South polar region:
+    if (fabs( fabs(lat_low) - fabs(upper_lim)) < 0.001) {
+      if (report.test_verbose(2))
+        std::cout << "Near south pole!\n";
+      dlat = (89.9 * cDtoR + lat_low) / nGCs;
+    }
+    // North equatorial region:
+    if (fabs( fabs(lat_low) - fabs(lower_lim)) < 0.001) {
+      if (report.test_verbose(2))
+        std::cout << "Near northern equator!\n";
+      dlat = (lat_low - 1.0 * cDtoR) / nGCs;
+    }
+    // Fill in GCs:
+    for (int64_t j = 0; j < iStart; j++) {
+      ang0 = lat_low + (float(j - iStart) + 0.5) * dlat;
+      angq = aa + bb * pow(ang0, spacing_factor);
+      Lats[j] = angq;
+    }
+    // Do the upper ghostcells:
+    // If the GCs are interior, leave dlat alone.
+    dlat = dlat0;
+    // North polar region:
+    if (lat_high == upper_lim) {
+      if (report.test_verbose(2))
+        std::cout << "Near north pole!\n";
+      dlat = (89.9 * cDtoR - lat_high) / nGCs;
+    }
+    // South equatorial region:
+    if (fabs( fabs(lat_high) - fabs(lower_lim)) < 0.001) {
+      if (report.test_verbose(2))
+        std::cout << "Near southern equator!\n";
+      dlat = -(1.0 * cDtoR + lat_high) / nGCs;
+    }
+    // Fill in the GCs:
+    for (int64_t j = iEnd; j < nLats; j++) {
+      ang0 = lat_high + (float(j - iEnd) + 0.5) * dlat;
+      angq = aa + bb * pow(ang0, spacing_factor);
+      Lats[j] = angq;
+    }
+  }
+  if (report.test_verbose(3))
+    std::cout << "Lats from baselat_spacing :\n" << Lats * cRtoD << "\n";
   report.exit(function);
   return Lats;
 }
@@ -209,8 +297,17 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
 
   report.print(3, "expQ");
 
+  // This is wrong (same lat everywhere), but get_radius doesnt support oblate earth yet.
+  precision_t planetRadius = planet.get_radius(0.0);
+
   // mag alts and lats:
   arma_mat bAlts(nLatLoc, nAlts), bLats(nLatLoc, nAlts);
+
+  if (report.test_verbose(3))
+    std::cout << "Setting min alt (actually r in Re) : " 
+              << min_altRe << " " 
+              << planetRadius << " " 
+              << (min_altRe - 1.0) * planetRadius/1000.0 << "\n";
 
   for (int iLat = 0; iLat < nLatLoc; iLat++) {
     q_Start = -cos(cPI / 2 + baseLatsLoc(iLat)) / pow(min_altRe, 2.0);
@@ -255,11 +352,8 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
   }
 
   arma_vec rNorm1d(nAlts), lat1dAlong(nAlts);
-  precision_t planetRadius;
 
   // rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-  // This is wrong (same lat everywhere), but get_radius doesnt support oblate earth yet.
-  planetRadius =  planet.get_radius(bLats.at(0));
 
   for (int64_t iLat = 0; iLat < nLatLoc; iLat++) {
     for (int64_t iLon = 0; iLon < nLons; iLon++) {
@@ -273,7 +367,7 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
 
       // Lay things down in the same order as the geo grid.
       //centers only
-      magAlt_scgc.tube(iLon,  iLat) = rNorm1d * planetRadius;
+      magAlt_scgc.tube(iLon, iLat) = rNorm1d * planetRadius;
       magLat_scgc.tube(iLon, iLat) = lat1dAlong;
     }
   }
@@ -473,8 +567,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   using namespace std;
   bool DidWork = true;
 
-
-
   string function = "Grid::init_dipole_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -486,8 +578,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   report.print(0, "Creating inter-node connections Grid");
 
-  if (!Is0D & !Is1Dz)
-    create_sphere_connection(quadtree_ion);
+  //if (!Is0D & !Is1Dz)
+  //  create_sphere_connection(quadtree_ion);
 
   report.print(0, "Creating Dipole Grid");
 
@@ -535,7 +627,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t dlon = size_right_norm(0) * cPI / (nLons - 2 * nGCs);
   precision_t lon0 = lower_left_norm(0) * cPI;
   arma_vec lon1d(nLons);
-
 
   arma_vec lon1dLeft(nLons + 1);
 
@@ -586,8 +677,14 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // latitude of field line base:
   // todo: needs support for variable stretching. it's like, halfway there.
-  arma_vec baseLats = baselat_spacing(size_up_norm[1], lower_left_norm[1],
+
+  if (report.test_verbose(2))
+    std::cout << "computing baselats : " << max_lat* cRtoD  << " " << min_lat* cRtoD  << "\n";
+  arma_vec baseLats = baselat_spacing(size_up_norm(1), lower_left_norm(1),
                                       max_lat, min_lat, 1.0);
+
+  if (report.test_verbose(2))
+    std::cout << "baselats : " << baseLats * cRtoD << "\n";
 
   // downward sides (latitude shifted by 1/2 step):
   // TODO: This only works for linear latitude spacing, which is all that's supported right now.
@@ -597,28 +694,29 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // put one cell halfway btwn each base latitude, leave 1st and last cell for now...
   for (int64_t iLat = 1; iLat < nLats; iLat ++)
-    baseLats_down(iLat) = baseLats(iLat - 1) + (dlat * 0.5);
+    baseLats_down(iLat) = (baseLats(iLat - 1) + baseLats(iLat))/2.0;
 
   // Put in 1st and last cell. Done this way so it's easier to put in supercell or something else
-  baseLats_down(0) = baseLats(0) - dlat * 0.5;
-  baseLats_down(nLats) = baseLats(nLats - 1) + dlat * 0.5;
+  baseLats_down(0) = baseLats(0) * 1.5 - baseLats(1) * 0.5;
+  baseLats_down(nLats) = baseLats(nLats - 1) * 1.5 - baseLats(nLats - 2) * 0.5;
+
+  if (report.test_verbose(2))
+    std::cout << "baselats_down : " << baseLats_down * cRtoD << "\n";
 
   report.print(3, "baselats done!");
 
   // latitude & altitude of points on field lines (2D)
   // Cell centers
-  fill_field_lines(baseLats, min_apex_re, Gamma, planet);
+  fill_field_lines(baseLats, min_alt_re, Gamma, planet);
   // Corners (final bool argument) tells function to place stuff in the corner.
   // This is only down for the "down" edges, where the base latitudes are different.
-  fill_field_lines(baseLats_down, min_apex_re, Gamma, planet, true);
+  fill_field_lines(baseLats_down, min_alt_re, Gamma, planet, true);
 
   report.print(4, "Field-aligned Edges");
   dipole_alt_edges(planet, min_alt_re);
 
   report.print(3,
                "Done generating symmetric latitude & altitude spacing in dipole.");
-
-
 
   std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
                                            planet);
