@@ -159,12 +159,6 @@ bool Neutrals::initial_conditions(Grid grid,
       } else
         temp1d = 200.0;
 
-      // spread the 1D temperature across the globe:
-      for (iLon = 0; iLon < nLons; iLon++) {
-        for (iLat = 0; iLat < nLats; iLat++)
-          temperature_scgc.tube(iLon, iLat) = temp1d;
-      }
-
       // Make the initial condition in the lower ghost cells to be consistent
       // with the actual lowwer BC:
       // Set the lower boundary condition:
@@ -173,14 +167,20 @@ bool Neutrals::initial_conditions(Grid grid,
         fill(species[iSpecies].lower_bc_density);
       }
 
+      report.print(2, "Calculating scale height");
       calc_scale_height(grid);
+      report.print(2, "setting lower BCs");
       set_lower_bcs(grid, time, indices);
 
+      report.print(2, "Filling with hydrostatic");
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
         fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
 
     } // type = planet
   }
+
+  // ensure that the densities are all within bounds:
+  clamp_density();
 
   if (!didWork)
     report.error("Issue with initial conditions!");
