@@ -66,6 +66,7 @@ Inputs::Inputs(Times &time) {
 
   if (report.test_verbose(1)) {
     std::cout << "Settings read in:\n";
+    std::cout << "iProc : " << iProc << "\n";
     std::cout << std::setw(2) << settings;
   }
 
@@ -106,7 +107,7 @@ std::string dummy_string = "unknown";
 
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : "
               << key1 << " and "
               << key2 << "\n";
@@ -131,7 +132,7 @@ bool Inputs::check_settings(std::string key1,
 // 1 key:
 
 bool Inputs::check_settings(std::string key1) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
