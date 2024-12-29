@@ -193,6 +193,7 @@ Grid::Grid(std::string gridtype) {
   dalt_lower_scgc.set_size(nX, nY, nZ);
   dalt_ratio_scgc.set_size(nX, nY, nZ);
   dalt_ratio_sq_scgc.set_size(nX, nY, nZ);
+  dr_lower_scgc.set_size(nX, nY, nZ);
 
   MeshCoef1s3rdp1.set_size(nX, nY, nGCs);
   MeshCoef1s3rdp2.set_size(nX, nY, nGCs);
