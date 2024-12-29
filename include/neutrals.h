@@ -310,6 +310,11 @@ class Neutrals {
 			     Grid grid);
   
   /**********************************************************************
+     \brief Limit the density to a floor and a ceiling
+   **/
+  void clamp_density();
+
+  /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
    **/
   void calc_mass_density();
