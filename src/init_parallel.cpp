@@ -23,8 +23,7 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-bool init_parallel(Quadtree &quadtree,
-Quadtree &quadtree_ion) {
+bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion) {
 
   bool DidWork = true;
 
@@ -55,6 +54,7 @@ Quadtree &quadtree_ion) {
               << nProcsPerNode << "\n";
 
   quadtree.max_depth = round(log(nProcsPerNode) / log(4));
+  quadtree_ion.max_depth = round(log(nProcsPerNode) / log(4));
 
   if (report.test_verbose(2))
     std::cout << "Quadtree max depth : " << quadtree.max_depth << "\n";
