@@ -126,6 +126,7 @@ void calc_aurora(Grid grid,
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  int64_t nGcs = grid.get_nGCs();
 
   // DENSITY INTEGRAL CALULATION ( done in calc_neutral_derived.cpp line
   // 170 rho_alt_int_scgc species[iSpecies].rho_alt_int_scgc =
@@ -164,6 +165,7 @@ void calc_aurora(Grid grid,
 
   if (IsFirstTime) {
 
+    report.print(4, "aurora - initializing");
     precision_t lnE;
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
@@ -192,9 +194,8 @@ void calc_aurora(Grid grid,
       CiArray.push_back(Ci);
     }
     IsFirstTime = false;
+    report.print(4, "aurora - done with init!");
   }
-
-  report.print(4, "aurora - done with init!");
 
   arma_vec rhoH1d;
   arma_cube scale_height;
@@ -226,8 +227,8 @@ void calc_aurora(Grid grid,
   report.print(4, "aurora - starting main loop!");
 
   // loop through each altitude and calculate ionization
-  for (iLon = 0; iLon < nLons ; iLon++) {
-    for (iLat = 0; iLat < nLats ; iLat++) {
+  for (iLon = nGcs; iLon < nLons - nGcs; iLon++) {
+    for (iLat = nGcs; iLat < nLats - nGcs ; iLat++) {
       
       // CHANGE
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
@@ -244,7 +245,6 @@ void calc_aurora(Grid grid,
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
           rhoH1d = rhoH1d + rho_tube / b1d;
         }
-
         // Step 2: Calculate the distribution function:
         diff_num_flux = calculate_maxwellian(eflux,
                                              avee,
