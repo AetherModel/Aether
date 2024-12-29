@@ -47,6 +47,26 @@ void Neutrals::calc_kappa_eddy() {
   return;
 }
 
+
+// ----------------------------------------------------------------------
+//  Calculate mass density and number density:
+// ----------------------------------------------------------------------
+
+void Neutrals::clamp_density() {
+
+  std::string function = "Neutrals::clamp_density";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iSpecies;
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].density_scgc.clamp(1.0, 1e32);
+  }
+
+  report.exit(function);
+  return;
+}
+
 // ----------------------------------------------------------------------
 //  Calculate mass density and number density:
 // ----------------------------------------------------------------------
@@ -181,7 +201,6 @@ void Neutrals::calc_bulk_velocity() {
 
     velocity_vcgc[iDir] = velocity_vcgc[iDir] / rho_advected;
   }
-
   report.exit(function);
   return;
 }
@@ -565,13 +584,19 @@ void Neutrals::calc_chapman(Grid grid) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(iAlt);
+
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
+      // dr is used here instead of dalt, since we only want the radial integration, while
+      // dalt is the integral along the 3rd dimension.
       integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
                                species[iSpecies].density_scgc.slice(iAlt) %
-                               grid.dalt_lower_scgc.slice(iAlt + 1);
+                               grid.dr_lower_scgc.slice(iAlt + 1);
+      species[iSpecies].rho_alt_int_scgc.slice(iAlt) = 
+          species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
+          species[iSpecies].density_scgc.slice(iAlt) %
+          grid.dalt_lower_scgc.slice(iAlt + 1);
     }
-
-    species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
 
     erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
 
@@ -589,8 +614,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
-
-        dAlt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dAlt1d = grid.dr_lower_scgc.tube(iLon, iLat);
         sza1d = grid.sza_scgc.tube(iLon, iLat);
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);
@@ -599,7 +623,6 @@ void Neutrals::calc_chapman(Grid grid) {
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
         H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
-
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
           // This is on the dayside:
           if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
