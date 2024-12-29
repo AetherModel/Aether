@@ -339,15 +339,20 @@ void Grid::calc_alt_grid_spacing() {
       (geoAlt_scgc.slice(iAlt + 1) - geoAlt_scgc.slice(iAlt - 1)) / 2.0;
     dalt_lower_scgc.slice(iAlt) =
       geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
+    dr_lower_scgc.slice(iAlt) =
+      radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
   }
 
   dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1);
   dalt_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
 
   dalt_lower_scgc.slice(0) = dalt_lower_scgc.slice(1);
+  dr_lower_scgc.slice(0) = dr_lower_scgc.slice(1);
   iAlt = nAlts - 1;
   dalt_lower_scgc.slice(iAlt) =
     geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
+  dr_lower_scgc.slice(iAlt) =
+    radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
 
   // For a stretched grid, calculate some useful quantities:
   // lower is defined for the current cell, which
@@ -475,6 +480,10 @@ void Grid::calc_cent_acc(Planets planet) {
   cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
 }
 
+// -----------------------------------------------------------------------------
+//  Calaculate Grid Spacing for Dipole Grid
+// -----------------------------------------------------------------------------
+
 void Grid::calc_dipole_grid_spacing(Planets planet)
 {
 
@@ -516,42 +525,43 @@ inline arma_cube delTc(arma_cube theta){
   return (sqrt(3 * cos(theta) % cos(theta) + 1));
   }
 
-// ---------------------------------------
+// -----------------------------------------------------------------------------
 // Grid spacing for altitude:
 //   - Dipole grid needs to be handled differently!
-// ---------------------------------------
+// -----------------------------------------------------------------------------
 
-void Grid::calc_alt_dipole_grid_spacing()
-{
+void Grid::calc_alt_dipole_grid_spacing() {
 
   int64_t iAlt;
-  // arma_vec alt_spacing;
   precision_t planetRadius;
 
-  //for (int64_t iLat = 1; iLat < nLats; iLat++) {
-    for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
+  for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
 
-      dalt_center_scgc.slice(iAlt) =
-          abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1)) 
-              % (1 / delTm(magLat_scgc.slice(iAlt + 1))) 
-              - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
-                % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
+    dalt_center_scgc.slice(iAlt) =
+        abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1)) 
+            % (1 / delTm(magLat_scgc.slice(iAlt + 1))) 
+            - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
+            % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
 
-      dalt_lower_scgc.slice(iAlt) =
-          abs(magAlt_scgc.slice(iAlt) % sin(magLat_scgc.slice(iAlt))
-              % (1 / delTm(magLat_scgc.slice(iAlt))) 
-              - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
-              % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
-    }
-  //}
+    dalt_lower_scgc.slice(iAlt) =
+        abs(magAlt_scgc.slice(iAlt) % sin(magLat_scgc.slice(iAlt))
+            % (1 / delTm(magLat_scgc.slice(iAlt))) 
+            - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1)) 
+            % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
+    dr_lower_scgc.slice(iAlt) =
+      radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
+  }
 
   dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1);
   dalt_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
 
   dalt_lower_scgc.slice(0) = dalt_lower_scgc.slice(1);
+  dr_lower_scgc.slice(0) = dr_lower_scgc.slice(1);
   iAlt = nAlts - 1;
   dalt_lower_scgc.slice(iAlt) =
       geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
+  dr_lower_scgc.slice(iAlt) =
+      radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
 
   // For a stretched grid, calculate some useful quantities:
   // lower is defined for the current cell, which
