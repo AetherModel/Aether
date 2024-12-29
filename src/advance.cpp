@@ -59,23 +59,37 @@ bool advance(Planets &planet,
   neutrals.calc_viscosity();
   neutrals.calc_cMax();
 
-  ions.fill_electrons();
-  ions.calc_sound_speed();
-  ions.calc_cMax();
-  ions.calc_specific_heat();
-
-  precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
-  precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
-  time.calc_dt(dtNeutral, dtIon);
-
+  neutralsMag.clamp_density();
   neutralsMag.calc_mass_density();
   neutralsMag.calc_mean_major_mass();
   neutralsMag.calc_specific_heat();
   neutralsMag.calc_concentration();
   neutralsMag.calc_pressure();
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: before bulk velocity");
   neutralsMag.calc_bulk_velocity();
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: After bulk velocity");
+
   neutralsMag.calc_kappa_eddy();
   neutralsMag.calc_cMax();
+
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: After extras");
+
+
+  ions.fill_electrons();
+  ions.calc_sound_speed();
+  ions.calc_cMax();
+  ions.calc_specific_heat();
+
+  ionsMag.fill_electrons();
+  ionsMag.calc_sound_speed();
+  ionsMag.calc_cMax();
+  ionsMag.calc_specific_heat();
+
+  precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
+  precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
+  time.calc_dt(dtNeutral, dtIon);
+
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: after calc dt");
 
   // ------------------------------------
   // Do advection first :
@@ -92,8 +106,11 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = ions.set_bcs(gGrid, time, indices);
 
-  if (didWork)
-    didWork = neutralsMag.set_bcs(mGrid, time, indices);
+  //if (didWork)
+  //  didWork = neutralsMag.set_bcs(mGrid, time, indices);
+
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
+
 
   // advect in the 3rd dimension (vertical), but only if we have it:
   if (gGrid.get_nAlts(false) > 1) {
@@ -152,14 +169,16 @@ bool advance(Planets &planet,
 
   if (didWork) {
     calc_ion_neutral_coll_freq(neutrals, ions);
+    calc_ion_neutral_coll_freq(neutralsMag, ionsMag);
     ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
+    ionsMag.calc_ion_drift(neutralsMag, mGrid, time.get_dt());
 
     calc_aurora(gGrid, neutrals, ions);
-    //calc_aurora(mGrid, neutralsMag, ionsMag);
+    calc_aurora(mGrid, neutralsMag, ionsMag);
 
     // Calculate chemistry on both grids:
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
-    //chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
+    chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
 
     if (input.get_O_cooling())
       neutrals.calc_O_cool();
