@@ -143,10 +143,16 @@ public:
   arma_cube sza_scgc;
   arma_cube cos_sza_scgc;
 
+  // dalt should be the altitudinal change along the third dimension,
+  // but is really the distance between grid points.
   arma_cube dalt_center_scgc;
   arma_cube dalt_lower_scgc;
   arma_cube dalt_ratio_scgc;
   arma_cube dalt_ratio_sq_scgc;
+
+  // dr is the radial change along the third dimension, which is
+  // primarily needed for building a hydrostatic solution
+  arma_cube dr_lower_scgc;
 
   arma_cube MeshCoefm2;
   arma_cube MeshCoefm1;
