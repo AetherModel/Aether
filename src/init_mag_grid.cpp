@@ -188,6 +188,12 @@ arma_vec Grid::baselat_spacing(precision_t extent,
         std::cout << "Near northern equator!\n";
       dlat = (lat_low - 1.0 * cDtoR) / nGCs;
     }
+    // The user may not want to go all the way to the pole or the equator.
+    // if we are very close to the pole or equator, then the calculated dlat
+    // will be small so we don't hit either.  If we are far enough away from
+    // either, we can just leave dlat alone.
+    if (dlat > dlat0)
+      dlat = dlat0;
     // Fill in GCs:
     for (int64_t j = 0; j < iStart; j++) {
       ang0 = lat_low + (float(j - iStart) + 0.5) * dlat;
@@ -209,6 +215,12 @@ arma_vec Grid::baselat_spacing(precision_t extent,
         std::cout << "Near southern equator!\n";
       dlat = -(1.0 * cDtoR + lat_high) / nGCs;
     }
+    // The user may not want to go all the way to the pole or the equator.
+    // if we are very close to the pole or equator, then the calculated dlat
+    // will be small so we don't hit either.  If we are far enough away from
+    // either, we can just leave dlat alone.
+    if (dlat > dlat0)
+      dlat = dlat0;
     // Fill in the GCs:
     for (int64_t j = iEnd; j < nLats; j++) {
       ang0 = lat_high + (float(j - iEnd) + 0.5) * dlat;
