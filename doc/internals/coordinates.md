@@ -27,3 +27,15 @@ Maybe we could have:
 i_scgc, j_scgc, k_scgc - coordinates in the native coordinates (radians, meters, etc.)
 im_scgc, jm_scgc, km_scgc - coordinate in meters
 
+The question is what variables do we need?
+
+Locations:
+- Cell Centers (these are the center of each volume)
+- Cell Edges in the i, j, k directions (these are the center of each area)
+- Cell Corners
+
+All locations should be described in the following coordinates:
+- i, j, k
+- lon, lat, radius (+alt)
+- magnetic lon, invariant lat?
+
