@@ -177,7 +177,7 @@ int main() {
       didWork = output(neutralsMag, ionsMag, mGrid, time, planet);
     }
     if (!didWork)
-      throw std::string("output failed!");
+      throw std::string("Initial output failed!");
 
     // This is advancing now... We are not coupling, so set dt_couple to the
     // end of the simulation
