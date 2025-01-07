@@ -87,7 +87,14 @@ bool output(const Neutrals &neutrals,
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(input.get_dt_output(iOutput))) {
+    // make sure the output dt is set correctly. Otherwise these errors aren't caught correctly.
+    precision_t dt_output = input.get_dt_output(iOutput);
+    if (dt_output == 0.0){
+      report.exit(function);
+      return false;
+    }
+
+    if (time.check_time_gate(dt_output)) {
 
       // ------------------------------------------------------------
       // Store time in all of the files:
