@@ -251,7 +251,7 @@ bool output(const Neutrals &neutrals,
                                                     grid.radius_scgc);
       }
 
-      if (type_output == "bfield") {
+      if (type_output == "bfield" || type_output == "ions") {
         AllOutputContainers[iOutput].store_variable("mlat",
                                                     "Magnetic Latitude",
                                                     "degrees",
