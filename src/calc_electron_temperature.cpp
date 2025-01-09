@@ -3,18 +3,25 @@
 
 #include "../include/aether.h"
 
-/// @brief Calculates photoelectron heating efficiency and heating rate
-/// @details Based on two key references:
-///   1. Swartz & Nisbet (1972)
-///   2. Smithro & Solomon (2008)
+/// @brief Calculates photoelectron heating
+/// @details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
 ///   
 /// Uses equations 9-12 from (Zhu & Ridley, 2016)
 ///   https://doi.org/10.1016/j.jastp.2016.01.005
 /// 
-/// @param neutrals 
 /// @param ions 
+/// @param epsilon 
 /// @return Qphe 
 arma_cube calc_photoelectron_heating(Ions &ions, arma_cube epsilon);
+
+
+/// @brief Calculates auroral heating
+/// @details NOTE: in GITM this is solved separately for ion precipitation & auroral 
+/// ionization. In Aether these are both in ions.species[iIon].ionization_scgc...
+/// @param ions 
+/// @param epsilon 
+/// @return Qaurora 
+arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
 
 
 // Since this is used a few times, calculate it separately & pass it to the functions.
@@ -40,15 +47,13 @@ arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
                 - pow(5.9e-2*logx,3) - 9.346e-3*pow(logx,4)
                 - 5.755e-4*pow(logx,5) - 1.249e-5*pow(logx,6)
                 )*1.6e-19;
-  return exp(5.342 + 1.056*logx - pow(4.392e-2*logx, 2) 
-                - pow(5.9e-2*logx,3) - 9.346e-3*pow(logx,4)
-                - 5.755e-4*pow(logx,5) - 1.249e-5*pow(logx,6)
-                )*1.6e-19;}
+  return epsilon;
+}
 
 // --------------------------------------------------------------------------
 // Heating terms:
 //  - [x] photoelectrons
-//  - [ ] auroral ionization
+//  - [x] auroral ionization (from ion precipitation & auroral ionization)
 //  - [ ] e- ion collisions
 //  - [ ] e- neutral collisions (elastic & inelastic)
 //  - [ ] e- chemistry (O2, V2 vibration; O fine structure, O exitation)
@@ -70,6 +75,8 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   arma_cube epsilon = calc_epsilon(neutrals, *this);
 
   arma_cube Qphe = calc_photoelectron_heating(*this, epsilon);
+
+  arma_cube QIonization = calc_ionization_heating(*this, epsilon);
 
   electron_temperature_scgc = neutrals.temperature_scgc;
 
@@ -98,4 +105,25 @@ arma_cube calc_photoelectron_heating(Ions &ions,
   Qphe = epsilon % IonsIonizationRate;
 
   return Qphe;
+}
+
+
+// --------------------------------------------------------------------------
+// Calculate ionization heating
+// --------------------------------------------------------------------------
+arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon){
+    int64_t nIons = ions.nSpecies;
+
+    // auroral heating efficiency coefficient
+    precision_t auroheat = 1.0;
+
+    int64_t iO_3P_ = ions.get_species_id("O_3P_");
+    int64_t iO2_ = ions.get_species_id("O2_");
+    int64_t iN2_ = ions.get_species_id("N2_");
+
+    arma_cube QIonization = auroheat * epsilon % (ions.species[iO_3P_].ionization_scgc 
+                                                 + ions.species[iO2_].ionization_scgc 
+                                                 + ions.species[iN2_].ionization_scgc);
+
+    return QIonization;
 }
