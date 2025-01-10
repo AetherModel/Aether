@@ -172,8 +172,13 @@ class Ions {
   /// Specific heat (constant volume):
   arma_cube Cv_scgc;
 
-  /// Head Conduction (bulk):
+  /// Heat Conduction (bulk):
   arma_cube lambda;
+
+  /// Electron temperature calculations need to know if some neutral species are present
+  bool has_nO;
+  bool has_nO2;
+  bool has_nN2;
 
   // Electrodynamics:
   /// Electric potential:

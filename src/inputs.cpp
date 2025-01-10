@@ -756,6 +756,30 @@ bool Inputs::get_O_cooling() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to include the photoelectron heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_photoelectron_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludePhotoElectronHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include (all) ionization heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_ionization_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeIonizationHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include electron-ion collisional heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_electron_ion_collisional_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeElectronIonCollisionalHeating");
+}
+
+// -----------------------------------------------------------------------
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 

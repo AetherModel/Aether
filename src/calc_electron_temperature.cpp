@@ -3,6 +3,15 @@
 
 #include "../include/aether.h"
 
+/// @brief Calculate epsilon
+/// @details intermediate variable used in photoelectron & ionization heating
+/// From (Smithro & Solomon, 2008).
+/// @param neutrals 
+/// @param ions 
+/// @return epsilon 
+arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions);
+
+
 /// @brief Calculates photoelectron heating
 /// @details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
 ///   
@@ -24,9 +33,92 @@ arma_cube calc_photoelectron_heating(Ions &ions, arma_cube epsilon);
 arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
 
 
+/// @brief Calculates electron-ion collisions
+/// @details From Schunk and Nagy 2009, and Bei-Chen Zhang and Y. Kamide 2003
+/// - This differs slightly from the GITM implementation, which assumes several ion species are present.
+///   Instead, here we use each ion species for the sum.
+/// - electon-ion collision frequency (from Schunk and Nagy 2009) = 5.45E-5
+/// - This is capable of handling BOTH the bulk & individual ion temperatures
+/// @param ions 
+/// @return Qeicp 
+std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions);
+
+
+// --------------------------------------------------------------------------
+// Heating terms:
+//  - [x] photoelectrons
+//  - [x] auroral ionization (from ion precipitation & auroral ionization)
+//  - [x] e- ion collisions
+//  - [ ] e- neutral collisions (elastic & inelastic)
+//  - [ ] e- chemistry (O2, V2 vibration; O fine structure, O exitation)
+// --------------------------------------------------------------------------
+
+
+
+
+// --------------------------------------------------------------------------
+// TODO (#24): this currently just sets the electron temperature to the neutral temperature
+// --------------------------------------------------------------------------
+
+void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
+
+  std::string function = "Ions::calc_electron_temperature";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  arma_cube epsilon, Qphe, QIonization;
+  // electron-ion collisions return a vector of cubes, one for Qe, one for Qi:
+  std::vector<arma_cube> Qeic;
+  arma_cube Qeicm, Qeicp;
+
+  // Initialize everything to zero!
+
+  epsilon.set_size(grid.get_nLons(), grid.get_nLats(), grid.get_nAlts());
+  epsilon.zeros();
+  Qphe = epsilon;
+  QIonization = epsilon;
+  Qeicm = epsilon;
+  Qeicp = epsilon;
+  
+  
+  // Needed for both ionization & photoelectron heating:
+  if (input.get_do_ionization_heating() || input.get_do_photoelectron_heating()) {
+    epsilon = calc_epsilon(neutrals, *this);
+  }
+
+  // Photoelectron heating
+  if (input.get_do_photoelectron_heating()) {
+    Qphe = calc_photoelectron_heating(*this, epsilon);
+  }
+
+  // Ionization heating (includes all ionization sources)
+  if (input.get_do_ionization_heating()) {
+    QIonization = calc_ionization_heating(*this, epsilon);
+  }
+
+  // electron-ion collisions
+  if (input.get_do_electron_ion_collisional_heating()) {
+    Qeic = calc_electron_ion_collisions(*this);
+    Qeicp = Qeic[0]; // Ions
+    Qeicm = Qeic[1]; // Electrons
+  }
+
+
+
+  electron_temperature_scgc = neutrals.temperature_scgc;
+
+  report.exit(function);
+}
+
+
+
 // Since this is used a few times, calculate it separately & pass it to the functions.
 // From (Smithro and Solomon, 2008)
 arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
+
+  std::string function = "calc_epsilon";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   // from Swartz & Nisbet (1972): we need neutral species id's for o2, n2 & o
   int64_t inO2 = neutrals.get_species_id("O2");
@@ -47,41 +139,11 @@ arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
                 - pow(5.9e-2*logx,3) - 9.346e-3*pow(logx,4)
                 - 5.755e-4*pow(logx,5) - 1.249e-5*pow(logx,6)
                 )*1.6e-19;
+
+  report.exit(function);
   return epsilon;
 }
 
-// --------------------------------------------------------------------------
-// Heating terms:
-//  - [x] photoelectrons
-//  - [x] auroral ionization (from ion precipitation & auroral ionization)
-//  - [ ] e- ion collisions
-//  - [ ] e- neutral collisions (elastic & inelastic)
-//  - [ ] e- chemistry (O2, V2 vibration; O fine structure, O exitation)
-// --------------------------------------------------------------------------
-
-
-
-
-// --------------------------------------------------------------------------
-// TODO (#24): this currently just sets the electron temperature to the neutral temperature
-// --------------------------------------------------------------------------
-
-void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
-
-  std::string function = "Ions::calc_electron_temperature";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  arma_cube epsilon = calc_epsilon(neutrals, *this);
-
-  arma_cube Qphe = calc_photoelectron_heating(*this, epsilon);
-
-  arma_cube QIonization = calc_ionization_heating(*this, epsilon);
-
-  electron_temperature_scgc = neutrals.temperature_scgc;
-
-  report.exit(function);
-}
 
 
 // --------------------------------------------------------------------------
@@ -89,13 +151,18 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
 // --------------------------------------------------------------------------
 arma_cube calc_photoelectron_heating(Ions &ions,
                                      arma_cube epsilon) {
+  
+  std::string function = "calc_photoelectron_heating";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   int64_t nIons = ions.nSpecies;
 
   // Initialize Qphe & IonsIonizationRate (sum of ionization rates)
   // to the same size as epsilon and then zero them out:
   // (Qphe is the product of epsilon & IonsIonizationRate, so is not zeroed.)
-  arma_cube Qphe = epsilon, IonsIonizationRate = epsilon;
+  arma_cube Qphe, IonsIonizationRate;
+  IonsIonizationRate.set_size(epsilon.n_rows, epsilon.n_cols, epsilon.n_slices);
   IonsIonizationRate.zeros();
 
   for (int64_t iIon = 0; iIon < nIons; iIon++) {
@@ -104,6 +171,7 @@ arma_cube calc_photoelectron_heating(Ions &ions,
 
   Qphe = epsilon % IonsIonizationRate;
 
+  report.exit(function);
   return Qphe;
 }
 
@@ -112,18 +180,74 @@ arma_cube calc_photoelectron_heating(Ions &ions,
 // Calculate ionization heating
 // --------------------------------------------------------------------------
 arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon){
-    int64_t nIons = ions.nSpecies;
 
-    // auroral heating efficiency coefficient
-    precision_t auroheat = 1.0;
+  std::string function = "calc_ionization_heating";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
-    int64_t iO_3P_ = ions.get_species_id("O_3P_");
-    int64_t iO2_ = ions.get_species_id("O2_");
-    int64_t iN2_ = ions.get_species_id("N2_");
+  int64_t nIons = ions.nSpecies;
 
-    arma_cube QIonization = auroheat * epsilon % (ions.species[iO_3P_].ionization_scgc 
-                                                 + ions.species[iO2_].ionization_scgc 
-                                                 + ions.species[iN2_].ionization_scgc);
+  // auroral heating efficiency coefficient
+  precision_t auroheat = 1.0;
 
-    return QIonization;
+  int64_t iO_3P = ions.get_species_id("O+");
+  int64_t iO2P = ions.get_species_id("O2+");
+  int64_t iN2P = ions.get_species_id("N2+");
+
+  arma_cube QIonization = auroheat * epsilon % (ions.species[iO_3P].ionization_scgc 
+                                                + ions.species[iO2P].ionization_scgc 
+                                                + ions.species[iN2P].ionization_scgc);
+
+
+  report.exit(function);
+  return QIonization;
+}
+
+// --------------------------------------------------------------------------
+// Calculate electron-ion collisions
+// --------------------------------------------------------------------------
+std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
+
+  std::string function = "calc_electron_ion_collisions";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  arma_cube Qeicp;
+  Qeicp.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
+  Qeicp.zeros();
+  arma_cube Qeicm = Qeicp;
+
+  int64_t nSpecies = ions.nSpecies;
+
+  if (input.get_do_calc_bulk_ion_temp()){
+    // This is used when we calculate bulk ion temperature!
+
+    // Use all species, not just major species (different from GITM)
+    for (int64_t iSpecies = 0; iSpecies < nSpecies - 1; iSpecies++) {
+      Qeicp += ions.species[iSpecies].density_scgc 
+                / (ions.species[nSpecies].mass + ions.species[iSpecies].mass);
+    }
+
+    Qeicp = Qeicp % ions.density_scgc * ions.species[nSpecies].mass * 3.0 * cKB 
+            % (ions.temperature_scgc - ions.electron_temperature_scgc)
+            * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
+  }
+  else{
+    // Individual ion temperatures:
+    // Use all species, not just major species (different from GITM)
+    for (int64_t iSpecies = 0; iSpecies < nSpecies - 1; iSpecies++) {
+      Qeicp += ions.species[iSpecies].density_scgc 
+               % (ions.species[iSpecies].temperature_scgc - ions.electron_temperature_scgc)
+               / (ions.species[nSpecies].mass + ions.species[iSpecies].mass);
+    }
+
+    Qeicp = Qeicp % ions.density_scgc * ions.species[nSpecies].mass * 3.0 * cKB 
+            * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
+  }
+
+  std::vector<arma_cube> Qeic = {Qeicp, Qeicp % ions.electron_temperature_scgc};
+
+  report.exit(function);
+  
+  return Qeic;
 }

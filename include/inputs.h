@@ -436,6 +436,24 @@ public:
   bool get_O_cooling();
 
   /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludePhotoElectronHeating"]
+     \param none
+   **/
+  bool get_do_photoelectron_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeIonizationHeating"]
+     \param none
+   **/
+  bool get_do_ionization_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronIonCollisionalHeating"]
+     \param none
+   **/
+  bool get_do_electron_ion_collisional_heating();
+
+  /**********************************************************************
      \brief returns settings["
      \param 
    **/
