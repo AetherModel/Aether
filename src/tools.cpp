@@ -160,6 +160,18 @@ void display_vector(arma_vec vec) {
 }
 
 // ----------------------------------------------------------------------------
+// Neatly display an armadillo vector with a name
+// ----------------------------------------------------------------------------
+
+void display_vector(std::string name, arma_vec vec) {
+  std::cout << name << " ";
+  for (int64_t i = 0; i < vec.n_rows; i++)
+    std::cout << vec(i) << " ";
+
+  std::cout << "\n";
+}
+
+// ----------------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
 // ----------------------------------------------------------------------------
 
