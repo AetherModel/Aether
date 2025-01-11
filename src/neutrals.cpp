@@ -264,7 +264,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
         temperature_scgc.slice(iAlt - 1) /
         temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
-        exp(-grid.dr_lower_scgc.slice(iAlt) /
+        exp(-grid.dr_edge.slice(iAlt) /
             species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
@@ -289,7 +289,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       temperature_scgc.slice(iAlt - 1) /
       temperature_scgc.slice(iAlt) %
       species[iSpecies].density_scgc.slice(iAlt - 1) %
-      exp(-grid.dr_lower_scgc.slice(iAlt) /
+      exp(-grid.dr_edge.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
 
