@@ -285,7 +285,6 @@ void Grid::calc_gravity(Planets planet) {
 
   // *this is the grid class....
   gravity_vcgc = calc_gradient_vector(gravity_potential_scgc, *this);
-
   gravity_vcgc[0] = - gravity_vcgc[0];
   gravity_vcgc[1] = - gravity_vcgc[1];
   gravity_vcgc[2] = - gravity_vcgc[2];
@@ -293,7 +292,6 @@ void Grid::calc_gravity(Planets planet) {
                        gravity_vcgc[0] % gravity_vcgc[0] +
                        gravity_vcgc[1] % gravity_vcgc[1] +
                        gravity_vcgc[2] % gravity_vcgc[2]);
-
   report.exit(function);
   return;
 }
@@ -302,14 +300,8 @@ void Grid::calc_gravity(Planets planet) {
 //  Fill in XYZ in geo and mag coordinates
 // -----------------------------------------------------------------------------
 
-void Grid::calc_grid_spacing_old(Planets planet) {
+void Grid::calc_xyz(Planets planet) {
   int64_t iLon, iLat, iAlt;
-
-  report.print(3, "starting calc_grid_spacing");
-
-  calc_alt_grid_spacing();
-  calc_lat_grid_spacing();
-  calc_long_grid_spacing();
 
   std::vector<arma_cube> lon_lat_radius;
   lon_lat_radius.push_back(geoLon_scgc);
