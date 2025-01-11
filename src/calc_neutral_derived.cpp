@@ -589,14 +589,14 @@ void Neutrals::calc_chapman(Grid grid) {
 
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
       // dr is used here instead of dalt, since we only want the radial integration, while
-      // dalt is the integral along the 3rd dimension.
+      // dk is the spacing along the 3rd dimension.
       integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
                                species[iSpecies].density_scgc.slice(iAlt) %
-                               grid.dr_lower_scgc.slice(iAlt + 1);
+                               grid.dr_edge.slice(iAlt + 1);
       species[iSpecies].rho_alt_int_scgc.slice(iAlt) =
         species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
         species[iSpecies].density_scgc.slice(iAlt) %
-        grid.dalt_lower_scgc.slice(iAlt + 1);
+        grid.dk_edge_m.slice(iAlt + 1);
     }
 
     erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
@@ -615,7 +615,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
-        dAlt1d = grid.dr_lower_scgc.tube(iLon, iLat);
+        dAlt1d = grid.dr_edge.tube(iLon, iLat);
         sza1d = grid.sza_scgc.tube(iLon, iLat);
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);
