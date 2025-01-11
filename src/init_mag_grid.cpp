@@ -306,15 +306,20 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
   if (!isCorner) {
     for (int64_t iLon = 0; iLon < nLons; iLon ++) {
       for (int64_t iLat = 0; iLat < nLatLoc; iLat ++) {
-        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++)
+        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++) {
           magP_scgc(iLon, iLat, iAlt) = Lshells(iLat);
+          j_center_scgc(iLon, iLat, iAlt) = Lshells(iLat);
+        }
       }
     }
   } else {
     for (int64_t iLon = 0; iLon < nLons; iLon ++) {
       for (int64_t iLat = 0; iLat < nLatLoc; iLat ++) {
-        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++)
+        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++) {
           magP_Down(iLon, iLat, iAlt) = Lshells(iLat);
+          j_edge_scgc(iLon, iLat, iAlt) = Lshells(iLat);
+          j_corner_scgc(iLon, iLat, iAlt) = Lshells(iLat);
+        }
       }
     }
   }
@@ -361,11 +366,17 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
 
       if (isCorner) {
         // save the q for the "down" case:
-        for (int64_t iLon = 0; iLon < nLons; iLon ++)
+        for (int64_t iLon = 0; iLon < nLons; iLon ++) {
           magQ_Down(iLon, iLat, iAlt) = qp2;
+          if (iLat < nLats)
+            k_edge_scgc(iLon, iLat, iAlt) = qp2;
+          k_corner_scgc(iLon, iLat, iAlt) = qp2;
+        }
       } else {
-        for (int64_t iLon = 0; iLon < nLons; iLon ++)
+        for (int64_t iLon = 0; iLon < nLons; iLon ++) {
           magQ_scgc(iLon, iLat, iAlt) = qp2;
+          k_center_scgc(iLon, iLat, iAlt) = qp2;
+        }
 
         r_theta = qp_to_r_theta(qp2, Lshells(iLat));
         bAlts(iLat, iAlt) = r_theta.first;
@@ -683,16 +694,18 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
       // centers:
       magLon_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
+      i_center_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
       // left edges
       magLon_Left.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
+      i_edge_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
     }
   }
-
 
   for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
     for (iLat = 0; iLat < nLats + 1; iLat++) {
       // Corners
       magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
+      i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
     }
   }
 
@@ -743,6 +756,13 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Corners (final bool argument) tells function to place stuff in the corner.
   // This is only down for the "down" edges, where the base latitudes are different.
   fill_field_lines(baseLats_down, min_alt_re, Gamma, planet, true);
+
+  // The baseLats are the Invariant Latitudes of the grid, so we can just fill in all of the 
+  // points with these values
+  for (iAlt = 0; iAlt < nAlts; iAlt++)
+    for (iLat = 0; iLat < nLats; iLat++)
+      for (iLon = 0; iLon < nLons; iLon++) 
+        magInvLat_scgc(iLon, iLat, iAlt) = baseLats(iLat);
 
   report.print(4, "Field-aligned Edges");
   dipole_alt_edges(planet, min_alt_re);
