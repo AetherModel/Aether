@@ -162,21 +162,18 @@ bool Neutrals::initial_conditions(Grid grid,
       // Make the initial condition in the lower ghost cells to be consistent
       // with the actual lowwer BC:
       // Set the lower boundary condition:
+
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
-
       report.print(2, "Calculating scale height");
       calc_scale_height(grid);
       report.print(2, "setting lower BCs");
       set_lower_bcs(grid, time, indices);
-
       report.print(2, "Filling with hydrostatic");
-
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
         fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
-
     } // type = planet
   }
 
