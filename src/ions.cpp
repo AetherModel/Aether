@@ -262,17 +262,17 @@ void Ions::nan_test(std::string variable) {
 //----------------------------------------------------------------------
 
 bool Ions::check_for_nonfinites() {
-  bool non_finites_exist = false;
+  bool didWork = true;
 
   if (!all_finite(density_scgc, "density_scgc") ||
       !all_finite(temperature_scgc, "temperature_scgc") ||
       !all_finite(velocity_vcgc, "velocity_vcgc"))
-    non_finites_exist = true;
+    didWork = false;
 
-  if (non_finites_exist)
+  if (!didWork)
     throw std::string("Check for nonfinites failed!!!\n");
 
-  return non_finites_exist;
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------
