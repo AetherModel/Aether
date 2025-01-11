@@ -103,7 +103,6 @@ int main() {
         throw std::string("init_dipole_grid failed!");
     } 
     else {
-      std::cout << "Making Spherical Magnetic Grid\n";
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
@@ -131,7 +130,11 @@ int main() {
 
     if (input.get_check_for_nans()) {
       didWork = neutrals.check_for_nonfinites("After Inputs");
+      if (!didWork)
+        throw std::string("NaNs found in Neutrals in Initialize!\n");
       didWork = ions.check_for_nonfinites();
+      if (!didWork)
+        throw std::string("NaNs found in Ions in Initialize!\n");
     }
 
     // -----------------------------------------------------------------
