@@ -137,7 +137,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
                                            nGCs,
                                            false);
 
-          // The conduction solver gives Tnew-Told, so divide by dt
           conduction1d.clamp(200, 5000);
           species[iIon].temperature_scgc.tube(iLon, iLat) = conduction1d;
         } // Lats
