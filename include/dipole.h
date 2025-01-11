@@ -59,7 +59,7 @@ namespace Dipole2 {
  *************************************************/
 namespace Dipole4 {
 
-  /// The normalized origins of each face of the cube (i.e. corner)
+  /// The normalized origins of each node (i.e. corner)
   static const arma_mat ORIGINS = {
 				   { 0.0, -0.5, 0.0},
 				   { 1.0, -0.5, 0.0},
@@ -67,7 +67,7 @@ namespace Dipole4 {
            { 0.0,  0.0, 0.0}
   };
 
-  /// Normalized right steps in cube
+  /// Normalized right steps in node
   static const arma_mat RIGHTS = {
 				  {1.0, 0.0, 0.0},
 				  {1.0, 0.0, 0.0},
@@ -75,7 +75,7 @@ namespace Dipole4 {
 				  {1.0, 0.0, 0.0}
   };
 
-  /// Normalized up steps in cube
+  /// Normalized up steps in node
   static const arma_mat UPS = {
 			       {0.0, 0.5, 0.0},
 			       {0.0, 0.5, 0.0},
