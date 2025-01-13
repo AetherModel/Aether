@@ -33,7 +33,7 @@ arma_cube calc_photoelectron_heating(Ions &ions, arma_cube epsilon);
 arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
 
 
-/// @brief Calculates electron-ion collisions
+/// @brief Calculates electron-ion (elastic) collisional heating
 /// @details From Schunk and Nagy 2009, and Bei-Chen Zhang and Y. Kamide 2003
 /// - This differs slightly from the GITM implementation, which assumes several ion species are present.
 ///   Instead, here we use each ion species for the sum.
@@ -223,22 +223,22 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
     // This is used when we calculate bulk ion temperature!
 
     // Use all species, not just major species (different from GITM)
-    for (int64_t iSpecies = 0; iSpecies < nSpecies - 1; iSpecies++) {
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       Qeicp += ions.species[iSpecies].density_scgc 
-                / (ions.species[nSpecies].mass + ions.species[iSpecies].mass);
+                / (cME + ions.species[iSpecies].mass);
     }
 
-    Qeicp = Qeicp % ions.density_scgc * ions.species[nSpecies].mass * 3.0 * cKB 
+    Qeicp = Qeicp % ions.density_scgc * cME * 3.0 * cKB 
             % (ions.temperature_scgc - ions.electron_temperature_scgc)
             * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
   }
   else{
     // Individual ion temperatures:
     // Use all species, not just major species (different from GITM)
-    for (int64_t iSpecies = 0; iSpecies < nSpecies - 1; iSpecies++) {
+    for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       Qeicp += ions.species[iSpecies].density_scgc 
                % (ions.species[iSpecies].temperature_scgc - ions.electron_temperature_scgc)
-               / (ions.species[nSpecies].mass + ions.species[iSpecies].mass);
+               / (cME + ions.species[iSpecies].mass);
     }
 
     Qeicp = Qeicp % ions.density_scgc * ions.species[nSpecies].mass * 3.0 * cKB 
