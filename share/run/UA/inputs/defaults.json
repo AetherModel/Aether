@@ -104,7 +104,13 @@
 		"Coriolis" : true },
 	"Neutrals" : {
 	    "NO_cool" : false,
-	    "O_cool": false } },
+	    "O_cool": false },
+	"Ions":{
+		"IncludePhotoElectronHeating": true,
+		"IncludeIonizationHeating": true,
+		"IncludeElectronIonCollisionalHeating":true,
+		"IncludeElectronNeutralElasticCollisionalHeating":true,
+		"IncludeElectronNeutralInelasticCollisionalHeating":true },
     
     "Seed" : 0,
 
