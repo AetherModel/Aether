@@ -160,6 +160,10 @@ arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
   int64_t inO2 = neutrals.get_species_id("O2");
   int64_t inN2 = neutrals.get_species_id("N2");
   int64_t inO = neutrals.get_species_id("O");
+
+  if ((inO == -1) || (inN2 == -1) || (inO2 == -1)) {
+    report.error("Could not find O, N2, or O2 in neutrals species list");
+  }
   
   arma_cube epsilon, x, logx;
   
@@ -326,6 +330,10 @@ std::vector<arma_cube> calc_electron_neutral_collisions(Ions &ions, Neutrals &ne
   int64_t inO2 = neutrals.get_species_id("O2");
   int64_t inN2 = neutrals.get_species_id("N2");
   int64_t inO = neutrals.get_species_id("O");
+
+  if ((inO == -1) || (inN2 == -1) || (inO2 == -1)) {
+    report.error("Could not find O, N2, or O2 in neutrals species list");
+  }
 
   Qenc = ions.density_scgc * cME * 3.0 * cKB % (neutrals.temperature_scgc - ions.electron_temperature_scgc)
           % ((2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6 
