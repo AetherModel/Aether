@@ -60,6 +60,11 @@ std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neut
 /// @return vector<Qencp, Qencm, Qenc_v>
 std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals);
 
+/// @brief Calculate the thermoelectric current
+/// @param ions
+/// @param grid
+/// @return arma_cube JParaAlt
+std::vector<arma_cube> calc_thermoelectric_current(Ions &ions, Grid &grid);
 
 
 // --------------------------------------------------------------------------
@@ -98,6 +103,9 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   // Inelastic electron-neutral collisions:
   std::vector<arma_cube> Qenc_inelastic;
   arma_cube Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2;
+
+  // Thermoelectric Current
+  arma_cube JParaAlt;
 
   // Initialize everything to zero!
 
@@ -164,6 +172,9 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
     Qvib_O2 = Qenc_inelastic[4];
     Qvib_N2 = Qenc_inelastic[5];
   }
+
+  // Thermoelectric current
+
 
   electron_temperature_scgc = neutrals.temperature_scgc;
 
@@ -575,3 +586,18 @@ std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Ne
 
   return std::vector<arma_cube> {Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2};  
   }
+
+arma_cube calc_thermoelectric_current(Ions ions, Grid grid){
+
+  std::string function = "calc_thermoelectric_current";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  arma_cube JuTotal = ions.density_scgc * cE;
+
+  report.exit(function);
+
+  return JuTotal;
+  
+
+}
