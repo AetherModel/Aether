@@ -74,6 +74,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  // Photoelectron, (all) ionization heating terms:
   arma_cube epsilon, Qphe, QIonization;
 
   // electron-ion collisions return a vector of cubes, one for Qe, one for Qi, one for friction:
@@ -99,21 +100,27 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   
   report.print(4, "Calculating epsilon");
   
-  
+
   // Needed for both ionization & photoelectron heating:
   if (input.get_do_ionization_heating() || input.get_do_photoelectron_heating()) {
     epsilon = calc_epsilon(neutrals, *this);
   }
+
+  report.print(4, "Calculating photoelectron heating");
 
   // Photoelectron heating
   if (input.get_do_photoelectron_heating()) {
     Qphe = calc_photoelectron_heating(*this, epsilon);
   }
 
+  report.print(4, "Calculating ionization heating");
+
   // Ionization heating (includes all ionization sources)
   if (input.get_do_ionization_heating()) {
     QIonization = calc_ionization_heating(*this, epsilon);
   }
+
+  report.print(4, "Calculating electron-ion collisions");
 
   // electron-ion collisions
   if (input.get_do_electron_ion_collisional_heating()) {
@@ -367,4 +374,4 @@ std::vector<arma_cube> calc_electron_neutral_collisions(Ions &ions, Neutrals &ne
   report.exit(function);
 
   return std::vector<arma_cube> {Qencp, Qencm, Qenc_v};
-}
+  }
