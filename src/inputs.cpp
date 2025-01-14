@@ -780,6 +780,15 @@ bool Inputs::get_do_electron_ion_collisional_heating() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to include electron-neutral collisional heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_electron_neutral_collisional_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralCollisionalHeating");
+}
+
+
+// -----------------------------------------------------------------------
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 

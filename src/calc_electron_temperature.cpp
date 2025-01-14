@@ -44,6 +44,14 @@ arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
 std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions);
 
 
+/// @brief Calculates electron-neutral elastic collisional heating
+/// @details From Schunk and Nagy 2009
+/// @param ions
+/// @param neutrals
+/// @return vector<Qencp, Qencm, Qenc_v>
+std::vector<arma_cube> calc_electron_neutral_collisions(Ions &ions, Neutrals &neutrals);
+
+
 // --------------------------------------------------------------------------
 // Heating terms:
 //  - [x] photoelectrons
@@ -71,6 +79,10 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   // electron-ion collisions return a vector of cubes, one for Qe, one for Qi, one for friction:
   std::vector<arma_cube> Qeic;
   arma_cube Qeicm, Qeicp, Qeic_v;
+  
+  // (elastic) Electron-neutral collisions:
+  std::vector<arma_cube> Qenc;
+  arma_cube Qencm, Qencp, Qenc_v;
 
   // Initialize everything to zero!
 
@@ -81,6 +93,11 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   Qeicm = epsilon;
   Qeicp = epsilon;
   Qeic_v = epsilon;
+  Qencm = epsilon;
+  Qencp = epsilon;
+  Qenc_v = epsilon;
+  
+  report.print(4, "Calculating epsilon");
   
   
   // Needed for both ionization & photoelectron heating:
@@ -106,6 +123,15 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
     Qeic_v = Qeic[2]; // Friction
   }
 
+  report.print(4, "Calculating electron-neutral collisions");
+
+  // electron-neutral collisions
+  if (input.get_do_electron_neutral_collisional_heating()) {
+    Qenc = calc_electron_neutral_collisions(*this, neutrals);
+    Qencp = Qenc[0]; 
+    Qencm = Qenc[1]; 
+    Qenc_v = Qenc[2]; // Friction
+  }
 
 
   electron_temperature_scgc = neutrals.temperature_scgc;
@@ -269,4 +295,76 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
   report.exit(function);
   
   return Qeic;
+}
+
+// --------------------------------------------------------------------------
+// Calculate electron-neutral collisions
+// --------------------------------------------------------------------------
+std::vector<arma_cube> calc_electron_neutral_collisions(Ions &ions, Neutrals &neutrals){
+
+  std::string function = "calc_electron_neutral_collisions";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // initialize & zero the quantities we need:
+  arma_cube Qenc;
+  Qenc.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
+  Qenc.zeros();
+  arma_cube Qencp = Qenc;
+  arma_cube Qencm = Qenc;
+  // frictional things:
+  arma_cube dv2_en = Qenc;
+  arma_cube Qenc_v = Qenc;
+
+  int64_t inO2 = neutrals.get_species_id("O2");
+  int64_t inN2 = neutrals.get_species_id("N2");
+  int64_t inO = neutrals.get_species_id("O");
+
+  Qenc = ions.density_scgc * cME * 3.0 * cKB % (neutrals.temperature_scgc - ions.electron_temperature_scgc)
+          % ((2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6 
+              % (1 - 1.21e-4 * ions.electron_temperature_scgc) 
+                % ions.electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
+            + (1.82e-10*neutrals.species[inO2].density_scgc*1.e-6
+              % (1 + 3.60e-2 * pow(ions.electron_temperature_scgc, 0.5)) 
+                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
+            + (8.90e-11*neutrals.species[inO].density_scgc*1.e-6
+              % (1 + 5.70e-4 * ions.electron_temperature_scgc) 
+                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass)) 
+            );
+
+  Qencp = ions.density_scgc * cME * 3.0 * cKB 
+          % ((2.33e-11*neutrals.species[inN2].density_scgc*1.e-6
+              % (1 - 1.21e-4*ions.electron_temperature_scgc) 
+                % ions.electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
+            + (1.82e-10*neutrals.species[inO2].density_scgc*1.e-6
+              % (1 + 3.60e-2 * pow(ions.electron_temperature_scgc, 0.5)) 
+                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
+            + (8.90e-11*neutrals.species[inO].density_scgc*1.e-6
+              % (1 + 5.70e-4*ions.electron_temperature_scgc) 
+                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass))
+          );
+
+  // delta velocity **2 btwn e- & neutrals:
+  for (int64_t iDir = 0; iDir < 3; iDir++) {
+      dv2_en += pow(neutrals.velocity_vcgc[iDir] - ions.exb_vcgc[iDir], 2);
+  }
+  
+
+  Qenc_v = ions.density_scgc * cME % dv2_en 
+            %(2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6
+                % (1 - 1.21e-4 * ions.electron_temperature_scgc) % ions.electron_temperature_scgc * neutrals.species[inN2].mass
+                /(cME + neutrals.species[inN2].mass) 
+              + 1.82e-10*neutrals.species[inO2].density_scgc*1.e-6%(1 + 3.60e-2*pow(ions.electron_temperature_scgc, 0.5))
+                  % pow(ions.electron_temperature_scgc, 0.5) *neutrals.species[inO2].mass
+                  /(cME + neutrals.species[inO2].mass) 
+              + 8.90e-11*neutrals.species[inO].density_scgc*1.e-6%(1 + 5.70e-4*ions.electron_temperature_scgc)
+                  %pow(ions.electron_temperature_scgc,0.5)*neutrals.species[inO2].mass/(cME + neutrals.species[inO2].mass) 
+            );
+
+
+  Qencm = Qencp % neutrals.temperature_scgc;
+
+  report.exit(function);
+
+  return std::vector<arma_cube> {Qencp, Qencm, Qenc_v};
 }
