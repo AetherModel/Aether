@@ -454,10 +454,17 @@ public:
   bool get_do_electron_ion_collisional_heating();
 
   /**********************************************************************
-     \brief returns settings["Sources"]["Ions"]["IncludeElectronNeutralCollisionalHeating"]
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronNeutralElasticCollisionalHeating"]
      \param none
    **/
-  bool get_do_electron_neutral_collisional_heating();
+  bool get_do_electron_neutral_elastic_collisional_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronNeutralInelasticCollisionalHeating"]
+     \param none
+   **/
+  bool get_do_electron_neutral_inelastic_collisional_heating();
+
 
   /**********************************************************************
      \brief returns settings["

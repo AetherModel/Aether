@@ -34,7 +34,7 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
       ||(neutrals.get_species_id("N2") == -1)){
     if (input.get_do_photoelectron_heating() 
         || input.get_do_ionization_heating()
-        || input.get_do_electron_neutral_collisional_heating()) {
+        || input.get_do_electron_neutral_elastic_collisional_heating()) {
     report.error("Your electron temperature sources require neutral O, O2, and N2 to be present.");
     }
   }
