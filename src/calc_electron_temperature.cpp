@@ -40,7 +40,7 @@ arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
 /// - electon-ion collision frequency (from Schunk and Nagy 2009) = 5.45E-5
 /// - This is capable of handling BOTH the bulk & individual ion temperatures
 /// @param ions 
-/// @return Qeicp 
+/// @return vector<Qeicp, Qeicm, Qeic_v>
 std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions);
 
 
@@ -67,9 +67,10 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   report.enter(function, iFunction);
 
   arma_cube epsilon, Qphe, QIonization;
-  // electron-ion collisions return a vector of cubes, one for Qe, one for Qi:
+
+  // electron-ion collisions return a vector of cubes, one for Qe, one for Qi, one for friction:
   std::vector<arma_cube> Qeic;
-  arma_cube Qeicm, Qeicp;
+  arma_cube Qeicm, Qeicp, Qeic_v;
 
   // Initialize everything to zero!
 
@@ -79,6 +80,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   QIonization = epsilon;
   Qeicm = epsilon;
   Qeicp = epsilon;
+  Qeic_v = epsilon;
   
   
   // Needed for both ionization & photoelectron heating:
@@ -99,8 +101,9 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   // electron-ion collisions
   if (input.get_do_electron_ion_collisional_heating()) {
     Qeic = calc_electron_ion_collisions(*this);
-    Qeicp = Qeic[0]; // Ions
-    Qeicm = Qeic[1]; // Electrons
+    Qeicp = Qeic[0]; 
+    Qeicm = Qeic[1]; 
+    Qeic_v = Qeic[2]; // Friction
   }
 
 
@@ -216,12 +219,14 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
   Qeicp.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
   Qeicp.zeros();
   arma_cube Qeicm = Qeicp;
+  // Friction things
+  arma_cube Qeic_v = Qeicp, dv2_ei = Qeicp;
 
   int64_t nSpecies = ions.nSpecies;
 
   if (input.get_do_calc_bulk_ion_temp()){
     // This is used when we calculate bulk ion temperature!
-
+    report.print(3, "Using bulk ion temperature for electron-ion collisions");
     // Use all species, not just major species (different from GITM)
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       Qeicp += ions.species[iSpecies].density_scgc 
@@ -234,6 +239,7 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
   }
   else{
     // Individual ion temperatures:
+    report.print(3, "Using individual ion temperatures for electron-ion collisions");
     // Use all species, not just major species (different from GITM)
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
       Qeicp += ions.species[iSpecies].density_scgc 
@@ -241,11 +247,24 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
                / (cME + ions.species[iSpecies].mass);
     }
 
-    Qeicp = Qeicp % ions.density_scgc * ions.species[nSpecies].mass * 3.0 * cKB 
+    Qeicp = Qeicp % ions.density_scgc * cME * 3.0 * cKB 
             * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
   }
 
-  std::vector<arma_cube> Qeic = {Qeicp, Qeicp % ions.electron_temperature_scgc};
+  report.print(3, "Calculating frictional heating");
+
+  // delta velocity **2 btwn e- & ions:
+  // This uses the bulk ion velocity, not the individual ion velocity.
+  // (Different from GITM): Uses all species' densities (so just ne), not just o+, o2+, n2+, no+, n+
+  for (int64_t iDir = 0; iDir < 3; iDir++) {
+    dv2_ei += pow(ions.velocity_vcgc[iDir] - ions.exb_vcgc[iDir], 2);
+  }
+  Qeic_v = ions.density_scgc * cME % dv2_ei * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5)
+    % (ions.density_scgc);
+    
+  std::vector<arma_cube> Qeic = {Qeicp,
+                                 Qeicp % ions.electron_temperature_scgc,
+                                 Qeic_v};
 
   report.exit(function);
   
