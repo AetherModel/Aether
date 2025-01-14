@@ -95,6 +95,10 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
   std::vector<arma_cube> Qenc;
   arma_cube Qencm, Qencp, Qenc_v;
 
+  // Inelastic electron-neutral collisions:
+  std::vector<arma_cube> Qenc_inelastic;
+  arma_cube Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2;
+
   // Initialize everything to zero!
 
   epsilon.set_size(grid.get_nLons(), grid.get_nLats(), grid.get_nAlts());
@@ -152,10 +156,13 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid) {
 
   // electron-neutral inelastic collisions
   if (input.get_do_electron_neutral_inelastic_collisional_heating()) {
-    Qenc = calc_electron_neutral_inelastic_collisions(*this, neutrals);
-    Qencp = Qenc[0]; 
-    Qencm = Qenc[1]; 
-    Qenc_v = Qenc[2]; // Friction
+    Qenc_inelastic = calc_electron_neutral_inelastic_collisions(*this, neutrals);
+    Qrotm = Qenc_inelastic[0];
+    Qrotp = Qenc_inelastic[1];
+    Qf = Qenc_inelastic[2];
+    Qexc = Qenc_inelastic[3];
+    Qvib_O2 = Qenc_inelastic[4];
+    Qvib_N2 = Qenc_inelastic[5];
   }
 
   electron_temperature_scgc = neutrals.temperature_scgc;
@@ -485,11 +492,11 @@ std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Ne
   // GITM clamped e- temp before calculating, but that makles things really hard here.
   // Instead we will use all Te's, and then limit the outputs after.
 
-  arma_cube logQ = (5.0148e-31*pow(Te,9) - 1.5346e-26*pow(Te,8) 
-                    + 2.0127e-22*pow(Te,7) - 1.4791e-18*pow(Te,6)
-                    + 6.6865e-15*pow(Te,5) - 1.9228e-11*pow(Te,4)
-                    + 3.5187e-8*pow(Te,3) - 3.996e-5*pow(Te,2)
-                    + 0.0267*Te - 19.9171);
+  logQ = (5.0148e-31*pow(Te,9) - 1.5346e-26*pow(Te,8) 
+          + 2.0127e-22*pow(Te,7) - 1.4791e-18*pow(Te,6)
+          + 6.6865e-15*pow(Te,5) - 1.9228e-11*pow(Te,4)
+          + 3.5187e-8*pow(Te,3) - 3.996e-5*pow(Te,2)
+          + 0.0267*Te - 19.9171);
   // GITM's Te_6000 was from 300 - 6000, which corresponds to ~-15.9 & 198.3 for logQ
   // Mask the values outside of this range...
   // TODO: Should we do it this way or just use the clamp?
@@ -565,5 +572,6 @@ std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Ne
   }
 
   Qvib_N2 = -ne % nn2 * 1.e-12 % Qvib_N2 * 1.6e-13;
-  
+
+  return std::vector<arma_cube> {Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2};  
   }
