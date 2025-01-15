@@ -110,7 +110,8 @@
 		"IncludeIonizationHeating": true,
 		"IncludeElectronIonCollisionalHeating":true,
 		"IncludeElectronNeutralElasticCollisionalHeating":true,
-		"IncludeElectronNeutralInelasticCollisionalHeating":true },
+		"IncludeElectronNeutralInelasticCollisionalHeating":true}
+	},
     
     "Seed" : 0,
 
