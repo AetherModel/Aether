@@ -348,8 +348,9 @@ class Ions {
      \brief Calculates the electron temperature on the given grid
      \param neutrals these are needed for the collision terms
      \param grid this is the grid to solve the equation on
+     \param time the time class to know dt
    **/
-  void calc_electron_temperature(Neutrals neutrals, Grid grid);
+  void calc_electron_temperature(Neutrals neutrals, Grid grid, Times time);
 
   /**********************************************************************
      \brief Check all of the variables for nonfinites, such as nans
