@@ -353,6 +353,70 @@ class Ions {
   void calc_electron_temperature(Neutrals neutrals, Grid grid, Times time);
 
   /**********************************************************************
+  /// @brief Calculate epsilon
+  /// @details intermediate variable used in photoelectron & ionization heating
+  /// From (Smithro & Solomon, 2008).
+  /// @param neutrals 
+  /// @param ions 
+  /// @return epsilon
+  **/
+  arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions);
+
+  /**********************************************************************
+    \brief Calculates photoelectron heating
+    \details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
+            Uses equations 9-12 from (Zhu & Ridley, 2016)
+            https://doi.org/10.1016/j.jastp.2016.01.005
+    \param ions 
+    \param epsilon 
+    \return Qphe 
+  **/
+  arma_cube calc_photoelectron_heating(Ions &ions, arma_cube epsilon);
+
+  /**********************************************************************
+    \brief Calculates auroral heating
+    \details NOTE: in GITM this is solved separately for ion precipitation & auroral 
+        ionization. In Aether these are both in ions.species[iIon].ionization_scgc...
+    \param ions 
+    \param epsilon 
+    \return Qaurora 
+  **/
+  arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
+
+  /**********************************************************************
+    \brief Calculates electron-ion (elastic) collisional heating
+    \details From Schunk and Nagy 2009, and Bei-Chen Zhang and Y. Kamide 2003
+    - This differs slightly from the GITM implementation, which assumes several ion species are present.
+      Instead, here we use each ion species for the sum.
+    - electon-ion collision frequency (from Schunk and Nagy 2009) = 5.45E-5
+    - This is capable of handling BOTH the bulk & individual ion temperatures
+    \param ions 
+    \return vector<Qeicp, Qeicm, Qeic_v>
+  **/
+  std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions);
+
+  /**********************************************************************
+    \brief Calculates electron-neutral elastic collisional heating
+    \details From Schunk and Nagy 2009
+    \param ions 
+    \param neutrals 
+    \return vector<Qencp, Qencm, Qenc_v>
+  **/
+  std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neutrals &neutrals);
+
+  /**********************************************************************
+    \brief Calculates the electron-neutral inelastic collisional heating
+    \details From Schunk and Nagy 2009 pages 277, 282.
+    This includes N2, O2 rotation, fine structure, O(1D) exitation & vibration, N2 vibration.
+    See equation 15 from (Zhu, Ridley, Deng, 2016) https://doi.org/10.1016/j.jastp.2016.01.005
+    \param ions 
+    \param neutrals 
+    \return vector<Qencp, Qencm, Qenc_v>
+  **/
+  std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals);
+
+
+  /**********************************************************************
      \brief Check all of the variables for nonfinites, such as nans
      \param none
    **/

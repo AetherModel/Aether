@@ -3,81 +3,6 @@
 
 #include "../include/aether.h"
 
-/// @brief Calculate epsilon
-/// @details intermediate variable used in photoelectron & ionization heating
-/// From (Smithro & Solomon, 2008).
-/// @param neutrals 
-/// @param ions 
-/// @return epsilon 
-arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions);
-
-
-/// @brief Calculates photoelectron heating
-/// @details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
-///   
-/// Uses equations 9-12 from (Zhu & Ridley, 2016)
-///   https://doi.org/10.1016/j.jastp.2016.01.005
-/// 
-/// @param ions 
-/// @param epsilon 
-/// @return Qphe 
-arma_cube calc_photoelectron_heating(Ions &ions, arma_cube epsilon);
-
-
-/// @brief Calculates auroral heating
-/// @details NOTE: in GITM this is solved separately for ion precipitation & auroral 
-/// ionization. In Aether these are both in ions.species[iIon].ionization_scgc...
-/// @param ions 
-/// @param epsilon 
-/// @return Qaurora 
-arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon);
-
-
-/// @brief Calculates electron-ion (elastic) collisional heating
-/// @details From Schunk and Nagy 2009, and Bei-Chen Zhang and Y. Kamide 2003
-/// - This differs slightly from the GITM implementation, which assumes several ion species are present.
-///   Instead, here we use each ion species for the sum.
-/// - electon-ion collision frequency (from Schunk and Nagy 2009) = 5.45E-5
-/// - This is capable of handling BOTH the bulk & individual ion temperatures
-/// @param ions 
-/// @return vector<Qeicp, Qeicm, Qeic_v>
-std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions);
-
-
-/// @brief Calculates electron-neutral elastic collisional heating
-/// @details From Schunk and Nagy 2009
-/// @param ions
-/// @param neutrals
-/// @return vector<Qencp, Qencm, Qenc_v>
-std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neutrals &neutrals);
-
-/// @brief Calculates electron-neutral inelastic collisional heating
-/// @details From Schunk and Nagy 2009 pages 277, 282.
-/// This includes N2, O2 rotation, fine structure, O(1D) exitation & vibration, N2 vibration.
-/// See equation 15 from (Zhu, Ridley, Deng, 2016) https://doi.org/10.1016/j.jastp.2016.01.005
-/// @param ions
-/// @param neutrals
-/// @return vector<Qencp, Qencm, Qenc_v>
-std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals);
-
-/// @brief Calculate the thermoelectric current
-/// @param ions
-/// @param grid
-/// @return arma_cube JParaAlt
-std::vector<arma_cube> calc_thermoelectric_current(Ions &ions, Grid &grid);
-
-
-// --------------------------------------------------------------------------
-// Heating terms:
-//  - [x] photoelectrons
-//  - [x] auroral ionization (from ion precipitation & auroral ionization)
-//  - [x] e- ion collisions
-//  - [ ] e- neutral collisions (elastic & inelastic)
-//  - [ ] e- chemistry (O2, V2 vibration; O fine structure, O exitation)
-// --------------------------------------------------------------------------
-
-
-
 
 // --------------------------------------------------------------------------
 // TODO (#24): this currently just sets the electron temperature to the neutral temperature
@@ -105,11 +30,15 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
   arma_cube Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2;
 
   // Thermoelectric Current
-  arma_cube JParaAlt;
+  arma_mat JParallel;
+
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+  int64_t nAlts = grid.get_nAlts();
+  int64_t nGCs = grid.get_nGCs();
 
   // Initialize everything to zero!
-
-  epsilon.set_size(grid.get_nLons(), grid.get_nLats(), grid.get_nAlts());
+  epsilon.set_size(nLons, nLats, nAlts);
   epsilon.zeros();
   Qphe = epsilon;
   QIonization = epsilon;
@@ -119,8 +48,16 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
   Qencm = epsilon;
   Qencp = epsilon;
   Qenc_v = epsilon;
+  Qrotm = epsilon;
+  Qrotp = epsilon;
+  Qf = epsilon;
+  Qexc = epsilon;
+  Qvib_O2 = epsilon;
+  Qvib_N2 = epsilon;
   
   report.print(4, "Calculating epsilon");
+
+  // ============= ADD SOURCES =================
   
 
   // Needed for both ionization & photoelectron heating:
@@ -152,7 +89,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
     Qeic_v = Qeic[2]; // Friction
   }
 
-  report.print(4, "Calculating electron-neutral collisions");
+  report.print(4, "Calculating electron-neutral elastic collisions");
 
   // electron-neutral Elastic collisions
   if (input.get_do_electron_neutral_elastic_collisional_heating()) {
@@ -185,7 +122,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
 
 // Since this is used a few times, calculate it separately & pass it to the functions.
 // From (Smithro and Solomon, 2008)
-arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
+arma_cube Ions::calc_epsilon(Neutrals &neutrals, Ions &ions) {
 
   std::string function = "calc_epsilon";
   static int iFunction = -1;
@@ -224,7 +161,7 @@ arma_cube calc_epsilon(Neutrals &neutrals, Ions &ions) {
 // --------------------------------------------------------------------------
 // Calculate photoelectron heating
 // --------------------------------------------------------------------------
-arma_cube calc_photoelectron_heating(Ions &ions,
+arma_cube Ions::calc_photoelectron_heating(Ions &ions,
                                      arma_cube epsilon) {
   
   std::string function = "calc_photoelectron_heating";
@@ -254,7 +191,7 @@ arma_cube calc_photoelectron_heating(Ions &ions,
 // --------------------------------------------------------------------------
 // Calculate ionization heating
 // --------------------------------------------------------------------------
-arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon){
+arma_cube Ions::calc_ionization_heating(Ions &ions, arma_cube epsilon){
 
   std::string function = "calc_ionization_heating";
   static int iFunction = -1;
@@ -281,7 +218,7 @@ arma_cube calc_ionization_heating(Ions &ions, arma_cube epsilon){
 // --------------------------------------------------------------------------
 // Calculate electron-ion collisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
+std::vector<arma_cube> Ions::calc_electron_ion_collisions(Ions &ions){
 
   std::string function = "calc_electron_ion_collisions";
   static int iFunction = -1;
@@ -346,7 +283,7 @@ std::vector<arma_cube> calc_electron_ion_collisions(Ions &ions){
 // --------------------------------------------------------------------------
 // Calculate electron-neutral elastic collisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neutrals &neutrals){
+std::vector<arma_cube> Ions::calc_electron_neutral_elastic_collisions(Ions &ions, Neutrals &neutrals){
 
   std::string function = "calc_electron_neutral_elastic_collisions";
   static int iFunction = -1;
@@ -381,7 +318,7 @@ std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neut
               % (1 + 5.70e-4 * ions.electron_temperature_scgc) 
                 % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass)) 
             );
-
+report.print(6, "Qenc done");
   Qencp = ions.density_scgc * cME * 3.0 * cKB 
           % ((2.33e-11*neutrals.species[inN2].density_scgc*1.e-6
               % (1 - 1.21e-4*ions.electron_temperature_scgc) 
@@ -393,12 +330,13 @@ std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neut
               % (1 + 5.70e-4*ions.electron_temperature_scgc) 
                 % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass))
           );
+report.print(6, "Qencp done");
 
   // delta velocity **2 btwn e- & neutrals:
   for (int64_t iDir = 0; iDir < 3; iDir++) {
       dv2_en += pow(neutrals.velocity_vcgc[iDir] - ions.exb_vcgc[iDir], 2);
   }
-  
+  report.print(6, "dv2 done");
 
   Qenc_v = ions.density_scgc * cME % dv2_en 
             %(2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6
@@ -411,6 +349,7 @@ std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neut
                   %pow(ions.electron_temperature_scgc,0.5)*neutrals.species[inO2].mass/(cME + neutrals.species[inO2].mass) 
             );
 
+report.print(6, "Qencv done");
 
   Qencm = Qencp % neutrals.temperature_scgc;
 
@@ -422,7 +361,7 @@ std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Ions &ions, Neut
 // --------------------------------------------------------------------------
 // Calculate electron-neutral inelasticcollisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals){
+std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals){
 
   std::string function = "calc_electron_neutral_inelastic_collisions";
   static int iFunction = -1;
@@ -508,11 +447,10 @@ std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Ions &ions, Ne
           + 6.6865e-15*pow(Te,5) - 1.9228e-11*pow(Te,4)
           + 3.5187e-8*pow(Te,3) - 3.996e-5*pow(Te,2)
           + 0.0267*Te - 19.9171);
-  // GITM's Te_6000 was from 300 - 6000, which corresponds to ~-15.9 & 198.3 for logQ
+  // GITM's Te_6000 was used when 300<T<6000, which corresponds to ~-15.9 & 198.3 for logQ
   // Mask the values outside of this range...
-  // TODO: Should we do it this way or just use the clamp?
   logQ.clamp(-15.9, 198.273);
-  logQ.elem( find(logQ < -15.9) ).fill(-20.0);
+  logQ.elem( find(logQ <= -15.9) ).fill(-20.0);
   
 
   Qvib_O2 = ne % no2 * 1.e-12 % exp10(logQ) % (1 - exp(2239. * (1. / Te - 1. / Tn)));
