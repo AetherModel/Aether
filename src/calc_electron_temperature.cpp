@@ -65,42 +65,46 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
     epsilon = calc_epsilon(neutrals);
   }
 
-  report.print(4, "Calculating photoelectron heating");
 
   // Photoelectron heating
   if (input.get_do_photoelectron_heating()) {
+    report.print(4, "Calculating photoelectron heating");
     Qphe = calc_photoelectron_heating(epsilon);
   }
 
-  report.print(4, "Calculating ionization heating");
-
   // Ionization heating (includes all ionization sources)
   if (input.get_do_ionization_heating()) {
+    report.print(4, "Calculating ionization heating");
     QIonization = calc_ionization_heating(epsilon);
   }
 
-  report.print(4, "Calculating electron-ion collisions");
 
   // electron-ion collisions
   if (input.get_do_electron_ion_collisional_heating()) {
+    report.print(4, "Calculating electron-ion collisions");
+    
     Qeic = calc_electron_ion_collisions();
     Qeicp = Qeic[0]; 
     Qeicm = Qeic[1]; 
     Qeic_v = Qeic[2]; // Friction
   }
 
-  report.print(4, "Calculating electron-neutral elastic collisions");
 
   // electron-neutral Elastic collisions
   if (input.get_do_electron_neutral_elastic_collisional_heating()) {
+    report.print(4, "Calculating electron-neutral elastic collisions");
+
     Qenc = calc_electron_neutral_elastic_collisions(neutrals);
     Qencp = Qenc[0]; 
     Qencm = Qenc[1]; 
     Qenc_v = Qenc[2]; // Friction
   }
 
+
   // electron-neutral inelastic collisions
   if (input.get_do_electron_neutral_inelastic_collisional_heating()) {
+    report.print(4, "Calculating electron-neutral inelastic collisions");
+
     Qenc_inelastic = calc_electron_neutral_inelastic_collisions(neutrals);
     Qrotm = Qenc_inelastic[0];
     Qrotp = Qenc_inelastic[1];
