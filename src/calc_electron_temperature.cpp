@@ -110,10 +110,12 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
     Qvib_N2 = Qenc_inelastic[5];
   }
 
-  // Thermoelectric current
-
-
-  electron_temperature_scgc = neutrals.temperature_scgc;
+  if (input.get_do_thermoelectric_heating()) {
+    report.print(4, "Calculating thermoelectric heating");
+    report.error("Thermoelectric heating is not working yet.");  
+    // Get JPar (Thermoelectric current)
+    JParallel = calc_thermoelectric_current(grid);
+  }
 
   report.exit(function);
 }
@@ -533,11 +535,43 @@ arma_mat Ions::calc_thermoelectric_current(Grid &grid){
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  arma_cube JuTotal = ions.density_scgc * cE;
+  std::vector <arma_cube> JTotal;
+
+  arma_mat JParallel;
+  JParallel.set_size(density_scgc.n_rows, density_scgc.n_cols);
+  JParallel.zeros();
+
+  // with the dipole, the field-aligned current is in the k^ direction
+  // But we do not solve for e- velocity (and exb is 0 parallel to B), so we cannot do this:
+  // if (grid.iGridShape_ == grid.iDipole_){
+  //   for (int64_t iAlt = 0; iAlt < ions.density_scgc.n_slices; iAlt++){
+  //     JParallel += (ions.density_scgc.slice(iAlt) * cE % (ions.velocity_vcgc[2].slice(iAlt) - ions.exb_vcgc[2].slice(iAlt)))
+  //                  * grid.dalt_center_scgc[iAlt];
+  //   }
+  // }
+
+  // else{
+  // We need to solve for J_Parallel with Equation (6) of (Zhu et al., 2016)
+  // http://dx.doi.org/10.1016/j.jastp.2016.01.005 - using \nabla \dot  J
+  JTotal.push_back(cE * density_scgc % (velocity_vcgc[0] - exb_vcgc[0]));
+  JTotal.push_back(cE * density_scgc % (velocity_vcgc[1] - exb_vcgc[1]));
+  JTotal.push_back(cE * density_scgc % (velocity_vcgc[2] - exb_vcgc[2]));
+
+  arma_cube JuTotalDotB = dot_product(JTotal, grid.bfield_vcgc);
+  arma_cube divJperp;
+
+  divJperp.set_size(density_scgc.n_rows, density_scgc.n_cols, density_scgc.n_slices);
+  divJperp.zeros();
+
+  for (int64_t iDir =0; iDir < 3; iDir ++){
+    divJperp += calc_gradient_vector(JTotal[iDir], grid)[iDir];
+    divJperp -= calc_gradient_vector(JuTotalDotB, grid)[iDir] % grid.bfield_unit_vcgc[iDir];
+    divJperp -= calc_gradient_vector(JuTotalDotB, grid)[iDir] % JuTotalDotB;
+  }
+
+  for (int64_t iAlt = 0; iAlt < density_scgc.n_slices; iAlt++){
+    JParallel -= divJperp.slice(iAlt) % grid.dalt_center_scgc.slice(iAlt);}
 
   report.exit(function);
-
-  return JuTotal;
-  
-
-}
+  return JParallel;
+  }

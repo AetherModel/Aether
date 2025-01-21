@@ -796,6 +796,14 @@ bool Inputs::get_do_electron_neutral_inelastic_collisional_heating() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to include heating from thermoelectric currents
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_thermoelectric_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeThermoelectricHeating");
+}
+
+// -----------------------------------------------------------------------
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 

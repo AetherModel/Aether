@@ -467,6 +467,12 @@ public:
 
 
   /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeThermoelectricHeating"]
+     \param none
+   **/
+  bool get_do_thermoelectric_heating();
+
+  /**********************************************************************
      \brief returns settings["
      \param 
    **/

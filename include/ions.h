@@ -410,6 +410,15 @@ class Ions {
   std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Neutrals &neutrals);
 
   /**********************************************************************
+    \brief Calculate the thermoelectric current (same at all altitudes)
+    \details Use eq. 6 of https://doi.org/10.1016/j.jastp.2016.01.005
+    - Since we do not know e- parallel velocity, the dipole needs to do it this way too.
+    \param grid 
+    \return arma_mat JParaAlt
+  **/
+  arma_mat calc_thermoelectric_current(Grid &grid);
+
+  /**********************************************************************
      \brief Check all of the variables for nonfinites, such as nans
      \param none
    **/
