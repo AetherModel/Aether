@@ -558,19 +558,19 @@ std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Neutrals
           Qvib_N2(iLon, iLat, iAlt) = (1.0 - exp(-3353.0 / ttn)) * exp10(logQv0(0))
                                       * (1.0 - exp(3353.0 * (1.0 / tte - 1.0 / ttn)));
         } else if (tte > 1500) {
+          logQv0 = Av0 + Bv0 * tte + Cv0 * pow(tte, 2) + Dv0 * pow(tte, 3) + Fv0 * pow(tte, 4) - 16.0;
+          logQv1 = Av1 + Bv1 * tte + Cv1 * pow(tte, 2) + Dv1 * pow(tte, 3) + Fv1 * pow(tte, 4) - 16.0;
+          
           for (int iLevel = 0; iLevel < 10; iLevel++) {
-            logQv0(iLevel) = Av0(iLevel) + Bv0(iLevel) * tte_6000 + Cv0(iLevel) * pow(tte, 2) 
-                            + Dv0(iLevel) * pow(tte, 3) + Fv0(iLevel) * pow(tte, 4) - 16.0;
-            Qvib_N2(iLon, iLat, iAlt) += (1.0 - exp(-3353.0 / ttn)) * exp10(logQv0(0))
+            Qvib_N2(iLon, iLat, iAlt) += (1.0 - exp(-3353.0 / ttn)) * exp10(logQv0(iLevel))
                                         * (1.0 - exp((iLevel + 1) * 3353.0 * (1.0 / tte - 1.0 / ttn)));
           }
 
           for (int iLevel = 0; iLevel < 8; iLevel++) {
-            logQv1(iLevel) = Av1(iLevel) + Bv1(iLevel) * tte_6000 + Cv1(iLevel) * pow(tte_6000, 2)
-                            + Dv1(iLevel) * pow(tte_6000, 3) + Fv1(iLevel) * pow(tte_6000, 4) - 16.0;
+            // GITM did this loop from 2-9, which is out of bounds, so we correct for iLevel here)
             Qvib_N2(iLon, iLat, iAlt) += (1.0 - exp(-3353.0 / ttn)) * exp(-3353.0 / ttn) 
                                           * exp10(logQv1(iLevel)) 
-                                          * (1.0 - exp(iLevel * 3353.0 * (1.0 / tte - 1.0 / ttn)));
+                                          * (1.0 - exp((iLevel + 2) * 3353.0 * (1.0 / tte - 1.0 / ttn)));
           }
         }
       }
