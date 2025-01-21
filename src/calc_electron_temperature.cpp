@@ -62,28 +62,28 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
 
   // Needed for both ionization & photoelectron heating:
   if (input.get_do_ionization_heating() || input.get_do_photoelectron_heating()) {
-    epsilon = calc_epsilon(neutrals, *this);
+    epsilon = calc_epsilon(neutrals);
   }
 
   report.print(4, "Calculating photoelectron heating");
 
   // Photoelectron heating
   if (input.get_do_photoelectron_heating()) {
-    Qphe = calc_photoelectron_heating(*this, epsilon);
+    Qphe = calc_photoelectron_heating(epsilon);
   }
 
   report.print(4, "Calculating ionization heating");
 
   // Ionization heating (includes all ionization sources)
   if (input.get_do_ionization_heating()) {
-    QIonization = calc_ionization_heating(*this, epsilon);
+    QIonization = calc_ionization_heating(epsilon);
   }
 
   report.print(4, "Calculating electron-ion collisions");
 
   // electron-ion collisions
   if (input.get_do_electron_ion_collisional_heating()) {
-    Qeic = calc_electron_ion_collisions(*this);
+    Qeic = calc_electron_ion_collisions();
     Qeicp = Qeic[0]; 
     Qeicm = Qeic[1]; 
     Qeic_v = Qeic[2]; // Friction
@@ -93,7 +93,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
 
   // electron-neutral Elastic collisions
   if (input.get_do_electron_neutral_elastic_collisional_heating()) {
-    Qenc = calc_electron_neutral_elastic_collisions(*this, neutrals);
+    Qenc = calc_electron_neutral_elastic_collisions(neutrals);
     Qencp = Qenc[0]; 
     Qencm = Qenc[1]; 
     Qenc_v = Qenc[2]; // Friction
@@ -101,7 +101,7 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
 
   // electron-neutral inelastic collisions
   if (input.get_do_electron_neutral_inelastic_collisional_heating()) {
-    Qenc_inelastic = calc_electron_neutral_inelastic_collisions(*this, neutrals);
+    Qenc_inelastic = calc_electron_neutral_inelastic_collisions(neutrals);
     Qrotm = Qenc_inelastic[0];
     Qrotp = Qenc_inelastic[1];
     Qf = Qenc_inelastic[2];
@@ -122,9 +122,9 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
 
 // Since this is used a few times, calculate it separately & pass it to the functions.
 // From (Smithro and Solomon, 2008)
-arma_cube Ions::calc_epsilon(Neutrals &neutrals, Ions &ions) {
+arma_cube Ions::calc_epsilon(Neutrals &neutrals) {
 
-  std::string function = "calc_epsilon";
+  std::string function = "Ions::calc_epsilon";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -139,7 +139,7 @@ arma_cube Ions::calc_epsilon(Neutrals &neutrals, Ions &ions) {
   
   arma_cube epsilon, x, logx;
   
-  x = ions.density_scgc / (neutrals.species[inO2].density_scgc 
+  x = density_scgc / (neutrals.species[inO2].density_scgc 
                            + neutrals.species[inN2].density_scgc 
                            + neutrals.species[inO].density_scgc);
   // should rarely need to be used:
@@ -161,14 +161,13 @@ arma_cube Ions::calc_epsilon(Neutrals &neutrals, Ions &ions) {
 // --------------------------------------------------------------------------
 // Calculate photoelectron heating
 // --------------------------------------------------------------------------
-arma_cube Ions::calc_photoelectron_heating(Ions &ions,
-                                     arma_cube epsilon) {
+arma_cube Ions::calc_photoelectron_heating(arma_cube epsilon) {
   
-  std::string function = "calc_photoelectron_heating";
+  std::string function = "Ions::calc_photoelectron_heating";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int64_t nIons = ions.nSpecies;
+  int64_t nIons = nSpecies;
 
   // Initialize Qphe & IonsIonizationRate (sum of ionization rates)
   // to the same size as epsilon and then zero them out:
@@ -178,7 +177,7 @@ arma_cube Ions::calc_photoelectron_heating(Ions &ions,
   IonsIonizationRate.zeros();
 
   for (int64_t iIon = 0; iIon < nIons; iIon++) {
-    IonsIonizationRate += ions.species[iIon].ionization_scgc;
+    IonsIonizationRate += species[iIon].ionization_scgc;
   }
 
   Qphe = epsilon % IonsIonizationRate;
@@ -191,24 +190,24 @@ arma_cube Ions::calc_photoelectron_heating(Ions &ions,
 // --------------------------------------------------------------------------
 // Calculate ionization heating
 // --------------------------------------------------------------------------
-arma_cube Ions::calc_ionization_heating(Ions &ions, arma_cube epsilon){
+arma_cube Ions::calc_ionization_heating(arma_cube epsilon){
 
-  std::string function = "calc_ionization_heating";
+  std::string function = "Ions::calc_ionization_heating";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int64_t nIons = ions.nSpecies;
+  int64_t nIons = nSpecies;
 
   // auroral heating efficiency coefficient
   precision_t auroheat = 1.0;
 
-  int64_t iO_3P = ions.get_species_id("O+");
-  int64_t iO2P = ions.get_species_id("O2+");
-  int64_t iN2P = ions.get_species_id("N2+");
+  int64_t iO_3P = get_species_id("O+");
+  int64_t iO2P = get_species_id("O2+");
+  int64_t iN2P = get_species_id("N2+");
 
-  arma_cube QIonization = auroheat * epsilon % (ions.species[iO_3P].ionization_scgc 
-                                                + ions.species[iO2P].ionization_scgc 
-                                                + ions.species[iN2P].ionization_scgc);
+  arma_cube QIonization = auroheat * epsilon % (species[iO_3P].ionization_scgc 
+                                                + species[iO2P].ionization_scgc 
+                                                + species[iN2P].ionization_scgc);
 
 
   report.exit(function);
@@ -218,46 +217,46 @@ arma_cube Ions::calc_ionization_heating(Ions &ions, arma_cube epsilon){
 // --------------------------------------------------------------------------
 // Calculate electron-ion collisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> Ions::calc_electron_ion_collisions(Ions &ions){
+std::vector<arma_cube> Ions::calc_electron_ion_collisions(){
 
-  std::string function = "calc_electron_ion_collisions";
+  std::string function = "Ions::calc_electron_ion_collisions";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   arma_cube Qeicp;
-  Qeicp.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
+  Qeicp.set_size(density_scgc.n_rows, density_scgc.n_cols, density_scgc.n_slices);
   Qeicp.zeros();
   arma_cube Qeicm = Qeicp;
   // Friction things
   arma_cube Qeic_v = Qeicp, dv2_ei = Qeicp;
 
-  int64_t nSpecies = ions.nSpecies;
+  int64_t nSpecies = nSpecies;
 
   if (input.get_do_calc_bulk_ion_temp()){
     // This is used when we calculate bulk ion temperature!
     report.print(3, "Using bulk ion temperature for electron-ion collisions");
     // Use all species, not just major species (different from GITM)
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      Qeicp += ions.species[iSpecies].density_scgc 
-                / (cME + ions.species[iSpecies].mass);
+      Qeicp += species[iSpecies].density_scgc 
+                / (cME + species[iSpecies].mass);
     }
 
-    Qeicp = Qeicp % ions.density_scgc * cME * 3.0 * cKB 
-            % (ions.temperature_scgc - ions.electron_temperature_scgc)
-            * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
+    Qeicp = Qeicp % density_scgc * cME * 3.0 * cKB 
+            % (temperature_scgc - electron_temperature_scgc)
+            * 5.45e-5 / pow(electron_temperature_scgc, 1.5);
   }
   else{
     // Individual ion temperatures:
     report.print(3, "Using individual ion temperatures for electron-ion collisions");
     // Use all species, not just major species (different from GITM)
     for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      Qeicp += ions.species[iSpecies].density_scgc 
-               % (ions.species[iSpecies].temperature_scgc - ions.electron_temperature_scgc)
-               / (cME + ions.species[iSpecies].mass);
+      Qeicp += species[iSpecies].density_scgc 
+               % (species[iSpecies].temperature_scgc - electron_temperature_scgc)
+               / (cME + species[iSpecies].mass);
     }
 
-    Qeicp = Qeicp % ions.density_scgc * cME * 3.0 * cKB 
-            * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5);
+    Qeicp = Qeicp % density_scgc * cME * 3.0 * cKB 
+            * 5.45e-5 / pow(electron_temperature_scgc, 1.5);
   }
 
   report.print(3, "Calculating frictional heating");
@@ -266,13 +265,13 @@ std::vector<arma_cube> Ions::calc_electron_ion_collisions(Ions &ions){
   // This uses the bulk ion velocity, not the individual ion velocity.
   // (Different from GITM): Uses all species' densities (so just ne), not just o+, o2+, n2+, no+, n+
   for (int64_t iDir = 0; iDir < 3; iDir++) {
-    dv2_ei += pow(ions.velocity_vcgc[iDir] - ions.exb_vcgc[iDir], 2);
+    dv2_ei += pow(velocity_vcgc[iDir] - exb_vcgc[iDir], 2);
   }
-  Qeic_v = ions.density_scgc * cME % dv2_ei * 5.45e-5 / pow(ions.electron_temperature_scgc, 1.5)
-    % (ions.density_scgc);
+  Qeic_v = density_scgc * cME % dv2_ei * 5.45e-5 / pow(electron_temperature_scgc, 1.5)
+    % (density_scgc);
     
   std::vector<arma_cube> Qeic = {Qeicp,
-                                 Qeicp % ions.electron_temperature_scgc,
+                                 Qeicp % electron_temperature_scgc,
                                  Qeic_v};
 
   report.exit(function);
@@ -283,15 +282,15 @@ std::vector<arma_cube> Ions::calc_electron_ion_collisions(Ions &ions){
 // --------------------------------------------------------------------------
 // Calculate electron-neutral elastic collisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> Ions::calc_electron_neutral_elastic_collisions(Ions &ions, Neutrals &neutrals){
+std::vector<arma_cube> Ions::calc_electron_neutral_elastic_collisions(Neutrals &neutrals){
 
-  std::string function = "calc_electron_neutral_elastic_collisions";
+  std::string function = "Ions::calc_electron_neutral_elastic_collisions";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   // initialize & zero the quantities we need:
   arma_cube Qenc;
-  Qenc.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
+  Qenc.set_size(density_scgc.n_rows, density_scgc.n_cols, density_scgc.n_slices);
   Qenc.zeros();
   arma_cube Qencp = Qenc;
   arma_cube Qencm = Qenc;
@@ -307,46 +306,46 @@ std::vector<arma_cube> Ions::calc_electron_neutral_elastic_collisions(Ions &ions
     report.error("Could not find O, N2, or O2 in neutrals species list");
   }
 
-  Qenc = ions.density_scgc * cME * 3.0 * cKB % (neutrals.temperature_scgc - ions.electron_temperature_scgc)
+  Qenc = density_scgc * cME * 3.0 * cKB % (neutrals.temperature_scgc - electron_temperature_scgc)
           % ((2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6 
-              % (1 - 1.21e-4 * ions.electron_temperature_scgc) 
-                % ions.electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
+              % (1 - 1.21e-4 * electron_temperature_scgc) 
+                % electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
             + (1.82e-10*neutrals.species[inO2].density_scgc*1.e-6
-              % (1 + 3.60e-2 * pow(ions.electron_temperature_scgc, 0.5)) 
-                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
+              % (1 + 3.60e-2 * pow(electron_temperature_scgc, 0.5)) 
+                % pow(electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
             + (8.90e-11*neutrals.species[inO].density_scgc*1.e-6
-              % (1 + 5.70e-4 * ions.electron_temperature_scgc) 
-                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass)) 
+              % (1 + 5.70e-4 * electron_temperature_scgc) 
+                % pow(electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass)) 
             );
 report.print(6, "Qenc done");
-  Qencp = ions.density_scgc * cME * 3.0 * cKB 
+  Qencp = density_scgc * cME * 3.0 * cKB 
           % ((2.33e-11*neutrals.species[inN2].density_scgc*1.e-6
-              % (1 - 1.21e-4*ions.electron_temperature_scgc) 
-                % ions.electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
+              % (1 - 1.21e-4*electron_temperature_scgc) 
+                % electron_temperature_scgc / (cME + neutrals.species[inN2].mass))
             + (1.82e-10*neutrals.species[inO2].density_scgc*1.e-6
-              % (1 + 3.60e-2 * pow(ions.electron_temperature_scgc, 0.5)) 
-                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
+              % (1 + 3.60e-2 * pow(electron_temperature_scgc, 0.5)) 
+                % pow(electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO2].mass))
             + (8.90e-11*neutrals.species[inO].density_scgc*1.e-6
-              % (1 + 5.70e-4*ions.electron_temperature_scgc) 
-                % pow(ions.electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass))
+              % (1 + 5.70e-4*electron_temperature_scgc) 
+                % pow(electron_temperature_scgc, 0.5)/(cME + neutrals.species[inO].mass))
           );
 report.print(6, "Qencp done");
 
   // delta velocity **2 btwn e- & neutrals:
   for (int64_t iDir = 0; iDir < 3; iDir++) {
-      dv2_en += pow(neutrals.velocity_vcgc[iDir] - ions.exb_vcgc[iDir], 2);
+      dv2_en += pow(neutrals.velocity_vcgc[iDir] - exb_vcgc[iDir], 2);
   }
   report.print(6, "dv2 done");
 
-  Qenc_v = ions.density_scgc * cME % dv2_en 
+  Qenc_v = density_scgc * cME % dv2_en 
             %(2.33e-11 * neutrals.species[inN2].density_scgc * 1.e-6
-                % (1 - 1.21e-4 * ions.electron_temperature_scgc) % ions.electron_temperature_scgc * neutrals.species[inN2].mass
+                % (1 - 1.21e-4 * electron_temperature_scgc) % electron_temperature_scgc * neutrals.species[inN2].mass
                 /(cME + neutrals.species[inN2].mass) 
-              + 1.82e-10*neutrals.species[inO2].density_scgc*1.e-6%(1 + 3.60e-2*pow(ions.electron_temperature_scgc, 0.5))
-                  % pow(ions.electron_temperature_scgc, 0.5) *neutrals.species[inO2].mass
+              + 1.82e-10*neutrals.species[inO2].density_scgc*1.e-6%(1 + 3.60e-2*pow(electron_temperature_scgc, 0.5))
+                  % pow(electron_temperature_scgc, 0.5) *neutrals.species[inO2].mass
                   /(cME + neutrals.species[inO2].mass) 
-              + 8.90e-11*neutrals.species[inO].density_scgc*1.e-6%(1 + 5.70e-4*ions.electron_temperature_scgc)
-                  %pow(ions.electron_temperature_scgc,0.5)*neutrals.species[inO2].mass/(cME + neutrals.species[inO2].mass) 
+              + 8.90e-11*neutrals.species[inO].density_scgc*1.e-6%(1 + 5.70e-4*electron_temperature_scgc)
+                  %pow(electron_temperature_scgc,0.5)*neutrals.species[inO2].mass/(cME + neutrals.species[inO2].mass) 
             );
 
 report.print(6, "Qencv done");
@@ -361,15 +360,15 @@ report.print(6, "Qencv done");
 // --------------------------------------------------------------------------
 // Calculate electron-neutral inelasticcollisions
 // --------------------------------------------------------------------------
-std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &ions, Neutrals &neutrals){
+std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Neutrals &neutrals){
 
-  std::string function = "calc_electron_neutral_inelastic_collisions";
+  std::string function = "Ions::calc_electron_neutral_inelastic_collisions";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
   // initialize & zero the quantities we need:
   arma_cube Qrot;
-  Qrot.set_size(ions.density_scgc.n_rows, ions.density_scgc.n_cols, ions.density_scgc.n_slices);
+  Qrot.set_size(density_scgc.n_rows, density_scgc.n_cols, density_scgc.n_slices);
   Qrot.zeros(); // N2, O2 roration (Shunk & Nagy pp. 277)
   arma_cube Qrotp = Qrot;
   arma_cube Qrotm = Qrot;
@@ -390,9 +389,9 @@ std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &io
   }
 
   // some aliases for common quantities
-  arma_cube ne = ions.density_scgc;
-  arma_cube Te = ions.electron_temperature_scgc;
-  arma_cube Ti = ions.temperature_scgc;
+  arma_cube ne = density_scgc;
+  arma_cube Te = electron_temperature_scgc;
+  arma_cube Ti = temperature_scgc;
   arma_cube Tn = neutrals.temperature_scgc;
   arma_cube no2 = neutrals.species[inO2].density_scgc;
   arma_cube nn2 = neutrals.species[inN2].density_scgc;
@@ -402,7 +401,7 @@ std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &io
   arma::uvec Ti_mask = find(Ti <= Tn);
   arma::uvec Te_mask = find(Te <= Tn);
   Ti.elem(Ti_mask) = Tn.elem(Ti_mask) * 1.0001;
-  Te.elem(Ti_mask) = Tn.elem(Te_mask) * 1.0001;
+  Te.elem(Te_mask) = Tn.elem(Te_mask) * 1.0001;
 
   // N2, O2 rotation (Shunk & Nagy pp. 277)
   Qrot = 3.5e-14*ne*1.e-6%nn2*1.e-6%(Tn - Te)/(pow(Te,0.5))
@@ -487,9 +486,9 @@ std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &io
   double tte; // since we need the min of this & 6000 & std::min can't accept precision_t
   precision_t ttn, tte_6000;
 
-  for (int64_t iLon = 0; iLon < ions.density_scgc.n_rows; iLon++) { //nLons
-    for (int64_t iLat = 0; iLat < ions.density_scgc.n_cols; iLat++) { // nLats
-      for (int64_t iAlt = 0; iAlt < ions.density_scgc.n_slices; iAlt++) { // nAlts
+  for (int64_t iLon = 0; iLon < density_scgc.n_rows; iLon++) { //nLons
+    for (int64_t iLat = 0; iLat < density_scgc.n_cols; iLat++) { // nLats
+      for (int64_t iAlt = 0; iAlt < density_scgc.n_slices; iAlt++) { // nAlts
         tte = Te(iLon, iLat, iAlt);
         ttn = Tn(iLon, iLat, iAlt);
         tte_6000 = std::min(tte, 6000.0);
@@ -522,12 +521,15 @@ std::vector<arma_cube> Ions::calc_electron_neutral_inelastic_collisions(Ions &io
 
   Qvib_N2 = -ne % nn2 * 1.e-12 % Qvib_N2 * 1.6e-13;
 
+  report.exit(function);
+  report.print(6, "Qenc done");
+
   return std::vector<arma_cube> {Qrotm, Qrotp, Qf, Qexc, Qvib_O2, Qvib_N2};  
   }
 
-arma_cube calc_thermoelectric_current(Ions ions, Grid grid){
+arma_mat Ions::calc_thermoelectric_current(Grid &grid){
 
-  std::string function = "calc_thermoelectric_current";
+  std::string function = "Ions::calc_thermoelectric_current";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
