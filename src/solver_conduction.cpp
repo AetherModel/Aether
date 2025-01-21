@@ -16,6 +16,8 @@
 //  - At this point, the bottom BC is fixed, while the top BC is zero gradient
 //  - The dx variable is assumed to be distance between the CURRENT cell center
 //    (i) and the cell center of the cell BELOW the current one (i-1).
+//
+// The last two arguments are optional, with default values set in the func declaration.
 // -----------------------------------------------------------------------
 
 arma_vec solver_conduction(arma_vec value,

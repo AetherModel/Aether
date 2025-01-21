@@ -117,6 +117,62 @@ void Ions::calc_electron_temperature(Neutrals neutrals, Grid grid, Times time) {
     JParallel = calc_thermoelectric_current(grid);
   }
 
+  report.print(4, "Calculating electron temperature");
+
+  arma_cube sources = Qphe + Qencm + Qeicm + Qrotm + Qf + Qexc + Qvib_O2 + Qvib_N2 
+              + QIonization + Qenc_v + Qeic_v;
+  arma_cube sources_temp_dependent  = Qencp + Qeicp + Qrotp;
+
+
+  // ============= CALCULATE TEMPERATURE =================
+  arma_vec temp1d(nAlts);
+  arma_vec lambda1d(nAlts);
+  arma_vec front1d(nAlts);
+  arma_vec dalt1d(nAlts);
+  arma_vec conduction1d(nAlts);
+  arma_vec sources1d(nAlts);
+  arma_vec sources_tempdep_1d(nAlts);
+  arma_vec ratios(nAlts);
+  arma_vec density_ratio(nAlts);
+
+  // Get the time step size
+  precision_t dt = time.get_dt();
+
+
+  for (int64_t iLon = nGCs; iLon < nLons - nGCs; iLon++) {
+        for (int64_t iLat = nGCs; iLat < nLats - nGCs; iLat++) {
+          temp1d = electron_temperature_scgc.tube(iLon, iLat);
+          temp1d(0) = neutrals.temperature_scgc(iLon, iLat, 0);
+          temp1d(1) = neutrals.temperature_scgc(iLon, iLat, 1);
+          lambda1d = lambda.tube(iLon, iLat);
+          lambda1d(1) = lambda1d(2);
+          lambda1d(0) = lambda1d(2);
+          front1d  = 3.0 / 2.0 * cKB * species[nSpecies].density_scgc.tube(iLon, iLat);
+          dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+          sources1d = sources.tube(iLon, iLat);
+          sources1d = sources1d / front1d;
+
+          sources_tempdep_1d = sources_temp_dependent.tube(iLon, iLat);
+          sources_tempdep_1d = sources_tempdep_1d / front1d;
+
+          conduction1d.zeros();    // reset temp variable to zero
+          conduction1d = solver_conduction(temp1d,
+                                           lambda1d,
+                                           front1d,
+                                           sources1d,
+                                           dalt1d,
+                                           dt / 10.,
+                                           nGCs,
+                                           false,
+                                           sources_tempdep_1d);
+
+          // The conduction solver gives Tnew-Told, so divide by dt
+          conduction1d.clamp(200, 6000);
+          electron_temperature_scgc.tube(iLon, iLat) = conduction1d;
+        }}
+
+  // electron_temperature_scgc = neutrals.temperature_scgc;
+
   report.exit(function);
 }
 
