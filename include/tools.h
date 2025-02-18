@@ -70,6 +70,7 @@ void display_vector(arma_vec vec);
 // ----------------------------------------------------------------------
 
 void display_vector(std::string, arma_vec vec);
+void display_vector(std::string, std::vector<precision_t> vec);
 
 // ----------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
