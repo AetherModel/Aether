@@ -172,6 +172,19 @@ void display_vector(std::string name, arma_vec vec) {
 }
 
 // ----------------------------------------------------------------------------
+// Neatly display a c++ vector with a name
+// ----------------------------------------------------------------------------
+
+void display_vector(std::string name, std::vector<precision_t> vec) {
+  std::cout << name << " ";
+  for (int64_t i = 0; i < vec.size(); i++)
+    std::cout << vec[i] << " ";
+
+  std::cout << "\n";
+}
+
+
+// ----------------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
 // ----------------------------------------------------------------------------
 
