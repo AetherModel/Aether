@@ -182,25 +182,25 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     IsCubeSphereGrid = false;
   }
 
-  if (input.get_do_restart() & iGridShape_ != iCubesphere_) {
-    report.print(1, "Restarting! Reading grid files!");
-    DidWork = read_restart(input.get_restartin_dir());
-  } else {
+  //if (input.get_do_restart() & iGridShape_ != iCubesphere_) {
+  //  report.print(1, "Restarting! Reading grid files!");
+  //  DidWork = read_restart(input.get_restartin_dir());
+  //} else {
     if (iGridShape_ == iCubesphere_) {
-      if (input.get_do_restart())
-        report.print(0, "Not restarting the grid - it is too complicated!");
+      //if (input.get_do_restart())
+      //  report.print(0, "Not restarting the grid - it is too complicated!");
 
       create_cubesphere_grid(quadtree);
     } else
       create_sphere_grid(quadtree);
 
-    MPI_Barrier(aether_comm);
+    //MPI_Barrier(aether_comm);
     create_altitudes(planet);
 
     init_connection();
 
-    DidWork = write_restart(input.get_restartout_dir());
-  }
+    //DidWork = write_restart(input.get_restartout_dir());
+  //}
 
   // Calculate the radius (for spherical or non-spherical)
   fill_grid_radius(planet);
