@@ -368,7 +368,7 @@ class Ions {
      \param dir the directory to read or write from/to
      \param DoRead whether to read (true) or write (false)
    **/
-  bool restart_file(std::string dir, bool DoRead);
+  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);
 
   /**********************************************************************
      \brief Exchange messages between processors
