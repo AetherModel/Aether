@@ -422,7 +422,7 @@ int Neutrals::get_species_id(std::string name) {
 // Read/Write restart files for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::restart_file(std::string dir, bool DoRead) {
+bool Neutrals::restart_file(std::string dir, std::string cGridtype, bool DoRead) {
 
   std::string filename;
   bool DidWork = true;
@@ -431,7 +431,7 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 
   OutputContainer RestartContainer;
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid + "_" + cGridtype);
 
   try {
     if (DoRead)
@@ -451,6 +451,22 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
         RestartContainer.store_variable(cName,
                                         density_unit,
                                         species[iSpecies].density_scgc);
+
+      // ----------------------------
+      // Velocity (per neutral)
+      // ----------------------------
+      for (int iDir = 0; iDir < 3; iDir++) {
+        cName = velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
+        if (DoRead)
+          species[iSpecies].velocity_vcgc[iDir] =
+            RestartContainer.get_element_value(cName);
+        else
+          RestartContainer.store_variable(cName,
+                                          velocity_unit,
+                                          species[iSpecies].
+                                          velocity_vcgc[iDir]);
+      }
     }
 
     cName = temperature_name;
