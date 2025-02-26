@@ -7,7 +7,10 @@
 
 // -----------------------------------------------------------------------------
 //  Set initial conditions for the neutrals.
-//    Two methods implemented so far:
+//    If user wants to restart, then read the restart files.
+//    Otherwise, initialize the neutrals.
+//
+//    Two methods of initialization implemented so far:
 //      - Planet: Use fixed density values in the planet.in file and the
 //                temperature profile to set the densities and temperature.
 //                Densities are filled with hydrostatic solution.
@@ -35,9 +38,12 @@ bool Neutrals::initial_conditions(Grid grid,
 
   report.print(3, "Creating Neutrals initial_condition");
 
+  // ----------------------------------------------------------
+  // Restart file:
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading neutral files!");
-    didWork = restart_file(input.get_restartin_dir(), DoRead);
+    didWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(), DoRead);
 
     if (!didWork)
       report.error("Reading Restart for Neutrals Failed!!!");
@@ -45,6 +51,9 @@ bool Neutrals::initial_conditions(Grid grid,
 
     json ics = input.get_initial_condition_types();
     std::string icsType = mklower(ics["type"]);
+
+    // ----------------------------------------------------------
+    // MSIS:
 
     if (icsType == "msis") {
       report.print(2, "Using MSIS for Initial Conditions");
@@ -97,6 +106,9 @@ bool Neutrals::initial_conditions(Grid grid,
         } // for species
       } // msis init worked ok
     } // type = msis
+
+    // ----------------------------------------------------------
+    // Planet:
 
     if (icsType == "planet") {
       report.print(2, "Using planet for Initial Conditions");
@@ -161,7 +173,6 @@ bool Neutrals::initial_conditions(Grid grid,
 
       // Make the initial condition in the lower ghost cells to be consistent
       // with the actual lowwer BC:
-      // Set the lower boundary condition:
 
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
