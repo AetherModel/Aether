@@ -16,6 +16,8 @@ Grid::Grid(std::string gridtype) {
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
 
+  gridType = gridtype;
+
   nX = grid_input.nX + nGCs * 2;
   nLons = nX;
   nY = grid_input.nY + nGCs * 2;
@@ -463,6 +465,14 @@ void Grid::report_grid_boundaries() {
 
 bool Grid::get_IsGeoGrid() {
   return IsGeoGrid;
+}
+
+// --------------------------------------------------------------------------
+// Return grid type (neu or ion)
+// --------------------------------------------------------------------------
+
+std::string Grid::get_gridtype() {
+  return gridType;
 }
 
 // --------------------------------------------------------------------------
