@@ -256,6 +256,7 @@ public:
   void set_variable_sizes();
 
   bool get_IsGeoGrid();
+  std::string get_gridtype();
   bool get_HasBField();
   void set_IsGeoGrid(bool value);
   void set_IsExperimental(bool value);
@@ -449,6 +450,7 @@ private:
   bool IsExperimental;
   bool IsMagGrid;
   bool IsDipole = false;
+  std::string gridType;
 
   int64_t nX, nLons;
   int64_t nY, nLats;
