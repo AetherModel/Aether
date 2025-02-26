@@ -213,8 +213,10 @@ bool advance(Planets &planet,
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
       report.print(3, "Writing restart files");
-      neutrals.restart_file(input.get_restartout_dir(), DoWrite);
-      ions.restart_file(input.get_restartout_dir(), DoWrite);
+      neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
+      neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
+      ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
+      ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
       time.restart_file(input.get_restartout_dir(), DoWrite);
     }
   }
