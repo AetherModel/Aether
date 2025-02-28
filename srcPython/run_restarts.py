@@ -128,10 +128,12 @@ if __name__ == '__main__':
     if (notInRunDir):
         if (os.path.exists(runDir)):
             print('Found rundir... copying')
+            
             dirPre = './run.restarts'
             cdPre = 'cd ' + dirPre + ' ; '
             cdPost = ' ; cd ..'
             command = 'rm -rf ' + dirPre
+            run(command, args.test, isVerbose)
             command = 'cp -r ' + runDir + ' ' + dirPre
             run(command, args.test, isVerbose)
         else:
