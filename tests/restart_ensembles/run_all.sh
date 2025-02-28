@@ -2,7 +2,7 @@
 
 NPROC=5
 TOTALTIME=180
-MPI=/Users/ridley/Software/Mpi/installed/bin/mpirun
+MPI=/usr/bin/mpirun
 NTIMES=2
 
 # include -dowhole to run the whole simulation as comparison:
