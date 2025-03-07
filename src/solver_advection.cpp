@@ -343,6 +343,8 @@ void advect(Grid &grid,
 
   arma_mat t_to_e;
 
+  precision_t duflux, lrflux, cosdrop;
+  
   for (iAlt = nGCs; iAlt < nAlts - nGCs; iAlt++) {
 
     if (report.test_verbose(3))
@@ -424,13 +426,13 @@ void advect(Grid &grid,
     eq2FluxD = rhoP.D % xVelP.D % yVelP.D;
     eq2FluxU = rhoP.U % xVelP.U % yVelP.U;
     eq2Flux = rho % xVel % yVel;
-
+    
     eq3FluxR = rhoP.R % xVelP.R % yVelP.R;
     eq3FluxL = rhoP.L % xVelP.L % yVelP.L;
     eq3FluxD = rhoP.D % (yVelP.D % yVelP.D + (gammaP.D - 1) % tempP.D);
     eq3FluxU = rhoP.U % (yVelP.U % yVelP.U + (gammaP.U - 1) % tempP.U);
     eq3Flux = rho % (yVel % yVel + (gamma2d - 1) % temp);
-
+    
     eq4FluxL = rhoP.L % xVelP.L % (0.5 * velL2 + gammaP.L % tempP.L);
     eq4FluxR = rhoP.R % xVelP.R % (0.5 * velR2 + gammaP.R % tempP.R);
     eq4FluxD = rhoP.D % yVelP.D % (0.5 * velD2 + gammaP.D % tempP.D);
@@ -499,29 +501,36 @@ void advect(Grid &grid,
 
     geometry =
       sin(grid.geoLat_scgc.slice(iAlt)) /
-      cos(grid.geoLat_scgc.slice(iAlt)) /
-      grid.radius_scgc(1, 1, iAlt);
+      cos(grid.geoLat_scgc.slice(iAlt));
+
+    geometry.clamp(-100.0, 100.0);
+    geometry = geometry / grid.radius_scgc(1, 1, iAlt);
 
     for (int64_t j = nGCs; j < nY - nGCs; j++) {
       for (int64_t i = nGCs; i < nX - nGCs; i++) {
-        //if (i == nGCs) cout << "j = " << j << " " << xWidth(i,j) << "\n";
         rho(i, j) = rho(i, j) - dt *
                     (yWidth(i + 1, j) * eq1FluxLR(i + 1, j) -
                      yWidth(i, j) * eq1FluxLR(i, j) +
                      xWidth(i, j + 1) * eq1FluxDU(i, j + 1) -
                      xWidth(i, j) * eq1FluxDU(i, j)) / area(i, j);
+	lrflux = 1.0 * (
+			    (yWidth(i + 1, j) * eq2FluxLR(i + 1, j) -
+			     yWidth(i, j) * eq2FluxLR(i, j)) / area(i,j) -
+			    geometry(i, j) * eq2Flux(i, j));
         xMomentum(i, j) = xMomentum(i, j) - dt *
-                          ((yWidth(i + 1, j) * eq2FluxLR(i + 1, j) -
-                            yWidth(i, j) * eq2FluxLR(i, j) +
-                            xWidth(i, j + 1) * eq2FluxDU(i, j + 1) -
-                            xWidth(i, j) * eq2FluxDU(i, j)) / area(i, j) -
-                           geometry(i, j) * eq2Flux(i, j));
+	  ((xWidth(i, j + 1) * eq2FluxDU(i, j + 1) -
+	    xWidth(i, j) * eq2FluxDU(i, j)) / area(i, j) +
+	   lrflux);
+	duflux = 1.0 * (
+			(xWidth(i, j + 1) * eq3FluxDU(i, j + 1) -
+			 xWidth(i, j) * eq3FluxDU(i, j)) / area(i, j) +
+			geometry(i, j) * eq3Flux(i, j));
+
         yMomentum(i, j) = yMomentum(i, j) - dt *
                           ((yWidth(i + 1, j) * eq3FluxLR(i + 1, j) -
-                            yWidth(i, j) * eq3FluxLR(i, j) +
-                            xWidth(i, j + 1) * eq3FluxDU(i, j + 1) -
-                            xWidth(i, j) * eq3FluxDU(i, j)) / area(i, j) +
-                           geometry(i, j) * eq3Flux(i, j));
+                            yWidth(i, j) * eq3FluxLR(i, j))/ area(i, j) +
+			   duflux);
+	    
         totalE(i, j) = totalE(i, j) - dt *
                        (yWidth(i + 1, j) * eq4FluxLR(i + 1, j) -
                         yWidth(i, j) * eq4FluxLR(i, j) +
