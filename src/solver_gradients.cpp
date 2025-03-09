@@ -11,28 +11,34 @@
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
   std::vector<arma_cube> gradient_vcgc;
+
   if (report.test_verbose(4)) {
-    std::cout << "grid shape (1 = sphere; 2 = cube; 3 = dipole) : " << grid.iGridShape_ << "\n";
-    display_vector("gradient, value : ", value_scgc.tube(9,9));
+    std::cout << "grid shape (1 = sphere; 2 = cube; 3 = dipole) : " <<
+              grid.iGridShape_ << "\n";
+    display_vector("gradient, value : ", value_scgc.tube(9, 9));
   }
+
   if (grid.iGridShape_ == grid.iCubesphere_)
     gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
   else {
 
     report.print(4, "Going into calc_gradient_lon");
     gradient_vcgc.push_back(calc_gradient2o_i(value_scgc, grid));
+
     if (report.test_verbose(4))
-      display_vector("gradient[0] : ", gradient_vcgc[0].tube(9,9));
+      display_vector("gradient[0] : ", gradient_vcgc[0].tube(9, 9));
 
     report.print(4, "Going into calc_gradient_lat");
     gradient_vcgc.push_back(calc_gradient2o_j(value_scgc, grid));
+
     if (report.test_verbose(4))
-      display_vector("gradient[1] : ", gradient_vcgc[1].tube(9,9));
+      display_vector("gradient[1] : ", gradient_vcgc[1].tube(9, 9));
 
     report.print(4, "Going into calc_gradient_alt");
     gradient_vcgc.push_back(calc_gradient_alt(value_scgc, grid));
+
     if (report.test_verbose(4))
-      display_vector("gradient[2] : ", gradient_vcgc[2].tube(9,9));
+      display_vector("gradient[2] : ", gradient_vcgc[2].tube(9, 9));
   }
 
   return gradient_vcgc;
@@ -79,6 +85,7 @@ arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
       (value.row(iX) - value.row(iX - 1)) /
       grid.di_center_m_scgc.row(iX);
   }
+
   return gradient;
 }
 
@@ -100,18 +107,18 @@ arma_cube calc_gradient4o_i(arma_cube value, Grid grid) {
   if (grid.get_HasXdim()) {
     // Interior, 5 point sencil:
     for (iX = 2; iX < nX - 2; iX++)
-      gradient.row(iX) = (-value.row(iX + 2) + 
-                            8 * value.row(iX + 1) - 
-                            8 * value.row(iX - 1) + 
-                            value.row(iX - 2)) / 
-                            (12. * grid.di_center_m_scgc.row(iX));
+      gradient.row(iX) = (-value.row(iX + 2) +
+                          8 * value.row(iX + 1) -
+                          8 * value.row(iX - 1) +
+                          value.row(iX - 2)) /
+                         (12. * grid.di_center_m_scgc.row(iX));
 
     // Points just inside edges (2nd order):
     iX = 1;
     gradient.row(iX) =
       (value.row(iX + 1) - value.row(iX - 1)) /
       (2 * grid.di_center_m_scgc.row(iX));
-    iX = nX-2;
+    iX = nX - 2;
     gradient.row(iX) =
       (value.row(iX + 1) - value.row(iX - 1)) /
       (2 * grid.di_center_m_scgc.row(iX));
@@ -126,6 +133,7 @@ arma_cube calc_gradient4o_i(arma_cube value, Grid grid) {
       (value.row(iX) - value.row(iX - 1)) /
       grid.di_center_m_scgc.row(iX);
   }
+
   return gradient;
 }
 
@@ -143,7 +151,7 @@ arma_cube calc_gradient_stretched_i(arma_cube value, Grid grid) {
 
   arma_cube gradient(nX, nY, nZ);
   gradient.zeros();
-  
+
   if (grid.get_HasXdim()) {
     // Central part
     for (iX = 1; iX < nX - 1; iX++)
@@ -164,6 +172,7 @@ arma_cube calc_gradient_stretched_i(arma_cube value, Grid grid) {
       (value.row(iX) - value.row(iX - 1)) /
       grid.di_center_m_scgc.row(iX);
   }
+
   return gradient;
 }
 
@@ -211,6 +220,7 @@ arma_cube calc_gradient2o_j(arma_cube value, Grid grid) {
       (value.col(iY) - value.col(iY - 1)) /
       grid.dj_center_m_scgc.col(iY);
   }
+
   return gradient;
 }
 
@@ -232,21 +242,21 @@ arma_cube calc_gradient4o_j(arma_cube value, Grid grid) {
   if (grid.get_HasYdim()) {
     // Interior:
     for (iY = 2; iY < nY - 2; iY++)
-      gradient.col(iY) = (-value.col(iY + 2) + 
-                            8 * value.col(iY + 1) - 
-                            8 * value.col(iY - 1) + 
-                            value.col(iY - 2)) / 
-                            (12. * grid.dj_center_m_scgc.col(iY));
+      gradient.col(iY) = (-value.col(iY + 2) +
+                          8 * value.col(iY + 1) -
+                          8 * value.col(iY - 1) +
+                          value.col(iY - 2)) /
+                         (12. * grid.dj_center_m_scgc.col(iY));
 
     // Points just inside edges (2nd order):
     iY = 1;
     gradient.col(iY) =
-        (value.col(iY + 1) - value.col(iY - 1)) /
-        (2 * grid.dj_center_m_scgc.col(iY));
-    iY = nY-2;
+      (value.col(iY + 1) - value.col(iY - 1)) /
+      (2 * grid.dj_center_m_scgc.col(iY));
+    iY = nY - 2;
     gradient.col(iY) =
-        (value.col(iY + 1) - value.col(iY - 1)) /
-        (2 * grid.dj_center_m_scgc.col(iY));
+      (value.col(iY + 1) - value.col(iY - 1)) /
+      (2 * grid.dj_center_m_scgc.col(iY));
 
     // Lower (one sided):
     iY = 0;
@@ -260,6 +270,7 @@ arma_cube calc_gradient4o_j(arma_cube value, Grid grid) {
       (value.col(iY) - value.col(iY - 1)) /
       grid.dj_center_m_scgc.col(iY);
   }
+
   return gradient;
 }
 
@@ -277,7 +288,7 @@ arma_cube calc_gradient_stretched_j(arma_cube value, Grid grid) {
 
   arma_cube gradient(nX, nY, nZ);
   gradient.zeros();
-  
+
   if (grid.get_HasYdim()) {
     // Central part
     for (iY = 1; iY < nY - 1; iY++)
@@ -298,6 +309,7 @@ arma_cube calc_gradient_stretched_j(arma_cube value, Grid grid) {
       (value.col(iY) - value.col(iY - 1)) /
       grid.dj_center_m_scgc.col(iY);
   }
+
   return gradient;
 }
 
@@ -346,6 +358,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
       (value.slice(iK) - value.slice(iK - 1)) /
       grid.dk_edge_m.slice(iK);
   }
+
   return gradient;
 }
 
@@ -441,25 +454,25 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
     // May vectorize for future improvements
 
     // if more than 1 nGCs, we do fourth order, some foolproofing in case we go into debug hell
-    if (nGCs >= 2) { 
+    if (nGCs >= 2) {
       for (int j = nGCs; j < nYs - nGCs; j++) {
         for (int i = nGCs; i < nXs - nGCs; i++) {
-          grad_x_curr(i, j) = (-curr_value(i + 2, j) + 
-                            8 * curr_value(i + 1, j) - 
-                            8 * curr_value(i - 1, j) + 
-                            curr_value(i - 2, j)) * (1. / 12. / dx);
-          grad_y_curr(i, j) = (-curr_value(i, j + 2) + 
-                            8 * curr_value(i, j + 1) - 
-                            8 * curr_value(i, j - 1) + 
-                            curr_value(i, j - 2)) * (1. / 12. / dy);
+          grad_x_curr(i, j) = (-curr_value(i + 2, j) +
+                               8 * curr_value(i + 1, j) -
+                               8 * curr_value(i - 1, j) +
+                               curr_value(i - 2, j)) * (1. / 12. / dx);
+          grad_y_curr(i, j) = (-curr_value(i, j + 2) +
+                               8 * curr_value(i, j + 1) -
+                               8 * curr_value(i, j - 1) +
+                               curr_value(i, j - 2)) * (1. / 12. / dy);
         }
       }
     } else { // otherwise we do second order
       for (int j = nGCs; j < nYs - nGCs; j++) {
         for (int i = nGCs; i < nXs - nGCs; i++) {
-          grad_x_curr(i, j) = (curr_value(i + 1, j) - 
+          grad_x_curr(i, j) = (curr_value(i + 1, j) -
                                curr_value(i - 1, j)) * (1. / 2. / dx);
-          grad_y_curr(i, j) = (curr_value(i, j + 1) - 
+          grad_y_curr(i, j) = (curr_value(i, j + 1) -
                                curr_value(i, j - 1)) * (1. / 2. / dy);
         }
       }

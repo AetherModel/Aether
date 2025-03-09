@@ -172,13 +172,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   if (iGridShape_ == iCubesphere_) {
     report.print(0, "Creating Cubesphere Grid");
+
     if (!Is0D & !Is1Dz)
       create_cubesphere_connection(quadtree);
+
     IsCubeSphereGrid = true;
   } else {
     report.print(0, "Creating Spherical Grid");
+
     if (!Is0D & !Is1Dz)
       create_sphere_connection(quadtree);
+
     IsCubeSphereGrid = false;
   }
 
@@ -186,20 +190,20 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //  report.print(1, "Restarting! Reading grid files!");
   //  DidWork = read_restart(input.get_restartin_dir());
   //} else {
-    if (iGridShape_ == iCubesphere_) {
-      //if (input.get_do_restart())
-      //  report.print(0, "Not restarting the grid - it is too complicated!");
+  if (iGridShape_ == iCubesphere_) {
+    //if (input.get_do_restart())
+    //  report.print(0, "Not restarting the grid - it is too complicated!");
 
-      create_cubesphere_grid(quadtree);
-    } else
-      create_sphere_grid(quadtree);
+    create_cubesphere_grid(quadtree);
+  } else
+    create_sphere_grid(quadtree);
 
-    //MPI_Barrier(aether_comm);
-    create_altitudes(planet);
+  //MPI_Barrier(aether_comm);
+  create_altitudes(planet);
 
-    init_connection();
+  init_connection();
 
-    //DidWork = write_restart(input.get_restartout_dir());
+  //DidWork = write_restart(input.get_restartout_dir());
   //}
 
   // Calculate the radius (for spherical or non-spherical)

@@ -18,12 +18,16 @@ int64_t iProcQuery = -1;
 Quadtree::Quadtree(std::string shape) {
   if (shape == "cubesphere")
     nRootNodes = 6;
+
   if (shape == "sphere")
     nRootNodes = 1;
+
   if (shape == "dipole")
     nRootNodes = 1;
+
   if (shape == "dipole2")
     nRootNodes = 2;
+
   if (shape == "dipole6")
     nRootNodes = 6;
 }
@@ -82,7 +86,7 @@ void Quadtree::build(std::string gridtype) {
     ups = Dipole6::UPS;
     IsSphere = true;
   }
-  
+
   arma_vec o(3), r(3), u(3);
 
   // This captures the limits of the sphere, independent of what the

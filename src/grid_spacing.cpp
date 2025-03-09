@@ -201,6 +201,7 @@ void Grid::calc_i_grid_spacing() {
     di_edge.row(iX) =
       i_center_scgc.row(iX) - i_center_scgc.row(iX - 1);
   }
+
   // Bottom (one sided):
   iX = 0;
   di_center_scgc.row(iX) =
@@ -226,6 +227,7 @@ void Grid::calc_i_grid_spacing() {
     // edge is in-line with the j center
     di_edge_m = di_edge_m % abs(cos(j_center_scgc));
   }
+
   // Need a similar thing for the dipole grid here!
   if (iGridShape_ == iDipole_) {
     // do something here!
@@ -313,6 +315,7 @@ void Grid::calc_j_grid_spacing() {
     dj_center_m_scgc = dj_center_scgc % radius_scgc;
     dj_edge_m = dj_edge % radius_scgc;
   }
+
   // Need to do something for the dipole grid?
 
   // For a stretched grid, calculate some useful quantities:

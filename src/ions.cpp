@@ -165,7 +165,8 @@ Ions::Ions(Grid grid, Planets planet) {
 
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading ion files!");
-    bool DidWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(), DoRead);
+    bool DidWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(),
+                                DoRead);
 
     if (!DidWork)
       std::cout << "Reading Restart for Ions Failed!!!\n";
@@ -527,7 +528,8 @@ bool Ions::restart_file(std::string dir, std::string cGridtype, bool DoRead) {
 
   OutputContainer RestartContainer;
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("ions_" + cMember + "_" + cGrid + "_" + cGridtype);
+  RestartContainer.set_filename("ions_" + cMember + "_" + cGrid + "_" +
+                                cGridtype);
 
   try {
     if (DoRead)

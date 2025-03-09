@@ -422,7 +422,8 @@ int Neutrals::get_species_id(std::string name) {
 // Read/Write restart files for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::restart_file(std::string dir, std::string cGridtype, bool DoRead) {
+bool Neutrals::restart_file(std::string dir, std::string cGridtype,
+                            bool DoRead) {
 
   std::string filename;
   bool DidWork = true;
@@ -431,7 +432,8 @@ bool Neutrals::restart_file(std::string dir, std::string cGridtype, bool DoRead)
 
   OutputContainer RestartContainer;
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid + "_" + cGridtype);
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid + "_" +
+                                cGridtype);
 
   try {
     if (DoRead)

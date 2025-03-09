@@ -178,14 +178,18 @@ void calc_aurora(Grid grid,
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
       lnE = log(auroral_energies(iBin));
+
       // loop through Pij values to get vector of Ci values.  This is
       // directly from Fang et al., [2010]:
       for (int i = 0; i < 8; i++) {
         precision_t tot = 0;
+
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
+
         Ci[i] = exp(tot);
       }
+
       CiArray.push_back(Ci);
     }
 
@@ -257,6 +261,7 @@ void calc_aurora(Grid grid,
         arma_vec temp;
 
         ionization1d.zeros();
+
         for (int iBin = 0; iBin < nBins; iBin++) {
           Ci = CiArray[iBin];
           temp = calculate_fang_v2(auroral_energies(iBin),
@@ -269,7 +274,7 @@ void calc_aurora(Grid grid,
         }
 
         // /cm3 -> /m3
-        ionization1d = ionization1d * pcm3topm3 /100.0;
+        ionization1d = ionization1d * pcm3topm3 / 100.0;
 
         // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the

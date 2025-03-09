@@ -585,7 +585,8 @@ void Neutrals::calc_chapman(Grid grid) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(iAlt) * species[iSpecies].mass;
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(
+                                                       iAlt) * species[iSpecies].mass;
 
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
       // dr is used here instead of dalt, since we only want the radial integration, while

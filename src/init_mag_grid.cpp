@@ -368,8 +368,10 @@ void Grid::fill_field_lines(arma_vec baseLatsLoc,
         // save the q for the "down" case:
         for (int64_t iLon = 0; iLon < nLons; iLon ++) {
           magQ_Down(iLon, iLat, iAlt) = qp2;
+
           if (iLat < nLats)
             k_edge_scgc(iLon, iLat, iAlt) = qp2;
+
           k_corner_scgc(iLon, iLat, iAlt) = qp2;
         }
       } else {
@@ -757,11 +759,11 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // This is only down for the "down" edges, where the base latitudes are different.
   fill_field_lines(baseLats_down, min_alt_re, Gamma, planet, true);
 
-  // The baseLats are the Invariant Latitudes of the grid, so we can just fill in all of the 
+  // The baseLats are the Invariant Latitudes of the grid, so we can just fill in all of the
   // points with these values
   for (iAlt = 0; iAlt < nAlts; iAlt++)
     for (iLat = 0; iLat < nLats; iLat++)
-      for (iLon = 0; iLon < nLons; iLon++) 
+      for (iLon = 0; iLon < nLons; iLon++)
         magInvLat_scgc(iLon, iLat, iAlt) = baseLats(iLat);
 
   report.print(4, "Field-aligned Edges");
