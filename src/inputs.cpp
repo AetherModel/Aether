@@ -547,10 +547,13 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 
 precision_t Inputs::get_dt_output(int iOutput) {
   precision_t value = 0.0;
-  int nOutputs = settings.at("Outputs").at("type").size();
+  int nOutputs = settings.at("Outputs").at("dt").size();
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
+  else{
+    report.error("Output Error; more output types than dt's provided.");
+  }
 
   return value;
 }
