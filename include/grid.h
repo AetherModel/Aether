@@ -531,9 +531,6 @@ private:
     bool in_grid;
   };
 
-  // Return the index of the last element that has altitude smaller than or euqal to the input
-  uint64_t search_altitude(const precision_t alt_in) const;
-
   // Calculate the range of a spherical grid
   void get_sphere_grid_range(struct sphere_range &sr) const;
   // Calculate the range of a cubesphere grid

@@ -72,22 +72,23 @@ int64_t get_cube_surface_number(const arma_vec &point_in) {
 // Helper variables / function ends. The following are all member functions of Grid class
 
 // --------------------------------------------------------------------------
-// Return the index of the last element that has altitude smaller than or euqal to the input
+// Return the index of the last element that has a value smaller than or equal to the input
+// - Optional argument (nGCs=0) since we cannot see grid info.
 // --------------------------------------------------------------------------
 
-uint64_t Grid::search_altitude(const precision_t alt_in) const {
+uint64_t binary_search_array(precision_t val_in, arma_vec ref_arr, int64_t nGCs = 0) {
   // Copy from std::upper_bound. Can't directly use it
   // mainly because geoAlt_scgc(0, 0, *) can't be formed as an iterator
   uint64_t first, last, len;
   first = nGCs;
-  last = nAlts - nGCs;
+  last = ref_arr.size();
   len = last - first;
 
   while (len > 0) {
     uint64_t half = len >> 1;
     uint64_t mid = first + half;
 
-    if (geoAlt_scgc(0, 0, mid) > alt_in)
+    if (ref_arr(mid) > val_in)
       len = half;
 
     else {
@@ -227,10 +228,12 @@ void Grid::set_interp_coef_sphere(const sphere_range &sr,
 
   // The altitude may not be linearly spaced, so use binary search to find
   // the first element smaller than or equal to the altitude of the give point
-  // Implemented in search_altitude
-  coef.iAlt = search_altitude(alt_in);
-  coef.rAlt = (alt_in - geoAlt_scgc(0, 0, coef.iAlt))
-              / (geoAlt_scgc(0, 0, coef.iAlt + 1) - geoAlt_scgc(0, 0, coef.iAlt));
+  // Implemented in binary_search_array
+  // - since Alt can be latitude-dependent, this needs to be done last.
+  coef.iAlt = binary_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol), nGCs);
+  coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
+              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow,
+                  coef.iCol, coef.iAlt));
 
   // Put the coefficient into the vector
   coef.in_grid = true;
@@ -302,10 +305,10 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
   coef.iCol = static_cast<uint64_t>(col_frac_index);
   coef.rCol = col_frac_index - coef.iCol;
   coef.iCol += nGCs - 1;
-  // Use binary search to find the index for altitude
-  coef.iAlt = search_altitude(alt_in);
-  coef.rAlt = (alt_in - geoAlt_scgc(0, 0, coef.iAlt))
-              / (geoAlt_scgc(0, 0, coef.iAlt + 1) - geoAlt_scgc(0, 0, coef.iAlt));
+  // Use binary search to find the index for altitude (handles oblate planets)
+  coef.iAlt = binary_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol), nGCs);
+  coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
+              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
 
   // Put the coefficient into the vector
   coef.in_grid = true;
