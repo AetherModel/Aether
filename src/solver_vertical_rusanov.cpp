@@ -311,7 +311,17 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
                 species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
         + dt * diffLogN_s[iSpecies];
       species[iSpecies].newDensity_scgc = exp(log_s);
-
+      /*
+            std::cout << iSpecies << " " << log_s(2,2,19) << " "
+            << dt << " "
+            << divVertVel_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].velocity_vcgc[2](2,2,19) << " "
+            << gradLogN_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].velocity_vcgc[2](2,2,19) * gradLogN_s[iSpecies](2,2,19) << " "
+            << diffLogN_s[iSpecies](2,2,19) << " "
+            << species[iSpecies].density_scgc(2,2,19) << " "
+            << species[iSpecies].newDensity_scgc(2,2,19) << "\n";
+      */
       accTotal =
         dt * grid.gravity_vcgc[2]
         - dt * temperature_scgc % gradLogN_s[iSpecies] * cKB / mass
@@ -381,10 +391,10 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
   if (doPrintThis) {
     iX = 2;
     iY = 2;
-    iSpecies = 4;
+    iSpecies = 0;
     mass = species[iSpecies].mass;
 
-    for (int iAlt = 0; iAlt < 20; iAlt++) {
+    for (int iAlt = 19; iAlt < 20; iAlt++) {
       std::cout << iAlt << " "
                 << log(species[iSpecies].density_scgc(iX, iY, iAlt)) << " "
                 << temperature_scgc(iX, iY, iAlt) << " "
@@ -465,7 +475,8 @@ void Ions::solver_vertical_rusanov(Grid grid,
     if (species[iSpecies].DoAdvect) {
 
       // Log(number density):
-      log_s = log(species[iSpecies].density_scgc);
+      //log_s = log(species[iSpecies].density_scgc);
+      log_s = species[iSpecies].density_scgc;
 
       calc_grad_and_diff_alts_rusanov(grid,
                                       log_s,
@@ -498,11 +509,13 @@ void Ions::solver_vertical_rusanov(Grid grid,
 
       // densities:
       log_s =
-        log(species[iSpecies].density_scgc)
-        - dt * (divVertVel_s[iSpecies] +
-                species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
+        species[iSpecies].density_scgc
+        //log(species[iSpecies].density_scgc)
+        - dt * (//divVertVel_s[iSpecies] +
+          species[iSpecies].velocity_vcgc[2] % gradLogN_s[iSpecies])
         + dt * diffLogN_s[iSpecies];
-      species[iSpecies].newDensity_scgc = exp(log_s);
+      //species[iSpecies].newDensity_scgc = exp(log_s);
+      species[iSpecies].newDensity_scgc = log_s;
 
     } else
       species[iSpecies].newDensity_scgc = species[iSpecies].density_scgc;

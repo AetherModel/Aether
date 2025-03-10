@@ -344,6 +344,11 @@ bool Euv::euvac(Times time,
   precision_t f107a = indices.get_f107a(time.get_current());
   precision_t mean_f107 = (f107 + f107a) / 2.0;
 
+  if (report.test_verbose(4))
+    std::cout << "F107, f107a, average : "
+              << f107 << " " << f107a
+              << " -> " << mean_f107 << "\n";
+
   for (int iWave = 0; iWave < nWavelengths; iWave++) {
     slope = 1.0 + euvac_afac[iWave] * (mean_f107 - 80.0);
 
@@ -351,19 +356,15 @@ bool Euv::euvac(Times time,
       slope = 0.8;
 
     wavelengths_intensity_1au[iWave] = euvac_f74113[iWave] * slope * pcm2topm2;
-  }
 
-  if (report.test_verbose(4)) {
-    std::cout << "EUVAC output : "
-              << f107 << " " << f107a
-              << " -> " << mean_f107 << "\n";
-
-    for (int iWave = 0; iWave < nWavelengths; iWave++) {
+    if (report.test_verbose(4))
       std::cout << "     " << iWave << " "
                 << wavelengths_short[iWave] << " "
                 << wavelengths_long[iWave] << " "
-                << wavelengths_intensity_1au[iWave] << "\n";
-    }
+                << wavelengths_intensity_1au[iWave] / 1e12 << " "
+                << euvac_afac[iWave] * 100.0 << " "
+                << euvac_f74113[iWave] / 1e9 << " "
+                << slope << "\n";
   }
 
   report.exit(function);

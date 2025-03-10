@@ -436,13 +436,7 @@ public:
   bool get_O_cooling();
 
   /**********************************************************************
-     \brief returns settings["
-     \param 
-   **/
-  bool get_use_centripetal();
-  
-  /**********************************************************************
-     \brief returns settings["
+      \brief returns settings["
      \param 
    **/
   bool get_use_coriolis();
@@ -487,7 +481,8 @@ public:
   bool get_advection_neutrals_bulkwinds();
   bool get_advection_neutrals_implicitfriction();
 
-  
+  std::string get_advection_ions_along();
+
   /**********************************************************************
      \brief returns settings["
      \param 

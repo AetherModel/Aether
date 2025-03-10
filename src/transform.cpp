@@ -148,11 +148,13 @@ arma_cube calc_magnitude(std::vector<arma_cube> xyz) {
 
 std::vector<arma_cube> transform_xyz_to_llr_3d(std::vector<arma_cube> xyz) {
   std::vector<arma_cube> llr;
-  arma_cube xy, r, lon;
+  arma_cube xy, r, lon, rat;
   r = calc_magnitude(xyz);
   xy = sqrt(xyz[0] % xyz[0] +
             xyz[1] % xyz[1]);
-  lon = acos(xyz[0] / xy);
+  rat = xyz[0] / xy;
+  rat.clamp(-0.99999, 0.99999);
+  lon = acos(rat);
   uvec ind_ = find(xyz[1] < 0.0);
   lon.elem(ind_) = 2 * cPI - lon.elem(ind_);
   llr.push_back(lon);

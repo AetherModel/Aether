@@ -34,6 +34,21 @@ Ions::species_chars Ions::create_species(Grid grid) {
   tmp.losses_scgc.set_size(nLons, nLats, nAlts);
   tmp.losses_scgc.zeros();
 
+  tmp.heating_neutral_friction_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_neutral_friction_scgc.zeros();
+  tmp.heating_electron_friction_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_electron_friction_scgc.zeros();
+  tmp.heating_neutral_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_neutral_heat_transfer_scgc.zeros();
+  tmp.heating_electron_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  tmp.heating_electron_heat_transfer_scgc.zeros();
+  tmp.heating_sources_total.set_size(nLons, nLats, nAlts);
+  tmp.heating_sources_total.zeros();
+  tmp.Cv_scgc.set_size(nLons, nLats, nAlts);
+  tmp.Cv_scgc.zeros();
+  tmp.lambda.set_size(nLons, nLats, nAlts);
+  tmp.lambda.zeros();
+
   tmp.par_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.perp_velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   tmp.velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
@@ -92,10 +107,25 @@ Ions::Ions(Grid grid, Planets planet) {
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
+  Cv_scgc.set_size(nLons, nLats, nAlts);
+  Cv_scgc.zeros();
+  lambda.set_size(nLons, nLats, nAlts);
+  lambda.zeros();
   gamma_scgc.set_size(nLons, nLats, nAlts);
   gamma_scgc.ones();
   sound_scgc.set_size(nLons, nLats, nAlts);
   sound_scgc.ones();
+
+  heating_neutral_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_neutral_friction_scgc.zeros();
+  heating_electron_friction_scgc.set_size(nLons, nLats, nAlts);
+  heating_electron_friction_scgc.zeros();
+  heating_neutral_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_neutral_heat_transfer_scgc.zeros();
+  heating_electron_heat_transfer_scgc.set_size(nLons, nLats, nAlts);
+  heating_electron_heat_transfer_scgc.zeros();
+  heating_sources_total.set_size(nLons, nLats, nAlts);
+  heating_sources_total.zeros();
 
   for (int iDir = 0; iDir < 3; iDir++) {
     velocity_vcgc[iDir].zeros();
@@ -135,7 +165,8 @@ Ions::Ions(Grid grid, Planets planet) {
 
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading ion files!");
-    bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
+    bool DidWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(),
+                                DoRead);
 
     if (!DidWork)
       std::cout << "Reading Restart for Ions Failed!!!\n";
@@ -154,6 +185,7 @@ int Ions::read_planet_file(Planets planet) {
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
+  int doAdvect;
 
   report.print(3, "In read_planet_file for Ions");
 
@@ -166,7 +198,13 @@ int Ions::read_planet_file(Planets planet) {
     double mass = ions["mass"][iSpecies];
     species[iSpecies].mass = mass * cAMU;
     species[iSpecies].charge = ions["charge"][iSpecies];
-    species[iSpecies].DoAdvect = ions["advect"][iSpecies];
+    doAdvect = ions["advect"][iSpecies];
+
+    if (doAdvect == 0)
+      species[iSpecies].DoAdvect = false;
+    else
+      species[iSpecies].DoAdvect = true;
+
     species[iSpecies].vibe = ions["vibration"][iSpecies];
   }
 
@@ -223,17 +261,17 @@ void Ions::nan_test(std::string variable) {
 //----------------------------------------------------------------------
 
 bool Ions::check_for_nonfinites() {
-  bool non_finites_exist = false;
+  bool didWork = true;
 
   if (!all_finite(density_scgc, "density_scgc") ||
       !all_finite(temperature_scgc, "temperature_scgc") ||
       !all_finite(velocity_vcgc, "velocity_vcgc"))
-    non_finites_exist = true;
+    didWork = false;
 
-  if (non_finites_exist)
+  if (!didWork)
     throw std::string("Check for nonfinites failed!!!\n");
 
-  return non_finites_exist;
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------
@@ -324,6 +362,99 @@ void Ions::calc_cMax() {
   return;
 }
 
+// ----------------------------------------------------------------------
+// Calculate thermal conduction (lambda)
+// ----------------------------------------------------------------------
+
+void Ions::calc_lambda() {
+
+  int64_t iIon, jIon;
+
+  std::string function = "Ions::calc_specific_heat";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  lambda.zeros();
+  precision_t Mi, Mj;
+  arma_cube density_ratio, ratios;
+
+  // This sets the size:
+  ratios = density_scgc;
+
+  for (iIon = 0; iIon < nSpecies; iIon++) {
+
+    Mi = species[iIon].mass / cAMU;
+    ratios.zeros();
+
+    for (jIon = 0; jIon < nSpecies; jIon++) {
+      if (jIon != iIon) {
+        Mj = species[jIon].mass / cAMU;
+        density_ratio = species[jIon].density_scgc /
+                        species[iIon].density_scgc;
+        density_ratio.clamp(0.001, 1000.0);
+        ratios = ratios + density_ratio *
+                 (species[jIon].charge * species[jIon].charge /
+                  species[iIon].charge / species[iIon].charge) *
+                 sqrt(Mj / (Mi + Mj)) *
+                 (3 * Mi * Mi + 1.6 * Mi * Mj + 1.3 * Mj * Mj) /
+                 ((Mi + Mj) * (Mi + Mj));
+      }
+
+      species[iIon].lambda =
+        3.1e6 / sqrt(Mi) / pow(species[iIon].charge, 4) *
+        pow(species[iIon].temperature_scgc, 2.5) % (1 + 1.75 * ratios) * cE;
+    }
+
+    lambda = lambda + species[iIon].lambda % species[iIon].density_scgc;
+  }
+
+  lambda = lambda / density_scgc;
+
+  //lambda1d = 25.0 * cKB * pow(temp1d, 2.5) * (cKB / species[iIon].mass)
+  //           / species[iIon].nu_ion_ion[iIon] / 8.0;
+
+
+  report.exit(function);
+  return;
+}
+
+
+// ----------------------------------------------------------------------
+// Calculate Specific Heat at Constant Volume (Cv)
+// ----------------------------------------------------------------------
+
+void Ions::calc_specific_heat() {
+
+  int64_t iSpecies;
+
+  std::string function = "Ions::calc_specific_heat";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  Cv_scgc.zeros();
+  gamma_scgc.zeros();
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // individual Cv for individual temperatures:
+    species[iSpecies].Cv_scgc =
+      (species[iSpecies].vibe - 2) * cKB / species[iSpecies].mass / 2;
+    // Bulk Cv for the bulk temperature:
+    Cv_scgc = Cv_scgc +
+              (species[iSpecies].vibe - 2) *
+              species[iSpecies].density_scgc *
+              cKB / species[iSpecies].mass;
+    gamma_scgc = gamma_scgc +
+                 species[iSpecies].density_scgc / (species[iSpecies].vibe - 2);
+  }
+
+  // Bulk Cv and gamma are the density-weighted Cv and gamma
+  Cv_scgc = Cv_scgc / (2 * density_scgc);
+  gamma_scgc = gamma_scgc * 2.0 / density_scgc + 1.0;
+
+  report.exit(function);
+  return;
+}
+
 
 // -----------------------------------------------------------------------------
 // Calculate the electron density from the sum of all ion species
@@ -341,13 +472,17 @@ void Ions::fill_electrons() {
   rho_scgc.zeros();
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    // Electron density is the last species:
     species[nSpecies].density_scgc =
       species[nSpecies].density_scgc + species[iSpecies].density_scgc;
+    // While we are at it, calculate the mass density too:
     rho_scgc = rho_scgc +
                species[iSpecies].mass * species[iSpecies].density_scgc;
   }
 
+  // The electron density is also stored as the bulk density:
   density_scgc = species[nSpecies].density_scgc;
+  // We can now calculate the mean major mass for ions too:
   mean_major_mass_scgc = rho_scgc / density_scgc;
 
   report.exit(function);
@@ -385,7 +520,7 @@ int Ions::get_species_id(std::string name) {
 // Read/Write restart files for the ions
 //----------------------------------------------------------------------
 
-bool Ions::restart_file(std::string dir, bool DoRead) {
+bool Ions::restart_file(std::string dir, std::string cGridtype, bool DoRead) {
 
   std::string filename;
   bool DidWork = true;
@@ -393,7 +528,8 @@ bool Ions::restart_file(std::string dir, bool DoRead) {
 
   OutputContainer RestartContainer;
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("ions_" + cMember + "_" + cGrid);
+  RestartContainer.set_filename("ions_" + cMember + "_" + cGrid + "_" +
+                                cGridtype);
 
   try {
     if (DoRead)

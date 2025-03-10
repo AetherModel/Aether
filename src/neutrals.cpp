@@ -198,6 +198,7 @@ int Neutrals::read_planet_file(Planets planet) {
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
+  int doAdvect;
 
   report.print(3, "In read_planet_file for Neutrals");
 
@@ -213,7 +214,13 @@ int Neutrals::read_planet_file(Planets planet) {
     species[iSpecies].vibe = neutrals["vibration"][iSpecies];
     species[iSpecies].thermal_cond = neutrals["thermal_cond"][iSpecies];
     species[iSpecies].thermal_exp = neutrals["thermal_exp"][iSpecies];
-    species[iSpecies].DoAdvect = neutrals["advect"][iSpecies];
+    doAdvect = neutrals["advect"][iSpecies];
+
+    if (doAdvect == 0)
+      species[iSpecies].DoAdvect = false;
+    else
+      species[iSpecies].DoAdvect = true;
+
     species[iSpecies].lower_bc_density = neutrals["BC"][iSpecies];
   }
 
@@ -257,7 +264,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
         temperature_scgc.slice(iAlt - 1) /
         temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
-        exp(-grid.dalt_lower_scgc.slice(iAlt) /
+        exp(-grid.dr_edge.slice(iAlt) /
             species[iSpecies].scale_height_scgc.slice(iAlt));
     }
   }
@@ -282,7 +289,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
       temperature_scgc.slice(iAlt - 1) /
       temperature_scgc.slice(iAlt) %
       species[iSpecies].density_scgc.slice(iAlt - 1) %
-      exp(-grid.dalt_lower_scgc.slice(iAlt) /
+      exp(-grid.dr_edge.slice(iAlt) /
           species[iSpecies].scale_height_scgc.slice(iAlt));
   }
 
@@ -415,7 +422,8 @@ int Neutrals::get_species_id(std::string name) {
 // Read/Write restart files for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::restart_file(std::string dir, bool DoRead) {
+bool Neutrals::restart_file(std::string dir, std::string cGridtype,
+                            bool DoRead) {
 
   std::string filename;
   bool DidWork = true;
@@ -424,7 +432,8 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
 
   OutputContainer RestartContainer;
   RestartContainer.set_directory(dir);
-  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid);
+  RestartContainer.set_filename("neutrals_" + cMember + "_" + cGrid + "_" +
+                                cGridtype);
 
   try {
     if (DoRead)
@@ -444,6 +453,22 @@ bool Neutrals::restart_file(std::string dir, bool DoRead) {
         RestartContainer.store_variable(cName,
                                         density_unit,
                                         species[iSpecies].density_scgc);
+
+      // ----------------------------
+      // Velocity (per neutral)
+      // ----------------------------
+      for (int iDir = 0; iDir < 3; iDir++) {
+        cName = velocity_name[iDir] + " (" + species[iSpecies].cName + ")";
+
+        if (DoRead)
+          species[iSpecies].velocity_vcgc[iDir] =
+            RestartContainer.get_element_value(cName);
+        else
+          RestartContainer.store_variable(cName,
+                                          velocity_unit,
+                                          species[iSpecies].
+                                          velocity_vcgc[iDir]);
+      }
     }
 
     cName = temperature_name;

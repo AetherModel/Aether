@@ -66,6 +66,7 @@ Inputs::Inputs(Times &time) {
 
   if (report.test_verbose(1)) {
     std::cout << "Settings read in:\n";
+    std::cout << "iProc : " << iProc << "\n";
     std::cout << std::setw(2) << settings;
   }
 
@@ -106,7 +107,7 @@ std::string dummy_string = "unknown";
 
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : "
               << key1 << " and "
               << key2 << "\n";
@@ -131,7 +132,7 @@ bool Inputs::check_settings(std::string key1,
 // 1 key:
 
 bool Inputs::check_settings(std::string key1) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
@@ -455,8 +456,7 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
   // The rest of the settings are different for mag/geo grids,
   // First take the magnetic options, then "else" should be (cube-)sphere
 
-  if (grid_specs.shape.find("dipole") != std::string::npos)
-  {
+  if (grid_specs.shape.find("dipole") != std::string::npos) {
     // Latitude range (base of field line) is specified with max lat & min apex.
     grid_specs.max_blat = check_settings_pt(gridtype, "LatMax") * cDtoR;
     grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
@@ -464,9 +464,7 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
     grid_specs.LatStretch = check_settings_pt(gridtype, "LatStretch");
     // controls the spacing of points along field line, <<1 for more pts at low alts
     grid_specs.FieldLineStretch = check_settings_pt(gridtype, "dAltStretch");
-  }
-  else
-  {
+  } else {
     min_max = get_setting_intarr(gridtype, "LatRange");
     grid_specs.lat_min = min_max[0] * cDtoR;
     grid_specs.lat_max = min_max[1] * cDtoR;
@@ -549,10 +547,13 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 
 precision_t Inputs::get_dt_output(int iOutput) {
   precision_t value = 0.0;
-  int nOutputs = settings.at("Outputs").at("type").size();
+  int nOutputs = settings.at("Outputs").at("dt").size();
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
+  else{
+    report.error("Output Error; more output types than dt's provided.");
+  }
 
   return value;
 }
@@ -761,8 +762,8 @@ bool Inputs::get_O_cooling() {
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
-bool Inputs::get_use_centripetal() {
-  return get_setting_bool("Sources", "Grid", "Centripetal");
+bool Inputs::get_cent_acc() {
+  return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
 // -----------------------------------------------------------------------
@@ -771,10 +772,6 @@ bool Inputs::get_use_centripetal() {
 
 bool Inputs::get_use_coriolis() {
   return get_setting_bool("Sources", "Grid", "Coriolis");
-}
-
-bool Inputs::get_cent_acc() {
-  return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
 // -----------------------------------------------------------------------
@@ -1153,6 +1150,10 @@ json Inputs::get_boundary_condition_types() {
 
 std::string Inputs::get_advection_neutrals_vertical() {
   return get_setting_str("Advection", "Neutrals", "Vertical");
+}
+
+std::string Inputs::get_advection_ions_along() {
+  return get_setting_str("Advection", "Ions", "Along");
 }
 
 bool Inputs::get_advection_neutrals_bulkwinds() {
