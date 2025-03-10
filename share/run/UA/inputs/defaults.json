@@ -100,7 +100,6 @@
 
     "Sources" : {
 	"Grid" : {
-	    "Centripetal" : true,
 		"Coriolis" : true,
 		"Cent_acc": true },
 	"Neutrals" : {

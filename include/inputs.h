@@ -436,13 +436,7 @@ public:
   bool get_O_cooling();
 
   /**********************************************************************
-     \brief returns settings["
-     \param 
-   **/
-  bool get_use_centripetal();
-  
-  /**********************************************************************
-     \brief returns settings["
+      \brief returns settings["
      \param 
    **/
   bool get_use_coriolis();
