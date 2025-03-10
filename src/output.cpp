@@ -260,6 +260,10 @@ bool output(const Neutrals &neutrals,
                                                     "Magnetic Longitude",
                                                     "degrees",
                                                     grid.magLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("invLat",
+                                                      "Magnetic Invariant Latitude",
+                                                      "degrees",
+                                                      grid.magInvLat_scgc * cRtoD);
         AllOutputContainers[iOutput].store_variable("mlt",
                                                     "Magnetic Local Time",
                                                     "hours",

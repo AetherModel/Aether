@@ -69,8 +69,7 @@ public:
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   arma_cube magLon_scgc, magX_scgc;
-  // The magnetic latitude and altitude need to be defined better. This should be the angle between
-  // magnetic equator and the point, but sometimes it is invariant latitude.
+  // The magnetic latitude is the angle between the magnetic equator and the point.
   arma_cube magLat_scgc, magY_scgc;
   // This is often just the altitude....
   arma_cube magAlt_scgc, magZ_scgc;
