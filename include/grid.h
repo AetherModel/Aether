@@ -433,6 +433,20 @@ public:
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
                                const std::vector<precision_t> &Alts);
+
+  /**
+   * \brief Set the interpolation coefficients for the dipole grid
+   * \param Lons The longitude of points
+   * \param Lats The latitude of points
+   * \param Alts The altitude of points
+   * \pre Lons, Lats and Alts have the same size
+   * \return true if the function succeeds, false if the instance is not a
+   *         mag grid or the size of Lons, Lats and Alts are not the same.
+   */
+  bool set_dipole_interpolation_coefs(const std::vector<precision_t> &Lons,
+                                      const std::vector<precision_t> &Lats,
+                                      const std::vector<precision_t> &Alts);
+  
   /**
    * \brief Create a map of geographic locations to data and do the interpolation
    * \param data The value at the positions of geoLon, geoLat, and geoAlt
@@ -511,6 +525,17 @@ private:
     bool col_min_exclusive;
     bool col_max_exclusive;
   };
+  // The struct representing the range of a dipole grid (in magnetic coordinates)
+  struct dipole_range{
+    precision_t lon_min;
+    precision_t lon_max;
+    precision_t dLon;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t dLat;
+    precision_t alt_min;
+    precision_t alt_max;
+  };
 
   // The index and coefficient used for interpolation
   // Each point is processed by the function set_interpolation_coefs and stored
@@ -534,6 +559,8 @@ private:
   void get_sphere_grid_range(struct sphere_range &sr) const;
   // Calculate the range of a cubesphere grid
   void get_cubesphere_grid_range(struct cubesphere_range &cr) const;
+  // Calculate the range of a dipole grid
+  void get_dipole_grid_range(struct dipole_range &dr) const;
 
   // Helper function for set_interpolation_coefs
   void set_interp_coef_sphere(const sphere_range &sr,
@@ -544,6 +571,11 @@ private:
                                   const precision_t lon_in,
                                   const precision_t lat_in,
                                   const precision_t alt_in);
+  // (note these are magnetic coordinates)
+  void set_interp_coef_dipole(const dipole_range &dr,
+                              const precision_t lon_in,
+                              const precision_t lat_in,
+                              const precision_t alt_in);
 
   // Processed interpolation coefficients
   std::vector<struct interp_coef_t> interp_coefs;
