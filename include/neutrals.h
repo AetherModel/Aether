@@ -47,7 +47,7 @@ class Neutrals {
     precision_t vibe;
 
     /// Advect this species? (1 = yes, 0 = no)
-    int DoAdvect;
+    bool DoAdvect;
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
@@ -310,6 +310,11 @@ class Neutrals {
 			     Grid grid);
   
   /**********************************************************************
+     \brief Limit the density to a floor and a ceiling
+   **/
+  void clamp_density();
+
+  /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
    **/
   void calc_mass_density();
@@ -465,7 +470,7 @@ class Neutrals {
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, bool DoRead);  
+  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);  
 
   /**********************************************************************
      \brief Exchange messages between processors

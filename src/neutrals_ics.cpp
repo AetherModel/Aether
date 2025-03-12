@@ -7,7 +7,10 @@
 
 // -----------------------------------------------------------------------------
 //  Set initial conditions for the neutrals.
-//    Two methods implemented so far:
+//    If user wants to restart, then read the restart files.
+//    Otherwise, initialize the neutrals.
+//
+//    Two methods of initialization implemented so far:
 //      - Planet: Use fixed density values in the planet.in file and the
 //                temperature profile to set the densities and temperature.
 //                Densities are filled with hydrostatic solution.
@@ -35,9 +38,12 @@ bool Neutrals::initial_conditions(Grid grid,
 
   report.print(3, "Creating Neutrals initial_condition");
 
+  // ----------------------------------------------------------
+  // Restart file:
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading neutral files!");
-    didWork = restart_file(input.get_restartin_dir(), DoRead);
+    didWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(), DoRead);
 
     if (!didWork)
       report.error("Reading Restart for Neutrals Failed!!!");
@@ -45,6 +51,9 @@ bool Neutrals::initial_conditions(Grid grid,
 
     json ics = input.get_initial_condition_types();
     std::string icsType = mklower(ics["type"]);
+
+    // ----------------------------------------------------------
+    // MSIS:
 
     if (icsType == "msis") {
       report.print(2, "Using MSIS for Initial Conditions");
@@ -97,6 +106,9 @@ bool Neutrals::initial_conditions(Grid grid,
         } // for species
       } // msis init worked ok
     } // type = msis
+
+    // ----------------------------------------------------------
+    // Planet:
 
     if (icsType == "planet") {
       report.print(2, "Using planet for Initial Conditions");
@@ -159,28 +171,27 @@ bool Neutrals::initial_conditions(Grid grid,
       } else
         temp1d = 200.0;
 
-      // spread the 1D temperature across the globe:
-      for (iLon = 0; iLon < nLons; iLon++) {
-        for (iLat = 0; iLat < nLats; iLat++)
-          temperature_scgc.tube(iLon, iLat) = temp1d;
-      }
-
       // Make the initial condition in the lower ghost cells to be consistent
       // with the actual lowwer BC:
-      // Set the lower boundary condition:
+
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
 
+      report.print(2, "Calculating scale height");
       calc_scale_height(grid);
+      report.print(2, "setting lower BCs");
       set_lower_bcs(grid, time, indices);
+      report.print(2, "Filling with hydrostatic");
 
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
         fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
-
     } // type = planet
   }
+
+  // ensure that the densities are all within bounds:
+  clamp_density();
 
   if (!didWork)
     report.error("Issue with initial conditions!");

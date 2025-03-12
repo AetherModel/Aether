@@ -7,36 +7,33 @@
 	"f107" : { "Mean" : 1.0,
 		   "Std" : 0.1,
 		   "Add" : false,
-		   "Constant" : true},
-	"f107a" : { "Mean" : 1.0,
-		    "Std" : 0.02,
-		    "Add" : false,
-		    "Constant" : true}}, 
+		   "Constant" : true}},
     
     "Restart" : {
 	"do" : false,
-	"OutDir" : "UA/restartOut",
-	"InDir" : "UA/restartIn",
-	"dt" : 3600.0},
+	"dt" : 900.0},
 
     "Debug" : {
-	"iVerbose" : 0,
-        "iFunctionVerbose" : {
-            "Grid::create_altitudes": 0},	
-	"dt" : 10.0,
-	"check_for_nans" : false
-    },
+	"iVerbose" : 0},
 
+    "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
-    "GeoBlockSize" : {
-	"nLons" : 18,
-	"nLats" : 18,
-	"nAlts" : 50},
+    "neuGrid" : {
+	"nLons" : 12,
+	"nLats" : 12,
+	"nAlts" : 30},
 
-    "GeoGrid" : {
-	"dAlt"   : 0.25,
-	"IsUniformAlt" : false},    
+    "ionGrid": {
+        "dAltStretch": 0.2,
+        "LatStretch": 1,
+        "Shape": "dipole",
+        "nLonsPerBlock": 18,
+        "nLatsPerBlock" : 18,
+        "nAlts":36,
+        "LatMax":88,
+        "MinAlt": 80.0,
+        "MinApex": 125.0},
 
     "InitialConditions" : {
 	"type" : "msis"},
@@ -44,24 +41,15 @@
     "BoundaryConditions" : {
 	"type" : "msis"},
 
-    "Advection" : {
-	"Neutrals" : {
-	    "Vertical" : "hydro",
-	    "Horizontal" : "default"},
-	"Ions" : {
-	    "Along" : "rusanov",
-	    "Across" : "default"} },
+    "Electrodynamics" : {
+        "Potential" : "Weimer05",
+        "DiffuseAurora" : "fta",
+        "File": "UA/inputs/b20110320n_omni.bin"},
     
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
     
     "Outputs" : {
 	"type" : ["states"],
-	"dt" : [900] },
-    
-    "DoCalcBulkIonTemp" : false,
-    
-    "PlanetFile" : "UA/inputs/earth.in"
+	"dt" : [60] }
     
 }

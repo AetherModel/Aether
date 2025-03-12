@@ -5,19 +5,37 @@
 	"iVerbose" : 0,
 	"dt" : 10.0},
 
-    "GeoBlockSize" : {
-	"nLons" : 18,
-	"nLats" : 18,
-	"nAlts" : 50},
+    "neuGrid" : {
+	"nLons" : 12,
+	"nLats" : 12,
+	"nAlts" : 30},
+
+    "ionGrid": {
+        "dAltStretch": 0.2,
+        "LatStretch": 1,
+        "Shape": "dipole",
+        "nLonsPerBlock": 18,
+        "nLatsPerBlock" : 18,
+        "nAlts":36,
+        "LatMax":88,
+        "MinAlt": 80.0,
+        "MinApex": 125.0
+        },
     
     "StartTime" : [2011, 3, 20, 0, 0, 0],
-    "EndTime" : [2011, 3, 20, 0, 15, 0],
+    "EndTime" : [2011, 3, 20, 0, 5, 0],
 
     "Electrodynamics" : {
-	"File" : "UA/inputs/b20110320n_omni.bin"},
+        "Potential" : "Weimer05",
+        "DiffuseAurora" : "fta",
+        "File": "UA/inputs/b20110320n_omni.bin"},
     
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
     
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [60]},
+
     "Restart" : {
 	"do" : false,
 	"dt" : 900.0}

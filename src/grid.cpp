@@ -16,6 +16,8 @@ Grid::Grid(std::string gridtype) {
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
 
+  gridType = gridtype;
+
   nX = grid_input.nX + nGCs * 2;
   nLons = nX;
   nY = grid_input.nY + nGCs * 2;
@@ -68,7 +70,7 @@ Grid::Grid(std::string gridtype) {
 
   if (mklower(grid_input.shape) == "cubesphere")
     iGridShape_ = iCubesphere_;
-  
+
   //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
   if (mklower(grid_input.shape).find("dipole") != std::string::npos)
     iGridShape_ = iDipole_;
@@ -153,6 +155,7 @@ Grid::Grid(std::string gridtype) {
   magLon_scgc.set_size(nX, nY, nZ);
   magLat_scgc.set_size(nX, nY, nZ);
   magAlt_scgc.set_size(nX, nY, nZ);
+  magInvLat_scgc.set_size(nX, nY, nZ);
 
   magPhi_scgc.set_size(nX, nY, nZ);
   magP_scgc.set_size(nX, nY, nZ);
@@ -193,6 +196,46 @@ Grid::Grid(std::string gridtype) {
   dalt_lower_scgc.set_size(nX, nY, nZ);
   dalt_ratio_scgc.set_size(nX, nY, nZ);
   dalt_ratio_sq_scgc.set_size(nX, nY, nZ);
+  dr_edge.set_size(nX, nY, nZ);
+
+  i_center_scgc.set_size(nX, nY, nZ);
+  j_center_scgc.set_size(nX, nY, nZ);
+  k_center_scgc.set_size(nX, nY, nZ);
+  i_edge_scgc.set_size(nX + 1, nY, nZ);
+  j_edge_scgc.set_size(nX, nY + 1, nZ);
+  k_edge_scgc.set_size(nX, nY, nZ + 1);
+  i_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+  j_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+  k_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+
+  di_center_scgc.set_size(nX, nY, nZ);
+  dj_center_scgc.set_size(nX, nY, nZ);
+  dk_center_scgc.set_size(nX, nY, nZ);
+
+  di_center_m_scgc.set_size(nX, nY, nZ);
+  dj_center_m_scgc.set_size(nX, nY, nZ);
+  dk_center_m_scgc.set_size(nX, nY, nZ);
+
+  di_edge.set_size(nX, nY, nZ);
+  di_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along i:
+  di_ratio.set_size(nX, nY, nZ);
+  di_ratio_sq.set_size(nX, nY, nZ);
+  di_one_minus_r2.set_size(nX, nY, nZ);
+
+  dj_edge.set_size(nX, nY, nZ);
+  dj_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along j:
+  dj_ratio.set_size(nX, nY, nZ);
+  dj_ratio_sq.set_size(nX, nY, nZ);
+  dj_one_minus_r2.set_size(nX, nY, nZ);
+
+  dk_edge.set_size(nX, nY, nZ);
+  dk_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along k:
+  dk_ratio.set_size(nX, nY, nZ);
+  dk_ratio_sq.set_size(nX, nY, nZ);
+  dk_one_minus_r2.set_size(nX, nY, nZ);
 
   MeshCoef1s3rdp1.set_size(nX, nY, nGCs);
   MeshCoef1s3rdp2.set_size(nX, nY, nGCs);
@@ -422,6 +465,14 @@ void Grid::report_grid_boundaries() {
 
 bool Grid::get_IsGeoGrid() {
   return IsGeoGrid;
+}
+
+// --------------------------------------------------------------------------
+// Return grid type (neu or ion)
+// --------------------------------------------------------------------------
+
+std::string Grid::get_gridtype() {
+  return gridType;
 }
 
 // --------------------------------------------------------------------------

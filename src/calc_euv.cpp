@@ -110,6 +110,7 @@ void calc_ionization_heating(Euv euv,
                   neutrals.species[iSpecies].chapman_scgc.slice(iAlt);
         }
       }
+
       intensity2d = euv.wavelengths_intensity_top[iWave] * exp(-1.0 * tau2d);
 
       for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {

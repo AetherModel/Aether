@@ -100,8 +100,8 @@
 
     "Sources" : {
 	"Grid" : {
-	    "Centripetal" : true,
-		"Coriolis" : true },
+		"Coriolis" : true,
+		"Cent_acc": true },
 	"Neutrals" : {
 	    "NO_cool" : false,
 	    "O_cool": false } },

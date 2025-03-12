@@ -47,6 +47,26 @@ void Neutrals::calc_kappa_eddy() {
   return;
 }
 
+
+// ----------------------------------------------------------------------
+//  Calculate mass density and number density:
+// ----------------------------------------------------------------------
+
+void Neutrals::clamp_density() {
+
+  std::string function = "Neutrals::clamp_density";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iSpecies;
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].density_scgc.clamp(1.0, 1e32);
+
+  report.exit(function);
+  return;
+}
+
 // ----------------------------------------------------------------------
 //  Calculate mass density and number density:
 // ----------------------------------------------------------------------
@@ -565,13 +585,20 @@ void Neutrals::calc_chapman(Grid grid) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(
+                                                       iAlt) * species[iSpecies].mass;
+
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
+      // dr is used here instead of dalt, since we only want the radial integration, while
+      // dk is the spacing along the 3rd dimension.
       integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
                                species[iSpecies].density_scgc.slice(iAlt) %
-                               grid.dalt_lower_scgc.slice(iAlt + 1);
+                               grid.dr_edge.slice(iAlt + 1);
+      species[iSpecies].rho_alt_int_scgc.slice(iAlt) =
+        species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
+        species[iSpecies].density_scgc.slice(iAlt) %
+        grid.dk_edge_m.slice(iAlt + 1) * species[iSpecies].mass;
     }
-
-    species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
 
     erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
 
@@ -589,8 +616,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
-
-        dAlt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dAlt1d = grid.dr_edge.tube(iLon, iLat);
         sza1d = grid.sza_scgc.tube(iLon, iLat);
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);

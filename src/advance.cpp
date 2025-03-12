@@ -22,6 +22,7 @@ bool advance(Planets &planet,
              Chemistry &chemistry,
              Chemistry &chemistryMag,
              Electrodynamics &electrodynamics,
+             Electrodynamics &electrodynamicsMag,
              Indices &indices,
              Logfile &logfile,
              Logfile &logfileMag) {
@@ -58,22 +59,37 @@ bool advance(Planets &planet,
   neutrals.calc_viscosity();
   neutrals.calc_cMax();
 
-  ions.fill_electrons();
-  ions.calc_sound_speed();
-  ions.calc_cMax();
-
-  precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
-  precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
-  time.calc_dt(dtNeutral, dtIon);
-
+  neutralsMag.clamp_density();
   neutralsMag.calc_mass_density();
   neutralsMag.calc_mean_major_mass();
   neutralsMag.calc_specific_heat();
   neutralsMag.calc_concentration();
   neutralsMag.calc_pressure();
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: before bulk velocity");
   neutralsMag.calc_bulk_velocity();
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: After bulk velocity");
+
   neutralsMag.calc_kappa_eddy();
   neutralsMag.calc_cMax();
+
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: After extras");
+
+
+  ions.fill_electrons();
+  ions.calc_sound_speed();
+  ions.calc_cMax();
+  ions.calc_specific_heat();
+
+  ionsMag.fill_electrons();
+  ionsMag.calc_sound_speed();
+  ionsMag.calc_cMax();
+  ionsMag.calc_specific_heat();
+
+  precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
+  precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
+  time.calc_dt(dtNeutral, dtIon);
+
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: after calc dt");
 
   // ------------------------------------
   // Do advection first :
@@ -90,17 +106,34 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = ions.set_bcs(gGrid, time, indices);
 
-  if (didWork)
-    didWork = neutralsMag.set_bcs(mGrid, time, indices);
+  //if (didWork)
+  //  didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
-  if (gGrid.get_nAlts(false) > 1)
+  didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
+
+
+  // advect in the 3rd dimension (vertical), but only if we have it:
+  if (gGrid.get_nAlts(false) > 1) {
     neutrals.advect_vertical(gGrid, time);
 
-  neutrals.exchange_old(gGrid);
-  advect(gGrid, time, neutrals);
+    if (didWork & input.get_check_for_nans())
+      didWork = neutrals.check_for_nonfinites("After Vertical Neutral Advection");
 
-  if (didWork & input.get_check_for_nans())
-    didWork = neutrals.check_for_nonfinites("After Horizontal Advection");
+    ions.advect_vertical(gGrid, time);
+  }
+
+  // advect in the 1st and 2nd dimensions (horizontal), but only if
+  // we have those dimensions:
+  if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
+    neutrals.exchange_old(gGrid);
+    ions.exchange_old(gGrid);
+    advect(gGrid, time, neutrals);
+  }
+
+  if (didWork & input.get_check_for_nans()) {
+    didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
+    didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Horizontal Advection");
+  }
 
   // ------------------------------------
   // Calculate source terms next:
@@ -131,16 +164,17 @@ bool advance(Planets &planet,
                                      ions);
 
   if (didWork)
-    didWork = electrodynamics.update(planet,
-                                     mGrid,
-                                     time,
-                                     indices,
-                                     ionsMag);
-
+    didWork = electrodynamicsMag.update(planet,
+                                        mGrid,
+                                        time,
+                                        indices,
+                                        ionsMag);
 
   if (didWork) {
     calc_ion_neutral_coll_freq(neutrals, ions);
+    calc_ion_neutral_coll_freq(neutralsMag, ionsMag);
     ions.calc_ion_drift(neutrals, gGrid, time.get_dt());
+    ionsMag.calc_ion_drift(neutralsMag, mGrid, time.get_dt());
 
     calc_aurora(gGrid, neutrals, ions);
     calc_aurora(mGrid, neutralsMag, ionsMag);
@@ -158,16 +192,17 @@ bool advance(Planets &planet,
     calc_ion_collisions(neutrals, ions);
 
     neutrals.add_sources(time, planet, gGrid);
+    //neutralsMag.add_sources(time, planet, mGrid);
 
-    if (didWork & input.get_check_for_nans())
-      didWork = neutrals.check_for_nonfinites("After Add Sources");
-
-    neutralsMag.add_sources(time, planet, mGrid);
+    if (didWork & input.get_check_for_nans()) {
+      didWork = neutrals.check_for_nonfinites("Geo Grid: After Add Sources");
+      didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Add Sources");
+    }
 
     ions.calc_ion_temperature(neutrals, gGrid, time);
     ions.calc_electron_temperature(neutrals, gGrid);
-    ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
-    ionsMag.calc_electron_temperature(neutralsMag, mGrid);
+    //ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
+    //ionsMag.calc_electron_temperature(neutralsMag, mGrid);
 
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Advection");
@@ -178,8 +213,12 @@ bool advance(Planets &planet,
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
       report.print(3, "Writing restart files");
-      neutrals.restart_file(input.get_restartout_dir(), DoWrite);
-      ions.restart_file(input.get_restartout_dir(), DoWrite);
+      neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(),
+                            DoWrite);
+      neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(),
+                               DoWrite);
+      ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
+      ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
       time.restart_file(input.get_restartout_dir(), DoWrite);
     }
   }
