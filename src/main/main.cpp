@@ -56,12 +56,14 @@ int main() {
 
     // Initialize the planet:
     Planets planet;
+    MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
     // Initialize the indices, read the files, and perturb:
     Indices indices;
     didWork = read_and_store_indices(indices);
+    MPI_Barrier(aether_comm);
     if (!didWork)
       throw std::string("read_and_store_indices failed!");
 
@@ -71,6 +73,7 @@ int main() {
     // Initialize Geographic grid:
     Grid gGrid("neuGrid");
     didWork = gGrid.init_geo_grid(quadtree, planet);
+    MPI_Barrier(aether_comm);
     if (!didWork)
       throw std::string("init_geo_grid failed!");
 
@@ -91,14 +94,16 @@ int main() {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
-    } 
-    else {
+    } else {
+      std::cout << "Making Spherical Magnetic Grid\n";
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
     }
 
-    // Initialize Neutrals on geographic and magnetic grids:
+    didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
+
+    // Initialize Neutrals on geographic grid:
     Neutrals neutrals(gGrid, planet, time, indices);
     Neutrals neutralsMag(mGrid, planet, time, indices);
 

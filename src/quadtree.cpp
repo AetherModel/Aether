@@ -217,7 +217,9 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 }
 
 // --------------------------------------------------------------------------
-//
+// This returns the lower left (LL) coordinate in normalized coordinates or
+// the size of the node in the right (SR) or up (SU) directions. It can
+// also return the midpoint of the node (MID)
 // --------------------------------------------------------------------------
 
 arma_vec Quadtree::get_vect(Quadtree::qtnode node, std::string which) {
@@ -499,7 +501,9 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which node a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_point(arma_vec point) {
@@ -525,7 +529,9 @@ int64_t Quadtree::find_point(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which root a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_root(arma_vec point) {
