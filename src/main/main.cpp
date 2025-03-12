@@ -37,32 +37,27 @@ int main() {
     // cubesphere (6 root)
     Quadtree quadtree(input.get_grid_shape("neuGrid"));
     Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
-
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
 
     // Initialize MPI and parallel aspects of the code:
     didWork = init_parallel(quadtree, quadtree_ion);
-
     if (!didWork)
       throw std::string("init_parallel failed!");
 
     // Everything should be set for the inputs now, so write a restart file:
     didWork = input.write_restart();
-
     if (!didWork)
       throw std::string("input.write_restart failed!");
 
     // Initialize the EUV system:
     Euv euv;
-
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
 
     // Initialize the planet:
     Planets planet;
     MPI_Barrier(aether_comm);
-
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
@@ -70,7 +65,6 @@ int main() {
     Indices indices;
     didWork = read_and_store_indices(indices);
     MPI_Barrier(aether_comm);
-
     if (!didWork)
       throw std::string("read_and_store_indices failed!");
 
@@ -82,7 +76,6 @@ int main() {
     Grid gGrid("neuGrid");
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
-
     if (!didWork)
       throw std::string("init_geo_grid failed!");
 
@@ -101,13 +94,15 @@ int main() {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
-    } 
-    else {
+    } else {
       std::cout << "Making Spherical Magnetic Grid\n";
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
     }
+
+    didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
+
     // Initialize Neutrals on geographic grid:
     Neutrals neutrals(gGrid, planet, time, indices);
     // Initialize Neutrals on magnetic grid:
