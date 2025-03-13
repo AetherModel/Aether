@@ -155,7 +155,7 @@ void calc_aurora(Grid grid,
   static int nBins = 101;
   static arma_vec auroral_energies(nBins);
   static arma_vec auroral_energy_widths(nBins);
-  std::vector<precision_t> Ci;
+  std::vector<precision_t> Ci(8);
 
   if (!neutrals.auroraInitialized) {
     // Initialize the aurora using the auroral csv file
@@ -177,7 +177,6 @@ void calc_aurora(Grid grid,
     auroral_energy_widths = calc_bin_widths(auroral_energies);
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
-
       lnE = log(auroral_energies(iBin));
 
       // loop through Pij values to get vector of Ci values.  This is
@@ -188,7 +187,7 @@ void calc_aurora(Grid grid,
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
 
-        Ci.push_back(exp(tot));
+        Ci[i] = exp(tot);
       }
 
       CiArray.push_back(Ci);
@@ -275,7 +274,6 @@ void calc_aurora(Grid grid,
         }
 
         // /cm3 -> /m3
-        // CHANGE!!!!
         ionization1d = ionization1d * pcm3topm3 / 100.0;
 
         // Step 5: Distribute ionization among neutrals:

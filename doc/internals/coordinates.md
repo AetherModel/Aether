@@ -1,3 +1,35 @@
+
+# Coordinate Systems
+
+## GEO - Geographic coordinate system (or geodetic)
+- Longitude (radians) - radians east of prime meridian (0 - 2pi)
+- Latitude (radians) - angle between the equatorial plane and point. For oblate spheriod, this angle is not the same as the angle orthogonal to the surface of the planet and the equatorial plane.
+- Radius (meters) - the distance to the center of the planet (Altitude is often used instead).
+
+## PCPF - Planet-centered Planet-fixed or Geocentric coordinate system
+- Cartesian coordinates of Geographic coordinate system in meters (X, Y, Z).
+- X (meters) - aligned with the equator and prime meridian
+- Z (meters) - aligned with rotation axis of the planet
+- Y (meters) - completes the right-hand coordinate system
+
+## PSE - Planetary Solar Ecliptic coordinates
+- Cartesian coordinates tying together planet and Sun
+- X (meters) - points from the center of the planet to the Sun
+- Y (meters) - points from the center of the planet towards dusk and opposite planet's motion around the sun
+- Z (meters) - orthogonal to the ecliptic plane
+
+## Dipole Coordinates
+- Longitude (radians) - radians east of the meridian that contains the north magnetic pole and north rotation axis
+- P (?) - Identifies the field line, related to L-shell
+- Q (meters?) - The distance along the field line from some reference point, related to magnetic latitude.
+
+## More Dipole Coordinates
+- L-shell (Planetary Radii) - The distance from the planet's center at which the magnetic field encounters the dipole's equatorial plane
+- Magnetic Latitude (radians) - angle between the dipole's equatorial plane and the point.
+- Invariant Latitude (degrees) - angle between the dipole's equatorial plane and the point at which the field-line passes through a reference radius of the planet.  This is constant along the field-line and is related to the L-Shell.
+- Magnetic Local Time (hours) - Angle between the sun, the north magnetic pole, and the point. Explicitly, this is done in PSE XY coordinates, ignoring the Z coorinate.
+
+
 # Coordinates in Aether
 
 There are a variety of coordinates in Aether. This document describes some of them.
@@ -38,4 +70,5 @@ All locations should be described in the following coordinates:
 - i, j, k
 - lon, lat, radius (+alt)
 - magnetic lon, invariant lat?
+
 

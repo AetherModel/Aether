@@ -91,6 +91,16 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid);
 arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid);
 arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt);
 
+// Calculate 4th-order gradients in the native coordinate system:
+arma_cube calc_gradient4o_i(arma_cube value, Grid grid);
+arma_cube calc_gradient4o_j(arma_cube value, Grid grid);
+arma_cube calc_gradient4o_k(arma_cube value, Grid grid);
+
+// Calculate 2nd-order gradients in the native coordinate system:
+arma_cube calc_gradient2o_i(arma_cube value, Grid grid);
+arma_cube calc_gradient2o_j(arma_cube value, Grid grid);
+arma_cube calc_gradient2o_k(arma_cube value, Grid grid);
+
 // interpolation in 1D
 precision_t linear_interpolation(const precision_t y0,
                                  const precision_t y1,

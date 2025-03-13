@@ -547,10 +547,13 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 
 precision_t Inputs::get_dt_output(int iOutput) {
   precision_t value = 0.0;
-  int nOutputs = settings.at("Outputs").at("type").size();
+  int nOutputs = settings.at("Outputs").at("dt").size();
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
+  else{
+    report.error("Output Error; more output types than dt's provided.");
+  }
 
   return value;
 }
@@ -807,8 +810,8 @@ bool Inputs::get_do_thermoelectric_heating() {
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
-bool Inputs::get_use_centripetal() {
-  return get_setting_bool("Sources", "Grid", "Centripetal");
+bool Inputs::get_cent_acc() {
+  return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
 // -----------------------------------------------------------------------
@@ -817,10 +820,6 @@ bool Inputs::get_use_centripetal() {
 
 bool Inputs::get_use_coriolis() {
   return get_setting_bool("Sources", "Grid", "Coriolis");
-}
-
-bool Inputs::get_cent_acc() {
-  return get_setting_bool("Sources", "Grid", "Cent_acc");
 }
 
 // -----------------------------------------------------------------------

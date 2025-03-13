@@ -66,6 +66,13 @@ std::string add_cmember(std::string inString);
 void display_vector(arma_vec vec);
 
 // ----------------------------------------------------------------------
+// Display an armadillo vector with a strong name in front
+// ----------------------------------------------------------------------
+
+void display_vector(std::string, arma_vec vec);
+void display_vector(std::string, std::vector<precision_t> vec);
+
+// ----------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
 // ----------------------------------------------------------------------
 

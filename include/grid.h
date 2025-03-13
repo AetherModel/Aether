@@ -69,8 +69,15 @@ public:
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   arma_cube magLon_scgc, magX_scgc;
+  // The magnetic latitude and altitude need to be defined better. This should be the angle between
+  // magnetic equator and the point, but sometimes it is invariant latitude.
   arma_cube magLat_scgc, magY_scgc;
+  // This is often just the altitude....
   arma_cube magAlt_scgc, magZ_scgc;
+  // Invariant latitude is the magnetic latitude that the field line hits at the lowest altitude.
+  // This is basically the L-shell, but models want it expressed as latitude and not L-shell.
+  arma_cube magInvLat_scgc;
+  // This is the angle from the sun, to the magnetic pole to the point.
   arma_cube magLocalTime_scgc;
 
   // Dipole coordinates:
@@ -152,7 +159,55 @@ public:
 
   // dr is the radial change along the third dimension, which is
   // primarily needed for building a hydrostatic solution
-  arma_cube dr_lower_scgc;
+  arma_cube dr_edge;
+
+  // i, j, k are the three directions, so these are the grid spacing
+  // between the cell centers in each direction, aligned with the grid
+  arma_cube i_center_scgc;
+  arma_cube j_center_scgc;
+  arma_cube k_center_scgc;
+
+  // edges are defined in the direction of the coordinate, shifted -half
+  // a cell in that direction.
+  arma_cube i_edge_scgc;
+  arma_cube j_edge_scgc;
+  arma_cube k_edge_scgc;
+
+  // corners are defined as shifted by -half a cell in each direction
+  arma_cube i_corner_scgc;
+  arma_cube j_corner_scgc;
+  arma_cube k_corner_scgc;
+
+  // native distances in native units:
+  arma_cube di_center_scgc;
+  arma_cube dj_center_scgc;
+  arma_cube dk_center_scgc;
+
+  // native distance in meters
+  arma_cube di_center_m_scgc;
+  arma_cube dj_center_m_scgc;
+  arma_cube dk_center_m_scgc;
+
+  // Gradients on the edges really only have to be between cells, so they
+  // can be defined at the interfaces (n-1 of them)
+  arma_cube di_edge;
+  arma_cube dj_edge;
+  arma_cube dk_edge;
+  // in meters:
+  arma_cube di_edge_m;
+  arma_cube dj_edge_m;
+  arma_cube dk_edge_m;
+
+  // These are for stretched grids:
+  arma_cube di_ratio;
+  arma_cube di_ratio_sq;
+  arma_cube di_one_minus_r2;
+  arma_cube dj_ratio;
+  arma_cube dj_ratio_sq;
+  arma_cube dj_one_minus_r2;
+  arma_cube dk_ratio;
+  arma_cube dk_ratio_sq;
+  arma_cube dk_one_minus_r2;
 
   arma_cube MeshCoefm2;
   arma_cube MeshCoefm1;
@@ -201,6 +256,7 @@ public:
   void set_variable_sizes();
 
   bool get_IsGeoGrid();
+  std::string get_gridtype();
   bool get_HasBField();
   void set_IsGeoGrid(bool value);
   void set_IsExperimental(bool value);
@@ -236,16 +292,21 @@ public:
   bool get_Is1Dy();
   bool get_Is1Dz();
 
-  void fill_grid(Planets planet);
+  //void fill_grid(Planets planet);
   void correct_xy_grid(Planets planet);
   void calc_sza(Planets planet, Times time);
   void calc_gse(Planets planet, Times time);
   void calc_mlt();
+  void calc_xyz(Planets planet);
 
   void calc_grid_spacing(Planets planet);
   void calc_alt_grid_spacing();
   void calc_lat_grid_spacing();
   void calc_long_grid_spacing();
+  void calc_maglong_grid_spacing();
+  void calc_i_grid_spacing();
+  void calc_j_grid_spacing();
+  void calc_k_grid_spacing();
 
   void fill_grid_radius(Planets planet);
   void calc_rad_unit(Planets planet);
@@ -389,6 +450,7 @@ private:
   bool IsExperimental;
   bool IsMagGrid;
   bool IsDipole = false;
+  std::string gridType;
 
   int64_t nX, nLons;
   int64_t nY, nLats;

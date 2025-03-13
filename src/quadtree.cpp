@@ -19,10 +19,17 @@ Quadtree::Quadtree(std::string shape) {
   if (shape == "cubesphere")
     nRootNodes = 6;
 
+  if (shape == "sphere")
+    nRootNodes = 1;
+
+  if (shape == "dipole")
+    nRootNodes = 1;
+
   if (shape == "dipole2")
     nRootNodes = 2;
-  else
-    nRootNodes = 1;
+
+  if (shape == "dipole6")
+    nRootNodes = 6;
 }
 
 // --------------------------------------------------------------------------
@@ -70,6 +77,13 @@ void Quadtree::build(std::string gridtype) {
     origins = Dipole2::ORIGINS;
     rights = Dipole2::RIGHTS;
     ups = Dipole2::UPS;
+    IsSphere = true;
+  }
+
+  if (grid_input.shape == "dipole6") {
+    origins = Dipole6::ORIGINS;
+    rights = Dipole6::RIGHTS;
+    ups = Dipole6::UPS;
     IsSphere = true;
   }
 
@@ -203,7 +217,9 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 }
 
 // --------------------------------------------------------------------------
-//
+// This returns the lower left (LL) coordinate in normalized coordinates or
+// the size of the node in the right (SR) or up (SU) directions. It can
+// also return the midpoint of the node (MID)
 // --------------------------------------------------------------------------
 
 arma_vec Quadtree::get_vect(Quadtree::qtnode node, std::string which) {
@@ -485,7 +501,9 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which node a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_point(arma_vec point) {
@@ -511,7 +529,9 @@ int64_t Quadtree::find_point(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which root a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_root(arma_vec point) {

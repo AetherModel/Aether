@@ -142,7 +142,7 @@ void Electrodynamics::set_all_indices_for_ie(Times time,
 // -----------------------------------------------------------------------------
 
 bool Electrodynamics::update(Planets planet,
-                             Grid gGrid,
+                             Grid grid,
                              Times time,
                              Indices &indices,
                              Ions &ions) {
@@ -161,9 +161,9 @@ bool Electrodynamics::update(Planets planet,
 
   if (HaveElectrodynamicsFile || HaveFortranIe) {
     set_time(time.get_current());
-    gGrid.calc_sza(planet, time);
-    gGrid.calc_gse(planet, time);
-    gGrid.calc_mlt();
+    grid.calc_sza(planet, time);
+    grid.calc_gse(planet, time);
+    grid.calc_mlt();
 
 #ifdef FORTRAN
 
@@ -172,9 +172,9 @@ bool Electrodynamics::update(Planets planet,
       set_all_indices_for_ie(time, indices);
 
       // Need to do this every time step, since we are switching between geo and mag grids.
-      int nXs = gGrid.get_nX();
-      int nYs = gGrid.get_nY();
-      int64_t nZs = gGrid.get_nZ();
+      int nXs = grid.get_nX();
+      int nYs = grid.get_nY();
+      int64_t nZs = grid.get_nZ();
       ie_set_nxs(&nXs);
       ie_set_nys(&nYs);
 
@@ -194,8 +194,8 @@ bool Electrodynamics::update(Planets planet,
 
       for (iZ = 0; iZ < nZs; iZ++) {
         report.print(5, "Looping through Altitudes...");
-        copy_mat_to_array(gGrid.magLocalTime_scgc.slice(iZ), mlt2d, true);
-        copy_mat_to_array(gGrid.magLat_scgc.slice(iZ), lat2d, true);
+        copy_mat_to_array(grid.magLocalTime_scgc.slice(iZ), mlt2d, true);
+        copy_mat_to_array(grid.magInvLat_scgc.slice(iZ), lat2d, true);
         ie_set_mlts(mlt2d, &iError);
 
         if (iError != 0) {
@@ -262,8 +262,8 @@ bool Electrodynamics::update(Planets planet,
     if (HaveElectrodynamicsFile) {
       report.print(3, "Setting electrodynamics from file!");
       auto electrodynamics_values =
-        get_electrodynamics(gGrid.magLat_scgc,
-                            gGrid.magLocalTime_scgc);
+        get_electrodynamics(grid.magInvLat_scgc,
+                            grid.magLocalTime_scgc);
       ions.potential_scgc = std::get<0>(electrodynamics_values);
       ions.eflux = std::get<1>(electrodynamics_values);
       ions.avee = std::get<2>(electrodynamics_values);

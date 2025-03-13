@@ -470,7 +470,7 @@ class Neutrals {
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, bool DoRead);  
+  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);  
 
   /**********************************************************************
      \brief Exchange messages between processors
