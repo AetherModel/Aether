@@ -26,7 +26,7 @@
         "IsUniformAlt" : false},
     
     "ionGrid": {
-        "Shape": "dipole",
+        "Shape": "dipole4",
         "nLonsPerBlock": 36,
         "nLatsPerBlock" : 18,
         "nAlts":36,

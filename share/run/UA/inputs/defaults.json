@@ -80,7 +80,7 @@
         "AltFile" : ""},
 
     "ionGrid" : {
-        "Shape" : "dipole",
+        "Shape" : "dipole4",
         "nLatsPerBlock" : 18,
 		"LonRange" : [0.0, 360.0],
 		"LatRange" : [85.0, 360.0],
