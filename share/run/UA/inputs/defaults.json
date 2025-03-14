@@ -83,6 +83,8 @@
         "Shape" : "dipole",
         "nLatsPerBlock" : 18,
 		"LonRange" : [0.0, 360.0],
+		"LatRange" : [85.0, 360.0],
+		"AltRange" : [0.0, 360.0],
         "nLonsPerBlock" : 22,
         "nAlts" : 50,
         "MinAlt" : 80.0,

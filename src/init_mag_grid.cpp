@@ -634,30 +634,21 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   int64_t nGCs = get_nGCs();
 
   // Get inputs:
+
+  precision_t max_lat = grid_input.lat_min;
+  precision_t max_lat = grid_input.lat_max;
+
   precision_t min_alt = grid_input.alt_min * cKMtoM;
-  precision_t LatStretch = grid_input.LatStretch;
-  precision_t Gamma = grid_input.FieldLineStretch;
-  precision_t min_apex = grid_input.min_apex * cKMtoM;
-  precision_t max_lat = grid_input.max_blat;
+  precision_t max_alt = grid_input.alt_max * cKMtoM;
 
   // Normalize inputs to planet radius... (update when earth is oblate)
   precision_t planetRadius = planet.get_radius(0.0);
   // Altitude to begin modeling, normalized to planet radius
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
-  precision_t min_apex_re = (min_apex + planetRadius) / planetRadius;
-
-  if (LatStretch != 1) {
-    report.error("LatStretch values =/= 1 are not yet supported!");
-    DidWork = false;
-  }
+  precision_t max_alt_re = (max_alt + planetRadius) / planetRadius;
 
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
-    DidWork = false;
-  }
-
-  if (min_alt >= min_apex) {
-    report.error("min_apex must be more than min_alt");
     DidWork = false;
   }
 

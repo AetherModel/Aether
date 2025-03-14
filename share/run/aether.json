@@ -26,15 +26,13 @@
         "IsUniformAlt" : false},
     
     "ionGrid": {
-        "dAltStretch": 0.6,
-        "LatStretch": 1,
         "Shape": "dipole",
         "nLonsPerBlock": 36,
         "nLatsPerBlock" : 18,
         "nAlts":36,
-        "LatMax":88,
-        "MinAlt":100.0,
-        "MinApex":150.0
+        "LatRange":[10, 80],
+        "AltRange":[80.0, 1000],
+		"LonRange" : [0.0, 360.0]
         },
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],

@@ -452,22 +452,22 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
   grid_specs.lon_min = min_max[0] * cDtoR;
   grid_specs.lon_max = min_max[1] * cDtoR;
 
-  grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
+  min_max = get_setting_intarr(gridtype, "LatRange");
+  grid_specs.lat_min = min_max[0] * cDtoR;
+  grid_specs.lat_max = min_max[1] * cDtoR;
+
   // The rest of the settings are different for mag/geo grids,
   // First take the magnetic options, then "else" should be (cube-)sphere
-
+  // - This checks if "dipole" is in shape, to account for the # of root nodes.
   if (grid_specs.shape.find("dipole") != std::string::npos) {
-    // Latitude range (base of field line) is specified with max lat & min apex.
-    grid_specs.max_blat = check_settings_pt(gridtype, "LatMax") * cDtoR;
-    grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
-    // stretch the baselatitudes (not yet implemented)
-    grid_specs.LatStretch = check_settings_pt(gridtype, "LatStretch");
-    // controls the spacing of points along field line, <<1 for more pts at low alts
-    grid_specs.FieldLineStretch = check_settings_pt(gridtype, "dAltStretch");
+    // Invariant latitude range (of real corners) is specified with max/min.
+    // max alt of open field lines, and min alt, is set in AltRange
+    min_max = get_setting_intarr(gridtype, "AltRange");
+    grid_specs.alt_min = min_max[0];
+    grid_specs.alt_max = min_max[1];
+
   } else {
-    min_max = get_setting_intarr(gridtype, "LatRange");
-    grid_specs.lat_min = min_max[0] * cDtoR;
-    grid_specs.lat_max = min_max[1] * cDtoR;
+    grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
     grid_specs.alt_file = check_settings_str(gridtype, "AltFile");
     grid_specs.IsUniformAlt = get_setting_bool(gridtype, "IsUniformAlt");
 
@@ -551,9 +551,8 @@ precision_t Inputs::get_dt_output(int iOutput) {
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
-  else{
+  else
     report.error("Output Error; more output types than dt's provided.");
-  }
 
   return value;
 }
