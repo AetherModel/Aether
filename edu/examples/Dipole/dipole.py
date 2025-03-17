@@ -3,8 +3,7 @@ import numpy as np
 
 ####        Set inputs          ####
 
-# Set to None or '' to not save, just show (pan/zoom capabilities).
-fig_save_path = None
+# To save plot, change last line of the code to save it, otherwise it is just 'show'n
 
 # Number of lats/alts (without ghost cells)
 nLatsPerBlock_in = 12 
@@ -32,11 +31,11 @@ cPI = np.pi
 # OUTLINE:
 # - constants & inputs (above)
 # - def main (the function to create the grid)
-# - def the ploting function
 # - def all conversions
-# - call main:
+# - def the ploting function
+# - Run script:
 #   - make the grid as Aether would
-#   - call the plotting script
+#   - call the plotting function
 
 def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock, nAltsPerBlock):
 
@@ -62,17 +61,23 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
         pcenters1d = np.empty(nLatsPerBlock)
         qs = np.empty((nLatsPerBlock, nAltsPerBlock))
         pcenters2d = np.empty((nLatsPerBlock, nAltsPerBlock))
-        
 
         for i in range(nLatsPerBlock):
             lat1d.append(lat0 + (i - nGCs + 0.5) * dlat + lat_min)
-            pcenters1d[i] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[-1]))**2)
+
+        # IF touching pole, put last ghost cell at 89.9 degrees & the 2nd to last 1/2 way there.
+        if origin + extent > 0.49:
+            lat1d[-1] = 89.9
+            lat1d[-2] = (lat1d[-1] + lat1d[-2]) /2
+
+        for i in range(nLatsPerBlock):
+            pcenters1d[i] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[i]))**2)
             # Easier to save later if we get this:
-            pcenters2d[i, :] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[-1]))**2)
+            pcenters2d[i, :] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[i]))**2)
 
-        for i in range(nLatsPerBlock+1):
+        # Corners (only used here to determins if we need to close >1 block per hemisphere)
+        for i in range(nLatsPerBlock+1): 
             lat1d_co.append(lat0 + (i - nGCs) * dlat + lat_min)
-
         pcorners = alt_minRE / np.sin(np.pi/2 - np.deg2rad(lat1d_co)) **2
 
         ## Determine if field lines should close. There are two conditions:
@@ -276,6 +281,7 @@ if __name__ == "__main__":
     # if we want r&theta now:
     # rs = qp_solve(qs, ps)
     # ts = rq2t(rs, qs)
+
     # Otherwise the plotting function does it:
 
     fig = make_plot(qs, ps, alt_minRE, Re_KM, abs_bot=False)
