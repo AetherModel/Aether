@@ -3,13 +3,14 @@ import numpy as np
 
 ####        Set inputs          ####
 
-# To save plot, change last line of the code to save it, otherwise it is just 'show'n
+# To save plot, change last line of the code, otherwise it is just shown
 
 # Number of lats/alts (without ghost cells)
 nLatsPerBlock_in = 12 
 nAltsPerBlock_in = 12 
 
 # in degrees, where to begin & end grid between (90,0)
+# Grid is mirrored across N/S hemisphere
 max_blat = 85
 min_blat = 12
 
@@ -17,7 +18,7 @@ min_blat = 12
 min_alt = 80
 max_alt = 800
 
-# Number of "blocks" to simulate - i.e. # of processors in Aether run (>4 & even)
+# Number of "blocks" to simulate - i.e. # of processors in Aether run (must be >4 & even)
 nBlocks = 6
 
 nGCs = 2
@@ -71,20 +72,20 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
             lat1d[-2] = (lat1d[-1] + lat1d[-2]) /2
 
         for i in range(nLatsPerBlock):
-            pcenters1d[i] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[i]))**2)
+            pcenters1d[i] = alt_minRE / (np.sin(cPI/2 - np.deg2rad(lat1d[i]))**2)
             # Easier to save later if we get this:
-            pcenters2d[i, :] = alt_minRE / (np.sin(np.pi/2 - np.deg2rad(lat1d[i]))**2)
+            pcenters2d[i, :] = alt_minRE / (np.sin(cPI/2 - np.deg2rad(lat1d[i]))**2)
 
-        # Corners (only used here to determins if we need to close >1 block per hemisphere)
+        # Corners (only used here to determine if we need to close > 1 block per hemisphere)
         for i in range(nLatsPerBlock+1): 
             lat1d_co.append(lat0 + (i - nGCs) * dlat + lat_min)
-        pcorners = alt_minRE / np.sin(np.pi/2 - np.deg2rad(lat1d_co)) **2
+        pcorners = alt_minRE / np.sin(cPI/2 - np.deg2rad(lat1d_co)) **2
 
         ## Determine if field lines should close. There are two conditions:
         # - If the lowest l-shell in this block < altMin
         if np.min(pcorners) < alt_maxRE: 
             close_this_block = True
-        # - Or if we are touching the qeuator
+        # - Or if we are touching the equator
         if origin < 0.01: # NH equator
             close_this_block + True
         if np.abs(extent + origin) < 0.01: # SH equator
@@ -92,10 +93,11 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
 
         ## Setting up the q-values...
 
-        # The idea here is that we wither want the field line to close (wrap over equator)
+        # The idea here is that we either want the field line to close (wrap over equator)
         # or to have its boundaries entirely within min/max alt. 
-        # We do not want field lines ending before max_alt, and vice-versa
-        # Q_max is obtained from the minimum altitude point on the highest latitude field line
+        # We do not want field lines ending before max_alt, and vice-versa.
+        # By definition, q=0 at the equator and +/- infinity at the N/S poles, so:
+        # - Q_max is obtained from the minimum altitude point on the highest latitude field line
         q_max_center = rp2q(alt_minRE, pcenters1d[-1])
         if close_this_block:
             q_min_center = 0 # if the block is closed, q_min = 0. This is the equator!
@@ -109,7 +111,7 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
             qs[:, iAlt] = ((q_min_center + (iAlt - nGCs + 0.5) * delQ))
         
         # If we were in South hemisphere, multiply by -1
-        # (and reverse so the points are in the same order as NH)
+        # (and reverse so the points are ascending in q, same order as NH)
         if isSouth:
             qs = -1*np.flip(qs)
         qcenters[n,:] = qs
@@ -119,6 +121,14 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
 
 
 ####        Useful Functions for conversions:          ####
+####        - Not all used... 
+####        - Format: in2out, in as few letters as necessary
+####          example: cart to geo "xy2rt": (x,y) --> (r, theta)
+
+## NOTE: theta for the dipole coordinate system is defined as co-latitude, not latitude
+## Thus, we do (cPI-theta) for rt2(q/p).
+## Then things are kept as-is, until conversion back to spherical when 
+## colatitude is again considered
 
 def rt2q(r, t):
     return np.cos(cPI/2 - t)/r**2
@@ -205,8 +215,7 @@ def make_plot(qs, ps, alt_min_RE, Re_km=6371,
     ax0.set_xlim(xlim)
     ax0.set_aspect(1)
     ax0.set_title('in Re:')
-    
-    
+
     ax1 = fig.add_subplot(gs[:2,4:])
     counts, _, _ = ax1.hist(rs.flatten(), bins=60)
     ax1.vlines(alt_min_RE, 0, max(counts)*1.1, linestyle = '--', alpha=.7, color='k')
@@ -214,8 +223,7 @@ def make_plot(qs, ps, alt_min_RE, Re_km=6371,
                  f"{np.sum(rs < 1) / np.prod(rs.shape)*100:.2f}% of points below 0 Re")
     ax1.set_xlabel('Each cell altitude in Re')
     ax1.set_ylabel('bin count')
-    
-    
+
     ax1p2 = fig.add_subplot(gs[2,4:])
     alt_min_KM = r2alt(alt_min_RE, Re_km)
     counts, bins, _ = ax1p2.hist(r2alt(rs, Re_km).flatten(), bins=200)
@@ -226,9 +234,7 @@ def make_plot(qs, ps, alt_min_RE, Re_km=6371,
     another_hist_ax = fig.add_subplot(gs[3:5, 4:])
     another_hist_ax.hist(np.rad2deg(ts.flatten()), bins=90)
     another_hist_ax.set_xlabel('Magnetic Latitude (deg)')
-    # another_hist_ax.set_xlabel(
 
-    
     ax2 = fig.add_subplot(gs[5:,:])
     for x,y in zip(np.rad2deg(ts), r2alt(rs, Re_km)):
         if abs_bot:
@@ -240,9 +246,7 @@ def make_plot(qs, ps, alt_min_RE, Re_km=6371,
     ax2.set_ylim(0,1500)
     ax2.set_xlabel('Magnetic Latitude (deg)')
     ax2.set_ylabel('Altitude (km)')
-    
-    
-    
+
     plt.tight_layout()
 
     return fig
