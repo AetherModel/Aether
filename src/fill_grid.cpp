@@ -125,7 +125,7 @@ void Grid::calc_mlt() {
   // calculated and converted to an hour.
 
   for (int iZ = 0; iZ < nZ; iZ++) {
-    dlat_north = 1.0 - (cPI / 2.0 - magLat_scgc.slice(iZ)) / cPI;
+    dlat_north = 1.0 - (cPI / 2.0 - magInvLat_scgc.slice(iZ)) / cPI;
     x_blend = dlat_north * mag_pole_north_gse[0](0, 0, iZ) +
               (1.0 - dlat_north) * mag_pole_south_gse[0](0, 0, iZ);
     y_blend = dlat_north * mag_pole_north_gse[1](0, 0, iZ) +
@@ -171,9 +171,13 @@ void Grid::fill_grid_bfield(Planets planet) {
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
                                    planet);
           // This is Invariant Latitude
-          magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
+          // (regular magnetic latitude is not defined yet for the geo grid)
+          // - magLat is not used by the geo grid, so not defined
           magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
-          magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
+
+          // init_mag grid already initialized magLon
+          if (iGridShape_ != iDipole_)
+            magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
 
           bfield_mag_scgc(iLon, iLat, iAlt) = 0.0;
 
