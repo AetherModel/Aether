@@ -347,22 +347,25 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // - touching the (magnetic) equator
   // - minimum Lshell in this block is < max_alt (the q-value would be undefined)
 
-  precision_t q_min = 0; // q=0 at equator (for closed blocks)
+  precision_t q_min;
   bool close_this_block = false;
 
-  if ((Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
-      || (abs(lat_origin - size_up_norm(1)) < 0.01)) // equator, with some imprecision
+  if (Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
+    close_this_block = true;
+  
+  if(lat_origin < 0.01) // equator, with some imprecision
     close_this_block = true;
 
-  if (!close_this_block)
+  if (close_this_block)
+    q_min = 0; // q=0 at equator (for closed blocks)
+  else
     // invLats are still all in North Hemisphere & increasing.
     // Use minimum p & alt to solve for q
     // q = sqrt((1-r/p)/r^4)
-    // TODO: use nGCs or 0 to index Pcorners??
-    q_min = pow(((1 - min_alt_re / Pcorners(nGCs)) / pow(min_alt_re, 4.0)), 0.5);
+  q_min = pow(((1 - max_alt_re / Pcorners(nGCs)) / pow(max_alt_re, 4.0)), 0.5);
 
   // Trace each field line up to q_max, obtained from the lowest field line in the block
-  precision_t q_max = pow(((1 - max_alt_re / Pcorners(nLats)) / pow(max_alt_re,
+  precision_t q_max = pow(((1 - min_alt_re / Pcorners(nLats)) / pow(min_alt_re,
                            4.0)), 0.5);
 
   precision_t delQ = (q_max - q_min) / (nAlts - nGCs * 2.0);
