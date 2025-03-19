@@ -22,6 +22,9 @@ Quadtree::Quadtree(std::string shape) {
   if (shape == "sphere")
     nRootNodes = 1;
 
+    if (shape == "sphere4")
+    nRootNodes = 4;
+
   if (shape == "dipole4")
     nRootNodes = 4;
 
@@ -60,6 +63,13 @@ void Quadtree::build(std::string gridtype) {
     origins = Sphere::ORIGINS;
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
+    IsSphere = true;
+  }
+
+  if (grid_input.shape == "sphere4") {
+    origins = Sphere4::ORIGINS;
+    rights = Sphere4::RIGHTS;
+    ups = Sphere4::UPS;
     IsSphere = true;
   }
 
