@@ -654,7 +654,7 @@ bool all_finite(arma_cube cube, std::string name) {
       "," + std::to_string(loc[1]) +
       "," + std::to_string(loc[2]) + ")";
     int size = locations.size();
-    std::cout << "all_finite : " << cube(loc[0], loc[1], loc[2]) << "\n";
+    std::cout << "all_finite ("<<name<<"): " << cube(loc[0], loc[1], loc[2]) << "\n";
     std::string error_message =
       std::to_string(size) +
       " Nonfinite values exist in " + name +
