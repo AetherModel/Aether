@@ -128,14 +128,9 @@ to be -infinity at the south pole, +infinity at the north pole, and 0 at the
 magnetic equator. The equations for p (L-shell) and q are taken as the following,
 where r is the distance from the origin and $\theta$ is *colatitude*:
 
-$$
-p = \frac{r}{\sin^2\theta}
+$p = \frac{r}{\sin^2\theta}$
 
-\newline
-\newline
-
-q = \frac{\cos{\theta}}{r^2}
-$$
+$q = \frac{\cos{\theta}}{r^2}$
 
 
 
