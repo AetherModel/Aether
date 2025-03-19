@@ -18,19 +18,21 @@ again, 16 processors are needed, etc. However, in the altitude/radial direction,
 the number of points that are specified in the aether.json is unchanged, as it
 does not rely on the number of processors used.
 
-- [Grid Types Explained](#grid-types-explained)
-- [Grid Shapes Explained](#grid-shapes-explained)
-  - [TL;DR](#tldr)
-  - [The Sphere Grid](#the-sphere-grid)
-  - [The Cubesphere Grid](#the-cubesphere-grid)
-  - [The Dipole Grid](#the-dipole-grid)
-  - [Root Nodes](#root-nodes)
-    - [Sphere](#sphere)
-    - [Cubesphere](#cubesphere)
-    - [Specifying Root Nodes](#specifying-root-nodes)
-- [Specifying the Grid](#specifying-the-grid)
-  - [Horizontal Resolution](#horizontal-resolution)
-  - [Vertical Resolution](#vertical-resolution)
+- [Grids in Aether](#grids-in-aether)
+  - [Grid Types Explained](#grid-types-explained)
+  - [Grid Shapes Explained](#grid-shapes-explained)
+    - [TL;DR](#tldr)
+    - [The Sphere Grid](#the-sphere-grid)
+    - [The Cubesphere Grid](#the-cubesphere-grid)
+    - [The Dipole Grid](#the-dipole-grid)
+      - [Inputs:](#inputs)
+    - [Root Nodes](#root-nodes)
+      - [Sphere](#sphere)
+      - [Cubesphere](#cubesphere)
+      - [Specifying Root Nodes](#specifying-root-nodes)
+  - [Specifying the Grid](#specifying-the-grid)
+    - [Horizontal Resolution](#horizontal-resolution)
+    - [Vertical Resolution](#vertical-resolution)
 
 ## Grid Types Explained
 
@@ -110,7 +112,9 @@ scale-height.
 
 The dipole grid is aligned with the magnetic field. The `k` dimension is along
 the fieldline, `i` is magnetic longitude, and `j` is roughly latitude for the
-bottom of the field-line. Each fieldline starts at the lowest modeled altitude
+bottom of the field-line. 
+
+Each fieldline starts at the lowest modeled altitude
 and curves towards the equator. In the northern hemisphere, this means that the
 fieldlines curve south, while in the southern hemisphere they curve north.
 
@@ -133,8 +137,7 @@ $p = \frac{r}{\sin^2\theta}$
 $q = \frac{\cos{\theta}}{r^2}$
 
 
-
-these are the steps taken:
+Here is how the dipole grid is generated:
 
 1. Receive latitude range of this block from the quadtree. This will look 
 something like `lower_left_norm=(0.0, -0.5, 0.0)` and `size_up_norm=(0, 0.25, 0)`
@@ -147,24 +150,44 @@ node is in the southern hemisphere, store the top of the node's extent as lat_or
 `lat_range`. These for the invariant latitudes, which are evenly spaced between 
 the latitude range provided and dictate where each field line passes through the minimum
 altitude provided.
+   - At the poles, put the last corner at $89.9^\circ$ magnetic latitude. Add
+another corner 1/2 way between this point and the last "real" corner, and put
+cell centers between these corners.
 4. Determine if this node will have closed or open field lines. There are two conditions:
    - If the node is touching the equator
    - If the lowest L-shell is below the maximum altitude. This is rare, but prevents unexpected behavior.
-5. If the field line closes, 
+5. Determine the limits & values of the q-coordinate for all points along all field
+lines on this node. The q-values on each node are identical, and the p-value is
+constant along each field line (by definition). To solve for q, use the p-values
+from step 3 and the altitude, as described below. Use $q=\sqrt{(1-r/p)/r^4}$.
+   - If the field line closes, $q_{min}=0$. There will be a corner/edge at the 
+magnetic equator and two ghost cell centers across the equator for message passing.
+   - If the field line does not close, $q_{min}$ is calculated from the highest
+altitude point on the lowest latitude field line. This is the point farthest
+from the planet on the most equatorward field line (and since q=0 at the
+equator, it has the lowest allowed q-value).
+   - The maximum q-value is solved for identically in open & closed blocks with
+the lower altitude limit and the highest latitude field line. The point closest
+to the planet on the highest latitude field line has the highest allowed q-value
+(q=$\pm$infinity at the poles).
+6. We now have p (step 3) and q (step 5) for all points on the grid. From this
+we solve for `(r, \theta)`, and any other coordinates we need.
 
-
-
-Along the `k` dimension, field lines terminate after a specified number of points.
-When using the Dipole grid option, there is not an option to set the maximum altitude.
-Rather, points are laid down from the pole towards the equator, stopping when the field
-line reaches the equator. Ghost cells are then used to pass information across the
-equator. The spacing of points along each field line is the same as
-[(Huba, Joyce & Fedder, 2000)](https://doi.org/10.1029/2000JA000035).
-Using an even number of points along the `k` dimension (`nAlts`) means that no points
-will lie on the magnetic equator and thus the field lines from the high latitude
-regions will not reach beyond the plasmasphere. See
-[the dipole script in edu/examples](../../edu/examples/Dipole/dipole.py) to
+See [the dipole script in edu/examples](../../edu/examples/Dipole/dipole.py) to
 experiment with the available options.
+
+#### Inputs:
+
+- ***Shape***: either `dipole4` or `dipole6`. Cannot (yet) be run on a single core.
+- ***nLonsPerBlock***: number of magnetic longitudes
+- ***nLatsPerBlock***: number of field lines (invariant latitudes)
+- ***nAlts***: Number of points along each field line. A number of these will 
+be discarded for being at too low of altitude.
+- ***AltRange***: [`min_alt`, `max_alt`] - the altitude (in km) range to bound 
+cells by. 
+- ***LatRange***: [`min_lat`, `max_lat`] - the limits on invariant latitudes 
+(in degrees). Sets the limits on the latitudes where field lines cross `min_alt`.
+
 
 ### Root Nodes
 
