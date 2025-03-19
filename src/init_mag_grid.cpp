@@ -10,6 +10,7 @@
 // or with approach from (Swisdak, 2006), who solved it analytically:
 //  https://arxiv.org/pdf/physics/0606044
 //
+// Overloaded for single conversions & arma_cubes
 // ----------------------------------------------------------------------
 
 std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q,
@@ -31,7 +32,7 @@ std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q,
   // now that r is determined we can solve for theta
   // theta = asin(sqrt(r/p));
   theta = acos(q * pow(r, 2.0));
-  // Then make sure its the correct sign & direction
+  // Then make sure its the correct sign & direction (not colatitude)
   theta = cPI / 2 - theta;
 
   return {r, theta};
@@ -57,367 +58,6 @@ std::pair<arma_cube, arma_cube> qp_to_r_theta(arma_cube q, arma_cube p) {
   return {r, theta};
 }
 
-// ----------------------------------------------------------------------
-// The general idea here is to make the physical cells within the
-// upper and lower limits.  The cell EDGES will be these limits, so
-// that the cell CENTERS (which this function calculates) will be
-// 1/2 dlat away from these locations.
-// The two limits coming in are the lowest northern latitude field line
-// and the highest northern latitude field line (i.e., they are both
-// positive values and are over half the domain.)
-// If the block is touching the equator boundaries or the polar
-// boundaries, then these ghost cells extend beyond these boundaries and
-// the EDGES go to [-88, -1, 1, or 88] degrees latitude, depending on
-// the boundary. This function deals with CENTERS, though, so the
-// centers are selected so the the edges will be correct when calculated
-// down stream.
-// If we are running on 1 processor only, then this is all thrown out
-// the window and code puts the centers are the +/- upper_lim. It first
-// builds the southern hemisphere with nLats/2 points, then mirrors them.
-// ----------------------------------------------------------------------
-
-arma_vec Grid::baselat_spacing(precision_t extent,
-                               precision_t origin,
-                               precision_t upper_lim,
-                               precision_t lower_lim,
-                               precision_t spacing_factor) {
-  std::string function = "Grid::baselat_spacing";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  if (report.test_verbose(3))
-    std::cout << "inputs : " << iProc << " " <<  extent << " " << origin << " "
-              << lower_lim * cRtoD << " " << lower_lim * cRtoD << "\n";
-
-  // intermediate latitude values
-  precision_t lat_low, lat_high, lat_low0, lat_high0;
-  // intermediate calculation values
-  precision_t dlat, bb, aa, ang0, angq, nLats_here, extent_here;
-  precision_t dlat0, dlatLower, dLatUpper;
-
-  // Now we can allocate the return array,
-  arma_vec Lats(nLats);
-
-  // Noting the special case of 1 root node & 1 processor...
-  bool DO_FLIPBACK = false;
-
-  int64_t iStart, iEnd;
-
-  if (extent > 0.5) {
-    // This is when running on 1 processor:
-    DO_FLIPBACK = true;
-    nLats_here = nLats / 2;
-    extent_here = 0.5;
-    iStart = 0;
-    iEnd = nLats_here;
-  } else {
-    // Span only physical cells with extent:
-    nLats_here = nLats - 2 * nGCs;
-    extent_here = extent;
-    // Want to fill in only physical cells, then do ghostcells later:
-    iStart = nGCs;
-    iEnd = nLats - nGCs;
-  }
-
-  // get the upper & lower latitude bounds for our division of the quadree
-  if (origin < 0) {
-    // negative origin == Southern hemisphere: lat_high <=> lat_low
-    lat_low, lat_high = -upper_lim, -lower_lim;
-    lat_low0 = lat_low;
-    lat_low = -lower_lim + (upper_lim - lower_lim) * (origin / 0.5);
-    lat_high = lat_low + (upper_lim - lower_lim) * (extent_here / 0.5);
-  } else {
-    // Northern hemisphere:
-    lat_low, lat_high = lower_lim, upper_lim;
-    lat_low0 = lower_lim;
-    lat_low = lower_lim + (upper_lim - lower_lim) * (origin / 0.5);
-    lat_high = lat_low + (upper_lim - lower_lim) * (extent_here / 0.5);
-  }
-
-  if (report.test_verbose(3))
-    std::cout << "lat_low, lat_high : "
-              << lat_low*cRtoD << " " << lat_high*cRtoD << " " << lower_lim << " " <<
-              upper_lim << "\n";
-
-  // normalized spacing in latitude
-  // NOTE: spacing factor != 1 will not work yet. but framework is here...
-  bb = (lat_high - lat_low) / (pow(lat_high, spacing_factor) - pow(lat_low,
-                               spacing_factor));
-  aa = lat_high - bb * pow(lat_high, spacing_factor);
-  dlat = (lat_high - lat_low) / (nLats_here);
-  // Save dlat so that we can use it in ghostcells if they are interior:
-  dlat0 = dlat;
-
-  if (!HasYdim) {
-    // edge case for 1-D (or no latitudinal extent, really)
-    // In 1-D, the base latitudes will be 1/2 way between LatMax & minApex,
-    // dlat is adjustable if it doesn't suit your needs.
-    DO_FLIPBACK = false;
-    dlat = 1.0 * cDtoR;
-    nLats_here = nLats + 1;
-  }
-
-  // Fill in physical cell centers:
-  for (int64_t j = iStart; j < iEnd; j++) {
-    ang0 = lat_low + (float(j - iStart) + 0.5) * dlat;
-    angq = aa + bb * pow(ang0, spacing_factor);
-    Lats[j] = angq;
-  }
-
-  if (DO_FLIPBACK) {
-    // In the flipback case (single processor, global sim), we want baselats
-    // to be strictly increasing, same as geo grid!
-    // remember : nLats_here = nLats / 2
-    for (int64_t j = 0; j < nLats_here; j++)
-      // mirror south to north:
-      Lats[j + nLats_here] = -1 * Lats[nLats_here - j - 1];
-  } else {
-    // Here we are filling ghostcells, first the lower GCs, then the upper GCs.
-    // If they are interior GCs, use the default dlat.  If they are exterior GCs
-    // (i.e., poleward of max lat or equatorward of min lat), then adjust the dlat
-    // to force the last cell edges to be at [-89.9, -1, 1, 89.9] depending on cells.
-    // Do the lower ghostcells:
-    // If the GCs are interior, leave dlat alone.
-    dlat = dlat0;
-
-    // South polar region:
-    if (fabs( fabs(lat_low) - fabs(upper_lim)) < 0.001) {
-      if (report.test_verbose(2))
-        std::cout << "Near south pole!\n";
-
-      dlat = (89.9 * cDtoR + lat_low) / nGCs;
-    }
-
-    // North equatorial region:
-    if (fabs( fabs(lat_low) - fabs(lower_lim)) < 0.001) {
-      if (report.test_verbose(2))
-        std::cout << "Near northern equator!\n";
-
-      dlat = (lat_low - 1.0 * cDtoR) / nGCs;
-    }
-
-    // The user may not want to go all the way to the pole or the equator.
-    // if we are very close to the pole or equator, then the calculated dlat
-    // will be small so we don't hit either.  If we are far enough away from
-    // either, we can just leave dlat alone.
-    if (dlat > dlat0)
-      dlat = dlat0;
-
-    // Fill in GCs:
-    for (int64_t j = 0; j < iStart; j++) {
-      ang0 = lat_low + (float(j - iStart) + 0.5) * dlat;
-      angq = aa + bb * pow(ang0, spacing_factor);
-      Lats[j] = angq;
-    }
-
-    // Do the upper ghostcells:
-    // If the GCs are interior, leave dlat alone.
-    dlat = dlat0;
-
-    // North polar region:
-    if (lat_high == upper_lim) {
-      if (report.test_verbose(2))
-        std::cout << "Near north pole!\n";
-
-      dlat = (89.9 * cDtoR - lat_high) / nGCs;
-    }
-
-    // South equatorial region:
-    if (fabs( fabs(lat_high) - fabs(lower_lim)) < 0.001) {
-      if (report.test_verbose(2))
-        std::cout << "Near southern equator!\n";
-
-      dlat = -(1.0 * cDtoR + lat_high) / nGCs;
-    }
-
-    // The user may not want to go all the way to the pole or the equator.
-    // if we are very close to the pole or equator, then the calculated dlat
-    // will be small so we don't hit either.  If we are far enough away from
-    // either, we can just leave dlat alone.
-    if (dlat > dlat0)
-      dlat = dlat0;
-
-    // Fill in the GCs:
-    for (int64_t j = iEnd; j < nLats; j++) {
-      ang0 = lat_high + (float(j - iEnd) + 0.5) * dlat;
-      angq = aa + bb * pow(ang0, spacing_factor);
-      Lats[j] = angq;
-    }
-  }
-
-  if (report.test_verbose(3))
-    std::cout << "Lats from baselat_spacing :\n" << Lats * cRtoD << "\n";
-
-  report.exit(function);
-  return Lats;
-}
-
-// // Gravity vectors in the dipole basis
-// void calc_dipole_gravity(Planets planet){
-
-// // rhat = -(2*cos/(del)) qhat + (sin/(del)) phat
-
-
-// }
-
-
-// === SPACING ALONG FIELD LINE === //
-// Coordinates along the field line to begin modeling
-// - Created in dipole (p,q) coordinates, stored as magnetic coords
-// - North & south hemisphere base-latitudes, shouldn't be *too* hard to support offset
-//   dipole and/or oblate Earth.
-// isCorner is a bool, if false then the p's and q's are stored for later (p,q cell centers).
-// Field line filling only needs to be redone for the "down" edges, left is the same p,q
-// and then for "lower", we just shift the p,q after
-
-void Grid::fill_field_lines(arma_vec baseLatsLoc,
-                            precision_t min_altRe, precision_t Gamma,
-                            Planets planet,
-                            bool isCorner = false) {
-
-  std::string function = "Grid::fill_field_lines";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t q_Start, delqp;
-
-  // allocate & calculate some things outside of the main loop
-  // - mostly just factors to make the code easier to read
-  precision_t qp0, fb0, ft, delq, qp2, fa, fb, term0, term1, term2, term3;
-  // exp_q_dist is the fraction of total q-distance to step for each pt along field line
-  arma_vec exp_q_dist(nAlts);
-
-  // corners/edges have one more lat dimension...
-  int64_t nLatLoc = baseLatsLoc.n_elem;
-
-  // temp holding of results from q,p -> r,theta conversion:
-  std:: pair<precision_t, precision_t> r_theta;
-  report.print(3, " calculating lshells!");
-
-  // Find L-Shell for each baseLat
-  // using L=R/sin2(theta), where theta is from north pole
-  arma_vec Lshells(nLatLoc);
-
-  for (int64_t iLat = 0; iLat < nLatLoc; iLat++)
-    Lshells(iLat) = (min_altRe) / pow(sin(cPI / 2 - baseLatsLoc(iLat)), 2.0);
-
-  report.print(3, "lshells calculated!");
-
-  if (!isCorner) {
-    for (int64_t iLon = 0; iLon < nLons; iLon ++) {
-      for (int64_t iLat = 0; iLat < nLatLoc; iLat ++) {
-        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++) {
-          magP_scgc(iLon, iLat, iAlt) = Lshells(iLat);
-          j_center_scgc(iLon, iLat, iAlt) = Lshells(iLat);
-        }
-      }
-    }
-  } else {
-    for (int64_t iLon = 0; iLon < nLons; iLon ++) {
-      for (int64_t iLat = 0; iLat < nLatLoc; iLat ++) {
-        for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++) {
-          magP_Down(iLon, iLat, iAlt) = Lshells(iLat);
-          j_edge_scgc(iLon, iLat, iAlt) = Lshells(iLat);
-          j_corner_scgc(iLon, iLat, iAlt) = Lshells(iLat);
-        }
-      }
-    }
-  }
-
-  report.print(3, "dipole p-values stored for later.");
-
-  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++)
-    exp_q_dist(iAlt) = Gamma + (1 - Gamma) * exp(-pow(((iAlt - nAlts) /
-                                                       (nAlts / 5.0)), 2.0));
-
-  report.print(3, "expQ");
-
-  // This is wrong (same lat everywhere), but get_radius doesnt support oblate earth yet.
-  precision_t planetRadius = planet.get_radius(0.0);
-
-  // mag alts and lats:
-  arma_mat bAlts(nLatLoc, nAlts), bLats(nLatLoc, nAlts);
-
-  if (report.test_verbose(3))
-    std::cout << "Setting min alt (actually r in Re) : "
-              << min_altRe << " "
-              << planetRadius << " "
-              << (min_altRe - 1.0) * planetRadius / 1000.0 << "\n";
-
-  for (int iLat = 0; iLat < nLatLoc; iLat++) {
-    q_Start = -cos(cPI / 2 + baseLatsLoc(iLat)) / pow(min_altRe, 2.0);
-
-    // calculate const stride in dipole coords, same as sami2/3 (huba & joyce 2000)
-    // Note this is not the:
-    // ==  >>   sinh(gamma*qi)/sinh(gamma*q_S)  <<  ==
-    // but a different formula where the spacing is more easily controlled.
-    // Doesn't have any lat/lon dependence so won't work for offset dipoles
-    delqp = (-q_Start) / (nAlts + 1);
-    delqp = min_altRe * delqp;
-
-    for (int iAlt = 0; iAlt < nAlts; iAlt++) {
-      qp0 = q_Start + iAlt * (delqp);
-      fb0 = (1 - exp_q_dist(iAlt)) / exp(-q_Start / delqp - 1);
-      ft = exp_q_dist(iAlt) - fb0 + fb0 * exp(-(qp0 - q_Start) / delqp);
-      delq = qp0 - q_Start;
-
-      // Q value at this point:
-      qp2 = q_Start + ft * delq;
-
-      if (isCorner) {
-        // save the q for the "down" case:
-        for (int64_t iLon = 0; iLon < nLons; iLon ++) {
-          magQ_Down(iLon, iLat, iAlt) = qp2;
-
-          if (iLat < nLats)
-            k_edge_scgc(iLon, iLat, iAlt) = qp2;
-
-          k_corner_scgc(iLon, iLat, iAlt) = qp2;
-        }
-      } else {
-        for (int64_t iLon = 0; iLon < nLons; iLon ++) {
-          magQ_scgc(iLon, iLat, iAlt) = qp2;
-          k_center_scgc(iLon, iLat, iAlt) = qp2;
-        }
-
-        r_theta = qp_to_r_theta(qp2, Lshells(iLat));
-        bAlts(iLat, iAlt) = r_theta.first;
-        bLats(iLat, iAlt) = r_theta.second;
-      }
-    }
-  }
-
-  report.print(3, "QP-rtheta done!");
-
-  if (isCorner) { // we don't need the rest, yet
-    report.exit(function);
-    return;
-  }
-
-  arma_vec rNorm1d(nAlts), lat1dAlong(nAlts);
-
-  // rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
-
-  for (int64_t iLat = 0; iLat < nLatLoc; iLat++) {
-    for (int64_t iLon = 0; iLon < nLons; iLon++) {
-      // Not currently used. Dipole isn't offset. Leaving just in case.
-      // Lon = magPhi_scgc(iLon, iLat, 1);
-
-      for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
-        lat1dAlong(iAlt) = bLats(iLat, iAlt);
-        rNorm1d(iAlt) = bAlts(iLat, iAlt);
-      }
-
-      // Lay things down in the same order as the geo grid.
-      //centers only
-      magAlt_scgc.tube(iLon, iLat) = rNorm1d * planetRadius;
-      magLat_scgc.tube(iLon, iLat) = lat1dAlong;
-    }
-  }
-
-  report.exit(function);
-  return;
-}
 
 ////////////////////////////////////////////
 // convert cell coordinates to geographic //
@@ -454,96 +94,6 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
   report.exit(function);
   return llr;
 }
-
-// Use magP and magQ to make alt edges:
-// This does the heavy lifting for the edges & corners of the dipole grid.
-// These will be 1/2 way btwn each q point, which is pretty close to evenly spaced.
-// They will not, however, line up from one field line to the next.
-// It's not going to be *too* hard to get the corners to line up, but it messes with the
-// orthogonality too much for me to figure out right now.
-void Grid::dipole_alt_edges(Planets planet, precision_t min_altRe) {
-
-  std::string function = "Grid::dipole_alt_edges";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  // P-coordinates will be the same along alt coord, we saved p-vals when we made them
-  // in the fill field line function.
-  precision_t pTmp;
-
-  for (int64_t iLon = 0; iLon < nLons; iLon++) {
-    for (int64_t iLat = 0; iLat < nLats + 1; iLat++) {
-      pTmp = magP_Down(iLon, iLat, 0);
-
-      for (int64_t iAlt = 0; iAlt < nAlts; iAlt ++)
-        magP_Corner(iLon, iLat, iAlt) = pTmp;
-    }
-  }
-
-  // Here are some shortcuts that exploit the symmetry.
-  // This is done by each coord so cases like offset dipoles or oblate planets are easier later
-
-  // first, use the fact that p is the same along each field line (alt)
-  for (int64_t iLon = 0; iLon < nLons + 1; iLon++) {
-    for (int64_t iLat = 0; iLat < nLats + 1; iLat++)
-      magP_Corner(iLon, iLat, nAlts) = magP_Corner(iLon, iLat, nAlts - 1);
-  }
-
-  // And final step, use the longitude symmetry.
-  // It's fine, until the dipole is offset. then the entire fill_field_lines needs to be redone.
-  for (int64_t iAlt = 0; iAlt < nAlts + 1; iAlt++) {
-    for (int64_t iLat = 0; iLat < nLats + 1; iLat++)
-      magP_Corner(nLons, iLat, iAlt) = magP_Corner(nLons - 1, iLat, iAlt);
-  }
-
-  // For q-coord we'll avg q_down (from different baseLat) above and below the point...
-  // May need to change the dipole spacing func's to get this working exactly though.
-  // With how the field line pts are currently put in, this ends up being quite a hassle.
-  // Not to mention, there would be a corner at q=0 (so r=A_LOT).
-  // Top and bottom-most corners take the same q-step as the previous cell.
-  precision_t qTmp;
-
-  for (int64_t iLon = 0; iLon < nLons; iLon++) {
-    for (int64_t iLat = 0; iLat < nLats + 1; iLat++) {
-      for (int64_t iAlt = 1; iAlt < nAlts; iAlt ++)
-        magQ_Corner(iLon, iLat, iAlt) = (magQ_Down(iLon, iLat,
-                                                   iAlt - 1) + magQ_Down(iLon, iLat, iAlt)) / 2;
-
-      magQ_Corner(iLon, iLat, 0) = (2 * magQ_Corner(iLon, iLat, 1) - magQ_Corner(iLon,
-                                    iLat, 2));
-    }
-  }
-
-  // for last (alt) corner, take the same step as the prev corner to the highest center.
-  // this will force the highest corner to be above the last center
-  for (int64_t iLon = 0; iLon < nLons; iLon++) {
-    for (int64_t iLat = 0; iLat < nLats; iLat++) {
-      qTmp = 2 * magQ_Corner(iLon, iLat, nAlts - 1) - magQ_Corner(iLon, iLat,
-                                                                  nAlts - 2);
-      magQ_Corner(iLon, iLat, nAlts) = qTmp;
-    }
-  }
-
-  // last lon corner, copy previous. It's the same!
-  for (int64_t iAlt = 0; iAlt < nAlts + 1; iAlt ++) {
-    for (int64_t iLat = 0; iLat < nLats + 1; iLat++)
-      magQ_Corner(nLons, iLat, iAlt) = magQ_Corner(nLons - 1, iLat, iAlt);
-  }
-
-  // Now we have (p,q) coords corners, convert to lon/lat/alt and we r off to the races
-  std::pair <arma_cube, arma_cube> rtheta;
-  precision_t planetRadius;
-  rtheta = qp_to_r_theta(magQ_Corner, magP_Corner);
-  magLat_Corner = rtheta.second;
-
-  // Change if the dipole is offset and/or planet is oblate:
-  planetRadius =  planet.get_radius(magLat_scgc.at(1));
-  magAlt_Corner = rtheta.first * planetRadius;
-
-  report.exit(function);
-  return;
-}
-
 
 // -----------------------------------------------------------------------
 // Convert XyzDipole to XyzGeo
@@ -618,15 +168,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   IsGeoGrid = false;
   IsMagGrid = true;
   IsCubeSphereGrid = false;
+  IsDipole = true;
 
-  report.print(0, "Creating inter-node connections Grid");
+  // report.print(0, "Creating inter-node connections Grid");
 
   //if (!Is0D & !Is1Dz)
   //  create_sphere_connection(quadtree_ion);
 
   report.print(0, "Creating Dipole Grid");
 
-  report.print(3, "Getting mgrid_inputs inputs in dipole grid");
+  report.print(3, "Getting grid inputs for dipole grid");
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
 
@@ -635,7 +186,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // Get inputs:
 
-  precision_t max_lat = grid_input.lat_min;
+  precision_t min_lat = grid_input.lat_min;
   precision_t max_lat = grid_input.lat_max;
 
   precision_t min_alt = grid_input.alt_min * cKMtoM;
@@ -647,6 +198,14 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
   precision_t max_alt_re = (max_alt + planetRadius) / planetRadius;
 
+  magLat_scgc.zeros();
+  magInvLat_scgc.zeros();
+  magLon_scgc.zeros();
+  magAlt_scgc.zeros();
+  magLon_Corner.zeros();
+  magLat_Corner.zeros();
+  magAlt_Corner.zeros();
+
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
     DidWork = false;
@@ -655,8 +214,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Get some coordinates and sizes in normalized coordinates:
   arma_vec lower_left_norm = quadtree_ion.get_vect("LL"); // origin
   arma_vec size_right_norm = quadtree_ion.get_vect("SR"); // lon_lims
-  arma_vec size_up_norm = quadtree_ion.get_vect("SU");    //[1] = lat_lims
-  report.print(3, "Initializing (dipole) longitudes");
+  arma_vec size_up_norm = quadtree_ion.get_vect("SU");    // lat_extent
+  report.print(3, "Got all settings. Initializing longitudes.");
 
   precision_t dlon = size_right_norm(0) * cPI / (nLons - 2 * nGCs);
   precision_t lon0 = lower_left_norm(0) * cPI;
@@ -672,14 +231,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Dimension iterators
   int64_t iLon, iLat, iAlt;
 
-  // Longitudes (symmetric, for now):
+  /////////////////
+  // Longitudes: //
+  /////////////////
+
   // - Make a 1d vector
   // - copy it into the 3d cube
   for (iLon = 0; iLon < nLons; iLon++) {
     lon1d(iLon) = lon0 + (iLon - nGCs + 0.5) * dlon;
     lon1dLeft(iLon) = lon0 + (iLon - nGCs) * dlon; // corners
   }
-
 
   lon1dLeft(nLons) = lon0 + (nLons - nGCs) * dlon;
 
@@ -691,16 +252,22 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       // left edges
       magLon_Left.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_edge_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
-    }
-  }
 
-  for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
-    for (iLat = 0; iLat < nLats + 1; iLat++) {
-      // Corners
       magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
     }
   }
+
+  if (magLon_scgc.has_nan())
+    report.error("NAN IN MAGLON");
+
+  // for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+  //   for (iLat = 0; iLat < nLats + 1; iLat++) {
+  //     // Corners
+  //     magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
+  //     i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
+  //   }
+  // }
 
   report.print(3, "Done initializing longitudes, moving to latitude");
 
@@ -708,61 +275,178 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Latitudes: //
   ////////////////
 
-  // min_lat calculated from min_apex
-  precision_t min_lat = acos(sqrt(1 / min_apex_re));
+  // Invariant latitude is evenly spaced across each block.
+  // Latitude limits are adjusted here, not in quadtree
 
-  // latitude of field line base:
-  // todo: needs support for variable stretching. it's like, halfway there.
+  // - From the quadtree, we see the origin & extent of this block
+  // - That is normalized, without any influence from settings
+  // - Scale it with the latitude limits provided by the user
+  // - Put invariant latitudes down, linearly, between this range.
 
-  if (report.test_verbose(2))
-    std::cout << "computing baselats : " << max_lat* cRtoD  << " " << min_lat* cRtoD
-              << "\n";
+  // This has to be done differently in the north & south hemisphere.
+  // So note if we are in the southern hemisphere and invert it afterwards.
 
-  arma_vec baseLats = baselat_spacing(size_up_norm(1), lower_left_norm(1),
-                                      max_lat, min_lat, 1.0);
+  bool isSouth = false;
+  precision_t lat_origin = lower_left_norm(1);
 
-  if (report.test_verbose(2))
-    std::cout << "baselats : " << baseLats * cRtoD << "\n";
+  if (lat_origin < -0.01) { // handles some imprecision
+    isSouth = true;
+    lat_origin = -1.0 * lat_origin - size_up_norm(1);
+  }
 
-  // downward sides (latitude shifted by 1/2 step):
-  // TODO: This only works for linear latitude spacing, which is all that's supported right now.
-  // When the exponential spacing (or something else) is fixed, this needs updating.
-  precision_t dlat;
-  dlat = baseLats(1) - baseLats(0);
+  precision_t lat0 = 2.0 * (max_lat - min_lat) * lat_origin;
+  precision_t dlat = 2.0 * size_up_norm(1) * (max_lat -  min_lat) /
+                     (nLats - nGCs);
 
-  // put one cell halfway btwn each base latitude, leave 1st and last cell for now...
-  for (int64_t iLat = 1; iLat < nLats; iLat ++)
-    baseLats_down(iLat) = (baseLats(iLat - 1) + baseLats(iLat)) / 2.0;
+  arma_vec lat1d(nLats);
+  arma_vec lat1dDown(nLats + 1);
 
-  // Put in 1st and last cell. Done this way so it's easier to put in supercell or something else
-  baseLats_down(0) = baseLats(0) * 1.5 - baseLats(1) * 0.5;
-  baseLats_down(nLats) = baseLats(nLats - 1) * 1.5 - baseLats(nLats - 2) * 0.5;
+  for (iLat = 0; iLat < nLats; iLat++) {
+    lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat + min_lat; // centers
+    lat1dDown(iLat) = lat0 + (iLat - nGCs) * dlat + min_lat; // corners
+  }
 
-  if (report.test_verbose(2))
-    std::cout << "baselats_down : " << baseLats_down * cRtoD << "\n";
+  lat1dDown(nLats) = lat0 + (nLats - nGCs) * dlat; // last corner
 
-  report.print(3, "baselats done!");
+  // At the pole:
+  // - put last ghost cell's corner at 89.9 degrees latitude
+  // - put 2nd to last corner 1/2 way between 89.9 and the last real corner
+  // - evenly space the ghost cells between these.
 
-  // latitude & altitude of points on field lines (2D)
-  // Cell centers
-  fill_field_lines(baseLats, min_alt_re, Gamma, planet);
-  // Corners (final bool argument) tells function to place stuff in the corner.
-  // This is only down for the "down" edges, where the base latitudes are different.
-  fill_field_lines(baseLats_down, min_alt_re, Gamma, planet, true);
+  if (lat_origin + size_up_norm(1) > 0.49) { // touching the pole
+    lat1dDown(nLats) = 89.9 * 180.0 / cPI;
+    lat1dDown(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 2)) / 2.0;
+    lat1d(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 1)) / 2.0;
+    lat1d(nLats - 2) = (lat1dDown(nLats - 1) + lat1dDown(nLats - 2)) / 2.0;
+    // lat1d(-1) = (lat1dDown(-1) + lat1dDown(-2)) / 2.0;
+  }
 
-  // The baseLats are the Invariant Latitudes of the grid, so we can just fill in all of the
-  // points with these values
-  for (iAlt = 0; iAlt < nAlts; iAlt++)
-    for (iLat = 0; iLat < nLats; iLat++)
-      for (iLon = 0; iLon < nLons; iLon++)
-        magInvLat_scgc(iLon, iLat, iAlt) = baseLats(iLat);
+  // l-shells of centers (nLats)
+  arma_vec Pcenters = min_alt_re / pow(sin(cPI / 2 - lat1d), 2);
 
-  report.print(4, "Field-aligned Edges");
-  dipole_alt_edges(planet, min_alt_re);
+  // l-shells of corners
+  arma_vec Pcorners = min_alt_re / pow(sin(cPI / 2 - lat1dDown), 2);
 
-  report.print(3,
-               "Done generating symmetric latitude & altitude spacing in dipole.");
 
+  if (isSouth){ // so the values are increasing:
+    lat1d = -1*reverse(lat1d);
+  }
+
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iAlt = 0; iAlt < nAlts; iAlt++) {
+      magInvLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
+      magP_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = Pcenters;
+      magP_Down.subcube(iLon, 0, iAlt, iLon, nLats, iAlt) = Pcorners;
+    }
+  }
+
+  report.print(3, "Done initializing invariant latitudes");
+
+  ////////////////
+  // Altitudes: //
+  ////////////////
+
+  // - Trace each field line from q_min to q_max. Identical for all field lines within this block.
+  // - Obtain the minimum "altitude" (q) from the highest latitude
+  // field line on each block
+  // - Obtain the maximum "altitude" from the lowest latitude *open* field line.
+  // (closed field lines are treated differently)
+  //  - In other words, since we are tracing from q_min to q_max, use the highest field
+  //    line to get q_min and the lowest for q_max. This forces all field lines to
+  //    start & end within the bounds.
+  // - Evenly space all points' "altitude" linear across these two values
+  // - Altitude here refers to the dipole q-coordinate - cos(magLat)/r^2
+  // - Blocks touching a pole or the equator are treated differently
+
+  // Field lines close if:
+  // - touching the (magnetic) equator
+  // - minimum Lshell in this block is < max_alt (the q-value would be undefined)
+
+  precision_t q_min = 0; // q=0 at equator (for closed blocks)
+  bool close_this_block = false;
+
+  if ((Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
+      || (abs(lat_origin) < 0.01)) // equator, with some imprecision
+    close_this_block = true;
+
+  std::cout << "closing block?: " << close_this_block << "\n";
+
+  if (!close_this_block)
+    // invLats are still all in North Hemisphere & increasing.
+    // Use minimum p & alt to solve for q
+    // q = sqrt((1-r/p)/r^4)
+    // TODO: use nGCs or 0 to index Pcorners??
+    q_min = pow(((1 - min_alt_re / Pcorners(nGCs)) / pow(min_alt_re, 4.0)), 0.5);
+
+  // Trace each field line up to q_max, obtained from the lowest field line in the block
+  precision_t q_max = pow(((1 - max_alt_re / Pcorners(nLats)) / pow(max_alt_re,
+                           4.0)), 0.5);
+
+  precision_t delQ = (q_max - q_min) / (nAlts - nGCs * 2.0);
+
+  arma_vec magQ1d(nAlts);
+  arma_vec magQ_corner_1d(nAlts + 1);
+
+  for (iAlt = 0; iAlt < nAlts; iAlt ++) {
+    magQ1d(iAlt) = q_min + (iAlt - nGCs + 0.5) * delQ;
+    magQ_corner_1d(iAlt) = q_min + (iAlt - nGCs) * delQ;
+  }
+
+  magQ_corner_1d(nAlts) = q_min - nGCs * delQ;
+
+  if (isSouth) {
+    magQ1d = -1.0 * reverse(magQ1d);
+    magQ_corner_1d = -1.0 * reverse(magQ_corner_1d);
+  }
+
+  report.print(3, "Made q's");
+  ////////////////////////////
+  // That is the grid made. //
+  ////////////////////////////
+
+
+  std::pair<precision_t, precision_t> rtheta, rtheta_corner;
+  precision_t altitude;
+  arma_vec tmp(nLons), tmp2(nLons+1);
+
+  // We can solve for (r, theta) for each point on the (q,p) grid. Do that & store:
+  for (iLat = 0; iLat < nLats; iLat ++) {
+    for (iAlt = 0; iAlt < nAlts; iAlt++) {
+
+      // this is for cell centers:
+      rtheta = qp_to_r_theta(magQ1d(iAlt), Pcenters(iLat));
+      tmp.zeros();
+      tmp += rtheta.first;
+      magAlt_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
+      k_center_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
+      tmp.zeros();
+      tmp += rtheta.second;
+      magLat_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
+      j_center_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
+
+      // this is for cell corners:
+      rtheta_corner = qp_to_r_theta(magQ_corner_1d(iAlt), Pcorners(iLat));
+      tmp2.zeros();
+      tmp2 += rtheta_corner.first;
+      magAlt_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = tmp2;
+      tmp2.zeros();
+      tmp2 += rtheta_corner.second;
+      magLat_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = tmp2;
+    }
+  }
+
+  if (magLat_scgc.has_nan())
+    report.error("NAN IN MAGLAT");
+    
+  if (magLat_Corner.has_nan() || magLat_Corner.has_inf())
+  report.error("NAN IN MAGLAT_C");
+  
+  if (magAlt_Corner.has_nan())
+    report.error("NAN IN MAGALT_CORNER");
+
+  report.print(4,"got my mlats");
+  
   std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
                                            planet);
 
@@ -797,7 +481,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   arma_cube bm = sqrt(br % br + bt % bt);
   // Latitudinal direction of radial:
   arma_cube s = sign(magLat_scgc);
-  // s.elem(find(s == 0)).ones();
+  s.elem(find(s == 0)).ones();
 
   rad_unit_vcgc[1] = bt / bm % s;
   rad_unit_vcgc[2] = -br / bm;
@@ -824,7 +508,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
 
   // put back into altitude. we've been carrying around radius:
-  magAlt_scgc = magAlt_scgc - planetRadius;
+  // magAlt_scgc = magAlt_scgc - planetRadius;
+  // this breaks things more???
 
   report.exit(function);
   return DidWork;
