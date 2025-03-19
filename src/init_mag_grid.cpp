@@ -198,14 +198,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
   precision_t max_alt_re = (max_alt + planetRadius) / planetRadius;
 
-  magLat_scgc.zeros();
-  magInvLat_scgc.zeros();
-  magLon_scgc.zeros();
-  magAlt_scgc.zeros();
-  magLon_Corner.zeros();
-  magLat_Corner.zeros();
-  magAlt_Corner.zeros();
-
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
     DidWork = false;
@@ -261,14 +253,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   if (magLon_scgc.has_nan())
     report.error("NAN IN MAGLON");
 
-  // for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
-  //   for (iLat = 0; iLat < nLats + 1; iLat++) {
-  //     // Corners
-  //     magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
-  //     i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
-  //   }
-  // }
-
   report.print(3, "Done initializing longitudes, moving to latitude");
 
   ////////////////
@@ -313,24 +297,24 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // - put 2nd to last corner 1/2 way between 89.9 and the last real corner
   // - evenly space the ghost cells between these.
 
-  if (lat_origin + size_up_norm(1) > 0.49) { // touching the pole
-    lat1dDown(nLats) = 89.9 * 180.0 / cPI;
+  // Check if we're touching the pole, need to look at original quadtree values
+  if ((abs(lower_left_norm(1) + size_up_norm(1)) > 0.49) // north pole
+      || (lower_left_norm(1) < -0.49)) { // south pole
+    lat1dDown(nLats) = 89.9 * cDtoR;
     lat1dDown(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 2)) / 2.0;
     lat1d(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 1)) / 2.0;
     lat1d(nLats - 2) = (lat1dDown(nLats - 1) + lat1dDown(nLats - 2)) / 2.0;
-    // lat1d(-1) = (lat1dDown(-1) + lat1dDown(-2)) / 2.0;
   }
 
-  // l-shells of centers (nLats)
+  // l-shells of centers
   arma_vec Pcenters = min_alt_re / pow(sin(cPI / 2 - lat1d), 2);
 
   // l-shells of corners
   arma_vec Pcorners = min_alt_re / pow(sin(cPI / 2 - lat1dDown), 2);
 
 
-  if (isSouth){ // so the values are increasing:
-    lat1d = -1*reverse(lat1d);
-  }
+  if (isSouth)  // so the values are increasing:
+    lat1d = -1 * reverse(lat1d);
 
 
   for (iLon = 0; iLon < nLons; iLon++) {
@@ -367,10 +351,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   bool close_this_block = false;
 
   if ((Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
-      || (abs(lat_origin) < 0.01)) // equator, with some imprecision
+      || (abs(lat_origin - size_up_norm(1)) < 0.01)) // equator, with some imprecision
     close_this_block = true;
-
-  std::cout << "closing block?: " << close_this_block << "\n";
 
   if (!close_this_block)
     // invLats are still all in North Hemisphere & increasing.
@@ -400,7 +382,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     magQ_corner_1d = -1.0 * reverse(magQ_corner_1d);
   }
 
-  report.print(3, "Made q's");
   ////////////////////////////
   // That is the grid made. //
   ////////////////////////////
@@ -408,7 +389,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   std::pair<precision_t, precision_t> rtheta, rtheta_corner;
   precision_t altitude;
-  arma_vec tmp(nLons), tmp2(nLons+1);
+  arma_vec tmp(nLons), tmp2(nLons + 1);
 
   // We can solve for (r, theta) for each point on the (q,p) grid. Do that & store:
   for (iLat = 0; iLat < nLats; iLat ++) {
@@ -436,17 +417,9 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     }
   }
 
-  if (magLat_scgc.has_nan())
-    report.error("NAN IN MAGLAT");
-    
-  if (magLat_Corner.has_nan() || magLat_Corner.has_inf())
-  report.error("NAN IN MAGLAT_C");
-  
-  if (magAlt_Corner.has_nan())
-    report.error("NAN IN MAGALT_CORNER");
+  // magAlt is in units of planet radius
+  magAlt_scgc *= planetRadius;
 
-  report.print(4,"got my mlats");
-  
   std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
                                            planet);
 
