@@ -114,12 +114,50 @@ bottom of the field-line. Each fieldline starts at the lowest modeled altitude
 and curves towards the equator. In the northern hemisphere, this means that the
 fieldlines curve south, while in the southern hemisphere they curve north.
 
-The latitudinal spacing is determined by the `LatStretch` factor in the settings.
-The base latitudes are then scaled in such a way that **higher** `LatStretch` leads to
-more points near the equator, 1.0 is roughly linear, and then values less than 1.0 will
-distribute more points near the poles. The exact spacing is calculated where the
-difference between successive values is proportional to:
-`cos(lat_max)^(1/LatStretch)`. Using an even number of latitudes is required.
+The dipole grid requires >4 root nodes which ensures the coordinates are 
+mutually orthogonal. The available shapes are `dipole4` and `dipole6`, for 
+compatibility with the neutral grid being a sphere or cubesphere. In both cases,
+each node the entire longitude range and given a portion of the latitude range.
+So in the case of `dipole4`, the four nodes are each given 1/4 of the available
+latitudes and all of the longitudes.
+
+The dipole grid is evenly spaced in **invariant latitude** (where the field line
+passes the minumum altitude) and **q** (the dipole coordinate
+specifying how far along the field line a point lies). Q is dimensionless and defined 
+to be -infinity at the south pole, +infinity at the north pole, and 0 at the
+magnetic equator. The equations for p (L-shell) and q are taken as the following,
+where r is the distance from the origin and $\theta$ is *colatitude*:
+
+$$
+p = \frac{r}{\sin^2\theta}
+
+\newline
+\newline
+
+q = \frac{\cos{\theta}}{r^2}
+$$
+
+
+
+these are the steps taken:
+
+1. Receive latitude range of this block from the quadtree. This will look 
+something like `lower_left_norm=(0.0, -0.5, 0.0)` and `size_up_norm=(0, 0.25, 0)`
+for the node nearest the south pole in dipole4. From this, determine if we are
+in the southern hemisphere. If we are, everything will be done as if it was the north
+hemisphere and then reversed & negated at the end.
+2. Store the latitude (j) component of `lower_left_norm` as `lat_origin`. If this
+node is in the southern hemisphere, store the top of the node's extent as lat_origin.
+3. Scale this node's portion of the quadtree to be limited by the user-provided
+`lat_range`. These for the invariant latitudes, which are evenly spaced between 
+the latitude range provided and dictate where each field line passes through the minimum
+altitude provided.
+4. Determine if this node will have closed or open field lines. There are two conditions:
+   - If the node is touching the equator
+   - If the lowest L-shell is below the maximum altitude. This is rare, but prevents unexpected behavior.
+5. If the field line closes, 
+
+
 
 Along the `k` dimension, field lines terminate after a specified number of points.
 When using the Dipole grid option, there is not an option to set the maximum altitude.
