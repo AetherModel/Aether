@@ -128,14 +128,19 @@ latitudes and all of the longitudes.
 The dipole grid is evenly spaced in **invariant latitude** (where the field line
 passes the minumum altitude) and **q** (the dipole coordinate
 specifying how far along the field line a point lies). Q is dimensionless and defined 
-to be -infinity at the south pole, +infinity at the north pole, and 0 at the
-magnetic equator. The equations for p (L-shell) and q are taken as the following,
+to be $-\infty$ at the south pole, $+\infty$ at the north pole, and 0 at the
+magnetic equator. The equations for p (L-shell) and q are the following,
 where r is the distance from the origin and $\theta$ is *colatitude*:
 
-$p = \frac{r}{\sin^2\theta}$
+```math
+p = \frac{r}{\sin^2\theta}
 
-$q = \frac{\cos{\theta}}{r^2}$
+```
 
+```math
+q = \frac{\cos{\theta}}{r^2}
+
+```
 
 Here is how the dipole grid is generated:
 
@@ -159,7 +164,7 @@ cell centers between these corners.
 5. Determine the limits & values of the q-coordinate for all points along all field
 lines on this node. The q-values on each node are identical, and the p-value is
 constant along each field line (by definition). To solve for q, use the p-values
-from step 3 and the altitude, as described below. Use $q=\sqrt{(1-r/p)/r^4}$.
+from step 3 and the altitude, as described below. Use $q=\sqrt{(1-\frac{r}{p})/r^4}$.
    - If the field line closes, $q_{min}=0$. There will be a corner/edge at the 
 magnetic equator and two ghost cell centers across the equator for message passing.
    - If the field line does not close, $q_{min}$ is calculated from the highest
@@ -170,28 +175,28 @@ equator, it has the lowest allowed q-value).
 the lower altitude limit and the highest latitude field line. The point closest
 to the planet on the highest latitude field line has the highest allowed q-value
 (q=$\pm$infinity at the poles).
-6. We now have p (step 3) and q (step 5) for all points on the grid. From this
-we solve for `(r, \theta)`, and any other coordinates we need.
+6. We now have `p` (step 3) and `q` (step 5) for all points on the grid. From this
+we solve for $(r, \theta)$, and any other coordinates we need.
 
 See [the dipole script in edu/examples](../../edu/examples/Dipole/dipole.py) to
 experiment with the available options.
 
 #### Inputs:
 
-- ***Shape***: either `dipole4` or `dipole6`. Cannot (yet) be run on a single core.
+- ***Shape***: either `dipole4` or `dipole6`. Cannot be run on a single core.
 - ***nLonsPerBlock***: number of magnetic longitudes
 - ***nLatsPerBlock***: number of field lines (invariant latitudes)
 - ***nAlts***: Number of points along each field line. A number of these will 
 be discarded for being at too low of altitude.
-- ***AltRange***: [`min_alt`, `max_alt`] - the altitude (in km) range to bound 
+- ***AltRange***: (`min_alt`, `max_alt`) - the altitude (in km) range to bound 
 cells by. 
-- ***LatRange***: [`min_lat`, `max_lat`] - the limits on invariant latitudes 
+- ***LatRange***: (`min_lat`, `max_lat`) - the limits on invariant latitudes 
 (in degrees). Sets the limits on the latitudes where field lines cross `min_alt`.
 
 
 ### Root Nodes
 
->This document uses the words "block" and "node" somewhat
+> This document uses the words "block" and "node" somewhat
 interchangably. Technically, a "block" is single (`i, j, k`) grid, while a
 "node" can be multiple "blocks" that make up a section of the globe.
 
