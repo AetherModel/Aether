@@ -170,15 +170,14 @@ void Grid::fill_grid_bfield(Planets planet) {
 
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
                                    planet);
-          // This is Invariant Latitude
-          // (regular magnetic latitude is not defined yet for the geo grid)
-          // - magLat is not used by the geo grid, so not defined
-          magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
-
-          // init_mag grid already initialized magLon
-          if (iGridShape_ != iDipole_)
+          // Magnetic coordinates:
+          // init_mag grid already initializes magLon & magInvLat
+          // #TODO: make sure the bfield is correct for the dipole 
+          // - maybe Dot product the B_vec with (ijk)_vec?
+          if (iGridShape_ != iDipole_){
+            magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
             magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
-
+          }
           bfield_mag_scgc(iLon, iLat, iAlt) = 0.0;
 
           for (iDim = 0; iDim < 3; iDim++) {
