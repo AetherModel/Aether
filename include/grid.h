@@ -66,16 +66,16 @@ public:
   arma_cube g11_upper_Down, g12_upper_Down, g21_upper_Down, g22_upper_Down;
   arma_cube sqrt_g_Down;
 
-  // These define the magnetic grid:
-  // Armidillo Cube Versions:
-  arma_cube magLon_scgc, magX_scgc;
+  // These define the magnetic grid (only defined for a dipole grid):
   // The magnetic latitude is the angle between the magnetic equator and the point.
   arma_cube magLat_scgc, magY_scgc;
-  // This is often just the altitude....
+  // This is the same as radius.
   arma_cube magAlt_scgc, magZ_scgc;
+  // These exist for all grid types:
   // Invariant latitude is the magnetic latitude that the field line hits at the lowest altitude.
   // This is basically the L-shell, but models want it expressed as latitude and not L-shell.
   arma_cube magInvLat_scgc;
+  arma_cube magLon_scgc, magX_scgc;
   // This is the angle from the sun, to the magnetic pole to the point.
   arma_cube magLocalTime_scgc;
 
@@ -98,17 +98,6 @@ public:
   arma_cube magAlt_Down;
   arma_cube magAlt_Below;
   arma_cube magAlt_Corner;
-
-  //For easier interpolation:
-  arma_vec baseLats_down;
-
-  // these need to be stored in (p,q) coords for a bit, its messy:
-  arma_cube magP_Down;
-  arma_cube magP_Below;
-  arma_cube magQ_Down;
-  arma_cube magQ_Below;
-  arma_cube magP_Corner;
-  arma_cube magQ_Corner;
   
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent

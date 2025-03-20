@@ -38,27 +38,6 @@ std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q,
   return {r, theta};
 }
 
-std::pair<arma_cube, arma_cube> qp_to_r_theta(arma_cube q, arma_cube p) {
-  // return quanties
-  arma_cube r, theta;
-  // Intermediate quantities:
-  arma_cube term0, term1, term2, term3;
-
-  term0 = 256.0 / 27.0 * (q % q) % (p % p % p % p);
-  term1 = pow((1.0 + sqrt(1.0 + term0)), 2.0 / 3.0);
-  term2 = pow(term0, 1.0 / 3.0);
-  term3 = 0.5 * pow(((term1 % term1 + term1 % term2 + term2 % term2) / term1),
-                    3.0 / 2.0);
-
-  r = p % (4.0 * term3) / ((1.0 + term3) % (1.0 + sqrt(2.0 * term3 - 1.0)));
-
-  // now that r is determined we can solve for theta
-  theta = asin(q % (r % r));
-
-  return {r, theta};
-}
-
-
 ////////////////////////////////////////////
 // convert cell coordinates to geographic //
 ////////////////////////////////////////////
