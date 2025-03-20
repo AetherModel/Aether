@@ -10,7 +10,6 @@
 // or with approach from (Swisdak, 2006), who solved it analytically:
 //  https://arxiv.org/pdf/physics/0606044
 //
-// Overloaded for single conversions & arma_cubes
 // ----------------------------------------------------------------------
 
 std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q,
@@ -223,7 +222,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       // left edges
       magLon_Left.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_edge_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
-
+      // corners
       magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
     }
@@ -266,7 +265,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   for (iLat = 0; iLat < nLats; iLat++) {
     lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat + min_lat; // centers
-    lat1dDown(iLat) = lat0 + (iLat - nGCs) * dlat + min_lat; // corners
+    lat1dDown(iLat) = lat0 + (iLat - nGCs) * dlat + min_lat; // corners & edges
   }
 
   lat1dDown(nLats) = lat0 + (nLats - nGCs) * dlat; // last corner
@@ -290,19 +289,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // l-shells of corners
   arma_vec Pcorners = min_alt_re / pow(sin(cPI / 2 - lat1dDown), 2);
-
-
-  if (isSouth)  // so the values are increasing:
-    lat1d = -1 * reverse(lat1d);
-
-
-  for (iLon = 0; iLon < nLons; iLon++) {
-    for (iAlt = 0; iAlt < nAlts; iAlt++) {
-      magInvLat_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = lat1d;
-      magP_scgc.subcube(iLon, 0, iAlt, iLon, nLats - 1, iAlt) = Pcenters;
-      magP_Down.subcube(iLon, 0, iAlt, iLon, nLats, iAlt) = Pcorners;
-    }
-  }
 
   report.print(3, "Done initializing invariant latitudes");
 
@@ -331,8 +317,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   if (Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
     close_this_block = true;
-  
-  if(lat_origin < 0.01) // equator, with some imprecision
+
+  if (lat_origin < 0.01) // equator, with some imprecision
     close_this_block = true;
 
   if (close_this_block)
@@ -341,12 +327,14 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     // invLats are still all in North Hemisphere & increasing.
     // Use minimum p & alt to solve for q
     // q = sqrt((1-r/p)/r^4)
-  q_min = pow(((1 - max_alt_re / Pcorners(nGCs)) / pow(max_alt_re, 4.0)), 0.5);
+    q_min = pow(((1 - max_alt_re / Pcenters(nGCs)) / pow(max_alt_re, 4.0)), 0.5);
 
   // Trace each field line up to q_max, obtained from the lowest field line in the block
-  precision_t q_max = pow(((1 - min_alt_re / Pcorners(nLats)) / pow(min_alt_re,
+  precision_t q_max = pow(((1 - min_alt_re / Pcenters(nLats-nGCs)) / pow(min_alt_re,
                            4.0)), 0.5);
 
+  // Counter-intuitive, but the maximum value of q is actually where we start
+  // (lowest altitude), since q=0 at equator.
   precision_t delQ = (q_max - q_min) / (nAlts - nGCs * 2.0);
 
   arma_vec magQ1d(nAlts);
@@ -359,48 +347,145 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   magQ_corner_1d(nAlts) = q_min - nGCs * delQ;
 
-  if (isSouth) {
-    magQ1d = -1.0 * reverse(magQ1d);
-    magQ_corner_1d = -1.0 * reverse(magQ_corner_1d);
-  }
+  report.print(3,
+               "Done generating points for magnetic grid. Plugging everything in");
 
   ////////////////////////////
   // That is the grid made. //
   ////////////////////////////
+  // Now to store everything....
+  // It's all done at the end to make things more simple earlier, but that makes this part messier.
 
-
-  std::pair<precision_t, precision_t> rtheta, rtheta_corner;
-  precision_t altitude;
-  arma_vec tmp(nLons), tmp2(nLons + 1);
+  // temp holding names:
+  std::pair<precision_t, precision_t> rtheta, rtheta_edge;
+  precision_t radius, radius_edge, theta, theta_edge, invLat, invLat_edge,
+              pcenter, pedge, qcenter, qedge;
+  // we need to turn single floats into vectors/cubes:
 
   // We can solve for (r, theta) for each point on the (q,p) grid. Do that & store:
+  // Currently the grid is symmetric in longitude.
+  // Interte through centers & edges first, then do corners afterwards
   for (iLat = 0; iLat < nLats; iLat ++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
+      // We have to reverse & negate things; want latitudes from south->north
+      // and altitude low->high. Altitude is in the correct direction, so change how we 
+      // access values in the latitude dimension.
 
-      // this is for cell centers:
-      rtheta = qp_to_r_theta(magQ1d(iAlt), Pcenters(iLat));
-      tmp.zeros();
-      tmp += rtheta.first;
-      magAlt_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
-      k_center_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
-      tmp.zeros();
-      tmp += rtheta.second;
-      magLat_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
-      j_center_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = tmp;
+      if (isSouth) {
+        qcenter = magQ1d(iAlt);
+        pcenter = Pcenters(nLats - iLat - 1);
 
-      // this is for cell corners:
-      rtheta_corner = qp_to_r_theta(magQ_corner_1d(iAlt), Pcorners(iLat));
-      tmp2.zeros();
-      tmp2 += rtheta_corner.first;
-      magAlt_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = tmp2;
-      tmp2.zeros();
-      tmp2 += rtheta_corner.second;
-      magLat_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = tmp2;
+        qedge = magQ_corner_1d(iAlt);
+        pedge = Pcorners(nLats - iLat - 1);
+
+        invLat = lat1d(nLats - iLat - 1) * -1;
+        invLat_edge = lat1dDown(nLats - iLat - 1) * -1;
+
+        rtheta = qp_to_r_theta(qcenter, pcenter);
+        rtheta_edge = qp_to_r_theta(qcenter, pcenter);
+
+        // Flip hemisphere of latitude & q (cannot be done before qp_to_rtheta)
+        radius = rtheta.first;
+        theta = rtheta.second * -1.0;
+        qcenter *= -1.0;
+
+        radius_edge = rtheta_edge.first;
+        theta_edge = rtheta.second * -1.0;
+        qedge *= 1.0;
+      } else {
+        qcenter = magQ1d(iAlt);
+        pcenter = Pcenters(iLat);
+
+        qedge = magQ_corner_1d(iAlt);
+        pedge = Pcorners(iLat);
+
+        invLat = lat1d(iLat);
+        invLat_edge = lat1dDown(iLat);
+
+        rtheta = qp_to_r_theta(qcenter, pcenter);
+        rtheta_edge = qp_to_r_theta(qedge, pedge);
+
+        radius = rtheta.first;
+        theta = rtheta.second;
+
+        radius_edge = rtheta_edge.first;
+        theta_edge = rtheta_edge.second;
+      }
+
+      for (iLon = 0; iLon < nLons; iLon ++){
+        magLat_scgc(iLon, iLat, iAlt) = theta;
+        j_center_scgc(iLon, iLat, iAlt) = theta;
+
+        magLat_Down(iLon, iLat, iAlt) = theta_edge;
+        j_edge_scgc(iLon, iLat, iAlt) = theta_edge;
+
+        magAlt_scgc(iLon, iLat, iAlt) = radius;
+        k_center_scgc(iLon, iLat, iAlt) = radius;
+
+        magAlt_Below(iLon, iLat, iAlt) = radius_edge;
+        k_edge_scgc(iLon, iLat, iAlt) = radius_edge;
+
+        // extra coordinates
+        magP_scgc(iLon, iLat, iAlt) = pcenter;
+        magQ_scgc(iLon, iLat, iAlt) = qcenter;
+        magInvLat_scgc(iLon, iLat, iAlt) = invLat;
+      }
     }
   }
 
-  // magAlt is in units of planet radius
+  report.print(3, "Centers are in");
+
+  precision_t radius_corner, theta_corner, invLat_corner,
+              pcorner, qcorner;
+
+  for (iLat = 0; iLat < nLats + 1; iLat ++) {
+    for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+
+      // Same process as the centers & edges (above)
+      if (isSouth) {
+        qcorner = magQ_corner_1d(iAlt);
+        pcorner = Pcorners(nLats - iLat);
+        invLat_corner = lat1dDown(nLats - iLat) * -1;
+        rtheta = qp_to_r_theta(qcorner, pcorner);
+
+        radius_corner = rtheta.first;
+        theta_corner = rtheta.second * -1;
+        qcorner *= -1;
+      } else {
+        qcorner = magQ_corner_1d(iAlt);
+        pcorner = Pcorners(iLat);
+        invLat_corner = lat1dDown(iLat);
+        rtheta = qp_to_r_theta(qcorner, pcorner);
+        radius_corner = rtheta.first;
+        theta_corner = rtheta.second;
+      }
+      for (iLon = 0; iLon < nLons + 1; iLon ++){
+        magLat_Corner(iLon, iLat, iAlt) = theta_corner;
+        j_corner_scgc(iLon, iLat, iAlt) = theta_corner;
+
+        magAlt_Corner(iLon, iLat, iAlt) = radius_corner;
+        k_corner_scgc(iLon, iLat, iAlt) = radius_corner;
+
+        magP_Corner(iLon, iLat, iAlt) = pcorner;
+        magQ_Corner(iLon, iLat, iAlt) = qcorner;
+        magInvLat_Corner(iLon, iLat, iAlt) = invLat_corner;
+      }
+    }
+  }
+
+  report.print(3, "Corners done too");
+
+  // all distances, so far, are in units of planet radii, turn into meters.
+  // Except for Q, leave that dimensionless.
   magAlt_scgc *= planetRadius;
+  k_center_scgc *= planetRadius;
+  magAlt_Below *= planetRadius;
+  k_edge_scgc *= planetRadius;
+  magP_scgc *= planetRadius;
+  magAlt_Corner *= planetRadius;
+  k_corner_scgc *= planetRadius;
+  magP_Corner *= planetRadius;
+
 
   std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
                                            planet);
