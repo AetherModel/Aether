@@ -134,12 +134,12 @@ where r is the distance from the origin and $\theta$ is *colatitude*:
 
 ```math
 p = \frac{r}{\sin^2\theta}
-
+\tag{1}
 ```
 
 ```math
 q = \frac{\cos{\theta}}{r^2}
-
+\tag{2}
 ```
 
 Here is how the dipole grid is generated:
@@ -155,16 +155,17 @@ node is in the southern hemisphere, store the top of the node's extent as lat_or
 `lat_range`. These for the invariant latitudes, which are evenly spaced between 
 the latitude range provided and dictate where each field line passes through the minimum
 altitude provided.
-   - At the poles, put the last corner at $89.9^\circ$ magnetic latitude. Add
+   - At the poles, put the last corner at $89.9^\circ$ magnetic latitude, or
+$0.1^\circ$ and $179.9^\circ$ magnetic ***co***latitude. Add
 another corner 1/2 way between this point and the last "real" corner, and put
 cell centers between these corners.
 4. Determine if this node will have closed or open field lines. There are two conditions:
    - If the node is touching the equator
    - If the lowest L-shell is below the maximum altitude. This is rare, but prevents unexpected behavior.
-5. Determine the limits & values of the q-coordinate for all points along all field
+5. Determine the limits, then values, of the q-coordinate for all points along each field
 lines on this node. The q-values on each node are identical, and the p-value is
 constant along each field line (by definition). To solve for q, use the p-values
-from step 3 and the altitude, as described below. Use $q=\sqrt{(1-\frac{r}{p})/r^4}$.
+from step 3 and the altitude, as described below and Equation 3.
    - If the field line closes, $q_{min}=0$. There will be a corner/edge at the 
 magnetic equator and two ghost cell centers across the equator for message passing.
    - If the field line does not close, $q_{min}$ is calculated from the highest
