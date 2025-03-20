@@ -134,12 +134,10 @@ where r is the distance from the origin and $\theta$ is *colatitude*:
 
 ```math
 p = \frac{r}{\sin^2\theta}
-\tag{1}
 ```
 
 ```math
 q = \frac{\cos{\theta}}{r^2}
-\tag{2}
 ```
 
 Here is how the dipole grid is generated:
@@ -165,7 +163,7 @@ cell centers between these corners.
 5. Determine the limits, then values, of the q-coordinate for all points along each field
 lines on this node. The q-values on each node are identical, and the p-value is
 constant along each field line (by definition). To solve for q, use the p-values
-from step 3 and the altitude, as described below and Equation 3.
+from step 3 and the altitude, as described below and $q=\sqrt{(1-r/p)/r^4}$.
    - If the field line closes, $q_{min}=0$. There will be a corner/edge at the 
 magnetic equator and two ghost cell centers across the equator for message passing.
    - If the field line does not close, $q_{min}$ is calculated from the highest
@@ -179,8 +177,8 @@ to the planet on the highest latitude field line has the highest allowed q-value
 6. We now have `p` (step 3) and `q` (step 5) for all points on the grid. From this
 we solve for $(r, \theta)$, and any other coordinates we need.
 
-See [the dipole script in edu/examples](../../edu/examples/Dipole/dipole.py) to
-experiment with the available options.
+See [edu/examples/Dipole](../../edu/examples/Dipole) for more detailed information
+and to experiment with the available options in a Python script.
 
 #### Inputs:
 
