@@ -330,8 +330,9 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     q_min = pow(((1 - max_alt_re / Pcenters(nGCs)) / pow(max_alt_re, 4.0)), 0.5);
 
   // Trace each field line up to q_max, obtained from the lowest field line in the block
-  precision_t q_max = pow(((1 - min_alt_re / Pcenters(nLats-nGCs)) / pow(min_alt_re,
-                           4.0)), 0.5);
+  precision_t q_max = pow(((1 - min_alt_re / Pcenters(nLats - nGCs)) / pow(
+                             min_alt_re,
+                             4.0)), 0.5);
 
   // Counter-intuitive, but the maximum value of q is actually where we start
   // (lowest altitude), since q=0 at equator.
@@ -368,7 +369,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   for (iLat = 0; iLat < nLats; iLat ++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
       // We have to reverse & negate things; want latitudes from south->north
-      // and altitude low->high. Altitude is in the correct direction, so change how we 
+      // and altitude low->high. Altitude is in the correct direction, so change how we
       // access values in the latitude dimension.
 
       if (isSouth) {
@@ -412,7 +413,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
         theta_edge = rtheta_edge.second;
       }
 
-      for (iLon = 0; iLon < nLons; iLon ++){
+      for (iLon = 0; iLon < nLons; iLon ++) {
         magLat_scgc(iLon, iLat, iAlt) = theta;
         j_center_scgc(iLon, iLat, iAlt) = theta;
 
@@ -459,7 +460,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
         radius_corner = rtheta.first;
         theta_corner = rtheta.second;
       }
-      for (iLon = 0; iLon < nLons + 1; iLon ++){
+
+      for (iLon = 0; iLon < nLons + 1; iLon ++) {
         magLat_Corner(iLon, iLat, iAlt) = theta_corner;
         j_corner_scgc(iLon, iLat, iAlt) = theta_corner;
 

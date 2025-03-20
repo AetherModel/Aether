@@ -174,7 +174,7 @@ void Grid::fill_grid_bfield(Planets planet) {
           // init_mag grid already initializes magLon & magInvLat
           // #TODO: make sure the bfield is correct for the dipole 
           // - maybe Dot product the B_vec with (ijk)_vec?
-          if (iGridShape_ != iDipole_){
+          if (IsGeoGrid){
             magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
             magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
           }

@@ -65,7 +65,7 @@ Grid::Grid(std::string gridtype) {
   if (grid_input.nZ == 1)
     HasZdim = false;
 
-  if (mklower(grid_input.shape) == "sphere")
+  if (mklower(grid_input.shape).find("sphere") != std::string::npos)
     iGridShape_ = iSphere_;
 
   if (mklower(grid_input.shape) == "cubesphere")
@@ -179,14 +179,9 @@ Grid::Grid(std::string gridtype) {
   magLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
-  magP_Down.set_size(nX, nY + 1, nZ);
-  magP_Below.set_size(nX, nY, nZ + 1);
-  magQ_Down.set_size(nX, nY + 1, nZ);
-  magQ_Below.set_size(nX, nY, nZ + 1);
   magP_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magQ_Corner.set_size(nX + 1, nY + 1, nZ + 1);
-
-  baseLats_down.set_size(nY + 1);
+  magInvLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
   radius_scgc.set_size(nX, nY, nZ);
   radius2_scgc.set_size(nX, nY, nZ);

@@ -99,6 +99,10 @@ public:
   arma_cube magAlt_Below;
   arma_cube magAlt_Corner;
   
+  arma_cube magP_Corner;
+  arma_cube magQ_Corner;
+  arma_cube magInvLat_Corner;
+
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;
