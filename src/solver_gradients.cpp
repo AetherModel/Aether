@@ -20,6 +20,8 @@ std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
   if (grid.iGridShape_ == grid.iCubesphere_)
     gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
+  else if (grid.iGridShape_ == grid.iDipole_)
+    gradient_vcgc = calc_gradient_dipole(value_scgc, grid);
   else {
 
     report.print(4, "Going into calc_gradient_lon");
@@ -451,6 +453,30 @@ arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
   valueOut = value.slice(iAlt + 1) - gradient % grid.dalt_lower_scgc.slice(
                iAlt + 1);
   return valueOut;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the gradient on the dipole grid
+// - This is identical to the spherical grid, except the k/alt direction.
+// --------------------------------------------------------------------------
+std::vector<arma_cube> calc_gradient_dipole(arma_cube value_scgc, Grid grid) {
+
+  std::vector<arma_cube> gradient_vcgc;
+
+  report.print(3, "Calculating dipole griadient");
+
+  report.print(4, "Going into calc_gradient_lon");
+  gradient_vcgc.push_back(calc_gradient2o_i(value_scgc, grid));
+
+
+  report.print(4, "Going into calc_gradient_lat");
+  gradient_vcgc.push_back(calc_gradient2o_j(value_scgc, grid));
+
+
+  report.print(4, "Going into calc_gradient_alt");
+  gradient_vcgc.push_back(calc_gradient2o_k(value_scgc, grid));
+
+  return gradient_vcgc;
 }
 
 // --------------------------------------------------------------------------
