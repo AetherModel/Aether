@@ -322,6 +322,44 @@ arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
 }
 
 // --------------------------------------------------------------------------
+// Calculate the 2nd order gradient in the native k direction
+//   - these formulas assume that the grid is uniform.
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient2o_k(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iZ;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasZdim()) {
+    // Interior:
+    for (iZ = 1; iZ < nZ - 1; iZ++)
+      gradient.slice(iZ) =
+                (value.slice(iZ + 1) - value.slice(iZ - 1)) /
+                (2 * grid.dk_center_m_scgc.slice(iZ));
+
+    // Lower (one sided):
+    iZ = 0;
+    gradient.slice(iZ) =
+              (value.slice(iZ + 1) - value.slice(iZ)) /
+              grid.dk_center_m_scgc.slice(iZ);
+
+    // Upper (one sided):
+    iZ = nZ - 1;
+    gradient.slice(iZ) =
+              (value.slice(iZ) - value.slice(iZ - 1)) /
+              grid.dk_center_m_scgc.slice(iZ);
+  }
+
+  return gradient;
+}
+
+// --------------------------------------------------------------------------
 // Calculate the gradient in the altitudinal direction
 // --------------------------------------------------------------------------
 
