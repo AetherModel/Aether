@@ -123,6 +123,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t max_alt = grid_input.alt_max * cKMtoM;
 
   // Normalize inputs to planet radius... (update when earth is oblate)
+  // Here we are using the equatorial radius.
   precision_t planetRadius = planet.get_radius(0.0);
   // Altitude to begin modeling, normalized to planet radius
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
@@ -458,8 +459,13 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   report.print(4,
                "Done dipole -> geographic transformations for the dipole grid centers.");
 
-  // Calculate the radius, of planet
-  fill_grid_radius(planet);
+  // Fill grid radius, radius2, radius2i
+  // fill_grid_radius uses radius of the planet & geo_alt
+  // That would be redundant here since we already know the radius (magAlt)
+  // This is NOT yet offset: to offset do magAlt + dipole_cnter_m
+  radius_scgc = magAlt_scgc;
+  radius2_scgc = radius_scgc % radius_scgc;
+  radius2i_scgc = 1.0 / radius2_scgc;
 
   // Figure out what direction is radial:
   rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
@@ -470,15 +476,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     gravity_vcgc[iV].zeros();
   }
 
-  arma_cube br = 2 * sin(abs(magLat_scgc));
-  arma_cube bt = cos(magLat_scgc);
-  arma_cube bm = sqrt(br % br + bt % bt);
-  // Latitudinal direction of radial:
-  arma_cube s = sign(magLat_scgc);
-  s.elem(find(s == 0)).ones();
-
-  rad_unit_vcgc[1] = bt / bm % s;
-  rad_unit_vcgc[2] = -br / bm;
+  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(1+ 3* sin(magLat_scgc), 0.5);
+  rad_unit_vcgc[2] = -2* sin(magLat_scgc) / pow(1+ 3* sin(magLat_scgc), 0.5);
 
   precision_t mu = planet.get_mu();
   gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
