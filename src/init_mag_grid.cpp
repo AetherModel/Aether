@@ -55,16 +55,22 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
 
   precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
   precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
+  std::vector<precision_t> dipole_center = planet.get_dipole_center();
 
   // Reverse our dipole rotations:
   xyzRot1 = rotate_around_y_3d(xyz_mag, magnetic_pole_tilt);
   xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
 
-  // offset dipole (not yet implemented):
-  // std::vector<precision_t> dipole_center = planet.get_dipole_center();
-  // xyz_geo[0] = xyzRot2[0] + dipole_center[0];
-  // xyz_geo[1] = xyzRot2[1] + dipole_center[1];
-  // xyz_geo[2] = xyzRot2[2] + dipole_center[2];
+  // offset dipole (not fully suported yet, so will be zero. 
+  if ((dipole_center[0] != 0) || (dipole_center[1] != 0) ||
+    (dipole_center[2] != 0)) {
+  report.error("Dipole center != 0, but that is not supported yet. Setting to 0!");
+  dipole_center = {0, 0, 0};
+  }
+
+  xyz_geo[0] = xyzRot2[0] + dipole_center[0];
+  xyz_geo[1] = xyzRot2[1] + dipole_center[1];
+  xyz_geo[2] = xyzRot2[2] + dipole_center[2];
 
   // transform back to lon, lat, radius:
   llr = transform_xyz_to_llr_3d(xyzRot2);
