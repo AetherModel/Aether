@@ -73,60 +73,6 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
   return llr;
 }
 
-// -----------------------------------------------------------------------
-// Convert XyzDipole to XyzGeo
-//
-// -----------------------------------------------------------------------
-
-void Grid::convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
-                                  precision_t XyzGeo[3]) {
-
-  std::string function = "Grid::convert_dipole_geo_xyz";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t XyzRemoveShift[3];
-  precision_t XyzRemoveTilt[3];
-  precision_t XyzRemoveRot[3];
-
-  // get planetary parameters
-  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
-  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
-  precision_t radius = planet.get_radius(0.0);
-
-
-  // get the dipole shift, but normalize it to equatorial radius
-  precision_t dipole_center[3];
-  std::vector<precision_t> temp_dipole_center = planet.get_dipole_center();
-
-  if ((temp_dipole_center[0] != 0) or (temp_dipole_center[1] != 0) or
-      (temp_dipole_center[2] != 0)) {
-    report.print(0,
-                 "Dipole center != 0, but that is not supported yet. Setting to 0!");
-    temp_dipole_center = {0, 0, 0};
-
-  }
-
-  transform_float_vector_to_array(temp_dipole_center, dipole_center);
-
-  dipole_center[0] = dipole_center[0] / radius;
-  dipole_center[1] = dipole_center[1] / radius;
-  dipole_center[2] = dipole_center[2] / radius;
-
-  // Remove Tilt
-  transform_rot_y(XyzDipole, magnetic_pole_tilt, XyzRemoveTilt);
-
-  // Remove Rot
-  transform_rot_z(XyzRemoveTilt, magnetic_pole_rotation, XyzRemoveRot);
-
-  // Remove Shift
-  vector_add(XyzRemoveRot, dipole_center, XyzGeo);
-
-  report.exit(function);
-  return;
-
-}
-
 // ----------------------------------------------------------------------
 // Initialize the dipole grid.
 // - inputs (min_apex, min_alt, LatStretch, FieldLineStretch, max_lat_dipole)

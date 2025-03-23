@@ -83,7 +83,6 @@ public:
   // Phi => Longitude
   // P   => L-shell
   // Q   => Distance along field line
-  arma_cube magPhi_scgc;
   arma_cube magP_scgc;
   arma_cube magQ_scgc;
 
@@ -317,32 +316,9 @@ public:
   void calc_cent_acc(Planets planet);
 
   // Make mag-field grid:
-  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
-                              precision_t XyzGeo[3]);
-
   bool init_dipole_grid(Quadtree quadtree_ion, Planets planet);
   // Support functions:
   void calc_dipole_grid_spacing(Planets planet);
-  void calc_alt_dipole_grid_spacing();
-  void calc_lat_dipole_grid_spacing();
-  void calc_long_dipole_grid_spacing();
-  void fill_field_lines(arma_vec baseLats, precision_t min_altRe,
-                        precision_t Gamma, Planets planet,
-                        bool isCorner);
-  void dipole_alt_edges(Planets planet, precision_t min_altRe);
-  // get the latitude spacing given the quadtree start & size, and the latitude limits
-  // extent: quadtree up
-  // origin: quadtree origin
-  // upper_lim: upper latitude limit (input)
-  // lower_lim: lower latitude limit (from min_apex)
-  // nLats: number of latitudes (nY)
-  // spacing_factor: (not supported yet), so always 1.0. Will adjust baselat spacing, eventually.
-  arma_vec baselat_spacing(precision_t extent,
-                          precision_t origin,
-                          precision_t upper_lim,
-                          precision_t lower_lim,
-                          // int16_t nLats,
-                          precision_t spacing_factor);
 
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);

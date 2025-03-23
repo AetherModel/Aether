@@ -157,7 +157,6 @@ Grid::Grid(std::string gridtype) {
   magAlt_scgc.set_size(nX, nY, nZ);
   magInvLat_scgc.set_size(nX, nY, nZ);
 
-  magPhi_scgc.set_size(nX, nY, nZ);
   magP_scgc.set_size(nX, nY, nZ);
   magQ_scgc.set_size(nX, nY, nZ);
 
