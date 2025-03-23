@@ -61,11 +61,12 @@ public:
   /**********************************************************************
      \brief Returns radius of the planet, which can be a function of latitude
 
-     currently, this ignores the latitude, but should be implemented.
+     Overloaded for floats & cubes, much easier to call this on a cube.
 
      \param latitude the latitude to get the radius at.
    **/
   precision_t get_radius(precision_t latitude);
+  arma_cube get_radius(arma_cube latitude);
 
   /**********************************************************************
      \brief Returns the longitude offset to convert from longitude to local time

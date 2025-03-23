@@ -446,7 +446,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   geoLon_scgc = llr[0];
   geoLat_scgc = llr[1];
-  geoAlt_scgc = llr[2] - planetRadius;
+  geoAlt_scgc = llr[2] - planet.get_radius(geoLat_scgc);
   report.print(4,
                "Done dipole -> geographic transformations for the dipole grid centers.");
 
