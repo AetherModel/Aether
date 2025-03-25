@@ -66,7 +66,6 @@ precision_t Planets::get_cos_dec(Times time) {
 
 // -----------------------------------------------------------------------------
 // Get the radius of the planet as a function of latitude (meters)
-// - Overloaded to support passing cubes, avoids loops in the calling function.
 // -----------------------------------------------------------------------------
 
 precision_t Planets::get_radius(precision_t latitude) {
@@ -74,18 +73,6 @@ precision_t Planets::get_radius(precision_t latitude) {
     return planet.polar_radius + (planet.delta_radius * cos(latitude));
   else
     return planet.radius;
-}
-
-arma_cube Planets::get_radius(arma_cube latitude) {
-  if (input.get_do_lat_dependent_radius())
-    return planet.polar_radius + (planet.delta_radius * cos(latitude));
-  else{
-    arma_cube radius(latitude.n_rows,
-                    latitude.n_cols,
-                    latitude.n_slices);
-    radius = planet.radius;
-    return radius;
-  }
 }
 
 // -----------------------------------------------------------------------------
