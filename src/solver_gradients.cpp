@@ -465,15 +465,15 @@ std::vector<arma_cube> calc_gradient_dipole(arma_cube value_scgc, Grid grid) {
 
   report.print(3, "Calculating dipole griadient");
 
-  report.print(4, "Going into calc_gradient_lon");
+  report.print(4, "Going into calc_gradient_i (dipole)");
   gradient_vcgc.push_back(calc_gradient2o_i(value_scgc, grid));
 
 
-  report.print(4, "Going into calc_gradient_lat");
+  report.print(4, "Going into calc_gradient_j (dipole)");
   gradient_vcgc.push_back(calc_gradient2o_j(value_scgc, grid));
 
 
-  report.print(4, "Going into calc_gradient_alt");
+  report.print(4, "Going into calc_gradient_K (DIPOLE)");
   gradient_vcgc.push_back(calc_gradient2o_k(value_scgc, grid));
 
   return gradient_vcgc;
