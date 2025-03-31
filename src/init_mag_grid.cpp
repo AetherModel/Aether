@@ -314,6 +314,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   std::pair<precision_t, precision_t> rtheta, rtheta_edge;
   precision_t radius, radius_edge, theta, theta_edge, invLat, invLat_edge,
               pcenter, pedge, qcenter, qedge;
+  int64_t iAlt2;
   // we need to turn single floats into vectors/cubes:
 
   // We can solve for (r, theta) for each point on the (q,p) grid. Do that & store:
@@ -322,8 +323,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   for (iLat = 0; iLat < nLats; iLat ++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
       // We have to reverse & negate things; want latitudes from south->north
-      // and altitude low->high. Altitude is in the correct direction, so change how we
-      // access values in the latitude dimension.
+      // and altitude low->high. 
+      // - Altitude is in the reverse direction in both hemispheres.
+      // - Latitude is reversed in southern hemisphere.
+      iAlt2 = nAlts - iAlt - 1;
 
       if (isSouth) {
         qcenter = magQ1d(iAlt);
@@ -367,22 +370,22 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       }
 
       for (iLon = 0; iLon < nLons; iLon ++) {
-        magLat_scgc(iLon, iLat, iAlt) = theta;
-        j_center_scgc(iLon, iLat, iAlt) = theta;
+        magLat_scgc(iLon, iLat, iAlt2) = theta;
+        magLat_Down(iLon, iLat, iAlt2) = theta_edge;
 
-        magLat_Down(iLon, iLat, iAlt) = theta_edge;
-        j_edge_scgc(iLon, iLat, iAlt) = theta_edge;
+        magAlt_scgc(iLon, iLat, iAlt2) = radius;
+        magAlt_Below(iLon, iLat, iAlt2) = radius_edge;
 
-        magAlt_scgc(iLon, iLat, iAlt) = radius;
-        k_center_scgc(iLon, iLat, iAlt) = radius;
+        magInvLat_scgc(iLon, iLat, iAlt2) = invLat;
 
-        magAlt_Below(iLon, iLat, iAlt) = radius_edge;
-        k_edge_scgc(iLon, iLat, iAlt) = radius_edge;
+        magP_scgc(iLon, iLat, iAlt2) = pcenter;
+        j_center_scgc(iLon, iLat, iAlt2) = pcenter;
+        j_edge_scgc(iLon, iLat, iAlt2) = pedge;
 
-        // extra coordinates
-        magP_scgc(iLon, iLat, iAlt) = pcenter;
-        magQ_scgc(iLon, iLat, iAlt) = qcenter;
-        magInvLat_scgc(iLon, iLat, iAlt) = invLat;
+        magQ_scgc(iLon, iLat, iAlt2) = qcenter;
+        k_center_scgc(iLon, iLat, iAlt2) = qcenter;
+        k_edge_scgc(iLon, iLat, iAlt2) = qedge;
+
       }
     }
   }
@@ -394,6 +397,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   for (iLat = 0; iLat < nLats + 1; iLat ++) {
     for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
+      iAlt2 = nAlts - iAlt;
 
       // Same process as the centers & edges (above)
       if (isSouth) {
@@ -415,15 +419,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       }
 
       for (iLon = 0; iLon < nLons + 1; iLon ++) {
-        magLat_Corner(iLon, iLat, iAlt) = theta_corner;
-        j_corner_scgc(iLon, iLat, iAlt) = theta_corner;
+        magLat_Corner(iLon, iLat, iAlt2) = theta_corner;
+        magAlt_Corner(iLon, iLat, iAlt2) = radius_corner;
 
-        magAlt_Corner(iLon, iLat, iAlt) = radius_corner;
-        k_corner_scgc(iLon, iLat, iAlt) = radius_corner;
+        magInvLat_Corner(iLon, iLat, iAlt2) = invLat_corner;
 
-        magP_Corner(iLon, iLat, iAlt) = pcorner;
-        magQ_Corner(iLon, iLat, iAlt) = qcorner;
-        magInvLat_Corner(iLon, iLat, iAlt) = invLat_corner;
+        magP_Corner(iLon, iLat, iAlt2) = pcorner;
+        j_corner_scgc(iLon, iLat, iAlt2) = pcorner;
+
+        magQ_Corner(iLon, iLat, iAlt2) = qcorner;
+        k_corner_scgc(iLon, iLat, iAlt2) = qcorner;
       }
     }
   }
@@ -433,15 +438,18 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // all distances, so far, are in units of planet radii, turn into meters.
   // Except for Q, leave that dimensionless.
   magAlt_scgc *= planetRadius;
-  k_center_scgc *= planetRadius;
   magAlt_Below *= planetRadius;
-  k_edge_scgc *= planetRadius;
   magP_scgc *= planetRadius;
   magAlt_Corner *= planetRadius;
-  k_corner_scgc *= planetRadius;
   magP_Corner *= planetRadius;
+  magQ_Corner *= planetRadius;
+  magQ_scgc *= planetRadius;
 
+  k_center_scgc *= planetRadius;
+  k_edge_scgc *= planetRadius;
+  k_corner_scgc *= planetRadius;
 
+  // Convert to geographic, rotating and (maybe) shifting the dipole grid.
   std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
                                            planet);
 
