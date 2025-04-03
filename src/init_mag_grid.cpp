@@ -61,11 +61,14 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
   xyzRot1 = rotate_around_y_3d(xyz_mag, magnetic_pole_tilt);
   xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
 
-  // offset dipole (not fully suported yet, so will be zero. 
+  // offset dipole (not fully suported yet, so will be zero)
   if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
       (dipole_center[2] != 0.0)) {
-  report.error("Dipole center != 0, but that is not supported yet. Setting to 0!");
-  dipole_center = {0.0, 0.0, 0.0};
+    
+    if (iProc == 0) // only one error
+      report.error("Dipole center != 0, but that is not supported yet. Setting to 0!");
+    
+    dipole_center = {0.0, 0.0, 0.0};
   }
 
   xyz_geo.push_back(xyzRot2[0] + dipole_center[0]);
