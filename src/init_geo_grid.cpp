@@ -150,6 +150,10 @@ void Grid::create_altitudes(Planets planet) {
     }
   }
 
+  // All cells on the geographic grid *should* be ok
+  isTooLowCell = find(geoAlt_scgc < 0.0);
+  isPhysicalCell = find(geoAlt_scgc > 0.0);
+
   report.exit(function);
   return;
 }

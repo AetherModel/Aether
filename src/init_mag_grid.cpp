@@ -505,6 +505,11 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   calc_dipole_grid_spacing(planet);
 
+
+  // Generate mask for physicsl cells
+  isTooLowCell = find(magAlt_scgc < min_alt_re);
+  isPhysicalCell = find(magAlt_scgc > min_alt_re);
+
   report.print(4, "Done altitude spacing for the dipole grid.");
 
   // Calculate magnetic field and magnetic coordinates:

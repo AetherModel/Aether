@@ -102,6 +102,10 @@ public:
   arma_cube magQ_Corner;
   arma_cube magInvLat_Corner;
 
+  // Dipole grid has cells below the surface of earth. These variables hold masks
+  // to either access those cells or ignore them (with .elem()).
+  arma::uvec isTooLowCell, isPhysicalCell;
+
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;
