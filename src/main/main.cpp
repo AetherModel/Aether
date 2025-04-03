@@ -92,14 +92,16 @@ int main() {
 
     if (mGrid.iGridShape_ == mGrid.iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
-      if (!didWork)
-        throw std::string("init_dipole_grid failed!");
     } else {
       std::cout << "Making Spherical Magnetic Grid\n";
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
     }
+
+    if (!didWork)
+    throw std::string("Initializing magneitic grid failed!");
+
 
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
