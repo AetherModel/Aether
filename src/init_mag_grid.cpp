@@ -64,10 +64,10 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
   // offset dipole (not fully suported yet, so will be zero)
   if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
       (dipole_center[2] != 0.0)) {
-    
+
     if (iProc == 0) // only one error
       report.error("Dipole center != 0, but that is not supported yet. Setting to 0!");
-    
+
     dipole_center = {0.0, 0.0, 0.0};
   }
 
@@ -178,14 +178,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       // left edges
       magLon_Left.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_edge_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
+    }
+  }
+
+  for (iLat = 0; iLat < nLats + 1; iLat ++) {
+    for (iAlt = 0; iAlt < nAlts + 1; iAlt++) {
       // corners
       magLon_Corner.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
       i_corner_scgc.subcube(0, iLat, iAlt, nLons, iLat, iAlt) = lon1dLeft;
     }
   }
-
-  if (magLon_scgc.has_nan())
-    report.error("NAN IN MAGLON");
 
   report.print(3, "Done initializing longitudes, moving to latitude");
 
@@ -224,7 +226,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     lat1dDown(iLat) = lat0 + (iLat - nGCs) * dlat + min_lat; // corners & edges
   }
 
-  lat1dDown(nLats) = lat0 + (nLats - nGCs) * dlat; // last corner
+  lat1dDown(nLats) = lat0 + (nLats - nGCs) * dlat + min_lat; // last corner
 
   // At the pole:
   // - put last ghost cell's corner at 89.9 degrees latitude
@@ -302,7 +304,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     magQ_corner_1d(iAlt) = q_min + (iAlt - nGCs) * delQ;
   }
 
-  magQ_corner_1d(nAlts) = q_min - nGCs * delQ;
+  magQ_corner_1d(nAlts) = q_min + (nAlts - nGCs) * delQ;
 
   report.print(3,
                "Done generating points for magnetic grid. Plugging everything in");
@@ -318,7 +320,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t radius, radius_edge, theta, theta_edge, invLat, invLat_edge,
               pcenter, pedge, qcenter, qedge;
   int64_t iAlt2;
-  // we need to turn single floats into vectors/cubes:
 
   // We can solve for (r, theta) for each point on the (q,p) grid. Do that & store:
   // Currently the grid is symmetric in longitude.
@@ -326,7 +327,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   for (iLat = 0; iLat < nLats; iLat ++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
       // We have to reverse & negate things; want latitudes from south->north
-      // and altitude low->high. 
+      // and altitude low->high.
       // - Altitude is in the reverse direction in both hemispheres.
       // - Latitude is reversed in southern hemisphere.
       iAlt2 = nAlts - iAlt - 1;
@@ -406,12 +407,12 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
       if (isSouth) {
         qcorner = magQ_corner_1d(iAlt);
         pcorner = Pcorners(nLats - iLat);
-        invLat_corner = lat1dDown(nLats - iLat) * -1;
+        invLat_corner = lat1dDown(nLats - iLat) * -1.0;
         rtheta = qp_to_r_theta(qcorner, pcorner);
 
         radius_corner = rtheta.first;
-        theta_corner = rtheta.second * -1;
-        qcorner *= -1;
+        theta_corner = rtheta.second * -1.0;
+        qcorner *= -1.0;
       } else {
         qcorner = magQ_corner_1d(iAlt);
         pcorner = Pcorners(iLat);
@@ -487,8 +488,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     gravity_vcgc[iV].zeros();
   }
 
-  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(1+ 3* sin(magLat_scgc), 0.5);
-  rad_unit_vcgc[2] = -2* sin(magLat_scgc) / pow(1+ 3* sin(magLat_scgc), 0.5);
+  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(1 + 3 * sin(magLat_scgc), 0.5);
+  rad_unit_vcgc[2] = -2 * sin(magLat_scgc) / pow(1 + 3 * sin(magLat_scgc), 0.5);
 
   precision_t mu = planet.get_mu();
   gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
