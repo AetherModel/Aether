@@ -441,10 +441,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // all distances, so far, are in units of planet radii, turn into meters.
   // Except for Q, leave that dimensionless.
-  magAlt_scgc *= planetRadius;
-  magAlt_Below *= planetRadius;
+  magAlt_scgc;
+  magAlt_Below;
+  magAlt_Corner;
   magP_scgc *= planetRadius;
-  magAlt_Corner *= planetRadius;
   magP_Corner *= planetRadius;
   magQ_Corner *= planetRadius;
   magQ_scgc *= planetRadius;
@@ -454,7 +454,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   k_corner_scgc *= planetRadius;
 
   // Convert to geographic, rotating and (maybe) shifting the dipole grid.
-  std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc,
+  std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc * planetRadius,
                                            planet);
 
   geoLon_scgc = llr[0];
@@ -464,7 +464,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
                "Done dipole -> geographic transformations for the dipole grid centers.");
 
   std::vector <arma_cube> llr_corner = mag_to_geo(magLon_Corner, magLat_Corner,
-                                                  magAlt_Corner, planet);
+                                                  magAlt_Corner * planetRadius, planet);
   geoLon_Corner = llr_corner[0];
   geoLat_Corner = llr_corner[1];
   geoAlt_Corner = llr_corner[2] - planetRadius;
@@ -475,7 +475,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // fill_grid_radius uses radius of the planet & geo_alt
   // That would be redundant here since we already know the radius (magAlt)
   // This is NOT yet offset: to offset do magAlt + dipole_cnter_m
-  radius_scgc = magAlt_scgc;
+  radius_scgc = magAlt_scgc * planetRadius;
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;
 
@@ -507,8 +507,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
 
   // Generate mask for physicsl cells
-  isTooLowCell = find(magAlt_scgc < min_alt_re);
-  isPhysicalCell = find(magAlt_scgc > min_alt_re);
+  isTooLowCell = find(geoAlt_scgc < 0.0);
+  isPhysicalCell = find(geoAlt_scgc > 0.0);
 
   report.print(4, "Done altitude spacing for the dipole grid.");
 

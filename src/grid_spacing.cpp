@@ -155,8 +155,8 @@ void Grid::calc_k_grid_spacing() {
   }
   // This needs to be turned into a distance for the dipole:
   if (iGridShape_ == iDipole_){
-    dk_center_m_scgc = pow(radius_scgc, 3) % dk_center_scgc / delTc(magLat_scgc);
-    dk_edge_m = pow(radius_scgc, 3) % dk_edge / delTc(magLat_scgc);
+    dk_center_m_scgc = pow(magAlt_scgc, 3) % dk_center_scgc / delTc(magLat_scgc);
+    dk_edge_m = pow(magAlt_scgc, 3) % dk_edge / delTc(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
@@ -253,11 +253,11 @@ void Grid::calc_i_grid_spacing() {
     // edge is in-line with the j center
     di_edge_m = di_edge_m % abs(cos(j_center_scgc));
   }
-  // Dipole will use cos(geoLat):
+  // Dipole will use cos(magLat)
   if (iGridShape_ == iDipole_) {
-    di_center_m_scgc = di_center_m_scgc % abs(cos(geoLat_scgc));
+    di_center_m_scgc = di_center_m_scgc % abs(cos(magLat_scgc));
     // edge is in-line with the j center
-    di_edge_m = di_edge_m % abs(cos(geoLat_scgc));
+    di_edge_m = di_edge_m % abs(cos(magLat_scgc));
   }
 
   // For a stretched grid, calculate some useful quantities:
@@ -344,9 +344,9 @@ void Grid::calc_j_grid_spacing() {
   }
 
   // Dipole will have different scaling...
-  if (iGridShape_ == iSphere_ || iGridShape_ == iCubesphere_) {
-    dj_center_m_scgc = dj_center_scgc % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
-    dj_edge_m = dj_edge % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
+  if (iGridShape_ == iDipole_) {
+    dj_center_m_scgc = magAlt_scgc % dj_center_scgc % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
+    dj_edge_m = magAlt_scgc % dj_edge % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
