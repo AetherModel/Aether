@@ -506,6 +506,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Generate mask for physicsl cells
   isTooLowCell = find(geoAlt_scgc <= 0.0);
   isPhysicalCell = find(geoAlt_scgc > 0.0);
+  UseThisCell.elem(isTooLowCell).fill(false);
 
   report.print(4, "Done altitude spacing for the dipole grid.");
 

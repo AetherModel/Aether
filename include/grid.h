@@ -105,6 +105,7 @@ public:
   // Dipole grid has cells below the surface of earth. These variables hold masks
   // to either access those cells or ignore them (with .elem()).
   arma::uvec isTooLowCell, isPhysicalCell;
+  arma_cube UseThisCell; // (bool values whether altitude is valid)
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent

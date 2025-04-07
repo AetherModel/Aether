@@ -270,6 +270,9 @@ Grid::Grid(std::string gridtype) {
   HasBField = 0;
   IsExperimental = false;
 
+  UseThisCell.set_size(nX, nY, nZ);
+  UseThisCell.fill(true);
+
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   for (int i = 0; i < 3; i++)
