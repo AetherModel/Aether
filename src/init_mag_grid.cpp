@@ -87,10 +87,9 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
 // ----------------------------------------------------------------------
 bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
-  using namespace std;
   bool DidWork = true;
 
-  string function = "Grid::init_dipole_grid";
+  std::string function = "Grid::init_dipole_grid";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -513,11 +512,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
   report.print(4, "Done filling dipole grid with b-field!");
-
-
-  // put back into altitude. we've been carrying around radius:
-  // magAlt_scgc = magAlt_scgc - planetRadius;
-  // this breaks things more???
 
   report.exit(function);
   return DidWork;
