@@ -114,3 +114,9 @@ bfield_info_type get_dipole(precision_t lon,
 
   return bfield_info;
 }
+
+// This is the del value from (Swisdak, 2006) & others. Used in Dipole distance calc's.
+// Note the cos->sin, since magLat is latitude, not colatitude.
+arma_cube delTheta(arma_cube magLat) {
+  return (sqrt(3 * sin(magLat) % sin(magLat) + 1));
+}

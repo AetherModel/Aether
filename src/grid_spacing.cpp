@@ -34,13 +34,6 @@ void Grid::calc_dipole_grid_spacing(Planets planet) {
   report.print(3, "ending calc_grid_spacing");
 }
 
-
-// This is the del value from (Swisdak, 2006) & others. Used in Dipole distance calc's.
-// Note the cos->sin, since magLat is latitude, not colatitude.
-inline arma_cube delTc(arma_cube theta) {
-  return (sqrt(3 * sin(theta) % sin(theta) + 1));
-}
-
 // ---------------------------------------
 // Grid spacing for altitude:
 // ---------------------------------------
@@ -155,8 +148,8 @@ void Grid::calc_k_grid_spacing() {
   }
   // This needs to be turned into a distance for the dipole:
   if (iGridShape_ == iDipole_){
-    dk_center_m_scgc = pow(magAlt_scgc, 3) % dk_center_scgc / delTc(magLat_scgc);
-    dk_edge_m = pow(magAlt_scgc, 3) % dk_edge / delTc(magLat_scgc);
+    dk_center_m_scgc = pow(radius_scgc, 3) % dk_center_scgc / delTheta(magLat_scgc);
+    dk_edge_m = pow(radius_scgc, 3) % dk_edge / delTheta(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
@@ -345,8 +338,8 @@ void Grid::calc_j_grid_spacing() {
 
   // Dipole will have different scaling...
   if (iGridShape_ == iDipole_) {
-    dj_center_m_scgc = magAlt_scgc % dj_center_scgc % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
-    dj_edge_m = magAlt_scgc % dj_edge % pow(sin(magLat_scgc), 3) / delTc(magLat_scgc);
+    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc);
+    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
