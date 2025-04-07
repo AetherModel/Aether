@@ -583,8 +583,8 @@ void Neutrals::calc_chapman(Grid grid) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(
-                                                       iAlt) * species[iSpecies].mass;
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(iAlt)
+                                                     * species[iSpecies].mass;
 
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
       // dr is used here instead of dalt, since we only want the radial integration, while
@@ -619,14 +619,16 @@ void Neutrals::calc_chapman(Grid grid) {
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);
         xp1d = xp3d.tube(iLon, iLat);
-        y1d = y3d.tube(iLon, iLat);
+        // y1d = y3d.tube(iLon, iLat);
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
-        H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
+        // H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
 
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
+          if (!grid.UseThisCell(iLon, iLat, iAlt))
+            continue; // masks off cells below surface of earth, not the best implementation.
           // This is on the dayside:
-          if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
+          else if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
             species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
               integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
           } else {
