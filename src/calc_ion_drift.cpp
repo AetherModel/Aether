@@ -10,10 +10,7 @@
 void Ions::calc_efield(Grid grid) {
 
   // efield = - grad(potential)
-  efield_vcgc = calc_gradient_vector(potential_scgc, grid);
-
-  for (int64_t iComp = 0; iComp < 3; iComp++)
-    efield_vcgc[iComp] = -efield_vcgc[iComp];
+  efield_vcgc = calc_gradient_vector(-1.0 * potential_scgc, grid);
 
   // Remove component along b-field (should be zero, anyways!)
   arma_cube edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
@@ -28,12 +25,16 @@ void Ions::calc_efield(Grid grid) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid) {
+  std::string function = "Ions::calc_exb";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
   arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     exb_vcgc[iComp] = exb_vcgc[iComp] / bmag2;
+  report.exit(function);
 }
 
 // --------------------------------------------------------------------------
@@ -42,6 +43,10 @@ void Ions::calc_exb_drift(Grid grid) {
 
 std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
     Grid grid) {
+
+      std::string function = "Ions::elec_ion_pressure_gradient";
+      static int iFunction = -1;
+      report.enter(function, iFunction);
   std::vector<arma_cube> pressure_gradient_vcgc;
   arma_cube total_pressure_scgc;
 
@@ -57,6 +62,7 @@ std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
     cKB;
 
   pressure_gradient_vcgc = calc_gradient_vector(total_pressure_scgc, grid);
+  report.exit(function);
 
   return pressure_gradient_vcgc;
 }
