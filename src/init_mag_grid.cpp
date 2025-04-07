@@ -65,9 +65,6 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
   if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
       (dipole_center[2] != 0.0)) {
 
-    if (iProc == 0) // only one error
-      report.error("Dipole center != 0, but that is not supported yet. Setting to 0!");
-
     dipole_center = {0.0, 0.0, 0.0};
   }
 
@@ -507,7 +504,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
 
   // Generate mask for physicsl cells
-  isTooLowCell = find(geoAlt_scgc < 0.0);
+  isTooLowCell = find(geoAlt_scgc <= 0.0);
   isPhysicalCell = find(geoAlt_scgc > 0.0);
 
   report.print(4, "Done altitude spacing for the dipole grid.");

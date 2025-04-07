@@ -331,6 +331,7 @@ public:
 
   bool IsLatLonGrid;
   bool IsCubeSphereGrid;
+  bool IsDipole;
   bool DoesTouchNorthPole;
   bool DoesTouchSouthPole;
   /// The processor to the East/Right/X+:
@@ -435,7 +436,6 @@ private:
   bool HasBField;
   bool IsExperimental;
   bool IsMagGrid;
-  bool IsDipole = false;
   std::string gridType;
 
   int64_t nX, nLons;
