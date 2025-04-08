@@ -148,8 +148,8 @@ void Grid::calc_k_grid_spacing() {
   }
   // This needs to be turned into a distance for the dipole:
   if (iGridShape_ == iDipole_){
-    dk_center_m_scgc = pow(radius_scgc, 3) % dk_center_scgc / delTheta(magLat_scgc);
-    dk_edge_m = pow(radius_scgc, 3) % dk_edge / delTheta(magLat_scgc);
+    dk_center_m_scgc = pow(magAlt_scgc, 3) % dk_center_scgc / delTheta(magLat_scgc);
+    dk_edge_m = pow(magAlt_scgc, 3) % dk_edge / delTheta(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
