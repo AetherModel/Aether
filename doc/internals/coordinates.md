@@ -21,7 +21,7 @@
 ## Dipole Coordinates
 - Longitude (radians) - radians east of the meridian that contains the north magnetic pole and north rotation axis
 - P (meters) - Identifies the field line. This is the same as L-shell and is constant along wach field line.
-- Q (dimensionless) - parameterizes the distance along the field line, related to magnetic latitude & radius. This varies along the field line, but the values are idential for all field lines within each node. q=0 at the equator, and approaches positive (negative) infinity as theta points towards the north (south) pole.
+- Q (dimensionless) - parameterizes the distance along the field line, related to magnetic latitude & radius. This varies along the field line, but the values are idential for all field lines within each node. q=0 at the equator, and approaches positive (negative) infinity as theta points towards the north (south) pole. Thus, q values will be negative in the southern hemisphere and the change in q "upwards" will be negative in the northern hemisphere. See [../../edu/examples/Dipole](../../edu/examples/Dipole) for more information.
 
 ## More Dipole Coordinates
 - L-shell (Planetary Radii) - The distance from the planet's center at which the magnetic field encounters the dipole's equatorial plane
@@ -29,7 +29,7 @@
 - Invariant Latitude (radians) - angle between the dipole's equatorial plane and the point at which the field-line passes through a reference radius of the planet ([specified in the inputs](../internals/grid.md#inputs)).  This is constant along the field-line and is related to the L-Shell.
 - Magnetic Local Time (hours) - Angle between the sun, the north magnetic pole, and the point. Explicitly, this is done in PSE XY coordinates, ignoring the Z coorinate.
 
-> The dipole `(i,j,k)` coordinates are (magnetic longitude, magnetic latitude, radius).
+> The dipole `(i,j,k)` coordinates are (magnetic longitude, p, q).
 
 # Coordinates in Aether
 
@@ -53,7 +53,7 @@ For the (perfectly) spherical grid, the i-coordinate is longitude, the j-coordin
 
 For the Cubedsphere grid, the i-coordinate is RIGHT, the j-coodinate is UP, and the k-coordinate is radius.  Each face of the cubedsphere has the same coordinate system, but only with reference to that face.  This means that if each face is looked at independently, the lower left corner is at (about) i = -45, j = -45 deg, while the upper right corner is at i = +45, j = +45 deg. Radius is treated the same as in a spherical grid.
 
-For the dipole coordinate system, the i-coordinate is magnetic longitude, the j-coordinate is magnetic latitude, and the k-coordinate is radius. The dipole is orthogonal to a dipolar magnetic field.
+For the dipole coordinate system, the i-coordinate is magnetic longitude, the j-coordinate is L-shell, and the k-coordinate is Q: a dimensionless parameter, normalized to the planet radius, representing diatance along a magnetic field line. The dipole is orthogonal to a dipolar magnetic field.
 
 
 Should the official coordinates be in the native coordinates (which could be different for each system), or should the coordinates be in meters, such that when gradients are taken, they are in /m?

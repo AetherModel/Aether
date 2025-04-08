@@ -111,10 +111,12 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
             qs[:, iAlt] = ((q_min_center + (iAlt - nGCs + 0.5) * delQ))
         
         # If we were in South hemisphere, multiply by -1
-        # (and reverse so the points are ascending in q, same order as NH)
+        # And put data in the same order as we get back from Aether
         if isSouth:
-            qs = -1*np.flip(qs)
-        qcenters[n,:] = qs
+            qs = -1.0*qs
+            pcenters2d = np.flip(pcenters2d, axis=0)
+
+        qcenters[n,:] = np.flip(qs, axis=1)
         pcenters[n,:] = pcenters2d
 
     return qcenters, pcenters
