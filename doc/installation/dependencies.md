@@ -21,7 +21,7 @@ If a path is printed, `cmake` is installed. To check the version, run `cmake
 The layout of this page is as follows:
 
 - [Installing Dependencies](#installing-dependencies)
-  - [Install gcc](#install-gcc)
+  - [Install C++ Compiler](#install-gcc)
   - [Install cmake](#install-cmake)
   - [Install JSON libraries](#install-json-libraries)
   - [Install Armadillo (and boost)](#install-armadillo-and-boost)
@@ -29,20 +29,23 @@ The layout of this page is as follows:
 
 ## Install gcc
 
-This comes installed by default on Ubuntu. On MacOS this can be installed, for
+On MacOS this can be installed, for
 example, using:
 
 ```bash
 sudo port install gcc11
 ```
 
-> As development began, gcc11 was the latest version; there are newer versions
-> of `gcc` available now (latest version is gcc14), which have not yet been
-> validated.
+On Ubuntu, `gcc` (the C-compiler) is pre-installed, but the C++ compiler is not. This 
+can be installed with (subsituting your machine's package manager command):
+
+``bash
+sudo apt install g++
+```
 
 ## Install cmake
 
-Aether uses [CMake](https://cmake.org/) instead of `make`. If you don't have it
+Aether uses [CMake](https://cmake.org/) instead of GNU make. If you don't have it
 installed, you need it.
 
 For MacOS, this can be installed with:
@@ -57,7 +60,7 @@ For Ubuntu/Debian Linux:
 sudo apt install cmake
 ```
 
-This can be done on RedHat using yum also.
+This can be done on RedHat using `yum` also.
 
 ## Install JSON libraries
 

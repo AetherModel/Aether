@@ -18,17 +18,18 @@ cp -R share/run ./run.first_run
 This creates the directory where you will do your run.  In that directory is a
 link to the aether executable and an input file called aether.json.
 
-You can then run the executable from the directory you created.
+You can then run the executable from the directory you created. This uses four cores,
+which is the minimum for the dipole grid.
 
 ```bash
 cd run.first_run
-./aether
+mpirun -np 4 ./aether
 ```
 
 You should see something like:
 
 ```bash
-run.first_run% ./aether
+run.first_run% mpirun -np 4 ./aether
 > Need to NOT adjust F10.7, but that isn't included yet!!!
 > Writing file : 3DALL_20110320_000000
 > Writing file : 3DBFI_20110320_000000
@@ -58,6 +59,16 @@ The successful end of this will show a timing summary, similar to:
     nTimes called : 720
     timing_total (s) : 2.94398
 ```
+
+### Running in 1D
+
+If you want to quickly run Aether to test if things are working, there are a few changes
+that need to be made to run in one dimension. 
+
+1. Change the input file's, `aether.json`, value for the neutral and ion grids **both**
+to `"sphere"`. No number!
+2. Run the code with `./aether`. This will not use MPI, however armadillo may use
+multiple OpenMP processes for math, so be careful on cluster login nodes.
 
 ## Output Files
 
@@ -127,10 +138,35 @@ model.  This file is in UA/inputs/defaults.json.
 This is a json file that sets all of the defaults within Aether.  This file
 should never be modified!
 
-### For Developers
+## For Developers
 
-Within Aether, the inputs.cpp file has a large handful of of get_ routines to
+Within Aether, the inputs.cpp file has a large handful of of `get_` routines to
 get the values of the settings that the user has set.
+
+To speedup builds, it can be faster to use Ninja instead of GNU make. Ninja 
+automatically parallelizes to fit your machine, can re-run cmake for small changes, and
+has other small differences from GNU make. To use ninja for builds:
+
+1. Ensure it is installed. This can be done with conda or your system's package manager
+(note on Ubuntu it is called "ninja-build)
+2. Clear the GNU make build pecs from `build`. This is most easily done by removing the
+`CMakeCache.txt` file, but you can remove the entire contents of the build directory.
+3. Tell cmake to generate build scripts for Ninja. From `Aether/build/`, run:
+`cmake -GNinja [any options] ../`.
+4. Build with `ninja`. This will use as many cores asz your system has.
+
+The dfevelopment process can be further sped up since Ninja can change directories
+before compiling. This is useful, for example, to not need to cd out of run when testing
+changes. From `Aether/run/`, you can compile and run the code with the one-liner:
+
+```bash
+ninja -C ../build && mpirun -np 4 ./aether
+```
+
+The `-C` flag specifies which directory to move to before building. Obviously, change it
+if yours is different. When changing header files, Ninja often catches the change and
+will re-run cmake automatically. If not, you will need to remove `CMakeCache.txt` and
+re-run cmake (again using the `-GNinja` flag).
 
 ## aether.json file
 
