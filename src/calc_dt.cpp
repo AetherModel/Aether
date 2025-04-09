@@ -41,11 +41,11 @@ precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   arma_cube dtCube;
 
   // Longitudinal Direction:
-  dtCube = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+  dtCube = grid.di_center_m_scgc / cMax_vcgc[0];
   dta(0) = dtCube.min();
 
   // Latitudinal Direction:
-  dtCube = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+  dtCube = grid.dj_center_m_scgc / cMax_vcgc[1];
   dta(1) = dtCube.min();
 
   // Vertical Direction:
