@@ -256,6 +256,8 @@ int main() {
 
     } // End of outer time loop - done with run!
 
+    report.report_errors();
+
     report.exit(function);
     report.times();
 
@@ -267,7 +269,6 @@ int main() {
       std::cout << "---- Must Exit! ----\n";
     }
   }
-
 
   // End parallel tasks:
   iErr = MPI_Finalize();

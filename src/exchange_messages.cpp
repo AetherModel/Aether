@@ -966,7 +966,7 @@ bool exchange_one_var(Grid &grid,
   precision_t oneSign = 1.0;
 
   for (int iDir = 0; iDir < 4; iDir++) {
-    if (report.test_verbose(2))
+    if (report.test_verbose(4))
       std::cout << "packing one var : " << iDir << " " << iProc
                 << " " << grid.interchangesOneVar[iDir].iProc_to
                 << " " << grid.interchangesOneVar[iDir].iTag << "\n";
@@ -980,20 +980,20 @@ bool exchange_one_var(Grid &grid,
     // Current PE is the sender, so check if receiver exists:
     if (grid.interchangesOneVar[iDir].iProc_to > -1) {
       iP = 0;
-      report.print(2, "Packing Border");
+      report.print(4, "Packing Border");
       DidWork = pack_border(var_scgc,
                             grid.interchangesOneVar[iDir].buffer,
                             &iP,
                             nG,
                             iDir);
-      report.print(2, "Done Packing Border");
+      report.print(4, "Done Packing Border");
     }
   }
 
   // Send all faces asynchronously:
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
-      report.print(2, "Sending one face");
+      report.print(4, "Sending one face");
       DidWork = grid.send_one_var_one_face(iDir);
     }
   }
@@ -1001,7 +1001,7 @@ bool exchange_one_var(Grid &grid,
   // Receive all faces asynchronously:
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
-      report.print(2, "Receiving one face");
+      report.print(4, "Receiving one face");
       DidWork = grid.receive_one_var_one_face(iDir);
     }
   }
@@ -1016,7 +1016,7 @@ bool exchange_one_var(Grid &grid,
   for (int iDir = 0; iDir < 4; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
       iP = 0;
-      report.print(2, "Unpacking Border");
+      report.print(4, "Unpacking Border");
       DidWork = unpack_border(var_to_pass,
                               grid.interchangesOneVar[iDir].rbuffer,
                               &iP,
@@ -1025,7 +1025,7 @@ bool exchange_one_var(Grid &grid,
                               grid.interchangesOneVar[iDir].DoReverseX,
                               grid.interchangesOneVar[iDir].DoReverseY,
                               grid.interchangesOneVar[iDir].XbecomesY);
-      report.print(2, "Done Unpacking Border");
+      report.print(4, "Done Unpacking Border");
     }
   }
 
