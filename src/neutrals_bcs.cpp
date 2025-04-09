@@ -93,7 +93,7 @@ bool Neutrals::set_upper_bcs(Grid grid) {
       h = species[iSpecies].scale_height_scgc.slice(iAlt);
       species[iSpecies].density_scgc.slice(iAlt) =
         species[iSpecies].density_scgc.slice(iAlt - 1) %
-        exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
+        exp(-grid.dk_edge_m.slice(iAlt) / h);
     }
   }
 
@@ -216,7 +216,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
         temperature_scgc.slice(iAlt + 1) /
         temperature_scgc.slice(iAlt) %
         species[iSpecies].density_scgc.slice(iAlt + 1) %
-        exp(grid.dalt_lower_scgc.slice(iAlt) / sh_ave);
+        exp(grid.dk_edge_m.slice(iAlt) / sh_ave);
     }
 
     for (iAlt = nGCs - 1; iAlt >= 0; iAlt--) {

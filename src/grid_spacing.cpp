@@ -12,7 +12,7 @@ void Grid::calc_grid_spacing(Planets planet) {
 
   report.print(3, "starting calc_grid_spacing");
 
-  calc_alt_grid_spacing();
+  // calc_alt_grid_spacing();
   calc_lat_grid_spacing();
   calc_long_grid_spacing();
 

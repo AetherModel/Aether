@@ -91,7 +91,7 @@ bool Ions::set_upper_bcs(Grid grid) {
         species[iSpecies].temperature_scgc.slice(iAlt) /
         species[iSpecies].temperature_scgc.slice(iAlt - 1) %
         species[iSpecies].density_scgc.slice(iAlt - 1) %
-        exp(-grid.dalt_lower_scgc.slice(iAlt) / h);
+        exp(-grid.dk_edge_m.slice(iAlt) / h);
       species[iSpecies].velocity_vcgc[2].slice(iAlt).zeros();
     }
   }

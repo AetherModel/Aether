@@ -448,10 +448,9 @@ arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
       grid.MeshCoef1s3rdp5.slice(iAlt) % value.slice(iAlt + 5);
   */
   gradient = (value.slice(iAlt + 2) - value.slice(iAlt + 1)) /
-             grid.dalt_lower_scgc.slice(iAlt + 2);
+             grid.dk_edge_m.slice(iAlt + 2);
 
-  valueOut = value.slice(iAlt + 1) - gradient % grid.dalt_lower_scgc.slice(
-               iAlt + 1);
+  valueOut = value.slice(iAlt + 1) - gradient % grid.dk_edge_m.slice(iAlt + 1);
   return valueOut;
 }
 

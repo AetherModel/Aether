@@ -141,7 +141,7 @@ precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   precision_t dt;
 
   if (grid.get_nZ(false) > 1) {
-    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    arma_cube dtz = grid.dk_center_m_scgc / cMax_vcgc[2];
     dt = dtz.min();
   } else
     dt = 1e32;
