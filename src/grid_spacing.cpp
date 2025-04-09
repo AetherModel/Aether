@@ -148,11 +148,11 @@ void Grid::calc_k_grid_spacing() {
   }
   // This needs to be turned into a distance for the dipole:
   if (iGridShape_ == iDipole_){
-    // the dk's may not be negative (like the sphere). make sure they are
+    // the dk's may be negative (not allowed). make sure they are positive
     // this gets rid of SO many errors...
-    dk_center_scgc = -1.0 * abs(dk_center_scgc);
-    dk_edge = -1.0 * abs(dk_edge);
-    dr_edge = -1.0 * abs(dr_edge);
+    dk_center_scgc = abs(dk_center_scgc);
+    dk_edge = abs(dk_edge);
+    dr_edge =  abs(dr_edge);
     dk_center_m_scgc = pow(magAlt_scgc, 3) % dk_center_scgc / delTheta(magLat_scgc);
     dk_edge_m = pow(magAlt_scgc, 3) % dk_edge / delTheta(magLat_scgc);
   }
