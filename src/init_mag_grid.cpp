@@ -437,9 +437,6 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   // all distances, so far, are in units of planet radii, turn into meters.
   // Except for Q, leave that dimensionless.
-  magAlt_scgc;
-  magAlt_Below;
-  magAlt_Corner;
   magP_scgc *= planetRadius;
   magP_Corner *= planetRadius;
   magQ_Corner *= planetRadius;
@@ -484,8 +481,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     gravity_vcgc[iV].zeros();
   }
 
-  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(1 + 3 * sin(magLat_scgc), 0.5);
-  rad_unit_vcgc[2] = -2 * sin(magLat_scgc) / pow(1 + 3 * sin(magLat_scgc), 0.5);
+  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(abs(1 + 3 * sin(magLat_scgc)), 0.5);
+  rad_unit_vcgc[2] = -2 * sin(magLat_scgc) / pow(abs(1 + 3 * sin(magLat_scgc)), 0.5);
 
   precision_t mu = planet.get_mu();
   gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
@@ -506,7 +503,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   isTooLowCell = find(geoAlt_scgc <= 0.0);
   isPhysicalCell = find(geoAlt_scgc > 0.0);
   UseThisCell.elem(isTooLowCell).fill(false);
-
+  
   report.print(4, "Done altitude spacing for the dipole grid.");
 
   // Calculate magnetic field and magnetic coordinates:
