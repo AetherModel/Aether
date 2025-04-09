@@ -447,7 +447,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   k_corner_scgc *= planetRadius;
 
   // Convert to geographic, rotating and (maybe) shifting the dipole grid.
-  std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc, magAlt_scgc * planetRadius,
+  std::vector <arma_cube> llr = mag_to_geo(magLon_scgc, magLat_scgc,
+                                           magAlt_scgc * planetRadius,
                                            planet);
 
   geoLon_scgc = llr[0];
@@ -473,6 +474,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   radius2i_scgc = 1.0 / radius2_scgc;
 
   // Figure out what direction is radial:
+  // This is all in the dipole's i,j,k coordinate system...
   rad_unit_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
@@ -482,11 +484,12 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   }
 
   rad_unit_vcgc[1] = cos(magLat_scgc) / pow(abs(1 + 3 * sin(magLat_scgc)), 0.5);
-  rad_unit_vcgc[2] = -2 * sin(magLat_scgc) / pow(abs(1 + 3 * sin(magLat_scgc)), 0.5);
+  rad_unit_vcgc[2] = -2 * sin(magLat_scgc) / pow(abs(1 + 3 * sin(magLat_scgc)),
+                                                 0.5);
 
   precision_t mu = planet.get_mu();
-  gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
-  gravity_vcgc[2] = mu * rad_unit_vcgc[2] % radius2i_scgc;
+  gravity_vcgc[1] = - mu * rad_unit_vcgc[1] % radius2i_scgc;
+  gravity_vcgc[2] = - mu * rad_unit_vcgc[2] % radius2i_scgc;
   gravity_potential_scgc.set_size(nX, nY, nAlts);
   gravity_potential_scgc.zeros();
   gravity_mag_scgc = sqrt(
@@ -499,11 +502,14 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   calc_dipole_grid_spacing(planet);
 
 
-  // Generate mask for physicsl cells
+  //////////////////////////////////////
+  // Generate mask for physicsl cells //
+  //////////////////////////////////////
+
   isTooLowCell = find(geoAlt_scgc <= 0.0);
   isPhysicalCell = find(geoAlt_scgc > 0.0);
   UseThisCell.elem(isTooLowCell).fill(false);
-  
+
   report.print(4, "Done altitude spacing for the dipole grid.");
 
   // Calculate magnetic field and magnetic coordinates:
