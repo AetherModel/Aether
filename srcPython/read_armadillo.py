@@ -41,9 +41,8 @@ def check_file_inputs(files):
         list: sorted list of files that so indeed exist
     
     """
-    print(type(files))
+    
     if isinstance(files, str): # Probably need to glob
-        print(type(files))
         if "*" in files: # Definitely need to glob
             files2read = np.sort(glob(files))
         elif os.path.isfile(files):
@@ -76,8 +75,8 @@ def check_file_inputs(files):
 
 
 def cube2np(files2read):
-    """ Read armadillo cubes from .txt files, automatically globs and/or input.
-        return np array of shape (nFiles, n_x, n_y, n_x)
+    """ Read armadillo cubes from .txt files, automatically globs input.
+        return np array of shape (nFiles, n_x, n_y, n_z)
 
     Inputs
     ------
@@ -118,7 +117,60 @@ def cube2np(files2read):
                     # each line is n_y long. Convert it to a python list & retain it
                     l = f.readline().strip().replace('  ',',').split(',')
                     ls[i,:, j] = l # n_y
-        out.append(ls) # speed not a huge issue, work with lists
+        out.append(ls.T) # speed not a huge issue, work with lists
+
+    # remove 0th dimension if we only are reading one file
+    if len(files2read) == 1:
+        out = out[0] 
+
+    return np.array(out)
+
+
+
+
+def mat2np(files2read):
+    """ Read armadillo matrices from .txt files, automatically globs input.
+        return np array of shape (nFiles, n_x, n_y)
+
+    Inputs
+    ------
+        files (str or list-like): either path to files or list of files. If it's a str,
+            the pattern is globbed & sorted, or the directory's .txt files are sorted.
+            If it's list-like, the list is sorted.
+
+    Outputs
+    -------
+        np.array of shape (nFiles, n_x, n_y) & dtype float. If we are only reading
+            one file, return shape is just (n_x, n_y)
+
+    Usage
+    -----
+
+    lons = mat2np("../run/geolon_*.txt")
+    lons = mat2np(np.sort(glob.glob("../run/geolon_*.txt")))
+
+    """
+
+    # Sanitize input
+    files2read = check_file_inputs(files2read)
+
+    out = [] # output holder
+    for thisf in files2read:
+        with open(thisf, 'r') as f:
+            _ = f.readline() # first line is a header, not needed
+            shape = f.readline().strip() # next line holds the shape of the cube
+            shape = shape.split(' ')
+            if len(shape) != 2:
+                raise ValueError(
+                    f"File ({thisf}) does not appear to be an armadillo matrix.\n"
+                    f"Found shape: {shape}")
+            shape = np.array(shape, dtype=int) # convert shape to np array of int's
+            ls = np.zeros(shape) # holder for this file's outputs, dtype is float
+            for i in range(int(shape[0])): # n_x
+                # each line is n_y long. Convert it to a python list & retain it
+                l = f.readline().strip().replace('  ',',').split(',')
+                ls[i,:] = l # n_y
+        out.append(ls.T) # speed not a huge issue, work with lists
 
     # remove 0th dimension if we only are reading one file
     if len(files2read) == 1:
