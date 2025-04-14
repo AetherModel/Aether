@@ -102,10 +102,14 @@ public:
   arma_cube magQ_Corner;
   arma_cube magInvLat_Corner;
 
-  // Dipole grid has cells below the surface of earth. These variables hold masks
-  // to either access those cells or ignore them (with .elem()).
+  // Masks to either access the non-physical (ghost) cells, or ignore them - use with
+  // .elem()). Together they *should* hold the indices of all cells.
   arma::uvec isTooLowCell, isPhysicalCell;
-  arma_cube UseThisCell; // (bool values whether altitude is valid)
+  // (bool values whether altitude is valid)
+  arma_cube UseThisCell;
+  // Matrices whose elements denote the altitude index of the interiormost ghost cell
+  // in the k-up and k-down direction (altitude for geo grids, q for dipole).
+  arma_mat first_lower_gc, first_upper_gc;
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent

@@ -12,6 +12,7 @@
 Grid::Grid(std::string gridtype) {
 
   // At this point, we only need 2 ghostcells.  Hardcode this:
+  // This is also (kinda?) set in sizes.h for the geo & mag grid independently
   nGCs = 2;
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
@@ -272,6 +273,8 @@ Grid::Grid(std::string gridtype) {
 
   UseThisCell.set_size(nX, nY, nZ);
   UseThisCell.fill(true);
+  first_lower_gc.set_size(nX, nY);
+  first_upper_gc.set_size(nX, nY);
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 

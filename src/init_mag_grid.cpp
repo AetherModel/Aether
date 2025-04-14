@@ -506,9 +506,20 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Generate mask for physicsl cells //
   //////////////////////////////////////
 
-  isTooLowCell = find(geoAlt_scgc <= 0.0);
-  isPhysicalCell = find(geoAlt_scgc > 0.0);
+  isTooLowCell = find(geoAlt_scgc < grid_input.alt_min * cKMtoM);
+  isPhysicalCell = find(geoAlt_scgc >= grid_input.alt_min * cKMtoM);
   UseThisCell.elem(isTooLowCell).fill(false);
+
+  arma::uvec theGCs;
+  for (iLon=0; iLon<nLons; iLon++){
+    for (iLat = 0; iLat<nLats; iLat++){
+      // find *last* cell below alt_min
+      theGCs = find(geoAlt_scgc.tube(iLon, iLat) < grid_input.alt_min * cKMtoM);
+      // Get the last element if the col-vec
+      first_lower_gc(iLon, iLat) = theGCs(theGCs.n_elem - 1);
+    }
+  }
+  first_upper_gc.fill(nAlts - nGCs * 2 - 1);
 
   report.print(4, "Done altitude spacing for the dipole grid.");
 
