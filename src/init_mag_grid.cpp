@@ -121,7 +121,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t min_alt = grid_input.alt_min * cKMtoM;
   precision_t max_alt = grid_input.alt_max * cKMtoM;
 
-  // Normalize inputs to planet radius... (update when earth is oblate)
+  // Normalize inputs to planet radius... (update one day to support oblate Planet)
   // Here we are using the equatorial radius.
   precision_t planetRadius = planet.get_radius(0.0);
   // Altitude to begin modeling, normalized to planet radius
@@ -281,10 +281,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     // invLats are still all in North Hemisphere & increasing.
     // Use minimum p & alt to solve for q
     // q = sqrt((1-r/p)/r^4)
-    q_min = pow(((1 - max_alt_re / Pcenters(nGCs)) / pow(max_alt_re, 4.0)), 0.5);
+    q_min = pow(((1 - max_alt_re / Pcorners(0)) / pow(max_alt_re, 4.0)), 0.5);
 
   // Trace each field line up to q_max, obtained from the lowest field line in the block
-  precision_t q_max = pow(((1 - min_alt_re / Pcenters(nLats - nGCs)) / pow(
+  precision_t q_max = pow(((1 - min_alt_re / Pcorners(nLats -1)) / pow(
                              min_alt_re,
                              4.0)), 0.5);
 
@@ -302,8 +302,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   magQ_corner_1d(nAlts) = q_min + (nAlts - nGCs) * delQ;
 
-  report.print(3,
-               "Done generating points for magnetic grid. Plugging everything in");
+  report.print(3, "Done generating points for magnetic grid. Plugging everything in");
 
   ////////////////////////////
   // That is the grid made. //
@@ -510,14 +509,19 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   isPhysicalCell = find(geoAlt_scgc >= grid_input.alt_min * cKMtoM);
   UseThisCell.elem(isTooLowCell).fill(false);
 
-  arma::uvec theGCs;
   for (iLon=0; iLon<nLons; iLon++){
     for (iLat = 0; iLat<nLats; iLat++){
       // find *last* cell below alt_min
-      theGCs = find(geoAlt_scgc.tube(iLon, iLat) < grid_input.alt_min * cKMtoM);
-      // Get the last element if the col-vec
-      first_lower_gc(iLon, iLat) = theGCs(theGCs.n_elem - 1);
+      first_lower_gc(iLon, iLat) = find(geoAlt_scgc.tube(iLon, iLat) 
+                                        < grid_input.alt_min * cKMtoM).max();
     }
+  }
+  if (first_lower_gc.min() < nGCs-1 || first_lower_gc.max() > nAlts-nGCs-1){
+    report.error("Invalid magnetic grid!! Either:");
+    report.error(" - Lowest latitude field line is entirely below min_alt");
+    report.error(" - Highest altitude field line is above min_alt");
+    report.error("This should not happen. Something is terribly wrong. Goodbye.");
+    return false;
   }
   first_upper_gc.fill(nAlts - nGCs * 2 - 1);
 
