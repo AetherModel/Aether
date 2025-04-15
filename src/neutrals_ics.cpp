@@ -99,7 +99,7 @@ bool Neutrals::initial_conditions(Grid grid,
               std::cout << "  NOT Found in MSIS - setting constant\n";
 
             species[iSpecies].density_scgc.slice(0).
-            fill(species[iSpecies].lower_bc_density);
+                                          fill(species[iSpecies].lower_bc_density);
             fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
           }
 
@@ -129,8 +129,6 @@ bool Neutrals::initial_conditions(Grid grid,
       arma_vec alt1d(nAlts);
       arma_vec temp1d(nAlts);
 
-      arma_mat H2d(nLons, nLats);
-
       if (nInitial_temps > 0) {
         for (iLon = 0; iLon < nLons; iLon++) {
           for (iLat = 0; iLat < nLats; iLat++) {
@@ -155,7 +153,7 @@ bool Neutrals::initial_conditions(Grid grid,
                     iA++;
 
                   iA--;
-                  // alt will be between iA and iA+1:
+                  // alt will be between iA and iA+1
                   r = (alt - initial_altitudes[iA]) /
                       (initial_altitudes[iA + 1] - initial_altitudes[iA]);
                   temp1d[iAlt] =
@@ -169,14 +167,18 @@ bool Neutrals::initial_conditions(Grid grid,
           }
         }
       } else
-        temp1d = 200.0;
+        temperature_scgc.fill(200.0);
 
       // Make the initial condition in the lower ghost cells to be consistent
-      // with the actual lowwer BC:
-
-      for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        species[iSpecies].density_scgc.slice(0).
-        fill(species[iSpecies].lower_bc_density);
+      // with the actual lower BC:
+      for (iLon = 0; iLon < nLons; iLon ++) {
+        for (iLat = 0; iLat < nLats; iLat++) {
+          for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+            species[iSpecies].density_scgc.subcube(
+              iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat)).fill(
+                species[iSpecies].lower_bc_density);
+          }
+        }
       }
 
       report.print(2, "Calculating scale height");
