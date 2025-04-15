@@ -196,8 +196,8 @@ bool Neutrals::set_lower_bcs(Grid grid,
   // - This kind-of assumes nGCs=2, so may need to be updated.
   // - If the first_lower_gc is at iAlt = 1, this may cause issues.
   // - The equator-most (j-hat) grid cell will be entirely below min_alt!
-  for (int iLon = nGCs; iLon < nLons - nGCs; iLon++) {
-    for (int iLat = nGCs; iLat < nLats - nGCs; iLat++) {
+  for (int iLon = 0; iLon < nLons; iLon++) {
+    for (int iLat = 0; iLat < nLats; iLat++) {
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
         // k-index of 1st lower ghost cell is not constant on the dipole grid.

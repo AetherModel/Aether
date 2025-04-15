@@ -175,7 +175,7 @@ bool Neutrals::initial_conditions(Grid grid,
         for (iLat = 0; iLat < nLats; iLat++) {
           for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
             species[iSpecies].density_scgc.subcube(
-              iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat)).fill(
+              iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat)+1).fill(
                 species[iSpecies].lower_bc_density);
           }
         }
