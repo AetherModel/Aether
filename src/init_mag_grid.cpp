@@ -281,10 +281,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     // invLats are still all in North Hemisphere & increasing.
     // Use minimum p & alt to solve for q
     // q = sqrt((1-r/p)/r^4)
-    q_min = pow(((1 - max_alt_re / Pcorners(0)) / pow(max_alt_re, 4.0)), 0.5);
+    q_min = pow(((1 - max_alt_re / Pcenters(0)) / pow(max_alt_re, 4.0)), 0.5);
 
   // Trace each field line up to q_max, obtained from the lowest field line in the block
-  precision_t q_max = pow(((1 - min_alt_re / Pcorners(nLats -1)) / pow(
+  precision_t q_max = pow(((1 - min_alt_re / Pcenters(nLats - 1)) / pow(
                              min_alt_re,
                              4.0)), 0.5);
 
@@ -302,7 +302,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   magQ_corner_1d(nAlts) = q_min + (nAlts - nGCs) * delQ;
 
-  report.print(3, "Done generating points for magnetic grid. Plugging everything in");
+  report.print(3,
+               "Done generating points for magnetic grid. Plugging everything in");
 
   ////////////////////////////
   // That is the grid made. //
@@ -509,20 +510,22 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   isPhysicalCell = find(geoAlt_scgc >= grid_input.alt_min * cKMtoM);
   UseThisCell.elem(isTooLowCell).fill(false);
 
-  for (iLon=0; iLon<nLons; iLon++){
-    for (iLat = 0; iLat<nLats; iLat++){
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
       // find *last* cell below alt_min
-      first_lower_gc(iLon, iLat) = find(geoAlt_scgc.tube(iLon, iLat) 
-                                        < grid_input.alt_min * cKMtoM).max();
+      first_lower_gc(iLon, iLat) = find(geoAlt_scgc.tube(iLon, iLat) < min_alt).max();
     }
   }
-  if (first_lower_gc.min() < nGCs-1 || first_lower_gc.max() > nAlts-nGCs-1){
+
+  if (first_lower_gc.min() < nGCs - 1 ||
+      first_lower_gc.max() > nAlts - nGCs - 1) {
     report.error("Invalid magnetic grid!! Either:");
     report.error(" - Lowest latitude field line is entirely below min_alt");
     report.error(" - Highest altitude field line is above min_alt");
     report.error("This should not happen. Something is terribly wrong. Goodbye.");
     return false;
   }
+
   first_upper_gc.fill(nAlts - nGCs * 2 - 1);
 
   report.print(4, "Done altitude spacing for the dipole grid.");
