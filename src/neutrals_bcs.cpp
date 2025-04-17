@@ -230,7 +230,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
           temperature_scgc(iLon, iLat, iAlt + 1)
           / temperature_scgc(iLon, iLat, iAlt)
           * species[iSpecies].density_scgc(iLon, iLat, iAlt + 1)
-          * exp(-grid.dk_edge_m(iLon, iLat, iAlt) / sh_ave);
+          * exp(-grid.dr_edge(iLon, iLat, iAlt) / sh_ave);
 
         // Vertical velocities: (In GITM this projected down with mesh coeffs)
         // Take lowest physical cell's vertical velocity and project it down nGCs cells.
