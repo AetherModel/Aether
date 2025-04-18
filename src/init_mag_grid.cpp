@@ -145,7 +145,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   arma_vec lon1dLeft(nLons + 1);
 
-  // if we are not doing anything in the lon direction, then set dlon to
+  // If we are not doing anything in the lon direction, then set dlon to
   // something reasonable:
   if (!HasXdim)
     dlon = 1.0 * cDtoR;
@@ -158,7 +158,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   /////////////////
 
   // - Make a 1d vector
-  // - copy it into the 3d cube
+  // - Copy it into the 3d cube
   for (iLon = 0; iLon < nLons; iLon++) {
     lon1d(iLon) = lon0 + (iLon - nGCs + 0.5) * dlon;
     lon1dLeft(iLon) = lon0 + (iLon - nGCs) * dlon; // corners
@@ -504,9 +504,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   calc_dipole_grid_spacing(planet);
 
-
   //////////////////////////////////////
-  // Generate mask for physicsl cells //
+  // Generate mask for physical cells //
   //////////////////////////////////////
 
   isTooLowCell = find(geoAlt_scgc < grid_input.alt_min * cKMtoM);
