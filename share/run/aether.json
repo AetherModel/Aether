@@ -14,9 +14,9 @@
 
     "neuGrid" : {
         "Shape": "sphere4",
-	"nLonsPerBlock" : 24,
-	"nLatsPerBlock" : 22,
-	"nAlts" : 40,
+        "nLonsPerBlock" : 24,
+        "nLatsPerBlock" : 22,
+        "nAlts" : 40,
         "dAltScale" : 0.25,
         "IsUniformAlt" : false},
     
@@ -35,6 +35,7 @@
         "Potential" : "Weimer05",
         "DiffuseAurora" : "fta",
         "File": "UA/inputs/b20110320n_omni.bin"},
+        
     "Outputs" : {
         "type" : ["states", "grid"],
         "dt" : [900, -1] },

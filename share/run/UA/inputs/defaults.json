@@ -69,7 +69,7 @@
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
     "neuGrid" : {
-        "Shape" : "sphere",
+        "Shape" : "sphere4",
 		"LatRange" : [-90.0, 90.0],
         "nLatsPerBlock" : 18,
 		"LonRange" : [0.0, 360.0],
