@@ -79,19 +79,14 @@
 	"IsUniformAlt" : true,
         "AltFile" : ""},
 
-    "ionGrid" : {
-        "Shape" : "dipole4",
-        "nLatsPerBlock" : 18,
-		"LonRange" : [0.0, 360.0],
-		"LatRange" : [85.0, 360.0],
-		"AltRange" : [0.0, 360.0],
-        "nLonsPerBlock" : 22,
-        "nAlts" : 50,
-        "MinAlt" : 80.0,
-        "MinApex" : 120.0,
-        "LatMax":88.0,
-        "LatStretch":1.0,
-        "dAltStretch" : 0.6},
+	"ionGrid": {
+		"Shape": "dipole4",
+		"nLonsPerBlock": 14,
+		"nLatsPerBlock" : 20,
+		"nAlts":30,
+		"AltRange":[80,1500],
+		"LatRange":[7, 87]
+		},
 
     "Oblate" : {
 	"isOblate" : false,
