@@ -130,5 +130,8 @@
 		"do" : false,
 		"OutDir" : "UA/restartOut",
 		"InDir" : "UA/restartIn",
-		"dt" : 3600.0}
+		"dt" : 3600.0},
+
+	"DoTests": {
+				"exit_on_fail": true}
 }

@@ -31,6 +31,9 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
+    // Find out what tests we are running:
+    json tests = input.get_tests();
+
     // For now, the number of processors and blocks are set by the 
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)

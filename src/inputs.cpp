@@ -1163,6 +1163,14 @@ bool Inputs::get_advection_neutrals_implicitfriction() {
   return get_setting_bool("Advection", "Neutrals", "useImplicitFriction");
 }
 
+// -----------------------------------------------------------------------
+// See what tests are requested
+// -----------------------------------------------------------------------
+
+json Inputs::get_tests() {
+  return get_setting_json("DoTests");
+}
+
 // --------------------------------------------------------------------------
 // check to see if class is ok
 // --------------------------------------------------------------------------
