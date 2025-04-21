@@ -116,6 +116,10 @@ int main() {
     Ions ions(gGrid, planet);
     Ions ionsMag(mGrid, planet);
 
+    if (tests["test_gradient"]) {
+      test_gradient(planet, quadtree, tests, gGrid, mGrid);
+      }
+
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
     // Is simply adds nans and infinities in a few places, then

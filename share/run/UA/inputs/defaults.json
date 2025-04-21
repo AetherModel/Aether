@@ -132,6 +132,6 @@
 		"InDir" : "UA/restartIn",
 		"dt" : 3600.0},
 
-	"DoTests": {
+	"DoTests": {"test_gradient": false,
 				"exit_on_fail": true}
 }
