@@ -21,25 +21,29 @@ If a path is printed, `cmake` is installed. To check the version, run `cmake
 The layout of this page is as follows:
 
 - [Installing Dependencies](#installing-dependencies)
-  - [Install C++ Compiler](#install-gcc)
+  - [Install Compiler](#install-compiler)
   - [Install cmake](#install-cmake)
   - [Install JSON libraries](#install-json-libraries)
   - [Install Armadillo (and boost)](#install-armadillo-and-boost)
   - [Install NetCDF (optional)](#install-netcdf-optional)
 
-## Install gcc
+## Install Compiler
 
-On MacOS this can be installed, for
-example, using:
+On MacOS this can be installed, for example, using:
 
 ```bash
-sudo port install gcc11
+sudo port install g++
 ```
+
+> NOTE: On Macos, cmake will default to using clang instead of gcc.
+You need to set an environmental variable to tell cmake to use g++ instead. 
+Do this with `export CXX=/opt/local/bin/g++`,
+and replace the path if it is placed somewhere different.
 
 On Ubuntu, `gcc` (the C-compiler) is pre-installed, but the C++ compiler is not. This 
 can be installed with (subsituting your machine's package manager command):
 
-``bash
+```bash
 sudo apt install g++
 ```
 
@@ -103,7 +107,7 @@ sudo port install lapack
 sudo port install OpenBLAS
 sudo port install boost
 sudo port install armadillo
-sudo port install openmpi-bin libopenmpi-dev
+sudo port install openmpi
  ```
 
 ## Install NetCDF (optional)
@@ -122,7 +126,7 @@ sudo port install netcdf-cxx4
 If you want the gcc version of netcdf, then:
 
 ```bash
-sudo port install netcdf-cxx4 +gcc10
+sudo port install netcdf-cxx4
 ```
 
 On Ubuntu, gcc is the default compiler, it seems like you can probably just do:
