@@ -8,17 +8,12 @@
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
         "dt" : 10.0,
-        "check_for_nans" : false
-    },
+        "check_for_nans" : false},
 
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
-    "GeoBlockSize" : {
-        "nLons" : 18,
-        "nLats" : 18,
-        "nAlts" : 50},
-
     "neuGrid" : {
+        "Shape": "sphere4",
 	"nLonsPerBlock" : 24,
 	"nLatsPerBlock" : 22,
 	"nAlts" : 40,
@@ -28,12 +23,11 @@
     "ionGrid": {
         "Shape": "dipole4",
         "nLonsPerBlock": 36,
-        "nLatsPerBlock" : 18,
-        "nAlts":36,
-        "LatRange":[10, 80],
-        "AltRange":[80.0, 1000],
-		"LonRange" : [0.0, 360.0]
-        },
+        "nLatsPerBlock": 18,
+        "nAlts": 50,
+        "LatRange": [10, 80],
+        "AltRange": [80.0, 1000],
+	"LonRange": [0.0, 360.0] },
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
