@@ -89,7 +89,8 @@ bool output(const Neutrals &neutrals,
 
     // make sure the output dt is set correctly. Otherwise these errors aren't caught correctly.
     precision_t dt_output = input.get_dt_output(iOutput);
-    if (dt_output == 0.0){
+
+    if (dt_output == 0.0) {
       report.exit(function);
       return false;
     }
@@ -243,6 +244,9 @@ bool output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable("Gvertical",
                                                     "m/s^2",
                                                     grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gmag",
+                                                    "m/s^2",
+                                                    grid.gravity_mag_scgc);
         AllOutputContainers[iOutput].store_variable("Gpotential",
                                                     "m^2/s^2",
                                                     grid.gravity_potential_scgc);
@@ -261,9 +265,9 @@ bool output(const Neutrals &neutrals,
                                                     "degrees",
                                                     grid.magLon_scgc * cRtoD);
         AllOutputContainers[iOutput].store_variable("invLat",
-                                                      "Magnetic Invariant Latitude",
-                                                      "degrees",
-                                                      grid.magInvLat_scgc * cRtoD);
+                                                    "Magnetic Invariant Latitude",
+                                                    "degrees",
+                                                    grid.magInvLat_scgc * cRtoD);
         AllOutputContainers[iOutput].store_variable("mlt",
                                                     "Magnetic Local Time",
                                                     "hours",
