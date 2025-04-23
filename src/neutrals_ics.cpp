@@ -99,7 +99,7 @@ bool Neutrals::initial_conditions(Grid grid,
               std::cout << "  NOT Found in MSIS - setting constant\n";
 
             species[iSpecies].density_scgc.slice(0).
-                                          fill(species[iSpecies].lower_bc_density);
+            fill(species[iSpecies].lower_bc_density);
             fill_with_hydrostatic(iSpecies, 1, nAlts, grid);
           }
 
@@ -174,9 +174,11 @@ bool Neutrals::initial_conditions(Grid grid,
       for (iLon = 0; iLon < nLons; iLon ++) {
         for (iLat = 0; iLat < nLats; iLat++) {
           for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
             species[iSpecies].density_scgc.subcube(
-              iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat)+1).fill(
+              iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat) + 1).fill(
                 species[iSpecies].lower_bc_density);
+
           }
         }
       }
@@ -188,7 +190,7 @@ bool Neutrals::initial_conditions(Grid grid,
       report.print(2, "Filling with hydrostatic");
 
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-        fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
+       fill_with_hydrostatic(iSpecies, nGCs - 1, nAlts, grid);
     } // type = planet
   }
 
