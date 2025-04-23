@@ -12,6 +12,11 @@ import argparse
 import os
 import json
 from struct import unpack
+try:
+    from netCDF4 import Dataset
+    from h5py import File
+except InputError:
+    print("NetCDF and/or h5py not found")
 
 # ----------------------------------------------------------------------
 # Function to parse input arguments
@@ -549,7 +554,7 @@ def get_base_files():
     if len(filesInfo) == 0:
         try:
             os.chdir("UA/output")
-            get_base_files()
+            filesInfo = get_base_files()
         except:
             print("No input files found!!")
     
@@ -974,15 +979,7 @@ def main(args):
     iAlt = args.alt
 
     output_netcdf = False if args.hdf5 else True
-    
-    if filesInfo[0]['isNetCDF']:
-        try:
-            from netCDF4 import Dataset
-            from h5py import File
-        except InputError:
-            raise InputError(
-              "Attempting to postprocess NetCDF files, but NetCDF is not installed for Python")    
-    
+
     for iFile, fileInfo in enumerate(filesInfo):
         coreFile = fileInfo['coreFile']
         isNetCDF = fileInfo['isNetCDF']
