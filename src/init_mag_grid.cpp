@@ -492,10 +492,13 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   gravity_vcgc[2] = - mu * rad_unit_vcgc[2] % radius2i_scgc;
   gravity_potential_scgc.set_size(nX, nY, nAlts);
   gravity_potential_scgc.zeros();
-  gravity_mag_scgc = sqrt(
-                       gravity_vcgc[0] % gravity_vcgc[0] +
-                       gravity_vcgc[1] % gravity_vcgc[1] +
-                       gravity_vcgc[2] % gravity_vcgc[2]);
+
+  gravity_mag_scgc = mu / pow(radius_scgc, 2);
+  
+  //gravity_mag_scgc = sqrt(
+  //                     gravity_vcgc[0] % gravity_vcgc[0] +
+  //                     gravity_vcgc[1] % gravity_vcgc[1] +
+  //                     gravity_vcgc[2] % gravity_vcgc[2]);
 
   report.print(4, "Done gravity calculations for the dipole grid.");
 
