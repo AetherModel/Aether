@@ -193,15 +193,13 @@ void Grid::fill_grid_bfield(Planets planet) {
     // Now we modify the dipole's magnetic field to account for any imprecision.
     // Take the bfield_mag and put it into the third component (b-hat = k-hat)
     if (IsDipole) {
-      bfield_vcgc[2] = bfield_mag_scgc;
+      bfield_vcgc[2] = bfield_mag_scgc % sign(magInvLat_scgc * -1.0);
       bfield_vcgc[1].zeros();
       bfield_vcgc[0].zeros();
 
       bfield_unit_vcgc[0].zeros();
       bfield_unit_vcgc[1].zeros();
-      bfield_unit_vcgc[2].ones();
-
-      bfield_unit_vcgc[2] % sign(magInvLat_scgc * -1.0);
+      bfield_unit_vcgc[2] = 1.0 * sign(magInvLat_scgc * -1.0);
 
       // slight complication -
     } else
