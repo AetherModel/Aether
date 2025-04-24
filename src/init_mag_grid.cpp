@@ -483,14 +483,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     gravity_vcgc[iV].zeros();
   }
 
-  rad_unit_vcgc[1] = cos(magLat_scgc) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
+  // Gravity should be negative in the k direction, since the grid switches directions.
+  // j direction should switch signs when crossing the equator (+ in south, - in north)  
+  rad_unit_vcgc[1] = sign(magLat_scgc) % cos(magLat_scgc) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
                                                 % sin(magLat_scgc)), 0.5);
-  rad_unit_vcgc[2] = 2.0 * sin(magLat_scgc) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
+  rad_unit_vcgc[2] = - 2.0 * abs(sin(magLat_scgc)) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
                                                       % sin(magLat_scgc)), 0.5);
 
   precision_t mu = planet.get_mu();
-  gravity_vcgc[1] = - mu * rad_unit_vcgc[1] % radius2i_scgc;
-  gravity_vcgc[2] = - mu * rad_unit_vcgc[2] % radius2i_scgc;
+  gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;
+  gravity_vcgc[2] = mu * rad_unit_vcgc[2] % radius2i_scgc;
   gravity_potential_scgc.set_size(nX, nY, nAlts);
   gravity_potential_scgc.zeros();
 
