@@ -436,7 +436,50 @@ public:
   bool get_O_cooling();
 
   /**********************************************************************
-      \brief returns settings["
+     \brief returns settings["Sources"]["Ions"]["IncludePhotoElectronHeating"]
+     \param none
+   **/
+  bool get_do_photoelectron_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeIonizationHeating"]
+     \param none
+   **/
+  bool get_do_ionization_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronIonCollisionalHeating"]
+     \param none
+   **/
+  bool get_do_electron_ion_collisional_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronNeutralElasticCollisionalHeating"]
+     \param none
+   **/
+  bool get_do_electron_neutral_elastic_collisional_heating();
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeElectronNeutralInelasticCollisionalHeating"]
+     \param none
+   **/
+  bool get_do_electron_neutral_inelastic_collisional_heating();
+
+
+  /**********************************************************************
+     \brief returns settings["Sources"]["Ions"]["IncludeThermoelectricHeating"]
+     \param none
+   **/
+  bool get_do_thermoelectric_heating();
+
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
+  bool get_use_centripetal();
+  
+  /**********************************************************************
+     \brief returns settings["
      \param 
    **/
   bool get_use_coriolis();

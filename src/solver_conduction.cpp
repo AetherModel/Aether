@@ -16,6 +16,8 @@
 //  - At this point, the bottom BC is fixed, while the top BC is zero gradient
 //  - The dx variable is assumed to be distance between the CURRENT cell center
 //    (i) and the cell center of the cell BELOW the current one (i-1).
+//
+// The last two arguments are optional, with default values set in the func declaration.
 // -----------------------------------------------------------------------
 
 arma_vec solver_conduction(arma_vec value,
@@ -25,7 +27,9 @@ arma_vec solver_conduction(arma_vec value,
                            arma_vec dx,
                            precision_t dt,
                            int64_t nGCs,
-                           bool return_diff) {
+                           bool return_diff, // (optional) False by default (return new `value`)
+                           arma_vec source2 // (optional) Sources dependent on `value`
+                           ) {
 
   int64_t nPts = value.n_elem;
 
@@ -47,6 +51,12 @@ arma_vec solver_conduction(arma_vec value,
   arma_vec conduction(nPts);
   conduction.zeros();
 
+  // If source2 is not given, set it to zero:
+  if (source2.n_elem == 0){
+    source2.set_size(source.n_elem);
+    source2.zeros();
+  }
+
   int64_t i;
 
   for (i = nGCs; i < nPts - nGCs; i++)
@@ -54,7 +64,7 @@ arma_vec solver_conduction(arma_vec value,
 
   arma_vec a = di / du22 % r - dl / du12 % r % r;
   arma_vec c = di / du22 + dl / du12;
-  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r);
+  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r) + source2 % front * dt;
   arma_vec d = -1.0 * (value / m + source % front * dt);
 
   // Lower BCs (fixed value):
