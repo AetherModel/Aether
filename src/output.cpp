@@ -28,6 +28,9 @@ std::string get_filename_from_type(std::string type_output) {
 
   if (type_output == "bfield")
     filename = "3DBF";
+    
+  if (type_output == "delta")
+    filename = "3DDE";
 
   if (type_output == "moment")
     filename = "3DMO";
@@ -253,6 +256,22 @@ bool output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable("radius",
                                                     "m",
                                                     grid.radius_scgc);
+      }
+
+      if (type_output == "delta") {
+        AllOutputContainers[iOutput].store_variable("dim",
+                                                    "di Center m",
+                                                    "m",
+                                                    grid.di_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("djm",
+                                                    "dj Center m",
+                                                    "m",
+                                                    grid.dj_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("dkm",
+                                                    "dk Center m",
+                                                    "m",
+                                                    grid.dk_center_m_scgc);
+
       }
 
       if (type_output == "bfield" || type_output == "ions") {
