@@ -101,7 +101,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   std::vector<arma_cube> total_acc = make_cube_vector(nX, nY, nZ, 3);
   std::vector<arma_cube> efield_acc = make_cube_vector(nX, nY, nZ, 3);
 
-  int64_t iIon, iNeutral, iDim;
+  int64_t iIon, iNeutral, iComp;
 
   std::vector<arma_cube> grad_Pi_plus_Pe;
   arma_cube rho, nuin, nuin_sum, Nie, sum_rho;
@@ -115,7 +115,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   fill_electrons();
 
-  for (int64_t iComp = 0; iComp < 3; iComp++)
+  for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp].zeros();
 
   std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
@@ -124,7 +124,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   for (iIon = 0; iIon < nSpecies; iIon++) {
 
-    for (int64_t iComp = 0; iComp < 3; iComp++)
+    for (iComp = 0; iComp < 3; iComp++)
       species[iIon].perp_velocity_vcgc[iComp].zeros();
 
     if (species[iIon].DoAdvect) {
@@ -139,16 +139,16 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
-      for (iDim = 0; iDim < 3; iDim ++) {
-        gravity_vcgc[iDim] = grid.gravity_vcgc[iDim];
-        grad_Pi_plus_Pe[iDim] = grad_Pi_plus_Pe[iDim] / rho;
-        efield_acc[iDim] = Nie % efield_vcgc[iDim] / rho;
+      for (iComp = 0; iComp < 3; iComp ++) {
+        gravity_vcgc[iComp] = grid.gravity_vcgc[iComp];
+        grad_Pi_plus_Pe[iComp] = grad_Pi_plus_Pe[iComp] / rho;
+        efield_acc[iComp] = Nie % efield_vcgc[iComp] / rho;
       }
 
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
 
-      for (int64_t iComp = 0; iComp < 3; iComp++)
+      for (iComp = 0; iComp < 3; iComp++)
         wind_acc[iComp].zeros();
 
       nuin_sum.zeros();
@@ -157,14 +157,14 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
         nuin_sum = nuin_sum + species[iIon].nu_ion_neutral_vcgc[iNeutral];
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           wind_acc[iComp] = wind_acc[iComp] +
                             nuin % neutrals.velocity_vcgc[iComp];
         }
       }
 
       // Total Forcing (sum everything - this is A_s):
-      for (int64_t iComp = 0; iComp < 3; iComp++) {
+      for (iComp = 0; iComp < 3; iComp++) {
         total_acc[iComp] =
           - grad_Pi_plus_Pe[iComp]
           + gravity_vcgc[iComp]
@@ -176,7 +176,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         // With a Planetary Magnetic field
         arma_cube a_dot_b = dot_product(total_acc, grid.bfield_unit_vcgc);
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = a_dot_b % grid.bfield_unit_vcgc[iComp];
           a_perp[iComp] = total_acc[iComp] - a_par[iComp];
         }
@@ -190,7 +190,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           Nie % Nie % grid.bfield_mag_scgc % grid.bfield_mag_scgc;
         bottom.clamp(1e-32, 1e32);
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           // I redefined A to be an acceleration instead of a force, which
           // then changes the definition of top
           top = rho % nuin % a_perp[iComp] + Nie % a_x_b[iComp];
@@ -214,7 +214,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         }
       } else {
         // No Planetary Magnetic field
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = total_acc[iComp];
           // Steady state:
           //species[iIon].par_velocity_vcgc[iComp] =
@@ -230,9 +230,9 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // Calculate the mass-weighted average total velocity
       sum_rho = sum_rho + rho;
 
-      for (int64_t iComp = 0; iComp < 3; iComp++) {
+      for (iComp = 0; iComp < 3; iComp++) {
         species[iIon].velocity_vcgc[iComp] =
-          //species[iIon].perp_velocity_vcgc[iComp] +
+          species[iIon].perp_velocity_vcgc[iComp] +
           species[iIon].par_velocity_vcgc[iComp];
         velocity_vcgc[iComp] = velocity_vcgc[iComp] +
                                rho % (species[iIon].velocity_vcgc[iComp]);
@@ -243,7 +243,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   }  // for iIon
 
   // This is the mass weighted total bulk velocity:
-  for (int64_t iComp = 0; iComp < 3; iComp++)
+  for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp] = velocity_vcgc[iComp] / sum_rho;
 
   report.exit(function);
