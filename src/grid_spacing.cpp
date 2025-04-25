@@ -343,8 +343,8 @@ void Grid::calc_j_grid_spacing() {
 
   // Dipole will have different scaling...
   if (iGridShape_ == iDipole_) {
-    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc);
-    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc);
+    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc) % sign(magLat_scgc);
+    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc) % sign(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:
