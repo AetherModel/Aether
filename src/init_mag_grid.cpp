@@ -236,6 +236,11 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
     lat1dDown(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 2)) / 2.0;
     lat1d(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 1)) / 2.0;
     lat1d(nLats - 2) = (lat1dDown(nLats - 1) + lat1dDown(nLats - 2)) / 2.0;
+
+    if (sign(lower_left_norm(1)) > 0)
+      DoesTouchNorthPole = true;
+    else
+      DoesTouchSouthPole = true;
   }
 
   // l-shells of centers
@@ -267,15 +272,14 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // - minimum Lshell in this block is < max_alt (the q-value would be undefined)
 
   precision_t q_min;
-  bool close_this_block = false;
 
   if (Pcorners.min() < max_alt_re) // invalid q's - Lshell < max_alt
-    close_this_block = true;
+    IsClosed = true;
 
   if (lat_origin < 0.01) // equator, with some imprecision
-    close_this_block = true;
+    IsClosed = true;
 
-  if (close_this_block)
+  if (IsClosed)
     q_min = 0; // q=0 at equator (for closed blocks)
   else
     // invLats are still all in North Hemisphere & increasing.

@@ -111,6 +111,9 @@ public:
   // in the k-up and k-down direction (altitude for geo grids, q for dipole).
   arma_mat first_lower_gc, first_upper_gc;
 
+  // Whether to close field lines on dipole grid (Always false for geo grids)
+  bool IsClosed;
+
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;

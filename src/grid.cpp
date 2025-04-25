@@ -271,6 +271,11 @@ Grid::Grid(std::string gridtype) {
   HasBField = 0;
   IsExperimental = false;
 
+  // Spatial info defaults
+  IsClosed = false;
+  DoesTouchNorthPole = false;
+  DoesTouchSouthPole = false;
+
   UseThisCell.set_size(nX, nY, nZ);
   UseThisCell.fill(true);
   first_lower_gc.set_size(nX, nY);
