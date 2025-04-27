@@ -18,21 +18,21 @@ again, 16 processors are needed, etc. However, in the altitude/radial direction,
 the number of points that are specified in the aether.json is unchanged, as it
 does not rely on the number of processors used.
 
-- [Grids in Aether](#grids-in-aether)
-  - [Grid Types Explained](#grid-types-explained)
-  - [Grid Shapes Explained](#grid-shapes-explained)
-    - [TL;DR](#tldr)
-    - [The Sphere Grid](#the-sphere-grid)
-    - [The Cubesphere Grid](#the-cubesphere-grid)
-    - [The Dipole Grid](#the-dipole-grid)
-      - [Inputs:](#inputs)
-    - [Root Nodes](#root-nodes)
-      - [Sphere](#sphere)
-      - [Cubesphere](#cubesphere)
-      - [Specifying Root Nodes](#specifying-root-nodes)
-  - [Specifying the Grid](#specifying-the-grid)
-    - [Horizontal Resolution](#horizontal-resolution)
-    - [Vertical Resolution](#vertical-resolution)
+- [Grid Types Explained](#grid-types-explained)
+- [Grid Shapes Explained](#grid-shapes-explained)
+  - [TL;DR](#tldr)
+  - [The Sphere Grid](#the-sphere-grid)
+  - [The Cubesphere Grid](#the-cubesphere-grid)
+  - [The Dipole Grid](#the-dipole-grid)
+    - [Inputs:](#inputs)
+  - [Root Nodes](#root-nodes)
+    - [Sphere](#sphere)
+    - [Cubesphere](#cubesphere)
+    - [Dipole](#dipole)
+    - [Specifying Root Nodes](#specifying-root-nodes)
+- [Specifying the Grid](#specifying-the-grid)
+  - [Horizontal Resolution](#horizontal-resolution)
+  - [Vertical Resolution](#vertical-resolution)
 
 ## Grid Types Explained
 
@@ -77,8 +77,8 @@ system can simulate a sub-region of the Earth if desired.
 
 The user needs to specify the shape of the grid, which specifies the grid shape
 and the number of root nodes. Shapes include: `sphere` (1 root node), `sphere6`
-(6 root nodes), `cubesphere` (6 root nodes), `dipole` (1 root node), `dipole4`
-(4 root nodes), and `dipole6` (6 root nodes).
+(6 root nodes), `cubesphere` (6 root nodes),`dipole4` (4 root nodes), and
+`dipole6` (6 root nodes).
 
 ### The Sphere Grid
 
@@ -117,13 +117,6 @@ bottom of the field-line.
 Each fieldline starts at the lowest modeled altitude
 and curves towards the equator. In the northern hemisphere, this means that the
 fieldlines curve south, while in the southern hemisphere they curve north.
-
-The dipole grid requires >4 root nodes which ensures the coordinates are 
-mutually orthogonal. The available shapes are `dipole4` and `dipole6`, for 
-compatibility with the neutral grid being a sphere or cubesphere. In both cases,
-each node the entire longitude range and given a portion of the latitude range.
-So in the case of `dipole4`, the four nodes are each given 1/4 of the available
-latitudes and all of the longitudes.
 
 The dipole grid is evenly spaced in **invariant latitude** (where the field line
 passes the minumum altitude) and **q** (the dipole coordinate
@@ -235,6 +228,20 @@ divided into four blocks each), each root node is split in half along the
 left-right direction and the up-down direction. For a cubesphere grid, the
 number of processors that can be used to specify the grid are then: 6, 24 (6
 \* 4), 96 (6 \* 4^2), 384 (6 \* 4^3), etc.
+
+#### Dipole
+
+The dipole grid requires >4 root nodes to ensure the coordinates are 
+mutually orthogonal. The available shapes are `dipole4` and `dipole6`, for 
+compatibility with the neutral grid being a sphere or cubesphere. In both cases,
+each root node covers the entire longitude range and given a portion of the latitude 
+range. So in the case of `dipole4`, the four nodes each cover 1/4 of the available
+latitudes and all of the longitudes. The available latitudes are scaled to the latitude
+limits specified in the input file, so the divisions will not be at $\pm45^\circ$ and
+$0^\circ$ latitude, rather will be offset to evenly divide the entire range across the
+blocks. Dividing the root nodes works identically to the spherical grid, for example
+`dipole4` can be used with 16 MPI tasks and each root node is divided into four blocks,
+forming a 2x2 grid.
 
 #### Specifying Root Nodes
 
@@ -365,27 +372,17 @@ this is the number of points along the dipole flux tube.
 ```
 
 ```json
-  "ionGrid" : {
-    "Shape" : "dipole",
-    "LatRange" : [-90.0, 90.0],
-    "nLatsPerBlock" : 18,
-    "LonRange" : [0.0, 360.0],
-    "nLonsPerBlock" : 36,
-    "nAlts" : 200,
-        "MinAlt" : 80.0,
-        "MinApex" : 120.0,
-        "MaxAlt" : 5000.0},
+    "ionGrid": {
+        "Shape": "dipole4",
+        "nLonsPerBlock": 36,
+        "nLatsPerBlock": 18,
+        "nAlts": 100,
+        "LatRange": [10, 80],
+        "AltRange": [80.0, 1000],
+	      "LonRange": [0.0, 360.0]},
 ```
 
 The dipole grid has both open field-lines and closed field-lines. The closed
 field-lines are near the equator, while the open field-lines are near the poles.
-The variable `MaxAlt` sets where this differentiation occurs - if the apex
-height of the field-line is above this altitude, then it is open. All
-field-lines in Aether start at the `MinAlt` and rise along a dipolar shape until
-they either encounter the equatorial plane or `MaxAlt`. In the south, these
-field-lines tilt towards the north (from `MinAlt` to `MaxAlt`) and in the north,
-the field-lines tilt towards the south (from `MinAlt` to `MaxAlt`).
-
-- The spacing is uniform in longitude.
-- The spacing along the field-line has non-uniform spacing.
-- The spacing in latitude is non-uniform.
+The variable `MaxAlt` sets where the differentiation occurs - if the apex
+height of all field-lines on this block are above this altitude, then it is open. 

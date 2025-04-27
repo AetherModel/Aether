@@ -27,7 +27,7 @@
         "nAlts": 100,
         "LatRange": [10, 80],
         "AltRange": [80.0, 1000],
-	"LonRange": [0.0, 360.0] },
+        "LonRange": [0.0, 360.0]},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
