@@ -4,6 +4,22 @@ This document assumes you have already downloaded and built the Aether model. If
 not, you should return to [one](../../README.md) of
 [these](../installation/installation.md) pages before continuing.
 
+- [The first run](#the-first-run)
+  - [Running in 1D](#running-in-1d)
+  - [Using OpenMP](#using-openmp)
+- [Output Files](#output-files)
+  - [Blocks](#blocks)
+  - [Ensembles](#ensembles)
+  - [Post processing](#post-processing)
+- [Input Files](#input-files)
+- [defaults.json file](#defaultsjson-file)
+- [For Developers](#for-developers)
+- [aether.json file](#aetherjson-file)
+- [planet.in file](#planetin-file)
+- [orbits.csv file](#orbitscsv-file)
+- [chemistry file](#chemistry-file)
+
+
 ## The first run
 
 Once you have compiled you can run Aether. To remember which runs you're doing,
@@ -69,6 +85,33 @@ that need to be made to run in one dimension.
 to `"sphere"`. No number!
 2. Run the code with `./aether`. This will not use MPI, however armadillo may use
 multiple OpenMP processes for math, so be careful on cluster login nodes.
+
+### Using OpenMP
+
+> This section is mostly a placeholder. Everything is correct, but has little
+> effect on Aether's speed. This is only really a concern on laptops with low core counts
+> or shared systems.
+
+Armadillo contains several optimizations which utilize OpenMP for parallelization beyond
+the block decomposition on the entire sphere. Thus, runs on 4 MPI processors can benefit
+from devoting additional processors to OpenMP parallelization.
+
+The number of OpenMP tasks Armadillo is able to utilize can be set before compiling or
+at runtime. To change this *before* compiling, change the value of`ARMA_OPENMP_THREADS`
+in the [Armadillo config.hpp file](../../share/include/armadillo_bits/config.hpp#173)
+from 8. This will require re-compiling & possibly re-running `cmake`. The more flexible 
+option is to use a variable at runtime:
+
+The easier way to set the number of OpenMP threads is to use the variable 
+`OMP_NUM_THREADS`. This can be set before running the executable with 
+`export OMP_NUM_THREADS=2`, or at runtime with:
+
+```bash
+OMP_NUM_THREADS=2 mpirun -np 4 ./aether
+```
+At this stage in development, there is not much speedup available from OpenMP. For
+example, the change in runtime from the default value of 8 (from Armadillo) and 1
+(disabling OpenMP) in a 10-minute run is about one minute, or about 10%.
 
 ## Output Files
 
