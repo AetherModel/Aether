@@ -267,6 +267,7 @@ public:
 
   void set_IsDipole(bool value);
   bool get_IsDipole();
+  bool get_IsClosed();
 
   int64_t get_nPointsInGrid();
 
@@ -327,6 +328,8 @@ public:
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
 
+  void create_dipole_connection(Quadtree quadtree);
+
   // Make mag-field grid:
   bool init_dipole_grid(Quadtree quadtree_ion, Planets planet);
   // Support functions:
@@ -350,17 +353,26 @@ public:
   int iProcYp;
   /// The processor to the South/Down/Y-:
   int iProcYm;
+  // This is special, since message passing in the z direction will only be
+  // between closed magnetic field lines, so we don't need a +/- (p/m):
+  int iProcZ;
 
+  bool isExchangeInitialized = false;
+  
   arma_vec edge_Xp;
   arma_vec edge_Yp;
   arma_vec edge_Xm;
   arma_vec edge_Ym;
+  // again, z will only be in one
+  arma_vec edge_Z;
 
   int64_t iRoot;
   int64_t iRootXp;
   int64_t iRootXm;
   int64_t iRootYp;
   int64_t iRootYm;
+  // again, z will only be in one
+  int64_t iRootZ;
 
   struct messages_struct
   {
