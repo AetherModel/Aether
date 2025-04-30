@@ -105,6 +105,7 @@ bool Ions::exchange_old(Grid &grid) {
 //     1 - top
 //     2 - left
 //     3 - bottom
+//     4 - vertical (k direction) for closed field lines
 //
 // cells (assume gc = 2):
 // 0  1 | 2 3 4 ... n-gc*2 n-gc-1 | n-gc n-1
@@ -124,6 +125,7 @@ bool pack_border(const arma_cube &value,
 
   int64_t iXstart, iXend;
   int64_t iYstart, iYend;
+  int64_t iZstart, iZend;
 
   // ----------------------------
   // left / right message passing
@@ -159,8 +161,22 @@ bool pack_border(const arma_cube &value,
     }
   }
 
+  // ----------------------------
+  // k-dir (only top)
+  if (iDir == 4) {
+    iXstart = nG;
+    iXend = nX - nG;
+    iYstart = nG;
+    iYend = nY - nG;
+    iZstart = nZ - nG;
+    iZend = nZ;
+  } else {
+    iZstart = nG;
+    iZend = nZ - nG;
+  }
+
   try {
-    for (int64_t iZ = nG; iZ < nZ - nG; iZ++) {
+    for (int64_t iZ = iZstart; iZ < iZend; iZ++) {
       for (int64_t iY = iYstart; iY < iYend; iY++) {
         for (int64_t iX = iXstart; iX < iXend; iX++) {
           packed[*iCounter] = value(iX, iY, iZ);
@@ -186,6 +202,7 @@ bool pack_border(const arma_cube &value,
 //     1 - top
 //     2 - left
 //     3 - bottom
+//     4 - k-dir top
 //   DoReverseX and DoReverseY are because packing always happens from
 //     lower left to upper right, while face we are unpacking too may
 //     have a different (left - right and up - down) geometry
@@ -210,7 +227,8 @@ bool unpack_border(arma_cube &value,
 
   int64_t iXstart, iXend;
   int64_t iYstart, iYend;
-  int64_t xInc = 1, yInc = 1;
+  int64_t iZstart, iZend;
+  int64_t xInc = 1, yInc = 1, zInc = 1;
 
   int64_t iXOff = 0;
   int64_t nCx = nX - 2 * nG;
@@ -261,10 +279,26 @@ bool unpack_border(arma_cube &value,
     }
   }
 
+  if (iDir == 4) {
+    iXstart = nG;
+    iXend = nX - nG;
+    iYstart = nG;
+    iYend = nY - nG;
+    // need to reverse direction, since packing is from the bottom up,
+    // which means unpacking should be from the top down
+    iZend = nZ - nG;
+    iZstart = nZ;
+    zInc = -1;
+  }  else {
+    iZstart = nG;
+    iZend = nZ - nG;
+  }
+
   try {
     int64_t iXp, iYp;
 
-    for (int64_t iZ = nG; iZ < nZ - nG; iZ++) {
+    for (int64_t iZ = iZstart; iZ < iZend; iZ += zInc) {
+
       if (XbecomesY) {
         for (int64_t iX = iXstart; iX < iXend; iX += xInc) {
           iXp = iX;
@@ -311,7 +345,6 @@ bool unpack_border(arma_cube &value,
   } catch (...) {
     DidWork = false;
   }
-
   return DidWork;
 }
 
@@ -440,6 +473,12 @@ bool Grid::send_one_var_one_face(int64_t iFace) {
 
   bool DidWork = true;
 
+  if (report.test_verbose(4))
+    std::cout << "in send_one_var_one_face : " << iFace << " from: " <<
+    iProc << " to: " <<
+    interchangesOneVar[iFace].iProc_to << " tag: " <<
+    interchangesOneVar[iFace].iTag << "\n";
+
   MPI_Isend(interchangesOneVar[iFace].buffer,
             interchangesOneVar[iFace].iSizeTotal,
             MPI_BYTE,
@@ -480,6 +519,13 @@ bool Grid::receive_one_var_one_face(int64_t iFace) {
 
   bool DidWork = true;
 
+  if (report.test_verbose(4))
+    std::cout << "in receive_one_var_one_face : " << iFace << " from: " <<
+    iProc << " to: " << 
+    interchangesOneVar[iFace].iProc_to << " tag: " <<
+    interchangesOneVar[iFace].iTag << "\n";
+
+
   MPI_Recv(interchangesOneVar[iFace].rbuffer,
            interchangesOneVar[iFace].iSizeTotal,
            MPI_BYTE,
@@ -508,6 +554,7 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
 
   int64_t nPtsX = nGCs * (nY - nGCs * 2) * (nZ - nGCs * 2);
   int64_t nPtsY = nGCs * (nX - nGCs * 2) * (nZ - nGCs * 2);
+  int64_t nPtsZ = nGCs * (nX - nGCs * 2) * (nY - nGCs * 2);
 
   new_inter.iFace = iDir;
   new_inter.DoReverseX = DoReverseX;
@@ -515,15 +562,23 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
   new_inter.IsPole = IsPole;
   new_inter.XbecomesY = XbecomesY;
 
+  // Along i axis (left or right):
   if (iDir == 0 || iDir == 2) {
     new_inter.iSizeTotal = nVars * nPtsX * sizeof(precision_t);
     new_inter.index.set_size(nGCs, nY);
     new_inter.ratio.set_size(nGCs, nY);
-  } else {
+  }
+
+  // Along j axis (up or down):
+  if (iDir == 1 || iDir == 3) {
     new_inter.iSizeTotal = nVars * nPtsY * sizeof(precision_t);
     new_inter.index.set_size(nGCs, nX);
     new_inter.ratio.set_size(nGCs, nX);
   }
+
+  // Along K axis (up only for now):
+  if (iDir == 4)
+    new_inter.iSizeTotal = nVars * nPtsZ * sizeof(precision_t);
 
   new_inter.buffer = static_cast<precision_t*>(malloc(new_inter.iSizeTotal));
   new_inter.rbuffer = static_cast<precision_t*>(malloc(new_inter.iSizeTotal));
@@ -537,7 +592,6 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
 
   return new_inter;
 }
-
 
 /*
 // -----------------------------------------------------------------------------
@@ -772,6 +826,15 @@ bool Neutrals::exchange_really_old(Grid &grid) {
 
 // -----------------------------------------------------------------------------
 // Initialize interfaces between horizontal sides on a grid
+// Directions:
+//  0 = + i (right)
+//  1 = + j (up)
+//  2 = - i (left)
+//  3 = - j (down)
+//  4 = + k (vertical) - only along closed dipole field lines
+// For the cubesphere grid:
+//  iRoot = 4 is the south polar region
+//  iRoot = 5 is the north polar region
 // -----------------------------------------------------------------------------
 
 bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
@@ -911,6 +974,24 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass) {
                                   ReverseY,
                                   XbecomesY));
 
+  if (grid.get_IsDipole() && grid.get_IsClosed()) {
+    // This operates in the N/S (j or Y) direction:
+    ReverseX = false;
+    ReverseY = false;
+    IsPole = false;
+    XbecomesY = false;
+    grid.interchangesOneVar.push_back(
+      grid.make_new_interconnection(4,
+                                    nVarsToPass,
+                                    grid.iProcZ,
+                                    grid.edge_Z,
+                                    IsPole,
+                                    ReverseX,
+                                    ReverseY,
+                                    XbecomesY));
+
+  }
+
   report.exit(function);
   return DidWork;
 }
@@ -942,30 +1023,31 @@ bool exchange_one_var(Grid &grid,
 
   bool DidWork = true;
 
-  int iTag, iDir;
+  int iTag, iDir, nDir;
   int iSpecies;
 
-  static int64_t iX, nX = grid.get_nX();
-  static int64_t iY, nY = grid.get_nY();
-  static int64_t iZ, nZ = grid.get_nZ();
+  static int64_t nX = grid.get_nX();
+  static int64_t nY = grid.get_nY();
+  static int64_t nZ = grid.get_nZ();
   static int64_t nG = grid.get_nGCs();
-  static int64_t nPtsX = nG * (nY - nG * 2) * (nZ - nG * 2);
-  static int64_t nPtsY = nG * (nX - nG * 2) * (nZ - nG * 2);
-  static bool IsFirstTime = true;
   static arma_cube var_scgc;
 
   static int64_t nVarsToPass = 1;
 
-  if (IsFirstTime) {
+  if (!grid.isExchangeInitialized) {
     DidWork = exchange_sides_init(grid, nVarsToPass);
-    var_scgc.set_size(nX, nY, nX);
-    IsFirstTime = false;
+    grid.isExchangeInitialized = true;
   }
+  var_scgc.set_size(nX, nY, nZ);
 
   int64_t iP;
   precision_t oneSign = 1.0;
 
-  for (int iDir = 0; iDir < 4; iDir++) {
+  nDir = 4;
+  if (grid.get_IsDipole() && grid.get_IsClosed())
+    nDir++;
+
+  for (int iDir = 0; iDir < nDir; iDir++) {
     if (report.test_verbose(4))
       std::cout << "packing one var : " << iDir << " " << iProc
                 << " " << grid.interchangesOneVar[iDir].iProc_to
@@ -991,7 +1073,7 @@ bool exchange_one_var(Grid &grid,
   }
 
   // Send all faces asynchronously:
-  for (int iDir = 0; iDir < 4; iDir++) {
+  for (int iDir = 0; iDir < nDir; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
       report.print(4, "Sending one face");
       DidWork = grid.send_one_var_one_face(iDir);
@@ -999,7 +1081,7 @@ bool exchange_one_var(Grid &grid,
   }
 
   // Receive all faces asynchronously:
-  for (int iDir = 0; iDir < 4; iDir++) {
+  for (int iDir = 0; iDir < nDir; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
       report.print(4, "Receiving one face");
       DidWork = grid.receive_one_var_one_face(iDir);
@@ -1007,13 +1089,13 @@ bool exchange_one_var(Grid &grid,
   }
 
   // Wait for messages to get there:
-  for (int iDir = 0; iDir < 4; iDir++) {
+  for (int iDir = 0; iDir < nDir; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0)
       MPI_Wait(&grid.interchangesOneVar[iDir].requests, MPI_STATUS_IGNORE);
   }
 
   // Unpack all faces:
-  for (int iDir = 0; iDir < 4; iDir++) {
+  for (int iDir = 0; iDir < nDir; iDir++) {
     if (grid.interchangesOneVar[iDir].iProc_to >= 0) {
       iP = 0;
       report.print(4, "Unpacking Border");
@@ -1028,9 +1110,6 @@ bool exchange_one_var(Grid &grid,
       report.print(4, "Done Unpacking Border");
     }
   }
-
-  // Wait for all processors to be done.
-  MPI_Barrier(aether_comm);
 
   // If this is a cubesphere grid, interpolate ghostcells to their proper location
   //if (grid.IsCubeSphereGrid & grid.gcInterpolationSet) {
