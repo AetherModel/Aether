@@ -127,6 +127,7 @@ bool advance(Planets &planet,
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
+    ionsMag.exchange_old(mGrid);
     advect(gGrid, time, neutrals);
   }
 
