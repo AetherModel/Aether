@@ -264,7 +264,7 @@ arma_cube calc_gradient4o_j(arma_cube value, Grid grid) {
     iY = 0;
     gradient.col(iY) =
       (value.col(iY + 1) - value.col(iY)) /
-      grid.dj_center_m_scgc.row(iY);
+      grid.dj_center_m_scgc.col(iY);
 
     // Upper (one sided):
     iY = nY - 1;
