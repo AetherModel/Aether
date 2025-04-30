@@ -6,6 +6,127 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
+// Create connectivity between the nodes for message passing for dipole
+//  (this looks a lot like sphere, since they are very related)
+// ----------------------------------------------------------------------
+
+void Grid::create_dipole_connection(Quadtree quadtree) {
+
+  std::string function = "Grid::create_dipole_connection";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  IsLatLonGrid = true;
+
+  // Get some coordinates and sizes in normalized coordinates:
+  arma_vec lower_left_norm = quadtree.get_vect("LL");
+  arma_vec middle_norm = quadtree.get_vect("MID");
+  arma_vec size_right_norm = quadtree.get_vect("SR");
+  arma_vec size_up_norm = quadtree.get_vect("SU");
+
+  // Move to the next block in 4 directions:
+  arma_vec down_norm = middle_norm - 0.51 * size_up_norm;
+  arma_vec up_norm = middle_norm + 0.51 * size_up_norm;
+  arma_vec left_norm = middle_norm - 0.51 * size_right_norm;
+  arma_vec right_norm = middle_norm + 0.51 * size_right_norm;
+
+  // The first component could wrap around:
+  right_norm(0) = fmod(right_norm(0), quadtree.limit_high(0));
+  left_norm(0) = fmod((left_norm(0) + quadtree.limit_high(0)),
+                      quadtree.limit_high(0));
+
+  // These should be the exact edge of the face.
+  // The from and to processors should get these in the same place,
+  // so they can be used to match which processor to send / receive info
+  edge_Xp = middle_norm + size_right_norm / 2.0;
+  // wrap in longitude:
+  edge_Xp(0) = fmod(edge_Xp(0), quadtree.limit_high(0));
+  edge_Xm = middle_norm - size_right_norm / 2.0;
+  edge_Yp = middle_norm + size_up_norm / 2.0;
+  edge_Ym = middle_norm - size_up_norm / 2.0;
+  // by default, edge_Z isn't even an edge, since most processors should 
+  // not exchange messages in the Z direction.
+  edge_Z = middle_norm;
+
+  iProcYm = quadtree.find_point(down_norm) + iMember * nGrids;
+  iProcYp = quadtree.find_point(up_norm) + iMember * nGrids;
+  iProcXm = quadtree.find_point(left_norm) + iMember * nGrids;
+  iProcXp = quadtree.find_point(right_norm) + iMember * nGrids;
+  iProcZ = iProc;
+
+  iRoot = quadtree.find_root(middle_norm);
+  iRootYm = quadtree.find_root(down_norm);
+  iRootYp = quadtree.find_root(up_norm);
+  iRootXm = quadtree.find_root(left_norm);
+  iRootXp = quadtree.find_root(right_norm);
+  iRootZ = iRoot;
+
+  // If we are a closed field-line, then we want to exchange messages
+  // along the Z direction, which turns out to be the same processor
+  // as the Y direction, so just take that one:
+  IsClosed = false;
+  if ((middle_norm(1) < 0) && (up_norm(1) > 0)) {
+    // We are in the south and need to pass to the north:
+    iRootZ = iRootYp;
+    iProcZ = iProcYp;
+    edge_Z = edge_Yp;
+    // To make the point unique, we need to alter the edge location
+    // otherwise the message passing will get confused. Since the
+    // points are "higher" than the other edges, let's just add some
+    // to the 3rd dimension:
+    edge_Z(2) = 5.0;
+    IsClosed = true;
+  }
+  if ((middle_norm(1) > 0) && (down_norm(1) < 0)) {
+    // We are in the north and need to pass to the south:
+    iRootZ = iRootYm;
+    iProcZ = iProcYm;
+    edge_Z = edge_Ym;
+    // See note above...
+    edge_Z(2) = 5.0;
+    IsClosed = true;
+  }
+
+  // Check if touching South Pole:
+  if (lower_left_norm(1) == quadtree.limit_low(1)) {
+    DoesTouchSouthPole = true;
+
+    // edges need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Ym(0) < 1.0)
+      edge_Ym(0) += 0.5;
+    else
+      edge_Ym(0) -= 0.5;
+  }
+
+  // Check if touching North Pole:
+  if (lower_left_norm(1) + size_up_norm(1) == quadtree.limit_high(1)) {
+    DoesTouchNorthPole = true;
+
+    // edge need to be adjusted to deal with longitudes, since the
+    // pole will 180deg different for the from and to processors
+    if (edge_Yp(0) < 1.0)
+      edge_Yp(0) += 0.5;
+    else
+      edge_Yp(0) -= 0.5;
+  }
+
+  if (report.test_verbose(2))
+    std::cout << "connectivity : "
+              << "  iProc : " << iProc << "\n"
+              << "  isnorth : " << DoesTouchNorthPole << "\n"
+              << "  issouth : " << DoesTouchSouthPole << "\n"
+              << "  iProcYm : " << iProcYm << "\n"
+              << "  iProcYp : " << iProcYp << "\n"
+              << "  iProcXm : " << iProcXm << "\n"
+              << "  iProcXp : " << iProcXp << "\n";
+
+  report.exit(function);
+  return;
+}
+
+
+// ----------------------------------------------------------------------
 // Routine to convert p and q to r and theta. Can be solved iteratively,
 // or with approach from (Swisdak, 2006), who solved it analytically:
 //  https://arxiv.org/pdf/physics/0606044
@@ -99,10 +220,9 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   IsCubeSphereGrid = false;
   IsDipole = true;
 
-  // report.print(0, "Creating inter-node connections Grid");
-
-  //if (!Is0D & !Is1Dz)
-  //  create_sphere_connection(quadtree_ion);
+  report.print(0, "Creating inter-node dipole connections");
+  if (!Is0D & !Is1Dz)
+    create_dipole_connection(quadtree_ion);
 
   report.print(0, "Creating Dipole Grid");
 
