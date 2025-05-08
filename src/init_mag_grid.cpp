@@ -350,7 +350,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // - evenly space the ghost cells between these.
 
   // Check if we're touching the pole, need to look at original quadtree values
-  if ((abs(lower_left_norm(1) + size_up_norm(1)) > 0.49) // north pole
+  if ((lower_left_norm(1) + size_up_norm(1) > 0.49) // north pole
       || (lower_left_norm(1) < -0.49)) { // south pole
     lat1dDown(nLats) = 89.9 * cDtoR;
     lat1dDown(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 2)) / 2.0;
