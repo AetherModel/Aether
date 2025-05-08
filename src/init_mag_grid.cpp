@@ -335,7 +335,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   precision_t lat0 = 2.0 * (max_lat - min_lat) * lat_origin;
   precision_t dlat = 2.0 * size_up_norm(1) * (max_lat -  min_lat) /
-                     (nLats - nGCs);
+                     (nLats - nGCs * 2);
 
   arma_vec lat1d(nLats);
   arma_vec lat1dDown(nLats + 1);
