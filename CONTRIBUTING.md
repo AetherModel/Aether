@@ -34,29 +34,20 @@ on WSL with Ubuntu, the command seems to be:
 
 astyle --options=.astylerc src/*.cpp
 
+Astyle can also be used within VSCode as an extension. Install the "Astyle" extension (author: Chieh Yu).  Then go to settings (the "Manage" wheel on the bottom left, then click on "settings"). Under "Extensions", click on "Astyle Configuration".  Within that, you can set the location of the astylerc file. Click on "Edit in settings.json". Modify the file so it has the following line:
+    "[cpp]": {
+        "editor.defaultFormatter": "chiehyu.vscode-astyle",
+        "editor.formatOnSave": true
+    },
+    "astyle.astylerc": "${workspaceRoot}/.astylerc"
+
+This should then allow you to format the code using the defaults that we have set in the astyle file. This can be done with (Ctrl-Shift-I for Linux, Alt-Shift-F for Windows) and upon saving the file - this reformats the whole file to put it into the astyle format.
+
 #### Linting
 
-For *C++* code make sure to use a static code checker like
-[cpplint](https://github.com/cpplint/cpplint) to check the code for
-any style issues before submitting.  For *Python*,
-[flake8](https://flake8.pycqa.org/en/latest/) is a good option.  Both
-of these may by installed using pip.
+For *Python*,
+[flake8](https://flake8.pycqa.org/en/latest/) is a good option.  This may by installed using pip.
 
-To install `cpplint`
-
-```sh
-# depending on your system one of these lines applies
-pip install --user cpplint
-pip install cpplint
-python3 -m pip cpplint
-python3 -m pip --user cpplint
-```
-
-Using a linter in an editor is a good supplement, but not a replacement for the
-static linters. The linter in the 'atom' editor requires that you install the
-`linter` and `gcc-linter` packages. Atom also has additional packages
-`whitespaces` and `tabs-to-spaces` to automatically remove whitespaces at the
-end of the lines, and convert tabs to spaces.
 
 ## Commit Styling
 
