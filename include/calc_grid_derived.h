@@ -19,9 +19,14 @@ arma_vec calc_bin_widths(arma_vec centers);
 // ----------------------------------------------------------------------------
 // A helper function for mapping grids
 // ----------------------------------------------------------------------------
-bool grid_match(Grid gGrid, 
-                Grid mGrid, 
+bool grid_match(Grid &gGrid, 
+                Grid &mGrid, 
                 Quadtree gQuadtree,
                 Quadtree mQuadtree);
+
+bool get_data_from_other_grid(Grid &gGrid, 
+                              Grid &mGrid,
+                              arma_cube &gData,
+                              arma_cube &mData);
 
 #endif  // INCLUDE_CALC_GRID_DERIVED_H_
