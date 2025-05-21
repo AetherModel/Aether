@@ -41,6 +41,9 @@ std::string get_filename_from_type(std::string type_output) {
   if (type_output == "therm")
     filename = "3DTH";
 
+  if (type_output == "test")
+    filename = "3DTE";
+
   return filename;
 
 }
@@ -153,7 +156,6 @@ bool output(const Neutrals &neutrals,
           store_variable("density_" + neutrals.species[iSpecies].cName,
                          neutrals.density_unit,
                          neutrals.species[iSpecies].density_scgc);
-
       // Neutral Temperature:
       if (type_output == "neutrals" ||
           type_output == "states")
@@ -321,6 +323,13 @@ bool output(const Neutrals &neutrals,
                                                     "m/s^2",
                                                     grid.cent_acc_vcgc[2]);
       }
+
+      // Neutral Temperature:
+      if (type_output == "test")
+        AllOutputContainers[iOutput].
+        store_variable("test_grid",
+                       "none",
+                       grid.test_scgc);
 
       // ------------------------------------------------------------
       // Set output file names
