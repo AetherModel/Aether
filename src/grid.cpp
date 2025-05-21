@@ -80,6 +80,9 @@ Grid::Grid(std::string gridtype) {
   geoAlt_scgc.set_size(nX, nY, nZ);
   geoLocalTime_scgc.set_size(nX, nY, nZ);
 
+  test_scgc.set_size(nX, nY, nZ);
+  test_scgc.zeros();
+
   refx_scgc.set_size(nX, nY, nZ);
   refy_scgc.set_size(nX, nY, nZ);
   refx_angle.set_size(nX, nY, nZ);
