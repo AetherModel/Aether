@@ -100,7 +100,6 @@ int main() {
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
     }
-
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
     // Initialize Neutrals on geographic grid:
