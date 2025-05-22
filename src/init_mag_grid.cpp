@@ -44,7 +44,7 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
   edge_Xm = middle_norm - size_right_norm / 2.0;
   edge_Yp = middle_norm + size_up_norm / 2.0;
   edge_Ym = middle_norm - size_up_norm / 2.0;
-  // by default, edge_Z isn't even an edge, since most processors should 
+  // by default, edge_Z isn't even an edge, since most processors should
   // not exchange messages in the Z direction.
   edge_Z = middle_norm;
 
@@ -65,6 +65,7 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
   // along the Z direction, which turns out to be the same processor
   // as the Y direction, so just take that one:
   IsClosed = false;
+
   if ((middle_norm(1) < 0) && (up_norm(1) > 0)) {
     // We are in the south and need to pass to the north:
     iRootZ = iRootYp;
@@ -77,6 +78,7 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
     edge_Z(2) = 5.0;
     IsClosed = true;
   }
+
   if ((middle_norm(1) > 0) && (down_norm(1) < 0)) {
     // We are in the north and need to pass to the south:
     iRootZ = iRootYm;
@@ -221,6 +223,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   IsDipole = true;
 
   report.print(0, "Creating inter-node dipole connections");
+
   if (!Is0D & !Is1Dz)
     create_dipole_connection(quadtree_ion);
 
@@ -332,7 +335,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
 
   precision_t lat0 = 2.0 * (max_lat - min_lat) * lat_origin;
   precision_t dlat = 2.0 * size_up_norm(1) * (max_lat -  min_lat) /
-                     (nLats - nGCs);
+                     (nLats - nGCs * 2);
 
   arma_vec lat1d(nLats);
   arma_vec lat1dDown(nLats + 1);
@@ -350,7 +353,7 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // - evenly space the ghost cells between these.
 
   // Check if we're touching the pole, need to look at original quadtree values
-  if ((abs(lower_left_norm(1) + size_up_norm(1)) > 0.49) // north pole
+  if ((lower_left_norm(1) + size_up_norm(1) > 0.49) // north pole
       || (lower_left_norm(1) < -0.49)) { // south pole
     lat1dDown(nLats) = 89.9 * cDtoR;
     lat1dDown(nLats - 1) = (lat1dDown(nLats) + lat1dDown(nLats - 2)) / 2.0;
@@ -608,11 +611,11 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   }
 
   // Gravity should be negative in the k direction, since the grid switches directions.
-  // j direction should switch signs when crossing the equator (+ in south, - in north)  
-  rad_unit_vcgc[1] = sign(magLat_scgc) % cos(magLat_scgc) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
-                                                % sin(magLat_scgc)), 0.5);
-  rad_unit_vcgc[2] = - 2.0 * abs(sin(magLat_scgc)) / pow(abs(1.0 + 3.0 * sin(magLat_scgc)
-                                                      % sin(magLat_scgc)), 0.5);
+  // j direction should switch signs when crossing the equator (+ in south, - in north)
+  rad_unit_vcgc[1] = sign(magLat_scgc) % cos(magLat_scgc)
+                     / pow(abs(1.0 + 3.0 * sin(magLat_scgc) % sin(magLat_scgc)), 0.5);
+  rad_unit_vcgc[2] = - 2.0 * abs(sin(magLat_scgc))
+                     / pow(abs(1.0 + 3.0 * sin( magLat_scgc) % sin(magLat_scgc)), 0.5);
 
   precision_t mu = planet.get_mu();
   gravity_vcgc[1] = mu * rad_unit_vcgc[1] % radius2i_scgc;

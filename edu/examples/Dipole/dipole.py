@@ -53,7 +53,7 @@ def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock,
             origin  = -1*origin - extent
 
         lat0 = (2*(lat_max - lat_min))*origin    
-        dlat = extent * ((lat_max - lat_min)*2) / (nLatsPerBlock - nGCs)
+        dlat = extent * (2*(lat_max - lat_min)) / (nLatsPerBlock - nGCs*2)
         
         # Put latitudes down evenly (centers & corners)
         # - This forms the invariant latitudes which field lines must pass thru
