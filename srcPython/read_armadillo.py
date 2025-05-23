@@ -111,13 +111,10 @@ def cube2np(files2read):
                     f"File ({thisf}) does not appear to be an armadillo cube.\n"
                     f"Found shape: {shape}")
             shape = np.array(shape, dtype=int) # convert shape to np array of int's
-            ls = np.zeros(shape) # holder for this file's outputs, dtype is float
-            for i in range(int(shape[0])): # n_x
-                for j in range(int(shape[2])): # n_z
-                    # each line is n_y long. Convert it to a python list & retain it
-                    l = f.readline().strip().replace('  ',',').split(',')
-                    ls[i,:, j] = l # n_y
-        out.append(ls.T) # speed not a huge issue, work with lists
+        # Read in cube, transform shape, use same indexing as arma does
+        one_cube = np.loadtxt(thisf, skiprows=2, ).reshape(shape)
+        
+        out.append(one_cube) # speed not a huge issue, work with lists
 
     # remove 0th dimension if we only are reading one file
     if len(files2read) == 1:
@@ -165,12 +162,10 @@ def mat2np(files2read):
                     f"File ({thisf}) does not appear to be an armadillo matrix.\n"
                     f"Found shape: {shape}")
             shape = np.array(shape, dtype=int) # convert shape to np array of int's
-            ls = np.zeros(shape) # holder for this file's outputs, dtype is float
-            for i in range(int(shape[0])): # n_x
-                # each line is n_y long. Convert it to a python list & retain it
-                l = f.readline().strip().replace('  ',',').split(',')
-                ls[i,:] = l # n_y
-        out.append(ls.T) # speed not a huge issue, work with lists
+        
+        one_mat = np.loadtxt(thisf, skiprows=2).reshape(shape)
+
+        out.append(ls) # speed not a huge issue, work with lists
 
     # remove 0th dimension if we only are reading one file
     if len(files2read) == 1:
