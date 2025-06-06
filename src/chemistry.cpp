@@ -381,7 +381,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 
   std::vector<std::string> errors;
 
-  report.print(1, "Reading Chemistry File : " + input.get_chemistry_file());
+  report.print(0, "Reading Chemistry File : " + input.get_chemistry_file());
   infile_ptr.open(input.get_chemistry_file());
 
   if (!infile_ptr.is_open()) {

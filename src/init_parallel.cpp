@@ -23,7 +23,7 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-bool init_parallel(Quadtree &quadtree) {
+bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion) {
 
   bool DidWork = true;
 
@@ -54,13 +54,14 @@ bool init_parallel(Quadtree &quadtree) {
               << nProcsPerNode << "\n";
 
   quadtree.max_depth = round(log(nProcsPerNode) / log(4));
+  quadtree_ion.max_depth = round(log(nProcsPerNode) / log(4));
 
   if (report.test_verbose(2))
     std::cout << "Quadtree max depth : " << quadtree.max_depth << "\n";
 
   // Check to see if we have enough processors to do this stuff:
-  int nBlocksLonGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLonGeo();
-  int nBlocksLatGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLatGeo();
+  int nBlocksLonGeo = pow(2, quadtree.max_depth);
+  int nBlocksLatGeo = pow(2, quadtree.max_depth);
   nGrids = nBlocksLonGeo * nBlocksLatGeo * quadtree.nRootNodes;
   int nProcsNeeded = nMembers * nGrids;
 
@@ -98,7 +99,9 @@ bool init_parallel(Quadtree &quadtree) {
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
-    quadtree.build();
+    quadtree.build("neuGrid");
+    // #TODO
+    quadtree_ion.build("ionGrid");
 
   } else {
     if (iProc == 0) {

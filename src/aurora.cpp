@@ -38,6 +38,7 @@ void read_aurora(Neutrals &neutrals,
     }
 
     myFile.close();
+    neutrals.auroraInitialized = true;
   }
 
 }
@@ -125,6 +126,7 @@ void calc_aurora(Grid grid,
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
   int64_t nAlts = grid.get_nAlts();
+  int64_t nGcs = grid.get_nGCs();
 
   // DENSITY INTEGRAL CALULATION ( done in calc_neutral_derived.cpp line
   // 170 rho_alt_int_scgc species[iSpecies].rho_alt_int_scgc =
@@ -143,7 +145,7 @@ void calc_aurora(Grid grid,
   };
 
   static std::vector<std::vector<precision_t>> CiArray;
-  static bool IsFirstTime = 1;
+  static bool IsFirstTime = true;
 
   // ENERGY BINS AND DE (E in eV)
   static precision_t min = 100;
@@ -153,12 +155,17 @@ void calc_aurora(Grid grid,
   static int nBins = 101;
   static arma_vec auroral_energies(nBins);
   static arma_vec auroral_energy_widths(nBins);
-  std::vector<precision_t> Ci;
+  std::vector<precision_t> Ci(8);
+
+  if (!neutrals.auroraInitialized) {
+    // Initialize the aurora using the auroral csv file
+    report.print(1, "Reading aurora file");
+    read_aurora(neutrals, ions);
+  }
 
   if (IsFirstTime) {
-    // Initialize the aurora using the auroral csv file
-    read_aurora(neutrals, ions);
 
+    report.print(4, "aurora - initializing");
     precision_t lnE;
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
@@ -170,7 +177,6 @@ void calc_aurora(Grid grid,
     auroral_energy_widths = calc_bin_widths(auroral_energies);
 
     for (int64_t iBin = 0; iBin < nBins; iBin++) {
-
       lnE = log(auroral_energies(iBin));
 
       // loop through Pij values to get vector of Ci values.  This is
@@ -181,17 +187,15 @@ void calc_aurora(Grid grid,
         for (int j = 0; j < 4; j++)
           tot = tot +  Pij.at(i, j) * pow(lnE, j);
 
-        Ci.push_back(exp(tot));
+        Ci[i] = exp(tot);
       }
 
       CiArray.push_back(Ci);
     }
 
-    IsFirstTime = 0;
+    IsFirstTime = false;
+    report.print(4, "aurora - done with init!");
   }
-
-  if (report.test_verbose(4))
-    std::cout << "aurora - done with init!\n";
 
   arma_vec rhoH1d;
   arma_cube scale_height;
@@ -211,21 +215,22 @@ void calc_aurora(Grid grid,
   weighted_sum.set_size(nAlts);
 
   scale_height = cKB * neutrals.temperature_scgc /
-                 (neutrals.mean_major_mass_scgc % abs(grid.gravity_vcgc[2]));
+                 (neutrals.mean_major_mass_scgc % abs(grid.gravity_mag_scgc));
 
   precision_t eflux;
   precision_t avee;
   arma_vec diff_num_flux;
   arma_vec diff_energy_flux;
+  arma_vec b1d;
   bool DoDebug = false;
 
-  if (report.test_verbose(4))
-    std::cout << "aurora - starting main loop!\n";
+  report.print(4, "aurora - starting main loop!");
 
   // loop through each altitude and calculate ionization
-  for (iLon = 0; iLon < nLons ; iLon++) {
-    for (iLat = 0; iLat < nLats ; iLat++) {
+  for (iLon = nGcs; iLon < nLons - nGcs; iLon++) {
+    for (iLat = nGcs; iLat < nLats - nGcs ; iLat++) {
 
+      // CHANGE
       eflux = ions.eflux(iLon, iLat);  // in ergs/cm2/s
       avee = ions.avee(iLon, iLat);  // in keV
 
@@ -233,11 +238,12 @@ void calc_aurora(Grid grid,
 
         // Step 1: Calculate the height-integrated mass density:
         rhoH1d.zeros();
+        b1d = abs(grid.bfield_unit_vcgc[2].tube(iLon, iLat));
 
         for (iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
           rho_tube =
             neutrals.species[iSpecies].rho_alt_int_scgc.tube(iLon, iLat);
-          rhoH1d = rhoH1d + rho_tube;
+          rhoH1d = rhoH1d + rho_tube / b1d;
         }
 
         // Step 2: Calculate the distribution function:
@@ -268,7 +274,7 @@ void calc_aurora(Grid grid,
         }
 
         // /cm3 -> /m3
-        ionization1d = ionization1d * pcm3topm3;
+        ionization1d = ionization1d * pcm3topm3 / 100.0;
 
         // Step 5: Distribute ionization among neutrals:
         // Need to figure out which species get what percentage of the
@@ -312,7 +318,6 @@ void calc_aurora(Grid grid,
                 ions.species[iIon_].ionization_scgc.tube(iLon, iLat);
               ions.species[iIon_].ionization_scgc.tube(iLon, iLat) =
                 ionization_tube + ionization_species;
-
             }  // nAuroraIonSpecies
           }  // if nAuroraIonSpecies > 0
         }  // nSpecies

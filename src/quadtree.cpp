@@ -1,13 +1,35 @@
+// Copyright 2024, the Aether Development Team (see doc/dev_team.md for members)
+// Full license can be found in License.md
+
+// Need to allow more types of grids.  We have two axes of grids, really:
+//   - Neutral
+//   - Ion
+// Within each of those, we can have several types of grids:
+//   - Cubesphere, this has 6 root nodes (2 polar, 4 equatorial)
+//   - Sphere, this has 1 root node (whole grid)
+//   - Sphere6, this is a spherical grid, but has 6 root nodes (2 lats, 3 lons)
+//   - Dipole, which may be the same as Sphere
+//   - Dipole4, which has 4 root nodes (4 lats, 1 lon)
 
 #include "aether.h"
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree() {
-  if (input.get_is_cubesphere())
+Quadtree::Quadtree(std::string shape) {
+  if (shape == "cubesphere")
     nRootNodes = 6;
-  else
+
+  if (shape == "sphere")
     nRootNodes = 1;
+
+  if (shape == "dipole")
+    nRootNodes = 1;
+
+  if (shape == "dipole2")
+    nRootNodes = 2;
+
+  if (shape == "dipole6")
+    nRootNodes = 6;
 }
 
 // --------------------------------------------------------------------------
@@ -22,21 +44,46 @@ bool Quadtree::is_ok() {
 // build quadtree
 // --------------------------------------------------------------------------
 
-void Quadtree::build() {
+void Quadtree::build(std::string gridtype) {
 
   arma_mat origins;
   arma_mat rights;
   arma_mat ups;
 
-  if (input.get_is_cubesphere()) {
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  if (grid_input.shape == "cubesphere") {
     origins = CubeSphere::ORIGINS;
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
     IsCubeSphere = true;
-  } else {
+  }
+
+  if (grid_input.shape == "sphere") {
     origins = Sphere::ORIGINS;
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
+    IsSphere = true;
+  }
+
+  if (grid_input.shape == "dipole") {
+    origins = Dipole::ORIGINS;
+    rights = Dipole::RIGHTS;
+    ups = Dipole::UPS;
+    IsSphere = true;
+  }
+
+  if (grid_input.shape == "dipole2") {
+    origins = Dipole2::ORIGINS;
+    rights = Dipole2::RIGHTS;
+    ups = Dipole2::UPS;
+    IsSphere = true;
+  }
+
+  if (grid_input.shape == "dipole6") {
+    origins = Dipole6::ORIGINS;
+    rights = Dipole6::RIGHTS;
+    ups = Dipole6::UPS;
     IsSphere = true;
   }
 
@@ -64,8 +111,6 @@ void Quadtree::build() {
   // Before we build the quadtree, we need to allow the user to
   // restrict the domain.  This will only work for the spherical
   // grid so far:
-
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
 
   if (grid_input.lon_min > 0.0 ||
       grid_input.lon_max < 2.0 * cPI ||
@@ -172,7 +217,9 @@ Quadtree::qtnode Quadtree::new_node(arma_vec lower_left_norm_in,
 }
 
 // --------------------------------------------------------------------------
-//
+// This returns the lower left (LL) coordinate in normalized coordinates or
+// the size of the node in the right (SR) or up (SU) directions. It can
+// also return the midpoint of the node (MID)
 // --------------------------------------------------------------------------
 
 arma_vec Quadtree::get_vect(Quadtree::qtnode node, std::string which) {
@@ -454,7 +501,9 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which node a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_point(arma_vec point) {
@@ -480,7 +529,9 @@ int64_t Quadtree::find_point(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This is the starting point for determining which root a point
+// on the sphere is located.  The point needs to be in normalized 
+// coordinates.
 // --------------------------------------------------------------------------
 
 int64_t Quadtree::find_root(arma_vec point) {

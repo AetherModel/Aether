@@ -4,6 +4,72 @@
 #include "aether.h"
 
 // -----------------------------------------------------------------------------
+// This is the main exchange messages for the neutrals.
+//   We are exchanging densities, temperatures, and velocities
+// -----------------------------------------------------------------------------
+
+bool Neutrals::exchange_old(Grid &grid) {
+
+  std::string function = "Neutrals::exchange";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  bool DidWork = true;
+  int64_t nGCs = grid.get_nGCs();
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    //if (species[iSpecies].DoAdvect)
+    DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
+  }
+
+  DidWork = exchange_one_var(grid, temperature_scgc, false);
+
+  // velocity components:
+  // reverse east across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
+  // reverse north across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
+  // don't reverse vertical across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
+
+  report.exit(function);
+  return DidWork;
+}
+
+// -----------------------------------------------------------------------------
+// This is the main exchange messages for the neutrals.
+//   We are exchanging densities, temperatures, and velocities
+// -----------------------------------------------------------------------------
+
+bool Ions::exchange_old(Grid &grid) {
+
+  std::string function = "Ions::exchange";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  bool DidWork = true;
+  int64_t nGCs = grid.get_nGCs();
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
+
+  DidWork = exchange_one_var(grid, temperature_scgc, false);
+  DidWork = exchange_one_var(grid, electron_temperature_scgc, false);
+
+  // velocity components:
+  // reverse east across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
+  // reverse north across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
+  // don't reverse vertical across the pole:
+  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
+
+  report.exit(function);
+  return DidWork;
+}
+
+
+// -----------------------------------------------------------------------------
 // This is where all of the exchange messages routines will sit.
 //
 // Notes:
@@ -26,42 +92,6 @@
 //       iDir == 0 in sending could be iDir == 2 in receiving for blocks
 //       near the equator.
 // -----------------------------------------------------------------------------
-
-
-// -----------------------------------------------------------------------------
-// This is the main exchange messages for the neutrals.
-//   We are exchanging densities, temperatures, and velocities
-// -----------------------------------------------------------------------------
-
-
-bool Neutrals::exchange_old(Grid &grid) {
-
-  std::string function = "Neutrals::exchange";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  bool DidWork = true;
-  int64_t nGCs = grid.get_nGCs();
-
-  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-    if (species[iSpecies].DoAdvect)
-      DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
-  }
-
-  DidWork = exchange_one_var(grid, temperature_scgc, false);
-
-  // velocity components:
-  // reverse east across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[0], true);
-  // reverse north across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
-  // don't reverse vertical across the pole:
-  DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
-
-  report.exit(function);
-  return DidWork;
-}
-
 
 
 // -----------------------------------------------------------------------------
@@ -343,9 +373,7 @@ bool pack_one_var_on_one_face(arma_cube var_scgc,
   // Current PE is the sender, so check if receiver exists:
   if (iReceiver > -1) {
     iP = 0;
-
     DidWork = pack_border(var_scgc, buffer, &iP, nG, iDir);
-
   }
 
   return DidWork;
@@ -725,6 +753,13 @@ bool Neutrals::exchange_really_old(Grid &grid) {
       set_horizontal_bcs(iDir, grid);
   }
 
+  for (int i = 0; i < nSpecies; ++i)
+    fill_corners(species[i].density_scgc, nG);
+
+  fill_corners(temperature_scgc, nG);
+  for (int iDir = 0; iDir < 3; iDir++)
+    fill_corners(velocity_vcgc[iDir], nG);
+
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
 
@@ -896,6 +931,11 @@ bool exchange_one_var(Grid &grid,
                       arma_cube &var_to_pass,
                       bool doReverseSignAcrossPole) {
 
+  // This function is only needed if we do interpolation, which only happens in
+  // the horizontal directions
+  if (!grid.get_HasXdim() & !grid.get_HasYdim())
+    return true;
+
   std::string function = "exchange_one_var";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -993,14 +1033,14 @@ bool exchange_one_var(Grid &grid,
   MPI_Barrier(aether_comm);
 
   // If this is a cubesphere grid, interpolate ghostcells to their proper location
-  if (grid.IsCubeSphereGrid & grid.gcInterpolationSet) {
-    report.print(3, "Interpolating Ghostcells to Proper Location");
-    var_scgc = interpolate_ghostcells(var_to_pass, grid);
-    var_to_pass = var_scgc;
-  }
+  //if (grid.IsCubeSphereGrid & grid.gcInterpolationSet) {
+  //  report.print(3, "Interpolating Ghostcells to Proper Location");
+  //  var_scgc = interpolate_ghostcells(var_to_pass, grid);
+  //  var_to_pass = var_scgc;
+  //}
 
   // Now we fill in the corners so that we don't have zero values there:
-  fill_corners(var_to_pass, nG);
+  //fill_corners(var_to_pass, nG);
 
   report.exit(function);
   return DidWork;
@@ -1191,6 +1231,11 @@ arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid) {
 // -----------------------------------------------------------------------------
 
 bool find_ghostcell_interpolation_coefs(Grid &grid) {
+
+  // This function is only needed if we do interpolation, which only happens in
+  // the horizontal directions
+  if (!grid.get_HasXdim() & !grid.get_HasYdim())
+    return true;
 
   std::string function = "find_ghostcell_interpolation_coefs";
   static int iFunction = -1;

@@ -281,6 +281,7 @@ subroutine IO_GetPotential(PotentialOut, iError)
   real, dimension(IOi_NeednMLTs,IOi_NeednLats)               :: ValueOut
   real, dimension(IOi_NeednMLTs,IOi_NeednLats), intent(out)  :: PotentialOut
   real :: Filler = 0.0
+  integer :: iLat, iMlt
 
   iError = 0
 
@@ -301,6 +302,27 @@ subroutine IO_GetPotential(PotentialOut, iError)
   else
 
      call IO_GetNonGridBasedPotential(ValueOut, iError)
+
+    ! In Weimer, there are sometimes 0 potentials.  I don't know why.
+     if (maxval(abs(IOr2_NeedLats)) > 80.0) then
+
+      do iMlt = 2, IOi_NeednMLTs - 1
+        do iLat = 2, IOi_NeednLats - 1
+          if (ValueOut(iMlt, iLat) == 0.0) then
+            if (ValueOut(iMlt, iLat - 1)*ValueOut(iMlt, iLat + 1) > 0) then
+              ! this is a "hole" in the potential, since the potential is
+              ! the same sign both above and below the current point.
+              ValueOut(iMlt, iLat) = ( &
+                                     ValueOut(iMlt - 1, iLat) + &
+                                     ValueOut(iMlt, iLat - 1) + &
+                                     ValueOut(iMlt + 1, iLat) + &
+                                     ValueOut(iMlt, iLat + 1))/4.0
+            endif
+          endif
+        enddo
+      enddo
+
+     endif
 
      if (iError == 0) then
         PotentialOut = ValueOut
@@ -603,6 +625,14 @@ subroutine IO_GetElectronDiffuseAurora(EFluxOut, AveEOut, iError)
          call run_fta_model(EFluxOut, AveEOut, iError)
 
       endif
+
+      if ((index(EIE_NameOfAuroralModel,'zero') > 0) .or. &
+          (index(EIE_NameOfAuroralModel,'none') > 0)) then
+         iError = 0
+         AveEOut = 3.0
+         EFluxOut = 1e-9
+      endif
+
 
   endif
 

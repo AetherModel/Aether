@@ -4,56 +4,311 @@
 #include "../include/aether.h"
 
 // --------------------------------------------------------------------------
-// Calculate the gradient in the longitudinal direction
+// Calculate the gradient in all directions, returning a vector
+// It is assumed that this is lon, lat, rad
 // --------------------------------------------------------------------------
 
 std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 
   std::vector<arma_cube> gradient_vcgc;
 
-  if (input.get_is_cubesphere())
-    gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
+  if (report.test_verbose(4)) {
+    std::cout << "grid shape (1 = sphere; 2 = cube; 3 = dipole) : " <<
+              grid.iGridShape_ << "\n";
+    display_vector("gradient, value : ", value_scgc.tube(9, 9));
+  }
 
+  if (grid.iGridShape_ == grid.iCubesphere_)
+    gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
   else {
-    gradient_vcgc.push_back(calc_gradient_lon(value_scgc, grid));
-    gradient_vcgc.push_back(calc_gradient_lat(value_scgc, grid));
+
+    report.print(4, "Going into calc_gradient_lon");
+    gradient_vcgc.push_back(calc_gradient2o_i(value_scgc, grid));
+
+    if (report.test_verbose(4))
+      display_vector("gradient[0] : ", gradient_vcgc[0].tube(9, 9));
+
+    report.print(4, "Going into calc_gradient_lat");
+    gradient_vcgc.push_back(calc_gradient2o_j(value_scgc, grid));
+
+    if (report.test_verbose(4))
+      display_vector("gradient[1] : ", gradient_vcgc[1].tube(9, 9));
+
+    report.print(4, "Going into calc_gradient_alt");
     gradient_vcgc.push_back(calc_gradient_alt(value_scgc, grid));
+
+    if (report.test_verbose(4))
+      display_vector("gradient[2] : ", gradient_vcgc[2].tube(9, 9));
   }
 
   return gradient_vcgc;
 }
 
 // --------------------------------------------------------------------------
+// Routines related to native i - direction
+//  - 2nd order uniform grid
+//  - 4th order uniform grid
+//  - 2nd order stretched grid
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+// Calculate the 2nd order gradient in the native i direction
+//   - these formulas assume that the grid is uniform.
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iX;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasXdim()) {
+    // Interior:
+    for (iX = 1; iX < nX - 1; iX++)
+      gradient.row(iX) =
+        (value.row(iX + 1) - value.row(iX - 1)) /
+        (2 * grid.di_center_m_scgc.row(iX));
+
+    // Lower (one sided):
+    iX = 0;
+    gradient.row(iX) =
+      (value.row(iX + 1) - value.row(iX)) /
+      grid.di_center_m_scgc.row(iX);
+
+    // Upper (one sided):
+    iX = nX - 1;
+    gradient.row(iX) =
+      (value.row(iX) - value.row(iX - 1)) /
+      grid.di_center_m_scgc.row(iX);
+  }
+
+  return gradient;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the 4th gradient in the native i direction
+//   - these formulas assume that the grid is uniform.
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient4o_i(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iX;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasXdim()) {
+    // Interior, 5 point sencil:
+    for (iX = 2; iX < nX - 2; iX++)
+      gradient.row(iX) = (-value.row(iX + 2) +
+                          8 * value.row(iX + 1) -
+                          8 * value.row(iX - 1) +
+                          value.row(iX - 2)) /
+                         (12. * grid.di_center_m_scgc.row(iX));
+
+    // Points just inside edges (2nd order):
+    iX = 1;
+    gradient.row(iX) =
+      (value.row(iX + 1) - value.row(iX - 1)) /
+      (2 * grid.di_center_m_scgc.row(iX));
+    iX = nX - 2;
+    gradient.row(iX) =
+      (value.row(iX + 1) - value.row(iX - 1)) /
+      (2 * grid.di_center_m_scgc.row(iX));
+
+    // Points at the edges (1st order):
+    iX = 0;
+    gradient.row(iX) =
+      (value.row(iX + 1) - value.row(iX)) /
+      grid.di_center_m_scgc.row(iX);
+    iX = nX - 1;
+    gradient.row(iX) =
+      (value.row(iX) - value.row(iX - 1)) /
+      grid.di_center_m_scgc.row(iX);
+  }
+
+  return gradient;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the 2nd order gradient in the native i-direction,
+//   assuming a stretched grid
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient_stretched_i(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iX;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasXdim()) {
+    // Central part
+    for (iX = 1; iX < nX - 1; iX++)
+      gradient.row(iX) =
+        (value.row(iX + 1)
+         - grid.di_one_minus_r2.row(iX) % value.row(iX)
+         - grid.di_ratio_sq.row(iX) % value.row(iX - 1)) /
+        (grid.di_edge_m.row(iX + 1) %
+         (1.0 + grid.di_ratio.row(iX)));
+
+    // Points at the edges (1st order):
+    iX = 0;
+    gradient.row(iX) =
+      (value.row(iX + 1) - value.row(iX)) /
+      grid.di_center_m_scgc.row(iX);
+    iX = nX - 1;
+    gradient.row(iX) =
+      (value.row(iX) - value.row(iX - 1)) /
+      grid.di_center_m_scgc.row(iX);
+  }
+
+  return gradient;
+}
+
+
+
+// --------------------------------------------------------------------------
 // Calculate the gradient in the longitudinal direction
 // --------------------------------------------------------------------------
 
 arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
+  return calc_gradient2o_i(value, grid);
+}
 
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
-  int64_t iLon;
+// --------------------------------------------------------------------------
+// Calculate the 2nd order gradient in the native j direction
+//   - these formulas assume that the grid is uniform.
+// --------------------------------------------------------------------------
 
-  arma_cube gradient(nLons, nLats, nAlts);
+arma_cube calc_gradient2o_j(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iY;
+
+  arma_cube gradient(nX, nY, nZ);
   gradient.zeros();
 
-  // Interior:
-  for (iLon = 1; iLon < nLons - 1; iLon++)
-    gradient.row(iLon) =
-      (value.row(iLon + 1) - value.row(iLon - 1)) /
-      (2 * grid.dlon_center_dist_scgc.row(iLon));
+  if (grid.get_HasYdim()) {
+    // Interior:
+    for (iY = 1; iY < nY - 1; iY++)
+      gradient.col(iY) =
+        (value.col(iY + 1) - value.col(iY - 1)) /
+        (2 * grid.dj_center_m_scgc.col(iY));
 
-  // Lower (one sided):
-  iLon = 0;
-  gradient.row(iLon) =
-    (value.row(iLon + 1) - value.row(iLon)) /
-    grid.dlon_center_dist_scgc.row(iLon);
+    // Lower (one sided):
+    iY = 0;
+    gradient.col(iY) =
+      (value.col(iY + 1) - value.col(iY)) /
+      grid.dj_center_m_scgc.col(iY);
 
-  // Upper (one sided):
-  iLon = nLons - 1;
-  gradient.row(iLon) =
-    (value.row(iLon) - value.row(iLon - 1)) /
-    grid.dlon_center_dist_scgc.row(iLon);
+    // Upper (one sided):
+    iY = nY - 1;
+    gradient.col(iY) =
+      (value.col(iY) - value.col(iY - 1)) /
+      grid.dj_center_m_scgc.col(iY);
+  }
+
+  return gradient;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the 4th order gradient in the native j direction
+//   - these formulas assume that the grid is uniform.
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient4o_j(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iY;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasYdim()) {
+    // Interior:
+    for (iY = 2; iY < nY - 2; iY++)
+      gradient.col(iY) = (-value.col(iY + 2) +
+                          8 * value.col(iY + 1) -
+                          8 * value.col(iY - 1) +
+                          value.col(iY - 2)) /
+                         (12. * grid.dj_center_m_scgc.col(iY));
+
+    // Points just inside edges (2nd order):
+    iY = 1;
+    gradient.col(iY) =
+      (value.col(iY + 1) - value.col(iY - 1)) /
+      (2 * grid.dj_center_m_scgc.col(iY));
+    iY = nY - 2;
+    gradient.col(iY) =
+      (value.col(iY + 1) - value.col(iY - 1)) /
+      (2 * grid.dj_center_m_scgc.col(iY));
+
+    // Lower (one sided):
+    iY = 0;
+    gradient.col(iY) =
+      (value.col(iY + 1) - value.col(iY)) /
+      grid.dj_center_m_scgc.row(iY);
+
+    // Upper (one sided):
+    iY = nY - 1;
+    gradient.col(iY) =
+      (value.col(iY) - value.col(iY - 1)) /
+      grid.dj_center_m_scgc.col(iY);
+  }
+
+  return gradient;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the 2nd order gradient in the native j-direction,
+//   assuming a stretched grid
+// --------------------------------------------------------------------------
+
+arma_cube calc_gradient_stretched_j(arma_cube value, Grid grid) {
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t iY;
+
+  arma_cube gradient(nX, nY, nZ);
+  gradient.zeros();
+
+  if (grid.get_HasYdim()) {
+    // Central part
+    for (iY = 1; iY < nY - 1; iY++)
+      gradient.col(iY) =
+        (value.col(iY + 1)
+         - grid.dj_one_minus_r2.col(iY) % value.col(iY)
+         - grid.dj_ratio_sq.col(iY) % value.col(iY - 1)) /
+        (grid.dj_edge_m.col(iY + 1) %
+         (1.0 + grid.dj_ratio.col(iY)));
+
+    // Points at the edges (1st order):
+    iY = 0;
+    gradient.col(iY) =
+      (value.col(iY + 1) - value.col(iY)) /
+      grid.dj_center_m_scgc.col(iY);
+    iY = nY - 1;
+    gradient.col(iY) =
+      (value.col(iY) - value.col(iY - 1)) /
+      grid.dj_center_m_scgc.col(iY);
+  }
 
   return gradient;
 }
@@ -63,34 +318,7 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
 // --------------------------------------------------------------------------
 
 arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
-
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
-  int64_t iLat;
-
-  arma_cube gradient(nLons, nLats, nAlts);
-  gradient.zeros();
-
-  // Interior:
-  for (iLat = 1; iLat < nLats - 1; iLat++)
-    gradient.col(iLat) =
-      (value.col(iLat + 1) - value.col(iLat - 1)) /
-      (2 * grid.dlat_center_dist_scgc.col(iLat));
-
-  // Lower (one sided):
-  iLat = 0;
-  gradient.col(iLat) =
-    (value.col(iLat + 1) - value.col(iLat)) /
-    grid.dlat_center_dist_scgc.col(iLat);
-
-  // Upper (one sided):
-  iLat = nLats - 1;
-  gradient.col(iLat) =
-    (value.col(iLat) - value.col(iLat - 1)) /
-    grid.dlat_center_dist_scgc.col(iLat);
-
-  return gradient;
+  return calc_gradient2o_j(value, grid);
 }
 
 // --------------------------------------------------------------------------
@@ -99,37 +327,38 @@ arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
 
 arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
 
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
+  int64_t nX = grid.get_nLons();
+  int64_t nY = grid.get_nLats();
+  int64_t nZ = grid.get_nAlts();
   int64_t nGCs = grid.get_nGCs();
-  int64_t iAlt;
+  int64_t iK;
 
-  arma_cube gradient(nLons, nLats, nAlts);
+  arma_cube gradient(nX, nY, nZ);
   gradient.zeros();
 
-  arma_cube one_minus_r2 = 1.0 - grid.dalt_ratio_sq_scgc;
+  if (grid.get_HasZdim()) {
+    // Central part
+    for (iK = 1; iK < nZ - 1; iK++)
+      gradient.slice(iK) =
+        (value.slice(iK + 1)
+         - grid.dk_one_minus_r2.slice(iK) % value.slice(iK)
+         - grid.dk_ratio_sq.slice(iK) % value.slice(iK - 1)) /
+        (grid.dk_edge_m.slice(iK + 1) %
+         (1.0 + grid.dk_ratio.slice(iK)));
 
-  // Central part
-  for (iAlt = 1; iAlt < nAlts - 1; iAlt++)
-    gradient.slice(iAlt) =
-      (value.slice(iAlt + 1)
-       - one_minus_r2.slice(iAlt) % value.slice(iAlt)
-       - grid.dalt_ratio_sq_scgc.slice(iAlt) % value.slice(iAlt - 1)) /
-      (grid.dalt_lower_scgc.slice(iAlt + 1) %
-       (1.0 + grid.dalt_ratio_scgc.slice(iAlt)));
+    // lower boundary
+    iK = 0;
+    gradient.slice(iK) =
+      (value.slice(iK + 1) - value.slice(iK)) /
+      grid.dk_edge_m.slice(iK);
 
-  // lower boundary
-  iAlt = 0;
-  gradient.slice(iAlt) =
-    (value.slice(iAlt + 1) - value.slice(iAlt)) /
-    grid.dalt_lower_scgc.slice(iAlt);
+    // upper boundary
+    iK = nZ - 1;
+    gradient.slice(iK) =
+      (value.slice(iK) - value.slice(iK - 1)) /
+      grid.dk_edge_m.slice(iK);
+  }
 
-  // upper boundary
-  iAlt = nAlts - 1;
-  gradient.slice(iAlt) =
-    (value.slice(iAlt) - value.slice(iAlt - 1)) /
-    grid.dalt_lower_scgc.slice(iAlt);
   return gradient;
 }
 
@@ -157,6 +386,33 @@ arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
   }
 
   return gradient;
+}
+
+// --------------------------------------------------------------------------
+// Calculate the 3rd order (on-sided) gradient in the altitudinal direction
+//   - this is only defined for the bottom ghostcells!
+// --------------------------------------------------------------------------
+
+arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
+
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
+
+  arma_mat gradient(nLons, nLats), valueOut(nLons, nLats);
+  /*
+  gradient =
+      grid.MeshCoef1s3rdp1.slice(iAlt) % value.slice(iAlt + 1) +
+      grid.MeshCoef1s3rdp2.slice(iAlt) % value.slice(iAlt + 2) +
+      grid.MeshCoef1s3rdp3.slice(iAlt) % value.slice(iAlt + 3) +
+      grid.MeshCoef1s3rdp4.slice(iAlt) % value.slice(iAlt + 4) +
+      grid.MeshCoef1s3rdp5.slice(iAlt) % value.slice(iAlt + 5);
+  */
+  gradient = (value.slice(iAlt + 2) - value.slice(iAlt + 1)) /
+             grid.dalt_lower_scgc.slice(iAlt + 2);
+
+  valueOut = value.slice(iAlt + 1) - gradient % grid.dalt_lower_scgc.slice(
+               iAlt + 1);
+  return valueOut;
 }
 
 // --------------------------------------------------------------------------
@@ -197,23 +453,27 @@ std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
     // Only update interior cells
     // May vectorize for future improvements
 
-    if (nGCs >=
-        2) { // if more than 1 nGCs, we do fourth order, some foolproofing in case we go into debug hell
+    // if more than 1 nGCs, we do fourth order, some foolproofing in case we go into debug hell
+    if (nGCs >= 2) {
       for (int j = nGCs; j < nYs - nGCs; j++) {
         for (int i = nGCs; i < nXs - nGCs; i++) {
-          grad_x_curr(i, j) = (-curr_value(i + 2, j) + 8 * curr_value(i + 1,
-                                                                      j) - 8 * curr_value(i - 1, j) + curr_value(i - 2, j)) * (1. / 12. / dx);
-          grad_y_curr(i, j) = (-curr_value(i, j + 2) + 8 * curr_value(i,
-                                                                      j + 1) - 8 * curr_value(i, j - 1) + curr_value(i, j - 2)) * (1. / 12. / dy);
+          grad_x_curr(i, j) = (-curr_value(i + 2, j) +
+                               8 * curr_value(i + 1, j) -
+                               8 * curr_value(i - 1, j) +
+                               curr_value(i - 2, j)) * (1. / 12. / dx);
+          grad_y_curr(i, j) = (-curr_value(i, j + 2) +
+                               8 * curr_value(i, j + 1) -
+                               8 * curr_value(i, j - 1) +
+                               curr_value(i, j - 2)) * (1. / 12. / dy);
         }
       }
     } else { // otherwise we do second order
       for (int j = nGCs; j < nYs - nGCs; j++) {
         for (int i = nGCs; i < nXs - nGCs; i++) {
-          grad_x_curr(i, j) = (curr_value(i + 1, j) - curr_value(i - 1,
-                                                                 j)) * (1. / 2. / dx);
-          grad_y_curr(i, j) = (curr_value(i, j + 1) - curr_value(i,
-                                                                 j - 1)) * (1. / 2. / dy);
+          grad_x_curr(i, j) = (curr_value(i + 1, j) -
+                               curr_value(i - 1, j)) * (1. / 2. / dx);
+          grad_y_curr(i, j) = (curr_value(i, j + 1) -
+                               curr_value(i, j - 1)) * (1. / 2. / dy);
         }
       }
     }

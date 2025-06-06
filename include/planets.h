@@ -92,7 +92,7 @@ public:
   /**********************************************************************
      \brief Returns the location of the center of the dipole (in meters)
    **/
-  std::vector<float> get_dipole_center();
+  std::vector<precision_t> get_dipole_center();
 
   /**********************************************************************
      \brief Returns the rotation angle of the dipole in longitude (radians)
@@ -214,7 +214,7 @@ public:
     /// Dipole tilt from the rotation axis (co-latitude of pole) (radians)
     precision_t dipole_tilt;
     /// Offset of the dipole center from the geographic center of planet
-    std::vector<float> dipole_center{ 0.0, 0.0, 0.0 };
+    std::vector<precision_t> dipole_center{ 0.0, 0.0, 0.0 };
 
     //J2 value
     precision_t J2;

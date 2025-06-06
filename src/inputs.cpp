@@ -29,8 +29,8 @@ Inputs::Inputs(Times &time) {
   // Grid Defaults:
   geo_grid_input.alt_file = "";
   geo_grid_input.IsUniformAlt = true;
-  geo_grid_input.alt_min = 100.0 * 1000.0;
-  geo_grid_input.dalt = 5.0 * 1000.0;
+  geo_grid_input.alt_min = 100.0;
+  geo_grid_input.daltKm = 5.0;
 
   nLonsGeo = 12;
   nLatsGeo = 20;
@@ -64,6 +64,12 @@ Inputs::Inputs(Times &time) {
   // Now read the input file:
   isOk = read_inputs_json(time);
 
+  if (report.test_verbose(1)) {
+    std::cout << "Settings read in:\n";
+    std::cout << "iProc : " << iProc << "\n";
+    std::cout << std::setw(2) << settings;
+  }
+
   if (!isOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
 }
@@ -85,14 +91,13 @@ bool Inputs::write_restart() {
   return didWork;
 }
 
-
 // -----------------------------------------------------------------------
 // General check functions to see if keys exist:
 // check settings and throw invalid_argument error
 // if the setting doesn't exist
 // -----------------------------------------------------------------------
 
-//dummy values, to use if the settings are not set
+// dummy values, to use if the settings are not set
 int dummy_int = -1;
 float dummy_float = -1;
 std::string dummy_string = "unknown";
@@ -102,17 +107,17 @@ std::string dummy_string = "unknown";
 
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : "
               << key1 << " and "
               << key2 << "\n";
 
-  //try to find the keys first
+  // try to find the keys first
   if (settings.find(key1) != settings.end()) {
     if (settings.at(key1).find(key2) != settings.at(key1).end())
       isOk = true;
   } else
-    //if we haven't found the keys print a message & set IsOk to false
+    // if we haven't found the keys print a message & set IsOk to false
     isOk = false;
 
   if (!isOk) {
@@ -127,17 +132,17 @@ bool Inputs::check_settings(std::string key1,
 // 1 key:
 
 bool Inputs::check_settings(std::string key1) {
-  if (report.test_verbose(2))
+  if (report.test_verbose(5))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
   if (settings.find(key1) != settings.end())
     isOk = true;
   else
-    //if we haven't found the key print a message & set IsOk to false
+    // if we haven't found the key print a message & set IsOk to false
     isOk = false;
 
-  //perturb is non-essential, otherwise print error message
+  // perturb is non-essential, otherwise print error message
   if (!isOk && key1 != "Perturb") {
     report.error("Error in setting : " + key1);
     std::cout << "Missing setting called! [" << key1 << "]\n";
@@ -162,6 +167,22 @@ std::vector<int> Inputs::get_setting_intarr(std::string key1) {
 
     for (int i = 0; i < nPts; i++)
       value.push_back(settings.at(key1).at(i));
+  } else
+    isOk = false;
+
+  return value;
+}
+
+std::vector<int> Inputs::get_setting_intarr(std::string key1,
+                                            std::string key2) {
+  std::vector<int> value;
+
+  if (check_settings(key1, key2)) {
+    int nPts = settings.at(key1).at(key2).size();
+    isOk = true;
+
+    for (int i = 0; i < nPts; i++)
+      value.push_back(settings.at(key1).at(key2).at(i));
   } else
     isOk = false;
 
@@ -344,8 +365,10 @@ json Inputs::get_setting_json(std::string key1) {
   if (settings.find(key1) != settings.end())
     value = settings.at(key1);
   else {
-    isOk = false;
-    report.error("Error in setting : " + key1);
+    if (key1 != "Perturb") {
+      isOk = false;
+      report.error("Error in setting : " + key1);
+    }
   }
 
   return value;
@@ -365,8 +388,10 @@ json Inputs::get_setting_json(std::string key1,
       isOk = false;
       report.error("Error in setting : " + key1 + " : " + key2);
     } else {
-    isOk = false;
-    report.error("Error in setting : " + key1);
+    if (key1 != "Satellites") {
+      isOk = false;
+      report.error("Error in setting : " + key1);
+    }
   }
 
   return value;
@@ -409,38 +434,50 @@ precision_t Inputs::check_settings_pt(std::string key1,
 
 // -----------------------------------------------------------------------
 // Return characteristics of the grid that are entered by the user
+// gridtype needs to be "neuGrid" or "ionGrid"
 // -----------------------------------------------------------------------
 
-Inputs::grid_input_struct Inputs::get_grid_inputs() {
-  // First Get Values:
-  geo_grid_input.alt_file = check_settings_str("GeoGrid", "AltFile");
+Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
 
-  if (check_settings("GeoGrid", "IsUniformAlt")) {
-    bool reality = get_setting_bool("GeoGrid", "IsUniformAlt");
-    geo_grid_input.IsUniformAlt = get_setting_bool("GeoGrid", "IsUniformAlt");
-  } else
-    geo_grid_input.IsUniformAlt = true;
+  Inputs::grid_input_struct grid_specs;
 
-  geo_grid_input.alt_min = check_settings_pt("GeoGrid", "MinAlt");
-  geo_grid_input.dalt = check_settings_pt("GeoGrid", "dAlt");
-  geo_grid_input.lat_min = check_settings_pt("GeoGrid", "MinLat");
-  geo_grid_input.lat_max = check_settings_pt("GeoGrid", "MaxLat");
-  geo_grid_input.lon_min = check_settings_pt("GeoGrid", "MinLon");
-  geo_grid_input.lon_max = check_settings_pt("GeoGrid", "MaxLon");
+  std::vector<int> min_max;
 
-  // Second Change Units
-  geo_grid_input.alt_min = geo_grid_input.alt_min * cKMtoM;
-  geo_grid_input.lat_min = geo_grid_input.lat_min * cDtoR;
-  geo_grid_input.lat_max = geo_grid_input.lat_max * cDtoR;
-  geo_grid_input.lon_min = geo_grid_input.lon_min * cDtoR;
-  geo_grid_input.lon_max = geo_grid_input.lon_max * cDtoR;
+  grid_specs.shape = check_settings_str(gridtype, "Shape");
+  grid_specs.nX = get_setting_int(gridtype, "nLonsPerBlock");
+  grid_specs.nY = get_setting_int(gridtype, "nLatsPerBlock");
+  grid_specs.nZ = get_setting_int(gridtype, "nAlts");
 
-  // If the grid is uniform, dalt is in km, else it is in fractions of
-  // scale height:
-  if (geo_grid_input.IsUniformAlt)
-    geo_grid_input.dalt = geo_grid_input.dalt * cKMtoM;
+  min_max = get_setting_intarr(gridtype, "LonRange");
+  grid_specs.lon_min = min_max[0] * cDtoR;
+  grid_specs.lon_max = min_max[1] * cDtoR;
 
-  return geo_grid_input;
+  grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
+  // The rest of the settings are different for mag/geo grids,
+  // First take the magnetic options, then "else" should be (cube-)sphere
+
+  if (grid_specs.shape.find("dipole") != std::string::npos) {
+    // Latitude range (base of field line) is specified with max lat & min apex.
+    grid_specs.max_blat = check_settings_pt(gridtype, "LatMax") * cDtoR;
+    grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
+    // stretch the baselatitudes (not yet implemented)
+    grid_specs.LatStretch = check_settings_pt(gridtype, "LatStretch");
+    // controls the spacing of points along field line, <<1 for more pts at low alts
+    grid_specs.FieldLineStretch = check_settings_pt(gridtype, "dAltStretch");
+  } else {
+    min_max = get_setting_intarr(gridtype, "LatRange");
+    grid_specs.lat_min = min_max[0] * cDtoR;
+    grid_specs.lat_max = min_max[1] * cDtoR;
+    grid_specs.alt_file = check_settings_str(gridtype, "AltFile");
+    grid_specs.IsUniformAlt = get_setting_bool(gridtype, "IsUniformAlt");
+
+    if (grid_specs.IsUniformAlt)
+      grid_specs.daltKm = check_settings_pt(gridtype, "dAltkm");
+    else
+      grid_specs.daltScale = check_settings_pt(gridtype, "dAltScale");
+  }
+
+  return grid_specs;
 }
 
 // -----------------------------------------------------------------------
@@ -510,10 +547,13 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 
 precision_t Inputs::get_dt_output(int iOutput) {
   precision_t value = 0.0;
-  int nOutputs = settings.at("Outputs").at("type").size();
+  int nOutputs = settings.at("Outputs").at("dt").size();
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
+  else{
+    report.error("Output Error; more output types than dt's provided.");
+  }
 
   return value;
 }
@@ -557,6 +597,34 @@ int Inputs::get_updated_seed() {
 
 std::string Inputs::get_logfile() {
   std::string logfile = get_setting_str("Logfile", "name");
+
+  if (nMembers > 1)
+    logfile = add_cmember(logfile);
+
+  return logfile;
+}
+
+// -----------------------------------------------------------------------
+// Return log file name
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_logfile(int64_t iLog) {
+  std::string logfile = "log.txt";
+
+  if (check_settings("Logfile", "name")) {
+    int64_t nLogs = settings.at("Logfile").at("name").size();
+
+    if (nLogs == 1) {
+      logfile = settings.at("Logfile").at("name").at(iLog);
+      // logfile = get_setting_str("Logfile", "name");
+    } else {
+      if (iLog > nLogs - 1) {
+        report.error("Error in getting logfile name!");
+        logfile = settings.at("Logfile").at("name").at(nLogs - 1);
+      } else
+        logfile = settings.at("Logfile").at("name").at(iLog);
+    }
+  }
 
   if (nMembers > 1)
     logfile = add_cmember(logfile);
@@ -691,11 +759,67 @@ bool Inputs::get_O_cooling() {
 }
 
 // -----------------------------------------------------------------------
+// Return whether to include the photoelectron heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_photoelectron_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludePhotoElectronHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include (all) ionization heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_ionization_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeIonizationHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include electron-ion collisional heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_electron_ion_collisional_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeElectronIonCollisionalHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include electron-neutral elastic collisional heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_electron_neutral_elastic_collisional_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralElasticCollisionalHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include electron-neutral inelastic collisional heating
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_electron_neutral_inelastic_collisional_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralInelasticCollisionalHeating");
+}
+
+// -----------------------------------------------------------------------
+// Return whether to include heating from thermoelectric currents
+// -----------------------------------------------------------------------
+
+bool Inputs::get_do_thermoelectric_heating() {
+  return get_setting_bool("Sources", "Ions", "IncludeThermoelectricHeating");
+}
+
+// -----------------------------------------------------------------------
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
 bool Inputs::get_cent_acc() {
   return get_setting_bool("Sources", "Grid", "Cent_acc");
+}
+
+// -----------------------------------------------------------------------
+// Return coriolis acceleration
+// -----------------------------------------------------------------------
+
+bool Inputs::get_use_coriolis() {
+  return get_setting_bool("Sources", "Grid", "Coriolis");
 }
 
 // -----------------------------------------------------------------------
@@ -847,31 +971,23 @@ int Inputs::get_original_seed() {
 }
 
 // -----------------------------------------------------------------------
-// Return number of longitudes, latitudes, and altitudes in Geo grid
+// Return number of longitudes, latitudes, and altitudes in grid
 // -----------------------------------------------------------------------
 
-int Inputs::get_nLonsGeo() {
-  return check_settings_pt("GeoBlockSize", "nLons");
+int Inputs::get_nLons(std::string gridtype) {
+  return get_setting_int(gridtype, "nLonsPerBlock");
 }
 
-int Inputs::get_nLatsGeo() {
-  return check_settings_pt("GeoBlockSize", "nLats");
+int Inputs::get_nLats(std::string gridtype) {
+  return get_setting_int(gridtype, "nLatsPerBlock");
 }
 
-int Inputs::get_nAltsGeo() {
-  return check_settings_pt("GeoBlockSize", "nAlts");
+int Inputs::get_nAlts(std::string gridtype) {
+  return get_setting_int(gridtype, "nAlts");
 }
 
-// -----------------------------------------------------------------------
-// Return number of Blocks of longitudes and latitudes in Geo grid
-// -----------------------------------------------------------------------
-
-int Inputs::get_nBlocksLonGeo() {
-  return check_settings_pt("GeoBlockSize", "nBlocksLon");
-}
-
-int Inputs::get_nBlocksLatGeo() {
-  return check_settings_pt("GeoBlockSize", "nBlocksLat");
+std::string Inputs::get_grid_shape(std::string gridtype) {
+  return mklower(get_setting_str(gridtype, "Shape"));
 }
 
 // -----------------------------------------------------------------------
@@ -1082,6 +1198,18 @@ json Inputs::get_boundary_condition_types() {
 
 std::string Inputs::get_advection_neutrals_vertical() {
   return get_setting_str("Advection", "Neutrals", "Vertical");
+}
+
+std::string Inputs::get_advection_ions_along() {
+  return get_setting_str("Advection", "Ions", "Along");
+}
+
+bool Inputs::get_advection_neutrals_bulkwinds() {
+  return get_setting_bool("Advection", "Neutrals", "useBulkWinds");
+}
+
+bool Inputs::get_advection_neutrals_implicitfriction() {
+  return get_setting_bool("Advection", "Neutrals", "useImplicitFriction");
 }
 
 // --------------------------------------------------------------------------

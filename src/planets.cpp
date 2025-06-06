@@ -104,7 +104,7 @@ precision_t Planets::get_dipole_strength() {
 // Get the location of the dipole center
 // -----------------------------------------------------------------------------
 
-std::vector<float> Planets::get_dipole_center() {
+std::vector<precision_t> Planets::get_dipole_center() {
   return planet.dipole_center;
 }
 

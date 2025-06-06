@@ -109,7 +109,11 @@ void Electrodynamics::set_all_indices_for_ie(Times time,
   float au = indices.get_index(time_now, iAU_);
   float al = indices.get_index(time_now, iAL_);
 
+  if (imfbz < -1e31)
+    report.error("There doesnt seem to be any IMF Bz!");
+
   if (report.test_verbose(3)) {
+    std::cout << "time now : " << time_now << "\n";
     std::cout << "imf by : " << iBz_ << " " << imfby << "\n";
     std::cout << "imf bz : " << iBz_ << " " << imfbz << "\n";
     std::cout << "sw v : " << iVx_ << " " << swv << "\n";
@@ -138,7 +142,7 @@ void Electrodynamics::set_all_indices_for_ie(Times time,
 // -----------------------------------------------------------------------------
 
 bool Electrodynamics::update(Planets planet,
-                             Grid gGrid,
+                             Grid grid,
                              Times time,
                              Indices &indices,
                              Ions &ions) {
@@ -148,16 +152,18 @@ bool Electrodynamics::update(Planets planet,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (HaveElectrodynamicsFile  || HaveFortranIe) {
-    set_time(time.get_current());
-    gGrid.calc_sza(planet, time);
-    gGrid.calc_gse(planet, time);
-    gGrid.calc_mlt();
+  bool didWork = true;
 
-    // Default is to set everything to zero:
-    ions.potential_scgc.zeros();
-    ions.eflux.zeros();
-    ions.avee.ones();
+  // Default is to set everything to zero:
+  ions.potential_scgc.zeros();
+  ions.eflux.zeros();
+  ions.avee.ones();
+
+  if (HaveElectrodynamicsFile || HaveFortranIe) {
+    set_time(time.get_current());
+    grid.calc_sza(planet, time);
+    grid.calc_gse(planet, time);
+    grid.calc_mlt();
 
 #ifdef FORTRAN
 
@@ -165,11 +171,15 @@ bool Electrodynamics::update(Planets planet,
       report.print(3, "Using Fortran Electrodynamics!");
       set_all_indices_for_ie(time, indices);
 
+      // Need to do this every time step, since we are switching between geo and mag grids.
+      int nXs = grid.get_nX();
+      int nYs = grid.get_nY();
+      int64_t nZs = grid.get_nZ();
+      ie_set_nxs(&nXs);
+      ie_set_nys(&nYs);
+
       if (!IsAllocated) {
-        int nXs = gGrid.get_nX();
-        ie_set_nxs(&nXs);
-        int nYs = gGrid.get_nY();
-        ie_set_nys(&nYs);
+        report.print(4, "Allocating variables in electrodynamics");
         int64_t iTotal = nXs * nYs;
         mlt2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
         lat2d = static_cast<float*>(malloc(iTotal * sizeof(float)));
@@ -179,26 +189,70 @@ bool Electrodynamics::update(Planets planet,
         IsAllocated = true;
       }
 
-      int64_t nZs = gGrid.get_nZ();
       int64_t iZ;
-
       int iError;
 
       for (iZ = 0; iZ < nZs; iZ++) {
-        copy_mat_to_array(gGrid.magLocalTime_scgc.slice(iZ), mlt2d, true);
-        copy_mat_to_array(gGrid.magLat_scgc.slice(iZ), lat2d, true);
-
+        report.print(5, "Looping through Altitudes...");
+        copy_mat_to_array(grid.magLocalTime_scgc.slice(iZ), mlt2d, true);
+        copy_mat_to_array(grid.magInvLat_scgc.slice(iZ), lat2d, true);
         ie_set_mlts(mlt2d, &iError);
-        ie_set_lats(lat2d, &iError);
-        ie_update_grid(&iError);
 
-        ie_get_potential(pot2d, &iError);
+        if (iError != 0) {
+          didWork = false;
+          report.error("Error in ie_set_mlts");
+        }
+
+        if (didWork)
+          ie_set_lats(lat2d, &iError);
+
+        if (iError != 0) {
+          didWork = false;
+          report.error("Error in ie_set_lats");
+        }
+
+        if (didWork)
+          ie_update_grid(&iError);
+
+        if (iError != 0) {
+          didWork = false;
+          report.error("Error in ie_update_grid");
+        }
+
+        if (didWork)
+          ie_get_potential(pot2d, &iError);
+
+        if (iError != 0) {
+          didWork = false;
+          report.error("Error in ie_get_potential");
+          std::cout << "ie_get_potential iError : " << iError << "\n";
+        }
+
         copy_array_to_mat(pot2d, ions.potential_scgc.slice(iZ), true);
 
         if (iZ == nZs - 1) {
-          ie_get_electron_diffuse_aurora(eflux2d, avee2d, &iError);
-          copy_array_to_mat(avee2d, ions.avee, true);
-          copy_array_to_mat(eflux2d, ions.eflux, true);
+          report.print(5, "Getting Aurora...");
+
+          if (didWork) {
+            ie_get_electron_diffuse_aurora(eflux2d, avee2d, &iError);
+
+            if (iError != 0) {
+              didWork = false;
+              report.error("Error in ie_get_electron_diffuse_aurora");
+              std::cout << "ie_get_electron_diffuse_aurora iError : " << iError << "\n";
+            } else {
+              report.print(5, "Copying avee2d...");
+              copy_array_to_mat(avee2d, ions.avee, true);
+              report.print(5, "Copying eflux2d...");
+              copy_array_to_mat(eflux2d, ions.eflux, true);
+
+              if (report.test_verbose(3)) {
+                std::cout << "I have eflux2d: " << ions.eflux << "\n";
+                std::cout << "I have potential: " <<  ions.potential_scgc.slice(iZ) << "\n";
+              }
+            }
+          }
+
         }
       }
     }
@@ -208,8 +262,8 @@ bool Electrodynamics::update(Planets planet,
     if (HaveElectrodynamicsFile) {
       report.print(3, "Setting electrodynamics from file!");
       auto electrodynamics_values =
-        get_electrodynamics(gGrid.magLat_scgc,
-                            gGrid.magLocalTime_scgc);
+        get_electrodynamics(grid.magInvLat_scgc,
+                            grid.magLocalTime_scgc);
       ions.potential_scgc = std::get<0>(electrodynamics_values);
       ions.eflux = std::get<1>(electrodynamics_values);
       ions.avee = std::get<2>(electrodynamics_values);
@@ -217,7 +271,7 @@ bool Electrodynamics::update(Planets planet,
   }
 
   report.exit(function);
-  return true;
+  return didWork;
 }
 
 // -----------------------------------------------------------------------------

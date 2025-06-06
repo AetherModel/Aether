@@ -1,14 +1,17 @@
+# Debug
 
 The Debug command in the input file sets the type and amount of
 information that is fed to the user. An example of the Debug command
 is:
 
+```json
     "Debug" : {
-	"iVerbose" : 0,
-	"dt" : 60.0,
-	"TimingPercent" : 1.0,
-	"iTimingDepth" : 5,
-	"iProc" : 0},
+        "iVerbose" : 0,
+        "dt" : 60.0,
+        "TimingPercent" : 1.0,
+        "iTimingDepth" : 5,
+        "iProc" : 0},
+```
 
 The "iVerbose" command can be used under "Debug" in aether.json to set
 the overall verbose level in the code.  This sets the amount of
@@ -37,6 +40,7 @@ certain functions by specifying the function names and the
 corresponding verbose levels using the "iFunctionVerbose" command as
 follows:
 
+```json
     "Debug" : {
     "iVerbose" : 0,
     "iFunctionVerbose" : {
@@ -44,6 +48,7 @@ follows:
         "func2" : 2},
     "dt" : 10.0
     }
+```
 
 When a sub-function is entered, the verbose level stays the same if
 the verbose level for that sub-function is not specified. When that

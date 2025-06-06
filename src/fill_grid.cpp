@@ -90,7 +90,7 @@ void Grid::calc_gse(Planets planet, Times time) {
 
 // ---------------------------------------------------------------------------
 //  Fill in Magnetic Local Time
-//    - This assumes that the GE coordinates have been calculated
+//    - This assumes that the GSE coordinates have been calculated
 //      and filled in!
 // ---------------------------------------------------------------------------
 
@@ -170,8 +170,9 @@ void Grid::fill_grid_bfield(Planets planet) {
 
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
                                    planet);
-
+          // This is Invariant Latitude
           magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
+          magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
           magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
 
           bfield_mag_scgc(iLon, iLat, iAlt) = 0.0;
@@ -284,11 +285,13 @@ void Grid::calc_gravity(Planets planet) {
 
   // *this is the grid class....
   gravity_vcgc = calc_gradient_vector(gravity_potential_scgc, *this);
-
   gravity_vcgc[0] = - gravity_vcgc[0];
   gravity_vcgc[1] = - gravity_vcgc[1];
   gravity_vcgc[2] = - gravity_vcgc[2];
-
+  gravity_mag_scgc = sqrt(
+                       gravity_vcgc[0] % gravity_vcgc[0] +
+                       gravity_vcgc[1] % gravity_vcgc[1] +
+                       gravity_vcgc[2] % gravity_vcgc[2]);
   report.exit(function);
   return;
 }
@@ -297,118 +300,21 @@ void Grid::calc_gravity(Planets planet) {
 //  Fill in XYZ in geo and mag coordinates
 // -----------------------------------------------------------------------------
 
-void Grid::calc_grid_spacing(Planets planet) {
-
+void Grid::calc_xyz(Planets planet) {
   int64_t iLon, iLat, iAlt;
-
-  report.print(3, "starting calc_grid_spacing");
-
-  calc_alt_grid_spacing();
-  calc_lat_grid_spacing();
-  calc_long_grid_spacing();
 
   std::vector<arma_cube> lon_lat_radius;
   lon_lat_radius.push_back(geoLon_scgc);
   lon_lat_radius.push_back(geoLat_scgc);
   lon_lat_radius.push_back(radius_scgc);
-  std::vector<arma_cube> xyz;
 
+  std::vector<arma_cube> xyz;
   xyz = transform_llr_to_xyz_3d(lon_lat_radius);
   geoX_scgc = xyz[0];
   geoY_scgc = xyz[0];
   geoZ_scgc = xyz[0];
 
   report.print(3, "ending calc_grid_spacing");
-}
-
-// ---------------------------------------
-// Grid spacing for altitude:
-// ---------------------------------------
-
-void Grid::calc_alt_grid_spacing() {
-
-  int64_t iAlt;
-
-  for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
-    dalt_center_scgc.slice(iAlt) =
-      (geoAlt_scgc.slice(iAlt + 1) - geoAlt_scgc.slice(iAlt - 1)) / 2.0;
-    dalt_lower_scgc.slice(iAlt) =
-      geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
-  }
-
-  dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1);
-  dalt_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
-
-  dalt_lower_scgc.slice(0) = dalt_lower_scgc.slice(1);
-  iAlt = nAlts - 1;
-  dalt_lower_scgc.slice(iAlt) =
-    geoAlt_scgc.slice(iAlt) - geoAlt_scgc.slice(iAlt - 1);
-
-  // For a stretched grid, calculate some useful quantities:
-  // lower is defined for the current cell, which
-  // means that upper(iAlt) is lower(iAlt+1)
-  // ratio = upper / lower
-  for (iAlt = 0; iAlt < nAlts - 1; iAlt++)
-    dalt_ratio_scgc.slice(iAlt) =
-      dalt_lower_scgc.slice(iAlt + 1) / dalt_lower_scgc.slice(iAlt);
-
-  iAlt = nAlts - 1;
-  dalt_ratio_scgc.slice(iAlt) = dalt_ratio_scgc.slice(iAlt - 1);
-
-  // Need the square of the ratio:
-  dalt_ratio_sq_scgc = dalt_ratio_scgc % dalt_ratio_scgc;
-}
-
-// ---------------------------------------
-// Grid spacing for latitude:
-// ---------------------------------------
-
-void Grid::calc_lat_grid_spacing() {
-
-  int64_t iLat;
-
-  for (iLat = 1; iLat < nLats - 1; iLat++) {
-    dlat_center_scgc.col(iLat) =
-      (geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat - 1)) / 2.0;
-  }
-
-  // Bottom (one sided):
-  iLat = 0;
-  dlat_center_scgc.col(iLat) =
-    geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat);
-  // Top (one sided):
-  iLat = nLats - 1;
-  dlat_center_scgc.col(iLat) =
-    geoLat_scgc.col(iLat) - geoLat_scgc.col(iLat - 1);
-
-  // Make this into a distance:
-  dlat_center_dist_scgc = dlat_center_scgc % radius_scgc;
-}
-
-// ---------------------------------------
-// Grid spacing for longitude:
-// ---------------------------------------
-
-void Grid::calc_long_grid_spacing() {
-
-  int64_t iLon;
-
-  for (iLon = 1; iLon < nLons - 1; iLon++)
-    dlon_center_scgc.row(iLon) =
-      (geoLon_scgc.row(iLon + 1) - geoLon_scgc.row(iLon - 1)) / 2.0;
-
-  // Bottom (one sided):
-  iLon = 0;
-  dlon_center_scgc.row(iLon) =
-    geoLon_scgc.row(iLon + 1) - geoLon_scgc.row(iLon);
-  // Top (one sided):
-  iLon = nLons - 1;
-  dlon_center_scgc.row(iLon) =
-    geoLon_scgc.row(iLon) - geoLon_scgc.row(iLon - 1);
-
-  // Make this into a distance:
-  dlon_center_dist_scgc =
-    dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
 }
 
 // -----------------------------------------------------------------------------
@@ -429,3 +335,4 @@ void Grid::calc_cent_acc(Planets planet) {
   // Radial cent acc
   cent_acc_vcgc[2] = omega2 * radius_scgc % cos(geoLat_scgc) % cos(geoLat_scgc);
 }
+

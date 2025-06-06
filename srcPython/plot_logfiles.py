@@ -64,21 +64,23 @@ def read_ssv_file(file):
     while (iLine < iEnd):
         aline = lines[iLine].split(' ')
 
-        year = int(aline[0])
-        month = int(aline[1])
-        day = int(aline[2])
-        hour = int(aline[3])
-        minute = int(aline[4])
-        second = int(aline[5])
-        if (iOff == 6):
-            milli = 0
-        else:
-            milli = int(aline[6])
-        t = dt.datetime(year, month, day, hour, minute, second, milli)
+        if ((len(aline) - iOff) == nVars):
+
+            year = int(aline[0])
+            month = int(aline[1])
+            day = int(aline[2])
+            hour = int(aline[3])
+            minute = int(aline[4])
+            second = int(aline[5])
+            if (iOff == 6):
+                milli = 0
+            else:
+                milli = int(aline[6])
+            t = dt.datetime(year, month, day, hour, minute, second, milli)
         
-        data["times"].append(t)
-        for iVar in range(nVars):
-            allValues[iVar, iLine - iStart] = float(aline[iOff + iVar])
+            data["times"].append(t)
+            for iVar in range(nVars):
+                allValues[iVar, iLine - iStart] = float(aline[iOff + iVar])
         iLine += 1
         
     data['values'] = allValues
@@ -317,6 +319,7 @@ if __name__ == '__main__':
         print("Reading file : ",file)
         #data = read_timeline_file(file)
         data = read_ssv_file(file)
+        nT = len(data["times"])-1
         for iVar in args.vars:
             label = data["vars"][iVar]
             color = 'black'
@@ -326,7 +329,7 @@ if __name__ == '__main__':
             if (nVars > 1):
                 color,line,label = assign_var_to_color(data['vars'][iVar])
                 
-            ax.plot(data["times"], data["values"][iVar], label = label,
+            ax.plot(data["times"][:nT], data["values"][iVar,:nT], label = label,
                     color = color, linestyle = line, linewidth = 2.0)
 
     iVar = args.vars[0]

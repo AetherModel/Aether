@@ -135,7 +135,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
   std::vector<arma_mat> energy_flux_struct, average_energy_struct;
   std::vector<arma_mat> ion_energy_flux_struct, ion_average_energy_struct;
 
-  report.print(1, "Reading Electrodynamics file : " + filename);
+  report.print(0, "Reading Electrodynamics file : " + filename);
   FILE *infile;
 
   char* char_arr;

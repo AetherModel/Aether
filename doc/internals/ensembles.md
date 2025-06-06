@@ -1,10 +1,13 @@
+# Ensembles
 
 Aether is capable of running with ensembles, meaning that you can run
 multiples of the same simulation in one run. This is enabled by adding
 to the aether.json file:
 
+```json
     "Ensembles" : {
         "nMembers" : N},
+```
 
 where N is the number of members that you would like to run.  In order
 to do this, the number of nodes that are requested have to be N times
@@ -19,21 +22,22 @@ with.
 To perturb indices in Aether, you can use the "Perturb" command in the
 aether.json file. As an example:
 
-    "Perturb": {
-	"f107" : { "Mean" : 1.0,
-		   "Std" : 0.10,
-		   "Add" : false,
-		   "Constant" : true},
-	"f107a" : { "Mean" : 1.0,
-		   "Std" : 0.10,
-		   "Add" : false,
-		    "Constant" : true},
-	"imfbz" : { "Mean" : 0.0,
-		   "Std" : 2.0,
-		   "Add" : true,
-		   "Constant" : false}
-
+```json
+"Perturb": {
+    "f107" : { "Mean" : 1.0,
+               "Std" : 0.10,
+               "Add" : false,
+               "Constant" : true},
+    "f107a" : { "Mean" : 1.0,
+                "Std" : 0.10,
+                "Add" : false,
+                "Constant" : true},
+    "imfbz" : { "Mean" : 0.0,
+                "Std" : 2.0,
+                "Add" : true,
+                "Constant" : false}
     }
+```
 
 This perturbs the F10.7, F10.7a, and IMF Bz indices.  The sub-parts of
 the command include:
@@ -74,8 +78,10 @@ the post processing code can create mean and std files.
 
 You can also perturb chemical reaction rates, but doing something like:
 
+```json
     "Perturb": {
-	"Chemistry" : ["R2", "R10", "R20"] }
+        "Chemistry" : ["R2", "R10", "R20"] }
+```
 
 This will perturb the reaction rates in the chemistry file.  The Rxx
 names have to be in the "name" column.  The percentage of uncertainty

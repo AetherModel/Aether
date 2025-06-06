@@ -160,6 +160,33 @@ void display_vector(arma_vec vec) {
 }
 
 // ----------------------------------------------------------------------------
+// Neatly display an armadillo vector with a name
+// ----------------------------------------------------------------------------
+
+void display_vector(std::string name, arma_vec vec) {
+  std::cout << name << " ";
+
+  for (int64_t i = 0; i < vec.n_rows; i++)
+    std::cout << vec(i) << " ";
+
+  std::cout << "\n";
+}
+
+// ----------------------------------------------------------------------------
+// Neatly display a c++ vector with a name
+// ----------------------------------------------------------------------------
+
+void display_vector(std::string name, std::vector<precision_t> vec) {
+  std::cout << name << " ";
+
+  for (int64_t i = 0; i < vec.size(); i++)
+    std::cout << vec[i] << " ";
+
+  std::cout << "\n";
+}
+
+
+// ----------------------------------------------------------------------------
 // synchronize a (boolean) variable across all processors
 // ----------------------------------------------------------------------------
 
@@ -602,13 +629,11 @@ void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v,
 //----------------------------------------------------------------------
 
 std::vector<int> index_to_ijk(arma_cube cube, int index) {
-  arma::uword x = cube.n_rows;
-  arma::uword y = cube.n_cols;
-  int altitude = index / (x * y);
-  int remainder = index % (x * y);
-  int lattitude = remainder / y;
-  int longitude = remainder % y;
-  return std::vector<int> {lattitude, longitude, altitude};
+  uvec u = ind2sub(size(cube), index);
+  int iLon = u(0);
+  int iLat = u(1);
+  int iAlt = u(2);
+  return std::vector<int> {iLon, iLat, iAlt};
 }
 
 //----------------------------------------------------------------------
@@ -629,6 +654,7 @@ bool all_finite(arma_cube cube, std::string name) {
       "," + std::to_string(loc[1]) +
       "," + std::to_string(loc[2]) + ")";
     int size = locations.size();
+    std::cout << "all_finite : " << cube(loc[0], loc[1], loc[2]) << "\n";
     std::string error_message =
       std::to_string(size) +
       " Nonfinite values exist in " + name +

@@ -20,7 +20,7 @@ static const arma_mat ORIGINS = {
     { 1.0,  1.0, -1.0},
     {-1.0,  1.0, -1.0},
     {-1.0, -1.0, -1.0},
-    { 1.0, -1.0,  1.0},
+    { 1.0, -1.0,  1.0}
 };
 
 /// Normalized right steps in cube

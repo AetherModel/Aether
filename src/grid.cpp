@@ -9,15 +9,71 @@
 // Initialize Grid class
 // --------------------------------------------------------------------------
 
-Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
+Grid::Grid(std::string gridtype) {
 
-  nX = nX_in + nGCs_in * 2;
+  // At this point, we only need 2 ghostcells.  Hardcode this:
+  nGCs = 2;
+
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
+
+  gridType = gridtype;
+
+  nX = grid_input.nX + nGCs * 2;
   nLons = nX;
-  nY = nY_in + nGCs_in * 2;
+  nY = grid_input.nY + nGCs * 2;
   nLats = nY;
-  nZ = nZ_in + nGCs_in * 2;
+  nZ = grid_input.nZ + nGCs * 2;
   nAlts = nZ;
-  nGCs = nGCs_in;
+
+  // Now set all of the logicals to make the flow a bit easier:
+
+  if (grid_input.nX == 1 &
+      grid_input.nY == 1 &
+      grid_input.nZ == 1)
+    Is0D = true;
+  else {
+    if (grid_input.nY == 1 & grid_input.nZ == 1)
+      Is1Dx = true;
+
+    if (grid_input.nX == 1 & grid_input.nZ == 1)
+      Is1Dy = true;
+
+    if (grid_input.nX == 1 & grid_input.nY == 1)
+      Is1Dz = true;
+
+    if (!Is1Dx & !Is1Dy & !Is1Dz) {
+      if (grid_input.nX == 1)
+        Is2Dyz = true;
+
+      if (grid_input.nY == 1)
+        Is2Dxz = true;
+
+      if (grid_input.nZ == 1)
+        Is2Dxy = true;
+
+      if (!Is2Dyz & !Is2Dxz & !Is2Dxy)
+        Is3D = true;
+    }
+  }
+
+  if (grid_input.nX == 1)
+    HasXdim = false;
+
+  if (grid_input.nY == 1)
+    HasYdim = false;
+
+  if (grid_input.nZ == 1)
+    HasZdim = false;
+
+  if (mklower(grid_input.shape) == "sphere")
+    iGridShape_ = iSphere_;
+
+  if (mklower(grid_input.shape) == "cubesphere")
+    iGridShape_ = iCubesphere_;
+
+  //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
+  if (mklower(grid_input.shape).find("dipole") != std::string::npos)
+    iGridShape_ = iDipole_;
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
@@ -99,12 +155,38 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   magLon_scgc.set_size(nX, nY, nZ);
   magLat_scgc.set_size(nX, nY, nZ);
   magAlt_scgc.set_size(nX, nY, nZ);
+  magInvLat_scgc.set_size(nX, nY, nZ);
+
+  magPhi_scgc.set_size(nX, nY, nZ);
+  magP_scgc.set_size(nX, nY, nZ);
+  magQ_scgc.set_size(nX, nY, nZ);
 
   magX_scgc.set_size(nX, nY, nZ);
   magY_scgc.set_size(nX, nY, nZ);
   magZ_scgc.set_size(nX, nY, nZ);
 
   magLocalTime_scgc.set_size(nX, nY, nZ);
+
+  magLon_Left.set_size(nX + 1, nY, nZ);
+
+  magLat_Down.set_size(nX, nY + 1, nZ);
+  magLat_Below.set_size(nX, nY, nZ + 1);
+
+  magAlt_Down.set_size(nX, nY + 1, nZ);
+  magAlt_Below.set_size(nX, nY, nZ + 1);
+
+  magLon_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  magLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  magAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+
+  magP_Down.set_size(nX, nY + 1, nZ);
+  magP_Below.set_size(nX, nY, nZ + 1);
+  magQ_Down.set_size(nX, nY + 1, nZ);
+  magQ_Below.set_size(nX, nY, nZ + 1);
+  magP_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+  magQ_Corner.set_size(nX + 1, nY + 1, nZ + 1);
+
+  baseLats_down.set_size(nY + 1);
 
   radius_scgc.set_size(nX, nY, nZ);
   radius2_scgc.set_size(nX, nY, nZ);
@@ -114,6 +196,52 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   dalt_lower_scgc.set_size(nX, nY, nZ);
   dalt_ratio_scgc.set_size(nX, nY, nZ);
   dalt_ratio_sq_scgc.set_size(nX, nY, nZ);
+  dr_edge.set_size(nX, nY, nZ);
+
+  i_center_scgc.set_size(nX, nY, nZ);
+  j_center_scgc.set_size(nX, nY, nZ);
+  k_center_scgc.set_size(nX, nY, nZ);
+  i_edge_scgc.set_size(nX + 1, nY, nZ);
+  j_edge_scgc.set_size(nX, nY + 1, nZ);
+  k_edge_scgc.set_size(nX, nY, nZ + 1);
+  i_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+  j_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+  k_corner_scgc.set_size(nX + 1, nY + 1, nZ + 1);
+
+  di_center_scgc.set_size(nX, nY, nZ);
+  dj_center_scgc.set_size(nX, nY, nZ);
+  dk_center_scgc.set_size(nX, nY, nZ);
+
+  di_center_m_scgc.set_size(nX, nY, nZ);
+  dj_center_m_scgc.set_size(nX, nY, nZ);
+  dk_center_m_scgc.set_size(nX, nY, nZ);
+
+  di_edge.set_size(nX, nY, nZ);
+  di_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along i:
+  di_ratio.set_size(nX, nY, nZ);
+  di_ratio_sq.set_size(nX, nY, nZ);
+  di_one_minus_r2.set_size(nX, nY, nZ);
+
+  dj_edge.set_size(nX, nY, nZ);
+  dj_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along j:
+  dj_ratio.set_size(nX, nY, nZ);
+  dj_ratio_sq.set_size(nX, nY, nZ);
+  dj_one_minus_r2.set_size(nX, nY, nZ);
+
+  dk_edge.set_size(nX, nY, nZ);
+  dk_edge_m.set_size(nX, nY, nZ);
+  // For stretched grids along k:
+  dk_ratio.set_size(nX, nY, nZ);
+  dk_ratio_sq.set_size(nX, nY, nZ);
+  dk_one_minus_r2.set_size(nX, nY, nZ);
+
+  MeshCoef1s3rdp1.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp2.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp3.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp4.set_size(nX, nY, nGCs);
+  MeshCoef1s3rdp5.set_size(nX, nY, nGCs);
 
   dlat_center_scgc.set_size(nX, nY, nZ);
   dlat_center_dist_scgc.set_size(nX, nY, nZ);
@@ -146,6 +274,7 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
   mag_pole_south_gse.push_back(tmp_col);
 
   HasBField = 0;
+  IsExperimental = false;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
@@ -153,6 +282,16 @@ Grid::Grid(int nX_in, int nY_in, int nZ_in, int nGCs_in) {
     cent_acc_vcgc[i].zeros();
 
 }
+
+// --------------------------------------------------------------------------
+// Set Variable Sizes
+// --------------------------------------------------------------------------
+
+void Grid::set_variable_sizes() {
+
+  return;
+}
+
 
 // --------------------------------------------------------------------------
 // write restart out files for the grid
@@ -167,8 +306,9 @@ bool Grid::write_restart(std::string dir) {
     try {
       OutputContainer RestartContainer;
       RestartContainer.set_directory(dir);
-      RestartContainer.set_version(0.1);
+      RestartContainer.set_version(aether_version);
       RestartContainer.set_time(0.0);
+      RestartContainer.set_nGhostCells(nGCs);
 
       // Output Cell Centers
       RestartContainer.set_filename("grid_" + cGrid);
@@ -255,7 +395,7 @@ bool Grid::read_restart(std::string dir) {
   try {
     OutputContainer RestartContainer;
     RestartContainer.set_directory(dir);
-    RestartContainer.set_version(0.1);
+    RestartContainer.set_version(aether_version);
     // Cell Centers:
     RestartContainer.set_filename("grid_" + cGrid);
     RestartContainer.read();
@@ -323,8 +463,24 @@ void Grid::report_grid_boundaries() {
 // Get whether the grid is a geographic grid (or magnetic - return 0)
 // --------------------------------------------------------------------------
 
-int Grid::get_IsGeoGrid() {
+bool Grid::get_IsGeoGrid() {
   return IsGeoGrid;
+}
+
+// --------------------------------------------------------------------------
+// Return grid type (neu or ion)
+// --------------------------------------------------------------------------
+
+std::string Grid::get_gridtype() {
+  return gridType;
+}
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a experimental (return true for experimental)
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsExperimental() {
+  return IsExperimental;
 }
 
 // --------------------------------------------------------------------------
@@ -339,8 +495,24 @@ bool Grid::get_HasBField() {
 // Set whether the grid is a geographic grid (or magnetic - set to 0)
 // --------------------------------------------------------------------------
 
-void Grid::set_IsGeoGrid(int value) {
+void Grid::set_IsGeoGrid(bool value) {
   IsGeoGrid = value;
+}
+
+// --------------------------------------------------------------------------
+// Set whether the grid is an experimental grid
+// --------------------------------------------------------------------------
+
+void Grid::set_IsExperimental(bool value) {
+  IsExperimental = value;
+}
+
+// --------------------------------------------------------------------------
+// Set whether the grid is a dipole grid
+// --------------------------------------------------------------------------
+
+void Grid::set_IsDipole(bool value) {
+  IsDipole = value;
 }
 
 // --------------------------------------------------------------------------
@@ -351,6 +523,38 @@ int64_t Grid::get_nPointsInGrid() {
   int64_t nPoints;
   nPoints = int64_t(nX) * int64_t(nY) * int64_t(nZ);
   return nPoints;
+}
+
+// --------------------------------------------------------------------------
+// Get some grid definition things
+// --------------------------------------------------------------------------
+
+bool Grid::get_HasXdim() {
+  return HasXdim;
+}
+
+bool Grid::get_HasYdim() {
+  return HasYdim;
+}
+
+bool Grid::get_HasZdim() {
+  return HasZdim;
+}
+
+bool Grid::get_Is0D() {
+  return Is0D;
+}
+
+bool Grid::get_Is1Dx() {
+  return Is1Dx;
+}
+
+bool Grid::get_Is1Dy() {
+  return Is1Dy;
+}
+
+bool Grid::get_Is1Dz() {
+  return Is1Dz;
 }
 
 // --------------------------------------------------------------------------
@@ -367,6 +571,25 @@ int64_t Grid::get_nZ() {
   return nZ;
 }
 
+int64_t Grid::get_nX(bool includeGCs) {
+  if (includeGCs)
+    return nX;
+  else
+    return nX - 2 * nGCs;
+}
+int64_t Grid::get_nY(bool includeGCs) {
+  if (includeGCs)
+    return nY;
+  else
+    return nY - 2 * nGCs;
+}
+int64_t Grid::get_nZ(bool includeGCs) {
+  if (includeGCs)
+    return nZ;
+  else
+    return nZ - 2 * nGCs;
+}
+
 int64_t Grid::get_nLons() {
   return nLons;
 }
@@ -375,6 +598,25 @@ int64_t Grid::get_nLats() {
 }
 int64_t Grid::get_nAlts() {
   return nAlts;
+}
+
+int64_t Grid::get_nLons(bool includeGCs) {
+  if (includeGCs)
+    return nLons;
+  else
+    return nLons - 2 * nGCs;
+}
+int64_t Grid::get_nLats(bool includeGCs) {
+  if (includeGCs)
+    return nLats;
+  else
+    return nLats - 2 * nGCs;
+}
+int64_t Grid::get_nAlts(bool includeGCs) {
+  if (includeGCs)
+    return nAlts;
+  else
+    return nAlts - 2 * nGCs;
 }
 
 int64_t Grid::get_nGCs() {

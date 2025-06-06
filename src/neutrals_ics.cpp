@@ -7,7 +7,10 @@
 
 // -----------------------------------------------------------------------------
 //  Set initial conditions for the neutrals.
-//    Two methods implemented so far:
+//    If user wants to restart, then read the restart files.
+//    Otherwise, initialize the neutrals.
+//
+//    Two methods of initialization implemented so far:
 //      - Planet: Use fixed density values in the planet.in file and the
 //                temperature profile to set the densities and temperature.
 //                Densities are filled with hydrostatic solution.
@@ -30,25 +33,29 @@ bool Neutrals::initial_conditions(Grid grid,
 
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
-  int64_t nAlts = grid.get_nZ();
+  int64_t nAlts = grid.get_nZ(true);
+  int64_t nGCs = grid.get_nGCs();
 
   report.print(3, "Creating Neutrals initial_condition");
 
+  // ----------------------------------------------------------
+  // Restart file:
+
   if (input.get_do_restart()) {
     report.print(1, "Restarting! Reading neutral files!");
-    didWork = restart_file(input.get_restartin_dir(), DoRead);
+    didWork = restart_file(input.get_restartin_dir(), grid.get_gridtype(), DoRead);
 
-    if (!didWork) {
+    if (!didWork)
       report.error("Reading Restart for Neutrals Failed!!!");
-      \
-    }
   } else {
 
     json ics = input.get_initial_condition_types();
     std::string icsType = mklower(ics["type"]);
 
-    if (icsType == "msis") {
+    // ----------------------------------------------------------
+    // MSIS:
 
+    if (icsType == "msis") {
       report.print(2, "Using MSIS for Initial Conditions");
 
       Msis msis;
@@ -100,7 +107,11 @@ bool Neutrals::initial_conditions(Grid grid,
       } // msis init worked ok
     } // type = msis
 
+    // ----------------------------------------------------------
+    // Planet:
+
     if (icsType == "planet") {
+      report.print(2, "Using planet for Initial Conditions");
 
       didWork = true;
 
@@ -120,56 +131,67 @@ bool Neutrals::initial_conditions(Grid grid,
 
       arma_mat H2d(nLons, nLats);
 
-      alt1d = grid.geoAlt_scgc.tube(0, 0);
-
       if (nInitial_temps > 0) {
-        for (iAlt = 0; iAlt < nAlts; iAlt++) {
-          alt = alt1d(iAlt);
+        for (iLon = 0; iLon < nLons; iLon++) {
+          for (iLat = 0; iLat < nLats; iLat++) {
+            alt1d = grid.geoAlt_scgc.tube(iLon, iLat);
 
-          // Find temperatures:
-          if (alt <= initial_altitudes[0])
-            temp1d[iAlt] = initial_temperatures[0];
+            for (iAlt = 0; iAlt < nAlts; iAlt++) {
+              alt = alt1d(iAlt);
 
-          else {
-            if (alt >= initial_altitudes[nInitial_temps - 1])
-              temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
+              // Find temperatures:
+              if (alt <= initial_altitudes[0])
+                temp1d[iAlt] = initial_temperatures[0];
 
-            else {
-              // Linear interpolation!
-              iA = 0;
+              else {
+                if (alt >= initial_altitudes[nInitial_temps - 1])
+                  temp1d[iAlt] = initial_temperatures[nInitial_temps - 1];
 
-              while (alt > initial_altitudes[iA])
-                iA++;
+                else {
+                  // Linear interpolation!
+                  iA = 0;
 
-              iA--;
-              // alt will be between iA and iA+1:
-              r = (alt - initial_altitudes[iA]) /
-                  (initial_altitudes[iA + 1] - initial_altitudes[iA]);
-              temp1d[iAlt] =
-                (1.0 - r) * initial_temperatures[iA] +
-                (r) * initial_temperatures[iA + 1];
+                  while (alt > initial_altitudes[iA])
+                    iA++;
+
+                  iA--;
+                  // alt will be between iA and iA+1:
+                  r = (alt - initial_altitudes[iA]) /
+                      (initial_altitudes[iA + 1] - initial_altitudes[iA]);
+                  temp1d[iAlt] =
+                    (1.0 - r) * initial_temperatures[iA] +
+                    (r) * initial_temperatures[iA + 1];
+                }
+              }
             }
+
+            temperature_scgc.tube(iLon, iLat) = temp1d;
           }
         }
       } else
         temp1d = 200.0;
 
-      // spread the 1D temperature across the globe:
-      for (iLon = 0; iLon < nLons; iLon++) {
-        for (iLat = 0; iLat < nLats; iLat++)
-          temperature_scgc.tube(iLon, iLat) = temp1d;
-      }
+      // Make the initial condition in the lower ghost cells to be consistent
+      // with the actual lowwer BC:
 
-      // Set the lower boundary condition:
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
         species[iSpecies].density_scgc.slice(0).
         fill(species[iSpecies].lower_bc_density);
       }
 
+      report.print(2, "Calculating scale height");
       calc_scale_height(grid);
-      fill_with_hydrostatic(1, nAlts, grid);
+      report.print(2, "setting lower BCs");
+      set_lower_bcs(grid, time, indices);
+      report.print(2, "Filling with hydrostatic");
+
+      for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+        fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
     } // type = planet
   }
+
+  // ensure that the densities are all within bounds:
+  clamp_density();
 
   if (!didWork)
     report.error("Issue with initial conditions!");

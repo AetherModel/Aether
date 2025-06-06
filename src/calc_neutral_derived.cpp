@@ -7,6 +7,23 @@
 #include "aether.h"
 
 // ----------------------------------------------------------------------
+//  Calculate viscosity
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_viscosity() {
+
+  std::string function = "Neutrals::calc_viscosity";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  viscosity_scgc = 0.00013 * sqrt(temperature_scgc %
+                                  mean_major_mass_scgc / cKB);
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
 //  Calculate eddy diffusion coefficient
 // ----------------------------------------------------------------------
 
@@ -25,6 +42,26 @@ void Neutrals::calc_kappa_eddy() {
   kappa_eddy_scgc = coef * (pressure_scgc - top) / (bottom - top);
   kappa_eddy_scgc.elem( find(kappa_eddy_scgc > coef)).fill(coef);
   kappa_eddy_scgc.elem( find(kappa_eddy_scgc < 0)).zeros();
+
+  report.exit(function);
+  return;
+}
+
+
+// ----------------------------------------------------------------------
+//  Calculate mass density and number density:
+// ----------------------------------------------------------------------
+
+void Neutrals::clamp_density() {
+
+  std::string function = "Neutrals::clamp_density";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  int64_t iSpecies;
+
+  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    species[iSpecies].density_scgc.clamp(1.0, 1e32);
 
   report.exit(function);
   return;
@@ -66,9 +103,33 @@ void Neutrals::calc_concentration() {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].concentration_scgc =
       species[iSpecies].density_scgc / density_scgc;
+    species[iSpecies].mass_concentration_scgc =
+      species[iSpecies].mass * species[iSpecies].density_scgc / rho_scgc;
+  }
+
+  report.exit(function);
+  return;
+}
+
+// ----------------------------------------------------------------------
+//  Calculate densities from mass concentration
+//    Assuming mass density calculation is accurate...
+// ----------------------------------------------------------------------
+
+void Neutrals::calc_density_from_mass_concentration() {
+
+  std::string function = "Neutrals::calc_density_from_mass_concentration";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+    species[iSpecies].density_scgc =
+      rho_scgc % species[iSpecies].mass_concentration_scgc /
+      species[iSpecies].mass;
+  }
 
   report.exit(function);
   return;
@@ -157,11 +218,18 @@ void Neutrals::assign_bulk_velocity() {
 
   static int64_t iSpecies, iDir;
 
-  // If you don't advect a species, then fill with bulk velocity:
-  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    if (!species[iSpecies].DoAdvect)
+  if (input.get_advection_neutrals_bulkwinds()) {
+    // assume every species is advected with the bunk velocity:
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       for (iDir = 0; iDir < 3; iDir++)
         species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+  } else {
+    // If you don't advect a species, then fill with bulk velocity:
+    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+      if (!species[iSpecies].DoAdvect)
+        for (iDir = 0; iDir < 3; iDir++)
+          species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
+  }
 
   report.exit(function);
   return;
@@ -181,53 +249,53 @@ void Neutrals::calc_scale_height(Grid grid) {
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * abs(grid.gravity_mag_scgc));
   }
 
   // If we have eddy diffusion, the scale-heights need to be adjusted,
   // since all of the scale heights should be the same in the region
   // where eddy diffusion is dominant.
+  /*
+    if (input.get_use_eddy_momentum()) {
+      // We need the mean major mass in the bottom-most cell, which we
+      // assume is the region where the atmosphere is well-mixed:
 
-  if (input.get_use_eddy_momentum()) {
-    // We need the mean major mass in the bottom-most cell, which we
-    // assume is the region where the atmosphere is well-mixed:
+      // sum mass densities and densities to calculate mean major mass:
+      precision_t mTotal = 0.0, dTotal = 0.0, mmm;
+      // Need the mass density and the number density in the bottom slice:
+      arma_mat mSlice, dSlice;
 
-    // sum mass densities and densities to calculate mean major mass:
-    precision_t mTotal = 0.0, dTotal = 0.0, mmm;
-    // Need the mass density and the number density in the bottom slice:
-    arma_mat mSlice, dSlice;
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        mSlice =
+          species[iSpecies].mass *
+          species[iSpecies].density_scgc.slice(0);
+        dSlice =
+          species[iSpecies].density_scgc.slice(0);
+        mTotal = mTotal + accu(mSlice);
+        dTotal = dTotal + accu(dSlice);
+      }
 
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      mSlice =
-        species[iSpecies].mass *
-        species[iSpecies].density_scgc.slice(0);
-      dSlice =
-        species[iSpecies].density_scgc.slice(0);
-      mTotal = mTotal + accu(mSlice);
-      dTotal = dTotal + accu(dSlice);
+      mmm = mTotal / dTotal;
+      mmm = sync_mean_across_all_procs(mmm);
+
+      // bulk scale height, assuming well mixed atmosphere:
+      arma_cube bulkH =
+        cKB * temperature_scgc /
+        (mmm * abs(grid.gravity_mag_scgc));
+
+      // percentage will go from 1 = use bulk scale, to 0 = use individual
+      arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
+      arma_cube one = percentage;
+      one.ones();
+      arma_cube omp = one - percentage;
+
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+        species[iSpecies].scale_height_scgc =
+          omp % species[iSpecies].scale_height_scgc +
+          percentage % bulkH;
+      }
     }
-
-    mmm = mTotal / dTotal;
-    mmm = sync_mean_across_all_procs(mmm);
-
-    // bulk scale height, assuming well mixed atmosphere:
-    arma_cube bulkH =
-      cKB * temperature_scgc /
-      (mmm * abs(grid.gravity_vcgc[2]));
-
-    // percentage will go from 1 = use bulk scale, to 0 = use individual
-    arma_cube percentage = kappa_eddy_scgc / input.get_eddy_coef();
-    arma_cube one = percentage;
-    one.ones();
-    arma_cube omp = one - percentage;
-
-    for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      species[iSpecies].scale_height_scgc =
-        omp % species[iSpecies].scale_height_scgc +
-        percentage % bulkH;
-    }
-  }
-
+  */
   return;
 }
 
@@ -326,7 +394,7 @@ void Neutrals::calc_cMax() {
   report.exit(function);
   return;
 }
-
+/*
 // ----------------------------------------------------------------------
 // Calculate dt primarily for the spherical grid
 // ----------------------------------------------------------------------
@@ -339,7 +407,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   precision_t dt;
 
-  if (input.get_is_cubesphere())
+  if (grid.iGridShape_ == grid.iCubesphere_)
     dt = calc_dt_cubesphere(grid);
   else {
     int iDir;
@@ -353,7 +421,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
     arma_cube dty = grid.dlat_center_dist_scgc / cMax_vcgc[1];
     dta(1) = dty.min();
 
-    if (input.get_nAltsGeo() > 1) {
+    if (grid.get_nAlts(false) > 1) {
       arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
       dta(2) = dtz.min();
     } else
@@ -422,7 +490,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   dta(0) = dtx.min();
   dta(1) = dty.min();
 
-  if (input.get_nAltsGeo() > 1) {
+  if (grid.get_nAlts(false) > 1) {
     arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
     dta(2) = dtz.min();
   } else
@@ -441,6 +509,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
   report.exit(function);
   return dt;
 }
+*/
 
 //----------------------------------------------------------------------
 // Calculate the altitude integral of the different species for EUV
@@ -505,27 +574,31 @@ void Neutrals::calc_chapman(Grid grid) {
 
     species[iSpecies].scale_height_scgc =
       cKB * temperature_scgc /
-      (species[iSpecies].mass * abs(grid.gravity_vcgc[2]));
+      (species[iSpecies].mass * grid.gravity_mag_scgc);
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
+
+    integral3d.fill(1.0);
     iAlt = nAlts - 1;
-
-    integral3d.fill(0.0);
-
     integral3d.slice(iAlt) =
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    for (iAlt = nAlts - 1; iAlt >= 0; iAlt--) {
-      if (iAlt < nAlts - 1) {
-        integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
-                                 species[iSpecies].density_scgc.slice(iAlt) %
-                                 grid.dalt_lower_scgc.slice(iAlt + 1);
-      }
-    }
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(
+                                                       iAlt) * species[iSpecies].mass;
 
-    species[iSpecies].rho_alt_int_scgc = integral3d * species[iSpecies].mass;
+    for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
+      // dr is used here instead of dalt, since we only want the radial integration, while
+      // dk is the spacing along the 3rd dimension.
+      integral3d.slice(iAlt) = integral3d.slice(iAlt + 1) +
+                               species[iSpecies].density_scgc.slice(iAlt) %
+                               grid.dr_edge.slice(iAlt + 1);
+      species[iSpecies].rho_alt_int_scgc.slice(iAlt) =
+        species[iSpecies].rho_alt_int_scgc.slice(iAlt + 1) +
+        species[iSpecies].density_scgc.slice(iAlt) %
+        grid.dk_edge_m.slice(iAlt + 1) * species[iSpecies].mass;
+    }
 
     erfcy3d = (a + b * y3d) / (c + d * y3d + y3d % y3d);
 
@@ -543,8 +616,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
     for (iLon = 0; iLon < nLons ; iLon++) {
       for (iLat = 0; iLat < nLats ; iLat++) {
-
-        dAlt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dAlt1d = grid.dr_edge.tube(iLon, iLat);
         sza1d = grid.sza_scgc.tube(iLon, iLat);
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);
@@ -604,74 +676,6 @@ void Neutrals::calc_chapman(Grid grid) {
       }  // iLat
     }  // iLon
   }  // iSpecies
-
-  report.exit(function);
-  return;
-}
-
-// -----------------------------------------------------------------------------
-// Calculate thermal conduction
-// -----------------------------------------------------------------------------
-
-void Neutrals::calc_conduction(Grid grid, Times time) {
-
-  std::string function = "Neutrals::calc_conduction";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  precision_t dt;
-  int64_t iLon, iLat;
-  int64_t nLons = grid.get_nLons();
-  int64_t nLats = grid.get_nLats();
-  int64_t nAlts = grid.get_nAlts();
-  int64_t nGCs = grid.get_nGCs();
-
-  if (nAlts == 2 * nGCs + 1)
-    conduction_scgc.zeros();
-
-  else {
-
-    arma_cube rhocvr23d(nLons, nLats, nAlts);
-    arma_cube lambda3d(nLons, nLats, nAlts);
-    arma_cube prandtl3d(nLons, nLats, nAlts);
-
-    rhocvr23d = rho_scgc % Cv_scgc % grid.radius2_scgc;
-
-    // Need to make this eddy * rho * cv:
-    if (input.get_use_eddy_energy())
-      prandtl3d = kappa_eddy_scgc % rho_scgc % Cv_scgc;
-    else
-      prandtl3d.zeros();
-
-    lambda3d = (kappa_scgc + prandtl3d) % grid.radius2_scgc;
-
-    arma_vec temp1d(nAlts);
-    arma_vec lambda1d(nAlts);
-    arma_vec rhocvr21d(nAlts);
-    arma_vec dalt1d(nAlts);
-    arma_vec conduction1d(nAlts);
-
-    for (iLon = 0; iLon < nLons; iLon++) {
-      for (iLat = 0; iLat < nLats; iLat++) {
-
-        temp1d = temperature_scgc.tube(iLon, iLat);
-        lambda1d = lambda3d.tube(iLon, iLat);
-        rhocvr21d = rhocvr23d.tube(iLon, iLat);
-        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
-        conduction1d.zeros();
-
-        dt = time.get_dt();
-
-        conduction1d = solver_conduction(temp1d, lambda1d, rhocvr21d, dt, dalt1d);
-
-        // We want the sources to be in terms of dT/dt, while the
-        // conduction actually solves for Tnew-Told, so divide by dt
-
-        conduction_scgc.tube(iLon, iLat) = conduction1d / dt;
-      }  // lat
-    }  // lon
-
-  } // if nAlts == 1 + 2*GCs
 
   report.exit(function);
   return;

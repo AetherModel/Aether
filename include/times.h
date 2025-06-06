@@ -96,6 +96,8 @@ public:
      \brief Returns the current time as a string (year, month...)
 
      Returns the current time as a string of format YYYYMMDD_HHMMSS
+
+     \param useSeconds if false, replace seconds with 0
    **/
   std::string get_YMD_HMS();
 
@@ -159,6 +161,11 @@ public:
      \brief Get the current time as an array
    **/
   std::vector<int> get_iCurrent();
+  
+  /**************************************************************
+     \brief Get the current simulation time (sec since start)
+   **/
+  double get_simulation_time();
   
   /**********************************************************************
      \brief Read / Write restart files for time

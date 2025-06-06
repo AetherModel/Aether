@@ -168,18 +168,23 @@ subroutine EIE_Initialize(iOutputError)
       IsFound_AuroralModel = .true.
    endif
 
-  if (index(EIE_NameOfAuroralModel,'hpi') > 0) then
+   if (index(EIE_NameOfAuroralModel,'hpi') > 0) then
       call read_conductance_model(iError)
       IsFound_AuroralModel = .true.
    endif
-  if (index(EIE_NameOfAuroralModel,'pem') > 0) then
+   if (index(EIE_NameOfAuroralModel,'pem') > 0) then
       call read_conductance_model(iError)
       IsFound_AuroralModel = .true.
    endif
-  if (index(EIE_NameOfAuroralModel,'fta') > 0) then
+   if (index(EIE_NameOfAuroralModel,'fta') > 0) then
       IsFound_AuroralModel = .true.
    endif
-
+   if (index(EIE_NameOfAuroralModel,'zero') > 0) then
+      IsFound_AuroralModel = .true.
+   endif
+   if (index(EIE_NameOfAuroralModel,'none') > 0) then
+      IsFound_AuroralModel = .true.
+   endif
   if (iDebugLevel > 4) write(*,*) "=====> Back from read conductance"
 
   if (index(EIE_NameOfEFieldModel,'amie') > 0) then

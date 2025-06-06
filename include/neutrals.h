@@ -47,7 +47,7 @@ class Neutrals {
     precision_t vibe;
 
     /// Advect this species? (1 = yes, 0 = no)
-    int DoAdvect;
+    bool DoAdvect;
 
     /// Number density of species (/m3)
     arma_cube density_scgc;
@@ -60,8 +60,11 @@ class Neutrals {
     std::vector<arma_cube> velocity_vcgc;
     std::vector<arma_cube> newVelocity_vcgc;
 
-    /// Acceleration of each species (m/s^2)
+    /// Acceleration of each species (m/s^2) due to friction term
     std::vector<arma_cube> acc_neutral_friction;
+
+    /// Coefficient for the friction term (sum of friction coefs with others)
+    arma_cube neutral_friction_coef;
       
     /// Acceleration of each species based on Eddy contribution.
     /// Only in vertical direction.
@@ -72,6 +75,8 @@ class Neutrals {
             
     /// concentration (density of species / total density)
     arma_cube concentration_scgc;
+    // mass concentration (mass * density of species / rho)
+    arma_cube mass_concentration_scgc;
 
     /// Diffusion through other neutral species:
     std::vector<float> diff0;
@@ -169,6 +174,9 @@ class Neutrals {
   /// Eddy Diffusion
   arma_cube kappa_eddy_scgc;
 
+  /// Viscosity
+  arma_cube viscosity_scgc;
+
   /// O cooling 
   arma_cube O_cool_scgc;
 
@@ -183,6 +191,15 @@ class Neutrals {
 
   // Source terms:
 
+  // Bulk acceleration due to collisions with ions:
+  std::vector<arma_cube> acc_ion_collisions;
+
+  // Bulk acceleration due to coriolis
+  std::vector<arma_cube> acc_coriolis;
+
+  // Total bulk acceleration
+  std::vector<arma_cube> acc_sources_total;
+
   /// Bulk neutral thermal conduction temperature change rate (K/s)
   arma_cube conduction_scgc;
 
@@ -191,6 +208,15 @@ class Neutrals {
 
   /// Bulk neutral chemical heating temperatuare change (K/s)
   arma_cube heating_chemical_scgc;
+
+  // Bulk neutral collisional heating with ions (K/s)
+  arma_cube heating_ion_friction_scgc;
+
+  // Bulk neutral collisional heating with ions (K/s)
+  arma_cube heating_ion_heat_transfer_scgc;
+
+  // Total heating sources
+  arma_cube heating_sources_total;
 
   /// Nuetral gas direct absorption heating efficiency (~5%)
   precision_t heating_efficiency;
@@ -215,6 +241,10 @@ class Neutrals {
 
   std::string temperature_name = "Temperature";
   std::string temperature_unit = "K";
+
+  // Keep track of whether the aurora species have been initialized:
+  bool auroraInitialized = false;
+
 
   // --------------------------------------------------------------------
   // Functions:
@@ -280,6 +310,11 @@ class Neutrals {
 			     Grid grid);
   
   /**********************************************************************
+     \brief Limit the density to a floor and a ceiling
+   **/
+  void clamp_density();
+
+  /**********************************************************************
      \brief Calculate the bulk mass density from individual species densities
    **/
   void calc_mass_density();
@@ -291,6 +326,11 @@ class Neutrals {
   void calc_scale_height(Grid grid);
   
   /**********************************************************************
+     \brief Calculate the viscosity coefficient
+   **/
+  void calc_viscosity();
+  
+  /**********************************************************************
      \brief Calculate the eddy diffusion coefficient in valid pressure
    **/
   void calc_kappa_eddy();
@@ -299,7 +339,13 @@ class Neutrals {
      \brief Calculate the concentration for each species (species ndensity / total ndensity)
    **/
   void calc_concentration();
-    
+
+  /**********************************************************************
+     \brief Calculate the density of each species from the mass concentration 
+            for each species and rho (ndensity = con * rho / mass)
+   **/
+  void calc_density_from_mass_concentration();
+  
   /**********************************************************************
      \brief Calculate the bulk mean major mass
    **/
@@ -331,14 +377,6 @@ class Neutrals {
   void calc_cMax();
 
   /**********************************************************************
-     \brief Calculate dt (cell size / cMax) in each direction, and take min
-     \param dt returns the neutral time-step
-     \param grid The grid to define the neutrals on
-   **/
-  precision_t calc_dt(Grid grid);
-  precision_t calc_dt_cubesphere(Grid grid);
-
-  /**********************************************************************
      \brief Calculate the chapman integrals for the individual species
      \param grid The grid to define the neutrals on
    **/
@@ -349,7 +387,14 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
    **/
-  void calc_conduction(Grid grid, Times time);
+  void update_temperature(Grid grid, Times time);
+
+  /**********************************************************************
+     \brief Calculate the neutral bulk horizontal viscosity
+     \param grid The grid to define the neutrals on
+     \param time The times within the model (dt is needed)
+   **/
+  void update_horizontal_velocity(Grid grid, Times time);
 
   /**********************************************************************
      \brief Calculate the O radiative cooling
@@ -364,8 +409,10 @@ class Neutrals {
   /**********************************************************************
      \brief Add all of the neutral source terms to each of the equations
      \param time The times within the model (dt is needed)
+     \param planet Need things like rotation rate
+     \param grid Need things like radius
    **/
-  void add_sources(Times time);
+  void add_sources(Times time, Planets planet, Grid grid);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
@@ -411,7 +458,7 @@ class Neutrals {
   /*****************************************************************************
       \brief  Checks for nans and +/- infinities in density, temp, and velocity
     **/
-  bool check_for_nonfinites();
+  bool check_for_nonfinites(std::string location);
 
   /**********************************************************************
       \brief Checks for nans in the specified variable
@@ -423,7 +470,7 @@ class Neutrals {
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, bool DoRead);  
+  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);  
 
   /**********************************************************************
      \brief Exchange messages between processors
@@ -476,7 +523,6 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
-
   void solver_vertical_rusanov(Grid grid,
 			       Times time);
   
@@ -485,9 +531,29 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
-
   bool advect_vertical(Grid grid, Times time);
-  
+
+  /**********************************************************************
+     \brief Calculate the neutral friction in one cell using an implicit solver
+     \param iLong the longitude index
+     \param iLat the lat index
+     \param iAlt the altitude index
+     \param dt time step
+     \param vels updated velocity, which acts as a source term for the implicit solve
+   **/
+  arma_vec calc_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
+				   precision_t dt, arma_vec &vels);
+
+  /**********************************************************************
+     \brief Calculate the neutral friction in all cells (calls one_cell above)
+     \param dt time step
+   **/
+  void calc_neutral_friction_implicit(precision_t dt);  
+
+  /**********************************************************************
+     \brief Calculate the neutral friction coefficients for semi-implicit solver
+   **/
+  void calc_neutral_friction_coefs();    
 };
 
 #endif  // INCLUDE_NEUTRALS_H_

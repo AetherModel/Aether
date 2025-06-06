@@ -163,6 +163,14 @@ void OutputContainer::set_version(float in_version) {
 }
 
 // -----------------------------------------------------------------------------
+// Set the number of ghostcells.
+// -----------------------------------------------------------------------------
+
+void OutputContainer::set_nGhostCells(int in_nGCs) {
+  nGCs = in_nGCs;
+}
+
+// -----------------------------------------------------------------------------
 // Clears the elements vector within the output container
 // -----------------------------------------------------------------------------
 
@@ -176,6 +184,7 @@ void OutputContainer::clear_variables() {
 
 OutputContainer::OutputContainer() {
   // Set default output type to netCDF
+  nGCs = 0;
 #ifdef NETCDF
   output_type = netcdf_type;
 #else
@@ -236,6 +245,7 @@ void OutputContainer::display() {
   std::cout << "  nX : " << elements[0].value.n_rows << "\n";
   std::cout << "  nY : " << elements[0].value.n_cols << "\n";
   std::cout << "  nZ : " << elements[0].value.n_slices << "\n";
+  std::cout << "  nGCs : " << nGCs << "\n";
   int64_t nVars = elements.size();
   std::cout << "  Number of Variables : " << nVars << "\n";
 
@@ -281,6 +291,7 @@ bool OutputContainer::write_container_header() {
     {"nX", nX},
     {"nY", nY},
     {"nZ", nZ},
+    {"nGCs", nGCs},
     {"nLons", nX},
     {"nLats", nY},
     {"nAlts", nZ},
@@ -327,6 +338,7 @@ bool OutputContainer::read_container_binary() {
   int64_t iY, nY = header["nY"];
   int64_t iZ, nZ = header["nZ"];
   int64_t iTotalSize = nX * nY * nZ;
+  nGCs = header["nGCs"];
 
   float *variable_array = new float[iTotalSize];
   arma_cube value_scgc;

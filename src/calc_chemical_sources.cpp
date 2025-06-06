@@ -124,11 +124,11 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
       else if (piecewiseTemp == "Tn")
         temp = neutrals.temperature_scgc;
 
-      // Limit the reagion to where the temperautre is in the range:
-      change3d = change3d % (change3d > reactions[iReaction].min);
+      // zero out the rate when it is outside of the temperature bounds:
+      change3d.elem( find(temp < reactions[iReaction].min) ).zeros();
 
       if (reactions[iReaction].max > 0)
-        change3d = change3d % (change3d <= reactions[iReaction].max);
+        change3d.elem( find(temp > reactions[iReaction].max) ).zeros();
     }
 
     // Now that the reaction rate is calculated, multiply by the
@@ -145,7 +145,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     }
 
     // calculate heat change
-    chemical_heating += change3d * reactions[iReaction].energy;
+    chemical_heating = chemical_heating + change3d * reactions[iReaction].energy;
 
     // Now that full loss term is calculated, we can then add this
     // value to the losses:

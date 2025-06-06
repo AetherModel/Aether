@@ -120,6 +120,12 @@ class OutputContainer {
   void set_version(float in_version);
 
   /**********************************************************************
+     \brief set the number of ghost cells in Aether
+     \param in_nGCs the number of ghostcells in the grid
+   **/
+  void set_nGhostCells(int in_nGCs);
+
+  /**********************************************************************
      \brief write a file with the information in the container
    **/
   bool write();
@@ -191,8 +197,12 @@ class OutputContainer {
 
   /// The time of the data
   std::vector<int> itime;
+
   /// The version of the code / data / whatever:
   float version;
+
+  /// The number of Ghost Cells:
+  int nGCs;
 
   /// The frequency of the output for this particular container:
   float dt_output;
@@ -229,7 +239,7 @@ class OutputContainer {
 
 bool output(const Neutrals &neutrals,
 	    const Ions &ions,
-	    const Grid &grid,
+	    Grid &grid,
 	    Times time,
 	    const Planets &planet);
 
