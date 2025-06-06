@@ -98,7 +98,7 @@ class Ions {
   void init_ion_temperature(Neutrals neutrals, Grid grid);
   void set_floor();
   void fill_electrons();
-  int get_species_id(std::string name);
+  int get_species_id(const std::string &name)const;
   void calc_efield(Grid grid);
   void calc_exb_drift(Grid grid);
   void calc_ion_drift(Neutrals neutrals,

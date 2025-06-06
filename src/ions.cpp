@@ -264,7 +264,7 @@ void Ions::fill_electrons() {
 // Will return nSpecies for electrons
 //----------------------------------------------------------------------
 
-int Ions::get_species_id(std::string name) {
+int Ions::get_species_id(const std::string &name) const{
 
   std::string function = "Ions::get_species_id";
   static int iFunction = -1;
