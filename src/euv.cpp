@@ -44,10 +44,9 @@ Euv::Euv() {
         }
       }
 
-      // read in FISM data - does not need to be "slotted"
-      if (input.get_euv_model() == "fism"){
+      // Read in FISM data - does not need to be "slotted"
+      if (input.get_euv_model() == "fism")
         fismData = read_fism(input.get_euv_fismfile());
-      }
 
       // Slot the EUVAC model coefficients:
       if (input.get_euv_model() == "euvac") {
@@ -175,11 +174,11 @@ bool Euv::read_file() {
 // -------------------------------------------------------------------------------
 // Read in FISM data. FISM files are created with srcPython/fism.py,
 // and the data are read in to an index_file_output_struct.
-// Inside the struct, we have time & each of the "variables" correspond to a 
+// Inside the struct, we have time & each of the "variables" correspond to a
 // FISM bin. This number of bins should match the number of bins in the EUV file
 // -------------------------------------------------------------------------------
 
-index_file_output_struct Euv::read_fism(std::string fism_filename){
+index_file_output_struct Euv::read_fism(std::string fism_filename) {
 
   std::ifstream fismfstream;
   fismfstream.open(fism_filename);
@@ -196,7 +195,7 @@ index_file_output_struct Euv::read_fism(std::string fism_filename){
 
   // check that the user provided the correct EUV file
   // The number of bins in euv file should match the number of fism bins ("nVars")
-  if (fism_contents.nVars != nWavelengths){
+  if (fism_contents.nVars != nWavelengths) {
     report.error("Number of FISM wavelengths does not match the EUV file provided!");
     report.error("Either change EUV file or check your FISM file is correct.");
     IsOk = false;
@@ -205,8 +204,8 @@ index_file_output_struct Euv::read_fism(std::string fism_filename){
   std::vector<int> itime(7, 0);
   std::vector<std::vector<float>> values; // holds all values
   std::vector<float> values_tmp(fism_contents.nVars); // holds values in each row
-  
-  for (int iLine=0; iLine < fism_file.size(); iLine ++){
+
+  for (int iLine = 0; iLine < fism_file.size(); iLine ++) {
 
     itime[0] = stoi(fism_file[iLine][0]);
     itime[1] = stoi(fism_file[iLine][1]);
@@ -216,8 +215,10 @@ index_file_output_struct Euv::read_fism(std::string fism_filename){
     itime[5] = stoi(fism_file[iLine][5]);
     itime[6] = 0; // 0 ms
     fism_contents.times.push_back(time_int_to_real(itime));
-    for (int iVar=0;iVar<fism_contents.nVars;iVar++)
+
+    for (int iVar = 0; iVar < fism_contents.nVars; iVar++)
       values_tmp[iVar] = stof(fism_file[iLine][iVar + 6]);
+
     values.push_back(values_tmp);
   }
 
@@ -428,6 +429,48 @@ bool Euv::euvac(Times time,
 
   report.exit(function);
   return didWork;
+}
+
+// --------------------------------------------------------------------------
+// From the FISM file, interpolate the nearest 2 data to the current time
+// --------------------------------------------------------------------------
+
+bool Euv::get_fism(Times time) {
+  // This is functionally similar to get_indices, however we do not store FISM in
+  // the Indices class since it has variable number of bins.
+
+  double time_now = time.get_current();
+
+  if (fism_prev_index == 0) {
+    // This is probably the first time we're "running" fism.
+    // Make sure the file covers the entire time range of the run.
+    double end_time = time.get_end();
+    std::cout << "first time in fism\n";
+
+    if (time_now < fismData.times[0] && end_time > fismData.times[-1]) {
+      report.error("FISM data does not cover the entire time range!");
+      report.error("Please check that your FISM file is correct.");
+      IsOk = false;
+    }
+  }
+
+  // Get the index prior to the current time
+  while (fismData.times[fism_prev_index + 1] <= time_now)
+    fism_prev_index ++;
+
+  // Determine time-interpolation weighting factor
+  precision_t dt_fism;
+  dt_fism = fismData.times[fism_prev_index + 1] - fismData.times[fism_prev_index];
+  precision_t x = (time_now - fismData.times[fism_prev_index]) / dt_fism;
+  std::cout << x << "\n";
+
+  // store the wavelength:
+  for (int iWave = 0; iWave < nWavelengths; iWave ++)
+    wavelengths_intensity_1au[iWave] =
+      (1.0 - x) * fismData.values[fism_prev_index][iWave]
+      + x * fismData.values[fism_prev_index + 1][iWave];
+
+  return IsOk;
 }
 
 // --------------------------------------------------------------------------

@@ -124,13 +124,15 @@ public:
   /**********************************************************************
      \brief returns the FISM spectrum for a given time
 
-    Unlike the other EUV models ([N]EUVAC, Solomon, etc.), the soectrum
-    is read from a file. These data are stored in fismData
+    Unlike the other EUV models ([N]EUVAC, Solomon, etc.), the spectrum
+    is read from a file (stored in fismData). This does the same thing
+    as get_index, however FISM is not stored in Indices since it can
+    have variable # of bins
 
      \param time The times within the model (dt is needed)
    **/
 
- bool fism(Times time);
+ bool get_fism(Times time);
   
   /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a (new version)
