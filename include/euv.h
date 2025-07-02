@@ -93,6 +93,11 @@ public:
 
   /// NEUVAC model intercept:
   std::vector<float> neuvac_int;
+
+  // To avoid having to start from 0 each iteration:
+  int fism_prev_index = 0;
+  // Declare this so it is not passed between function:
+  index_file_output_struct fismData;
   
   // --------------------------------------------------------------------
   // Functions:
@@ -115,6 +120,17 @@ public:
      \param indices Need the F107 and F107a
    **/
  bool solomon_hfg(Times time, Indices indices);
+
+  /**********************************************************************
+     \brief returns the FISM spectrum for a given time
+
+    Unlike the other EUV models ([N]EUVAC, Solomon, etc.), the soectrum
+    is read from a file. These data are stored in fismData
+
+     \param time The times within the model (dt is needed)
+   **/
+
+ bool fism(Times time);
   
   /**********************************************************************
      \brief Compute the EUV spectrum given F107 and F107a (new version)
@@ -160,6 +176,17 @@ private:
      function of wavelength)
    **/
   bool read_file();
+
+  /**********************************************************************
+     \brief Read in the FISM  file
+
+     Read in the CSV file with FISM data. This can be made with
+      srcPython/fism.py. The data are read into a index_file_output_struct,
+      where each row is one time, and each col is a "variable". These should
+      match the number of bins in the provided EUV file.
+   **/
+ index_file_output_struct read_fism(std::string fism_filename);
+
 
   /**********************************************************************
      \brief Interprets the EUV CSV rows and returns the relevant row
