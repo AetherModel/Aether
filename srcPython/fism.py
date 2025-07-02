@@ -10,11 +10,9 @@
 # 3. Outputs a FISM2 file with the rebinnined irradiances in the desired bins (for use by euv.cpp)
 
 # Top-level imports:
+import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-import matplotlib
-matplotlib.use('Qt5Agg')
 import pathlib
 import os
 from urllib.request import urlretrieve
@@ -23,13 +21,14 @@ import scipy.integrate as integ
 
 # Directory management:
 here = pathlib.Path(__file__).parent.resolve()
+saveLoc = here.joinpath('.')
 
 # Physical constants:
 h = 6.62607015e-34 # Planck's constant in SI units of J s
 c = 299792458 # Speed of light in m s^-1
 
 # Helper Functions:
-def getFism(dateStart, dateEnd, stanBands=False):
+def getFism(dateStart, dateEnd, saveLoc, stanBands=False):
     """
     Download FISM2 daily data, either in the Standard Bands or not. Default is to download the data NOT in the
     Standard Bands. Note that this function downloads the data to a pre-determined location. The download is also
@@ -41,6 +40,8 @@ def getFism(dateStart, dateEnd, stanBands=False):
             The start date in 'YYYY-MM-DD' format.
         dateEnd: str
             The end date in 'YYYY-MM-DD' format.
+        saveLoc: str/path
+            The path to save data to
         stanBands: bool
             If True, downloads FISM2 data in the STAN BANDS. Default is False.
     Returns:
@@ -56,40 +57,32 @@ def getFism(dateStart, dateEnd, stanBands=False):
             print('File already exists (loading in data) '+str(fname))
         else:
             urlretrieve(url, fname)
+    
+    URL = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
+    fname = 'FISM2_daily.nc'
+    urlObtain(URL, fname)
 
     if stanBands:
-        URL = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
-        fname = 'FISM2_daily_stan_bands.nc'
-        saveLoc = here.joinpath('../../tmp/')
-        if os.path.exists(saveLoc) == False:
-            os.makedirs(saveLoc)
-        urlObtain(URL, saveLoc.joinpath(fname))
-        datetimes, wavelengths, irradiance, uncertainties = readFism(saveLoc.joinpath(fname), stanBands=True)
+        datetimes, wavelengths, irradiance = readFism(fname, stanBands=True)
     else:
-        URL = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_hr_data/daily_data.nc'
-        fname = 'FISM2_daily_bands.nc'
-        saveLoc = here.joinpath('../../tmp/')
-        if os.path.exists(saveLoc) == False:
-            os.makedirs(saveLoc)
-        urlObtain(URL, saveLoc.joinpath(fname))
-        datetimes, wavelengths, irradiance, uncertainties = readFism(saveLoc.joinpath(fname))
+        datetimes, wavelengths, irradiance = readFism(fname, stanBands=False)
 
     # Subset the data in time, and save the subset data to a relative path:
     subset_inds = np.where((datetimes >= dateStartDatetime) & (datetimes <= dateEndDatetime))[0]
     subset_times = datetimes[subset_inds]
     subset_irradiance = irradiance[subset_inds, :]
-    subset_uncertainty = uncertainties[subset_inds, :]
 
-    return subset_times, wavelengths, subset_irradiance, subset_uncertainty
+    return subset_times, wavelengths, subset_irradiance
 
-def rebin(fism_out, binning_scheme='EUVAC', zero=True):
+def rebin(fism_out, saveLoc, binning_scheme='EUVAC', zero=True):
     """
     Takes the output of getFism and rebins the data into whatever format the user desires.
     Args:
         fism_out: arraylike
             The output of getFism. Contains 4 elements: (1) datetime values for the FISM2 spectra, (2) the wavelengths
-            of the spectrum, (3) the actual FISM2 irradiance spectra, and (4) uncertainties on the FISM2 irradiances (is
-            non-NaN only for FISM2 data not in the Standard Bands).
+            of the spectrum, (3) the actual FISM2 irradiance spectra.
+        saveLoc: path
+            Path to save data files to.
         binning_scheme: str
             Determines the binning scheme to be used. Valid arguments include the following:
             'EUVAC': Uses the 37 wavelength band scheme described in Richards, et al. 1994; doi.org/10.1029/94JA00518
@@ -108,7 +101,7 @@ def rebin(fism_out, binning_scheme='EUVAC', zero=True):
             Contains 3 elements: (a) a list of datetimes for the data and (b) the rebinned FISM2 data.
     """
     # Unpack the contents of fism_out:
-    datetimes, wavelengths, irradiance, uncertainties = fism_out
+    datetimes, wavelengths, irradiance = fism_out
 
     # Get the native wavelength resolution of the input data:
     # nativeResolution = np.concatenate((np.diff(wavelengths), np.array([np.diff(wavelengths)[-1]])), axis=0)
@@ -117,12 +110,12 @@ def rebin(fism_out, binning_scheme='EUVAC', zero=True):
     if binning_scheme != 'HFG' and binning_scheme != 'SOLOMON':
         if binning_scheme == 'EUVAC':
             # Grab the euv_37.csv file:
-            fileStr = str(here.joinpath('euv_files/euv_37.csv'))
+            fileStr = str(saveLoc.joinpath('euv.csv'))
             bin_bounds = read_euv_csv_file(fileStr)
             tag = '_37'
         elif binning_scheme == 'NEUVAC':
             # Grab the euv_59.csv file:
-            fileStr = str(here.joinpath('euv_files/euv_59.csv'))
+            fileStr = str(saveLoc.joinpath('euv_59.csv'))
             bin_bounds = read_euv_csv_file(fileStr)
             tag = '_59'
         else:
@@ -179,12 +172,6 @@ def rebin(fism_out, binning_scheme='EUVAC', zero=True):
                     except:
                         fism2_data[:, iWave] = integ.trapezoid(myData[iStart:iEnd], wavelengths[iStart:iEnd])
 
-                    # # Plotting for a sanity check:
-                    # plt.figure()
-                    # plt.plot(wavelengths[iStart:iEnd], myData[0, iStart:iEnd], marker='o')
-                    # plt.scatter(newWaves, fism2_data[0, :])
-                    # plt.show()
-
     elif binning_scheme == 'HFG' or binning_scheme == 'SOLOMON':
         # Determine whether the supplied data already conforms to the Solomon and Qian binning scheme.
         tag = '_solomon'
@@ -199,7 +186,7 @@ def rebin(fism_out, binning_scheme='EUVAC', zero=True):
         raise ValueError("Invalid value for argument 'binning_scheme'. Must be 'EUVAC', 'NEUVAC', 'HFG', or 'SOLOMON'.")
 
     # Save the rebinned data to a relative path (outside the package directory) in the form of a .txt file:
-    fism2_file = here.joinpath('../../tmp/fism2_file'+tag+'.txt')
+    fism2_file = saveLoc.joinpath('fism2_file'+tag+'.txt')
     saveFism(fism2_data, datetimes, fism2_file)
 
     return fism2_file, fism2_data
@@ -286,10 +273,8 @@ def readFism(fism_file, stanBands=False):
         irradiance = np.zeros_like(flux)
         for i in range(flux.shape[1]):
             irradiance[:, i] = spectralIrradiance(pFlux[:, i], wavelengths[i] * 10.)# W/m^2
-        uncertainties = np.full_like(irradiance, np.nan)
     else:
-        irradiance = np.asarray(fism2Data.variables['irradiance'])
-        uncertainties = np.asarray(fism2Data.variables['uncertainty'])
+        irradiance = np.asarray(fism2Data.variables['ssi'])
     dates = fism2Data.variables['date']
     datetimes = []
     for j in range(len(dates)):
@@ -299,7 +284,7 @@ def readFism(fism_file, stanBands=False):
         datetimes.append(currentDatetime)
     datetimes = np.asarray(datetimes)
 
-    return datetimes, wavelengths, irradiance, uncertainties
+    return datetimes, wavelengths, irradiance
 
 def spectralIrradiance(photonFlux, wavelength):
     """
@@ -369,15 +354,40 @@ def read_euv_csv_file(file):
                    'f74113': f74113}
     return wavelengths
 
+
+def get_args():
+
+    parser = argparse.ArgumentParser(description = 'Create FISM input data')
+    parser.add_argument('start',
+                        help='Start date (format YYYYMMDD)',
+                        type=str)
+    parser.add_argument('end',
+                        help='End date (format YYYYMMDD)',
+                        type=str)
+    parser.add_argument('-b', '--binning',
+                        help="Binning scheme to use. Can be [solomon,neuvac,euvac] "
+                        "(case insensitive)",
+                        type=str)
+
+    args = parser.parse_args()
+
+    return args
+
 # Execution (testing):
 if __name__ == '__main__':
     # Download some FISM2 data for the time period stated by the user.
-    dateStart = '2015-08-13'
-    dateEnd = '2015-08-19'
+
+    args = get_args()
+
     # fismOut = getFism(dateStart, dateEnd)
     # rebinnedFismFile, rebinnedFismData = rebin(fismOut, binning_scheme='EUVAC')
     # rebinnedFismFile_N, rebinnedFismData_N = rebin(fismOut, binning_scheme='NEUVAC')
 
-    fismOut_S = getFism(dateStart, dateEnd, stanBands=True)
-    rebinnedFismFile_S, rebinnedFismData_S = rebin(fismOut_S, binning_scheme='SOLOMON')
+    fismOut_S = getFism(dateStart, dateEnd, saveLoc, stanBands=True)
+    rebinnedFismFile_S, rebinnedFismData_S = rebin(fismOut_S, saveLoc, binning_scheme='SOLOMON')
 
+    fismOut_N = getFism(dateStart, dateEnd, saveLoc, stanBands=False)
+    rebinnedFismFile_N, rebinnedFismData_N = rebin(fismOut_N, saveLoc, binning_scheme='NEUVAC')
+
+    fismOut_E = getFism(dateStart, dateEnd, saveLoc, stanBands=True)
+    rebinnedFismFile_E, rebinnedFismData_E = rebin(fismOut_E, saveLoc, binning_scheme='EUVAC')
