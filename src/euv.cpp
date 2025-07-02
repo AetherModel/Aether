@@ -438,8 +438,13 @@ bool Euv::euvac(Times time,
 bool Euv::get_fism(Times time) {
   // This is functionally similar to get_indices, however we do not store FISM in
   // the Indices class since it has variable number of bins.
+  
+  std::string function = "Euv::get_fism";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   double time_now = time.get_current();
+  bool didWork = true;
 
   if (fism_prev_index == 0) {
     // This is probably the first time we're "running" fism.
@@ -450,7 +455,7 @@ bool Euv::get_fism(Times time) {
     if (time_now < fismData.times[0] && end_time > fismData.times[-1]) {
       report.error("FISM data does not cover the entire time range!");
       report.error("Please check that your FISM file is correct.");
-      IsOk = false;
+      didWork = false;
     }
   }
 
@@ -462,7 +467,6 @@ bool Euv::get_fism(Times time) {
   precision_t dt_fism;
   dt_fism = fismData.times[fism_prev_index + 1] - fismData.times[fism_prev_index];
   precision_t x = (time_now - fismData.times[fism_prev_index]) / dt_fism;
-  std::cout << x << "\n";
 
   // store the wavelength:
   for (int iWave = 0; iWave < nWavelengths; iWave ++)
@@ -470,7 +474,8 @@ bool Euv::get_fism(Times time) {
       (1.0 - x) * fismData.values[fism_prev_index][iWave]
       + x * fismData.values[fism_prev_index + 1][iWave];
 
-  return IsOk;
+  report.exit(function);
+  return didWork;
 }
 
 // --------------------------------------------------------------------------
