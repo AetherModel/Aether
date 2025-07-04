@@ -2,6 +2,7 @@
 
 # Authors of this code:
 # Daniel A. Brandt, Ph.D., Michigan Tech Research Institute, daabrand@mtu.edu
+# Aaron L. Bukowski, Ph.D., University of Michigan, abukowski@umich.edu
 # Aaron J. Ridley, Ph.D., University of Michigan, ridley@umich.edu
 
 # This file contains a suite of tools that do the following:
@@ -14,83 +15,137 @@ import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import pathlib
-import os
-from urllib.request import urlretrieve
+import os, sys
+import pooch
 from netCDF4 import Dataset
 import scipy.integrate as integ
 
 # Directory management:
 here = pathlib.Path(__file__).parent.resolve()
-saveLoc = here.joinpath('.')
+euvDir = here.parent.joinpath('share/run/UA/inputs')
 
 # Physical constants:
 h = 6.62607015e-34 # Planck's constant in SI units of J s
 c = 299792458 # Speed of light in m s^-1
 
 # Helper Functions:
-def getFism(dateStart, dateEnd, saveLoc, stanBands=False):
+def getFism2(dateStart, dateEnd, source, downloadDir=None):
     """
-    Download FISM2 daily data, either in the Standard Bands or not. Default is to download the data NOT in the
-    Standard Bands. Note that this function downloads the data to a pre-determined location. The download is also
-    'smart'. If the data already exists (over the exact same time period). It is NOT overwitten. If the requested data
-    covers times OUTSIDE the time period of existing data, the NEW data is simply appended or prepended to a file
-    containing the existing data.
-    Args:
-        dateStart: str
-            The start date in 'YYYY-MM-DD' format.
-        dateEnd: str
-            The end date in 'YYYY-MM-DD' format.
-        saveLoc: str/path
-            The path to save data to
-        stanBands: bool
-            If True, downloads FISM2 data in the STAN BANDS. Default is False.
-    Returns:
-        fismFile: str
-            The location of the downloaded FISM data.
+    Given a starting date and an ending date, automatically download irradiance data from LISIRD for a specific source,
+    including FISM2 daily or FISM2 in the Standard Bands.
+    :param dateStart: str
+        The starting date for the data in YYYY-MM-DD format.
+    :param dateEnd: str
+        The ending date for the data in YYYY-MM-DD format.
+    :param source: str
+        The type of data to be obtained. Valid inputs are:
+        - FISM2 (for daily averages of FISM2 data)
+        - FISM2S (for daily averages of FISM2 standard bands, according to Solomon and Qian 2005)
+    :return times: ndarray
+        Datetime values for each spectrum.
+    :return wavelengths: ndarray
+        Wavelength bins (bin boundaries) for the spectral data.
+    :return irradiance: ndarray
+        A 2D array where each row is a spectrum at a particular time, and the columns are wavelength bands.
     """
+    # Converting the input time strings to datetimes:
     dateStartDatetime = datetime.strptime(dateStart, "%Y-%m-%d")
     dateEndDatetime = datetime.strptime(dateEnd, "%Y-%m-%d")
 
-    # Helper function to manage the obtaining of data, given a URL:
-    def urlObtain(url, fname):
-        if os.path.isfile(fname) == True:
-            print('File already exists (loading in data) '+str(fname))
-        else:
-            urlretrieve(url, fname)
-    
-    URL = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
-    fname = 'FISM2_daily.nc'
-    urlObtain(URL, fname)
+    # Check if the user has asked for a source that can be obtained:
+    validSources = ['FISM2', 'FISM2S']
+    if source not in validSources:
+        raise ValueError("Variable 'source' must be either 'FISM2' or 'FISM2S.")
 
-    if stanBands:
-        datetimes, wavelengths, irradiance = readFism(fname, stanBands=True)
+    # If the download directory is not specified, set it to the top directory that the package is in:
+    if downloadDir is None:
+        downloadDir = os.getcwd()
+
+    # Download the most recent file for the corresponding source and read it in:
+    if source == 'FISM2':
+        url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_hr_data/daily_data.nc'
+        fname = 'FISM2_daily_data.nc'
+        urlObtain(url, loc=downloadDir, fname=fname) # hash='dbee404e1c75689b47691b8a4a733236bb66abbdc0f01b8cbd8236f69fe9d469'
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname)
     else:
-        datetimes, wavelengths, irradiance = readFism(fname, stanBands=False)
+        url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
+        fname = 'FISM2_daily_bands.nc'
+        urlObtain(url, loc=downloadDir, fname=fname) # hash='27e3183f8ad6b289de191a63d3feada64c9d3f6b2973315ceda4a42c41638465'
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname, bands=True)
 
-    # Subset the data in time, and save the subset data to a relative path:
-    subset_inds = np.where((datetimes >= dateStartDatetime) & (datetimes <= dateEndDatetime))[0]
-    subset_times = datetimes[subset_inds]
-    subset_irradiance = irradiance[subset_inds, :]
+    # Subset the data according to user demands:
+    validInds = np.where((datetimes >= dateStartDatetime) & (datetimes <= dateEndDatetime))[0]
+    times = datetimes[validInds]
+    if source == 'FISM2S':
+        irradiance = irradiance[-1, validInds, :]
+    else:
+        irradiance = irradiance[validInds, :]
 
-    return subset_times, wavelengths, subset_irradiance
+    # Return the resulting data:
+    return times, wavelengths, irradiance
 
-def rebin(fism_out, saveLoc, binning_scheme='EUVAC', zero=True):
+def obtainFism2(myFism2File, bands=False):
+    """
+    Load in spectrum data from a FISM2 file.
+    :param myFism2File: str
+        The location of the NETCDF4 file.
+    :param bands: bool
+        If True, loads in the data segmented into the Solomon and Qian 2005 standard bands.
+    :return datetimes: ndarray
+        An array of datetimes for each TIMED/SEE spectra.
+    :return wavelengths: ndarray
+        A one-dimensional array of wavelengths at which there are irradiance values.
+    :return irradiances: ndarray
+        A two-dimensional array of irradiance values at each time.
+    :return uncertainties: ndarray
+        A two-dimensional array of irradiance uncertainty values at each time.
+    """
+    fism2Data = Dataset(myFism2File)
+    wavelengths = np.asarray(fism2Data.variables["wavelength"])
+    if bands == True:  # STANDARD BANDS
+        flux = np.asarray(fism2Data.variables["ssi"])  # photons/cm2/second
+        # bandwidths = np.asarray(fism2Data.variables['band_width'])
+        pFlux = flux * 1.0e4  # photons/m2/second
+        # Convert fluxes to irradiances:
+        irr = np.zeros_like(flux)
+        for i in range(flux.shape[1]):
+            irr[:, i] = spectralIrradiance(pFlux[:, i], wavelengths[i] * 10.0)  # W/m^2
+        irradiance = np.array([flux, irr])
+        uncertainties = np.full_like(irradiance, fill_value=np.nan) # TODO: Replace with an estimation of uncertainty
+    else:  # NATIVE DATA
+        irradiance = np.asarray(fism2Data.variables["irradiance"])  # W/m^2/nm
+        uncertainties = np.asarray(fism2Data.variables["uncertainty"])
+    dates = fism2Data.variables["date"]
+    datetimes = []
+    for i in range(len(dates)):
+        year = dates[i][:4]
+        day = dates[i][4:]
+        currentDatetime = (
+            datetime(int(year), 1, 1)
+            + timedelta(int(day) - 1)
+            + timedelta(hours=12)
+        )
+        datetimes.append(currentDatetime)
+    datetimes = np.asarray(datetimes)
+    return datetimes, wavelengths, irradiance, uncertainties
+
+def rebin(fism_out, saveLoc=os.getcwd(), binning_scheme='EUVAC', zero=True):
     """
     Takes the output of getFism and rebins the data into whatever format the user desires.
     Args:
         fism_out: arraylike
-            The output of getFism. Contains 4 elements: (1) datetime values for the FISM2 spectra, (2) the wavelengths
+            The output of getFism2. Contains 4 elements: (1) datetime values for the FISM2 spectra, (2) the wavelengths
             of the spectrum, (3) the actual FISM2 irradiance spectra.
         saveLoc: path
-            Path to save data files to.
+            Path to save data files to. Defaults to the current working directory.
         binning_scheme: str
             Determines the binning scheme to be used. Valid arguments include the following:
-            'EUVAC': Uses the 37 wavelength band scheme described in Richards, et al. 1994; doi.org/10.1029/94JA00518
-            'NEUVAC': Uses the 59 wavelength band scheme described in Brandt and Ridley, 2024; doi.org/10.1029/2024SW004043
+            'EUVAC' or 'Euvac' or 'euvac': Uses the 37 wavelength band scheme described in Richards, et al. 1994; doi.org/10.1029/94JA00518
+            'NEUVAC' or 'Neuvac' or 'neuvac': Uses the 59 wavelength band scheme described in Brandt and Ridley, 2024; doi.org/10.1029/2024SW004043
             'HFG': Uses the 23 wavelength band scheme described in Solomon and Qian, 2005; https://doi.org/10.1029/2005JA011160
-            'SOLOMON': Same situation as for argument 'HFG'.
-            NOTE: If 'HFG' or 'SOLOMON' is chosen, the values of fism_out must correspond to getFism being run with the
-            argument stanBands = True. If this IS NOT the case, an error will be thrown.
+            'SOLOMON' or 'Solomon' or 'solomon': Same situation as for argument 'HFG'.
+            NOTE: If 'HFG' or 'SOLOMON' is chosen, the values of fism_out must correspond to getFism2 being run with the
+            argument source='FISM2'. If this IS NOT the case, an error will be thrown.
         zero: bool
             Controls whether singular (bright) wavelength lines are set to a value of zero after they are extracted.
             Default is True.
@@ -107,15 +162,15 @@ def rebin(fism_out, saveLoc, binning_scheme='EUVAC', zero=True):
     # nativeResolution = np.concatenate((np.diff(wavelengths), np.array([np.diff(wavelengths)[-1]])), axis=0)
     nativeWavelengths = wavelengths.copy()
 
-    if binning_scheme != 'HFG' and binning_scheme != 'SOLOMON':
-        if binning_scheme == 'EUVAC':
+    if binning_scheme != 'HFG' and binning_scheme != 'SOLOMON' and binning_scheme != 'Solomon' and binning_scheme != 'solomon':
+        if binning_scheme == 'EUVAC' or binning_scheme == 'Euvac' or binning_scheme == 'euvac':
             # Grab the euv_37.csv file:
-            fileStr = str(saveLoc.joinpath('euv.csv'))
+            fileStr = str(euvDir.joinpath('euv.csv'))
             bin_bounds = read_euv_csv_file(fileStr)
             tag = '_37'
-        elif binning_scheme == 'NEUVAC':
+        elif binning_scheme == 'NEUVAC' or binning_scheme == 'Neuvac' or binning_scheme == 'neuvac':
             # Grab the euv_59.csv file:
-            fileStr = str(saveLoc.joinpath('euv_59.csv'))
+            fileStr = str(euvDir.joinpath('euv_59.csv'))
             bin_bounds = read_euv_csv_file(fileStr)
             tag = '_59'
         else:
@@ -172,7 +227,7 @@ def rebin(fism_out, saveLoc, binning_scheme='EUVAC', zero=True):
                     except:
                         fism2_data[:, iWave] = integ.trapezoid(myData[iStart:iEnd], wavelengths[iStart:iEnd])
 
-    elif binning_scheme == 'HFG' or binning_scheme == 'SOLOMON':
+    elif binning_scheme == 'HFG' or binning_scheme == 'SOLOMON' or binning_scheme == 'Solomon' or binning_scheme == 'solomon':
         # Determine whether the supplied data already conforms to the Solomon and Qian binning scheme.
         tag = '_solomon'
         if fism_out[2].shape[1] != 23:
@@ -186,7 +241,7 @@ def rebin(fism_out, saveLoc, binning_scheme='EUVAC', zero=True):
         raise ValueError("Invalid value for argument 'binning_scheme'. Must be 'EUVAC', 'NEUVAC', 'HFG', or 'SOLOMON'.")
 
     # Save the rebinned data to a relative path (outside the package directory) in the form of a .txt file:
-    fism2_file = saveLoc.joinpath('fism2_file'+tag+'.txt')
+    fism2_file = pathlib.Path(os.getcwd()).joinpath('fism2_file'+tag+'.txt')
     saveFism(fism2_data, datetimes, fism2_file)
 
     return fism2_file, fism2_data
@@ -245,46 +300,6 @@ def saveFism(data, times, filename):
     print('FISM2 data saved to: ')
     os.system('readlink -f '+str(filename))
     return
-
-def readFism(fism_file, stanBands=False):
-    """
-    Load in spectrum data from a FISM2 file.
-    Args:
-        fism_file: str
-            The location of a FISM2 NETCDF4 file.
-        stanBands: bool
-            If True, expects the data to be read in to be in the STAN BANDS. Default is False.
-    Returns:
-        datetimes: numpy.ndarray
-            An array of datetimes for reach FISM2 spectrum.
-        wavelengths: numpy.ndarray
-            A one-dimensional array of wavelengths at which there are irradiance values.
-        irradiances: numpy.ndarray
-            A two-dimensional array of irradiance values in each wavelength bin.
-        uncertainties: numpy.ndarray
-            A two-dimensional array of irradiance uncertainty values at each bin. Only returned if stanBands is False.
-    """
-    fism2Data = Dataset(fism_file)
-    wavelengths = np.asarray(fism2Data.variables['wavelength'])
-    if stanBands:
-        flux = np.asarray(fism2Data.variables['ssi']) # photons/cm^2/second
-        pFlux = flux * 1e4 # photons/m^2/second
-        # Convert fluxes to irradiances:
-        irradiance = np.zeros_like(flux)
-        for i in range(flux.shape[1]):
-            irradiance[:, i] = spectralIrradiance(pFlux[:, i], wavelengths[i] * 10.)# W/m^2
-    else:
-        irradiance = np.asarray(fism2Data.variables['ssi'])
-    dates = fism2Data.variables['date']
-    datetimes = []
-    for j in range(len(dates)):
-        year = dates[j][:4]
-        day = dates[j][4:]
-        currentDatetime = datetime(int(year), 1, 1) + timedelta(int(day) -1 ) + timedelta(hours=12)
-        datetimes.append(currentDatetime)
-    datetimes = np.asarray(datetimes)
-
-    return datetimes, wavelengths, irradiance
 
 def spectralIrradiance(photonFlux, wavelength):
     """
@@ -354,6 +369,28 @@ def read_euv_csv_file(file):
                    'f74113': f74113}
     return wavelengths
 
+def urlObtain(URL, loc=None, fname=None, hash=None):
+    """
+    Helper function that uses Pooch to download files to a location specified by the user.
+    :param URL: str
+        The location of a file to be downloaded.
+    :param loc: str
+        The place the file will be downloaded.
+    :param fname: str
+        The name the file will have once it is downloaded.
+    :param hash: str
+        A known hash (checksum) of the file. Will be used to verify the download or check if an existing file needs to
+        be updated.
+    :return:
+    """
+    if loc is None:
+        loc = os.getcwd()
+    if os.path.isfile(str(loc) + '/' + fname) is False:
+        fname_loc = pooch.retrieve(url=URL, known_hash=hash, fname=fname, path=loc)
+    else:
+        fname_loc = str(loc) + '/' + fname
+
+    return fname_loc
 
 def get_args():
 
@@ -378,16 +415,22 @@ if __name__ == '__main__':
     # Download some FISM2 data for the time period stated by the user.
 
     args = get_args()
+    dateStart = args.start
+    dateEnd = args.end
+    binning_scheme = args.binning
 
-    # fismOut = getFism(dateStart, dateEnd)
-    # rebinnedFismFile, rebinnedFismData = rebin(fismOut, binning_scheme='EUVAC')
-    # rebinnedFismFile_N, rebinnedFismData_N = rebin(fismOut, binning_scheme='NEUVAC')
+    if binning_scheme == 'HFG' or binning_scheme == 'SOLOMON' or binning_scheme == 'Solomon' or binning_scheme == 'solomon':
+        # SOLOMON (STAN BANDS; b23)
+        fism2_out_23 = getFism2(dateStart, dateEnd, 'FISM2S', downloadDir=None)
+        fism2_file_23, fism2_data_23 = rebin(fism2_out_23, binning_scheme=binning_scheme)
+    else:
+        fism2_out_raw = getFism2(dateStart, dateEnd, 'FISM2', downloadDir=None)
+        if binning_scheme == 'NEUVAC' or binning_scheme == 'Neuvac' or binning_scheme == 'neuvac':
+            # NEUVAC BINS (b59)
+            fism2_file_59, fism2_data_59 = rebin(fism2_out_raw, binning_scheme=binning_scheme, zero=True)
+        else:
+            # EUVAC BINS (b37)
+            fism2_file_37, fism2_data_37 = rebin(fism2_out_raw, binning_scheme=binning_scheme, zero=True)
 
-    fismOut_S = getFism(dateStart, dateEnd, saveLoc, stanBands=True)
-    rebinnedFismFile_S, rebinnedFismData_S = rebin(fismOut_S, saveLoc, binning_scheme='SOLOMON')
-
-    fismOut_N = getFism(dateStart, dateEnd, saveLoc, stanBands=False)
-    rebinnedFismFile_N, rebinnedFismData_N = rebin(fismOut_N, saveLoc, binning_scheme='NEUVAC')
-
-    fismOut_E = getFism(dateStart, dateEnd, saveLoc, stanBands=True)
-    rebinnedFismFile_E, rebinnedFismData_E = rebin(fismOut_E, saveLoc, binning_scheme='EUVAC')
+    # Exit with a zero error code:
+    sys.exit(0)
