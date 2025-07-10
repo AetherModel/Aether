@@ -49,8 +49,12 @@ def getFism2(dateStart, dateEnd, source, downloadDir=None):
         A 2D array where each row is a spectrum at a particular time, and the columns are wavelength bands.
     """
     # Converting the input time strings to datetimes:
-    dateStartDatetime = datetime.strptime(dateStart, "%Y-%m-%d")
-    dateEndDatetime = datetime.strptime(dateEnd, "%Y-%m-%d")
+    try:
+        dateStartDatetime = datetime.strptime(dateStart, "%Y-%m-%d")
+        dateEndDatetime = datetime.strptime(dateEnd, "%Y-%m-%d")
+    except:
+        dateStartDatetime = datetime.strptime(dateStart, "%Y%m%d")
+        dateEndDatetime = datetime.strptime(dateEnd, "%Y%m%d")
 
     # Check if the user has asked for a source that can be obtained:
     validSources = ['FISM2', 'FISM2S']
@@ -262,10 +266,7 @@ def saveFism(data, times, filename):
     """
     # A helper function for working with integers:
     def numStr(num):
-        if int(num) < 10:
-            return ' ' + str(int(num))
-        else:
-            return str(int(num))
+        return ',' + str(int(num))
 
     # Define a helper function for opening a file to write the data, in such a way as to include parent directories if
     # needed:
@@ -279,23 +280,23 @@ def saveFism(data, times, filename):
     # Open the new file and begin writing, line by line:
     with safe_open_w(str(filename)) as output:
         # Write the header information:
-        output.write("#START\n")
+        # output.write("#START\n")
         # Write the irradiances themselves:
         firstLine = ['%.6g' % (element) for element in data[0, :]]
-        firstLine_joined = ' '.join(firstLine)
+        firstLine_joined = ','.join(firstLine)
         # The first line should always be a duplicate of the first line of data, but starting at UTC=00:00 of the first date:
-        output.write(' ' + str(times[0].year) + ' ' + numStr(times[0].month) + ' ' + numStr(
-            times[0].day) + '  0  0  0 ' + firstLine_joined + '\n')
+        output.write(str(times[0].year) + numStr(times[0].month) + numStr(
+            times[0].day) + ',0,0,0,' + firstLine_joined + '\n')
         # The rest of the lines can be straight from the data:
         for i in range(data.shape[0]):
-            currentLine_joined = ' '.join(['%.6g' % (element) for element in data[i, :]])
-            output.writelines(' ' + str(times[i].year) + ' ' + numStr(times[i].month) + ' ' + numStr(
-                times[i].day) + ' ' + numStr(times[i].hour) + '  0  0 ' + currentLine_joined + '\n')
+            currentLine_joined = ','.join(['%.6g' % (element) for element in data[i, :]])
+            output.writelines(str(times[i].year) + numStr(times[i].month) + numStr(
+                times[i].day) + numStr(times[i].hour) + ',0,0,' + currentLine_joined + '\n')
         # The last line should occur 12 hours from the last datapoint, but have duplicate values there:
-        lastLine_joined = ' '.join(['%.6g' % (element) for element in data[-1, :]])
+        lastLine_joined = ','.join(['%.6g' % (element) for element in data[-1, :]])
         lastTime = times[-1] + timedelta(hours=12)
-        output.write(' ' + str(lastTime.year) + ' ' + numStr(lastTime.month) + ' ' + numStr(
-            lastTime.day) + '  0  0  0 ' + lastLine_joined + '\n')
+        output.write(str(lastTime.year) + numStr(lastTime.month) + numStr(
+            lastTime.day) + ',0,0,0,' + lastLine_joined + '\n')
 
     print('FISM2 data saved to: ')
     os.system('readlink -f '+str(filename))
