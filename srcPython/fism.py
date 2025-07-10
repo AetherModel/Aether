@@ -70,12 +70,12 @@ def getFism2(dateStart, dateEnd, source, downloadDir=None):
         url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_hr_data/daily_data.nc'
         fname = 'FISM2_daily_data.nc'
         urlObtain(url, loc=downloadDir, fname=fname) # hash='dbee404e1c75689b47691b8a4a733236bb66abbdc0f01b8cbd8236f69fe9d469'
-        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname)
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(os.path.join(downloadDir, fname))
     else:
         url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
         fname = 'FISM2_daily_bands.nc'
         urlObtain(url, loc=downloadDir, fname=fname) # hash='27e3183f8ad6b289de191a63d3feada64c9d3f6b2973315ceda4a42c41638465'
-        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname, bands=True)
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(os.path.join(downloadDir, fname), bands=True)
 
     # Subset the data according to user demands:
     validInds = np.where((datetimes >= dateStartDatetime) & (datetimes <= dateEndDatetime))[0]
@@ -405,7 +405,7 @@ def get_args():
     parser.add_argument('-b', '--binning',
                         help="Binning scheme to use. Can be [solomon,neuvac,euvac] "
                         "(case insensitive)",
-                        type=str)
+                        type=str, default="neuvac")
 
     args = parser.parse_args()
 
@@ -422,10 +422,10 @@ if __name__ == '__main__':
 
     if binning_scheme == 'HFG' or binning_scheme == 'SOLOMON' or binning_scheme == 'Solomon' or binning_scheme == 'solomon':
         # SOLOMON (STAN BANDS; b23)
-        fism2_out_23 = getFism2(dateStart, dateEnd, 'FISM2S', downloadDir=None)
+        fism2_out_23 = getFism2(dateStart, dateEnd, 'FISM2S', downloadDir=here)
         fism2_file_23, fism2_data_23 = rebin(fism2_out_23, binning_scheme=binning_scheme)
     else:
-        fism2_out_raw = getFism2(dateStart, dateEnd, 'FISM2', downloadDir=None)
+        fism2_out_raw = getFism2(dateStart, dateEnd, 'FISM2', downloadDir=here)
         if binning_scheme == 'NEUVAC' or binning_scheme == 'Neuvac' or binning_scheme == 'neuvac':
             # NEUVAC BINS (b59)
             fism2_file_59, fism2_data_59 = rebin(fism2_out_raw, binning_scheme=binning_scheme, zero=True)
