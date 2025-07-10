@@ -450,7 +450,6 @@ bool Euv::get_fism(Times time) {
     // This is probably the first time we're "running" fism.
     // Make sure the file covers the entire time range of the run.
     double end_time = time.get_end();
-    std::cout << "first time in fism\n";
 
     if (time_now < fismData.times[0] && end_time > fismData.times[-1]) {
       report.error("FISM data does not cover the entire time range!");
