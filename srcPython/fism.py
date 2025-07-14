@@ -276,7 +276,7 @@ def saveFism(data, times, filename):
         '''
         os.makedirs(os.path.dirname(path), exist_ok=True)
         return open(path, 'w')
-
+    
     # Open the new file and begin writing, line by line:
     with safe_open_w(str(filename)) as output:
         # Write the header information:
@@ -298,7 +298,7 @@ def saveFism(data, times, filename):
         output.write(str(lastTime.year) + numStr(lastTime.month) + numStr(
             lastTime.day) + ',0,0,0,' + lastLine_joined + '\n')
 
-    print('FISM2 data saved to: ')
+    print('Irradiance data saved to: ')
     os.system('readlink -f '+str(filename))
     return
 
@@ -405,7 +405,7 @@ def get_args():
     parser.add_argument('-b', '--binning',
                         help="Binning scheme to use. Can be [solomon,neuvac,euvac] "
                         "(case insensitive)",
-                        type=str)
+                        type=str, default="neuvac")
 
     args = parser.parse_args()
 
@@ -422,10 +422,10 @@ if __name__ == '__main__':
 
     if binning_scheme == 'HFG' or binning_scheme == 'SOLOMON' or binning_scheme == 'Solomon' or binning_scheme == 'solomon':
         # SOLOMON (STAN BANDS; b23)
-        fism2_out_23 = getFism2(dateStart, dateEnd, 'FISM2S', downloadDir=None)
+        fism2_out_23 = getFism2(dateStart, dateEnd, 'FISM2S', downloadDir=here)
         fism2_file_23, fism2_data_23 = rebin(fism2_out_23, binning_scheme=binning_scheme)
     else:
-        fism2_out_raw = getFism2(dateStart, dateEnd, 'FISM2', downloadDir=None)
+        fism2_out_raw = getFism2(dateStart, dateEnd, 'FISM2', downloadDir=here)
         if binning_scheme == 'NEUVAC' or binning_scheme == 'Neuvac' or binning_scheme == 'neuvac':
             # NEUVAC BINS (b59)
             fism2_file_59, fism2_data_59 = rebin(fism2_out_raw, binning_scheme=binning_scheme, zero=True)

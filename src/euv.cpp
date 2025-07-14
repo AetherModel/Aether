@@ -47,7 +47,8 @@ Euv::Euv() {
       // Read in FISM data - does not need to be "slotted"
       if (input.get_euv_model() == "fism")
         fismData = read_fism(input.get_euv_fismfile());
-
+      // Read in NEUVAC data - also does not need to be "slotted"
+      
       // Slot the EUVAC model coefficients:
       if (input.get_euv_model() == "euvac") {
         IsOk = slot_euv("F74113", "", euvac_f74113);
