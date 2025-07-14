@@ -70,12 +70,12 @@ def getFism2(dateStart, dateEnd, source, downloadDir=None):
         url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_hr_data/daily_data.nc'
         fname = 'FISM2_daily_data.nc'
         urlObtain(url, loc=downloadDir, fname=fname) # hash='dbee404e1c75689b47691b8a4a733236bb66abbdc0f01b8cbd8236f69fe9d469'
-        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname)
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(os.path.join(downloadDir, fname))
     else:
         url = 'https://lasp.colorado.edu/eve/data_access/eve_data/fism/daily_bands/daily_bands.nc'
         fname = 'FISM2_daily_bands.nc'
         urlObtain(url, loc=downloadDir, fname=fname) # hash='27e3183f8ad6b289de191a63d3feada64c9d3f6b2973315ceda4a42c41638465'
-        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(downloadDir + '/' + fname, bands=True)
+        datetimes, wavelengths, irradiance, uncertainties = obtainFism2(os.path.join(downloadDir, fname), bands=True)
 
     # Subset the data according to user demands:
     validInds = np.where((datetimes >= dateStartDatetime) & (datetimes <= dateEndDatetime))[0]
