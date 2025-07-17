@@ -104,14 +104,14 @@ class Chemistry {
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions);
 
-  reaction_type interpret_reaction_line(Neutrals neutrals,
-                                        Ions ions,
-                                        std::vector<std::string> line,
-					json headers);
+  reaction_type interpret_reaction_line(const Neutrals &neutrals,
+                                        const Ions &ions,
+                                        const std::vector<std::string> &line,
+					const json &headers);
 
-  void find_species_id(std::string name,
-                       Neutrals neutrals,
-                       Ions ions,
+  void find_species_id(const std::string &name,
+                       const Neutrals &neutrals,
+                       const Ions &ions,
                        int &id_,
                        bool &IsNeutral);
 

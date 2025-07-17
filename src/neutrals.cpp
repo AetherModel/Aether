@@ -397,7 +397,7 @@ bool Neutrals::check_for_nonfinites(std::string location) {
 // This will return -1 if the species is not found or name is empty
 //----------------------------------------------------------------------
 
-int Neutrals::get_species_id(std::string name) {
+int Neutrals::get_species_id(const std::string &name) const {
 
   std::string function = "Neutrals::get_species_id";
   static int iFunction = -1;

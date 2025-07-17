@@ -304,7 +304,7 @@ class Ions {
      \brief Get the ID of the ion species with the given name
      \param name a string that describes the species
    **/
-  int get_species_id(std::string name);
+  int get_species_id(const std::string &name)const;
 
   /**********************************************************************
      \brief Calculates the electric field
