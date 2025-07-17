@@ -172,7 +172,7 @@ class Ions {
   /// Specific heat (constant volume):
   arma_cube Cv_scgc;
 
-  /// Head Conduction (bulk):
+  /// Heat Conduction (bulk):
   arma_cube lambda;
 
   // Electrodynamics:
@@ -304,7 +304,7 @@ class Ions {
      \brief Get the ID of the ion species with the given name
      \param name a string that describes the species
    **/
-  int get_species_id(std::string name);
+  int get_species_id(const std::string &name)const;
 
   /**********************************************************************
      \brief Calculates the electric field
@@ -348,8 +348,75 @@ class Ions {
      \brief Calculates the electron temperature on the given grid
      \param neutrals these are needed for the collision terms
      \param grid this is the grid to solve the equation on
+     \param time the time class to know dt
    **/
-  void calc_electron_temperature(Neutrals neutrals, Grid grid);
+  void calc_electron_temperature(Neutrals neutrals, Grid grid, Times time);
+
+  /**********************************************************************
+  /// @brief Calculate epsilon
+  /// @details intermediate variable used in photoelectron & ionization heating
+  /// From (Smithro & Solomon, 2008).
+  /// @param neutrals 
+  /// @return epsilon
+  **/
+  arma_cube calc_epsilon(Neutrals &neutrals);
+
+  /**********************************************************************
+    \brief Calculates photoelectron heating
+    \details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
+            Uses equations 9-12 from (Zhu & Ridley, 2016)
+            https://doi.org/10.1016/j.jastp.2016.01.005
+    \param epsilon 
+    \return Qphe 
+  **/
+  arma_cube calc_photoelectron_heating(arma_cube epsilon);
+
+  /**********************************************************************
+    \brief Calculates auroral heating
+    \details NOTE: in GITM this is solved separately for ion precipitation & auroral 
+        ionization. In Aether these are both in ions.species[iIon].ionization_scgc...
+    \param epsilon 
+    \return Qaurora 
+  **/
+  arma_cube calc_ionization_heating(arma_cube epsilon);
+
+  /**********************************************************************
+    \brief Calculates electron-ion (elastic) collisional heating
+    \details From Schunk and Nagy 2009, and Bei-Chen Zhang and Y. Kamide 2003
+    - This differs slightly from the GITM implementation, which assumes several ion species are present.
+      Instead, here we use each ion species for the sum.
+    - electon-ion collision frequency (from Schunk and Nagy 2009) = 5.45E-5
+    - This is capable of handling BOTH the bulk & individual ion temperatures
+    \return vector<Qeicp, Qeicm, Qeic_v>
+  **/
+  std::vector<arma_cube> calc_electron_ion_collisions();
+
+  /**********************************************************************
+    \brief Calculates electron-neutral elastic collisional heating
+    \details From Schunk and Nagy 2009
+    \param neutrals 
+    \return vector<Qencp, Qencm, Qenc_v>
+  **/
+  std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Neutrals &neutrals);
+
+  /**********************************************************************
+    \brief Calculates the electron-neutral inelastic collisional heating
+    \details From Schunk and Nagy 2009 pages 277, 282.
+    This includes N2, O2 rotation, fine structure, O(1D) exitation & vibration, N2 vibration.
+    See equation 15 from (Zhu, Ridley, Deng, 2016) https://doi.org/10.1016/j.jastp.2016.01.005
+    \param neutrals 
+    \return vector<Qencp, Qencm, Qenc_v>
+  **/
+  std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Neutrals &neutrals);
+
+  /**********************************************************************
+    \brief Calculate the thermoelectric current (same at all altitudes)
+    \details Use eq. 6 of https://doi.org/10.1016/j.jastp.2016.01.005
+    - Since we do not know e- parallel velocity, the dipole needs to do it this way too.
+    \param grid 
+    \return arma_mat JParaAlt
+  **/
+  arma_mat calc_thermoelectric_current(Grid &grid);
 
   /**********************************************************************
      \brief Check all of the variables for nonfinites, such as nans
