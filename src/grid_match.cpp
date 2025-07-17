@@ -3,8 +3,8 @@
 
 #include "aether.h"
 
-bool grid_match(Grid gGrid, 
-                Grid mGrid, 
+bool grid_match(Grid gGrid,
+                Grid mGrid,
                 Quadtree gQuadtree,
                 Quadtree mQuadtree) {
 
@@ -24,6 +24,7 @@ bool grid_match(Grid gGrid,
       for (iZ = mGCs; iZ < mnZ - mGCs; iZ++) {
         lon = mGrid.geoLon_scgc(iX, iY, iZ);
         lat = mGrid.geoLat_scgc(iX, iY, iZ);
+
         if (gGrid.iGridShape_ == gGrid.iSphere_) {
           norms(0) = lon / cPI;
           norms(1) = lat / cPI;
@@ -33,14 +34,9 @@ bool grid_match(Grid gGrid,
           norms = sphere_to_cube(lon, lat);
           iNode = gQuadtree.find_point(norms);
         }
-        std::cout << "lon, lat, node: " << lon*cRtoD << " "
-        << lat*cRtoD << " "
-        << norms(0) << " "
-        << norms(1) << " "
-        << norms(2) << " "
-        << iNode << "\n";
       }
     }
   }
+
   return true;
 }
