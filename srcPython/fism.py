@@ -276,7 +276,7 @@ def saveFism(data, times, filename):
         '''
         os.makedirs(os.path.dirname(path), exist_ok=True)
         return open(path, 'w')
-
+    
     # Open the new file and begin writing, line by line:
     with safe_open_w(str(filename)) as output:
         # Write the header information:
@@ -298,7 +298,7 @@ def saveFism(data, times, filename):
         output.write(str(lastTime.year) + numStr(lastTime.month) + numStr(
             lastTime.day) + ',0,0,0,' + lastLine_joined + '\n')
 
-    print('FISM2 data saved to: ')
+    print('Irradiance data saved to: ')
     os.system('readlink -f '+str(filename))
     return
 
