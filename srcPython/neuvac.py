@@ -178,10 +178,13 @@ def readCLS(filename):
 
 def getCLSF107(dateStart, dateEnd, truncate=True):
     """
-    Obtains Sun-Earth distance adjusted, flare-corrected F10.7 data from Collecte Localisation Satellites. Downloads the
-    most recent measurements to a file. Reads the file and extracts the F10.7 values between two dates. Note that if the
-    ending date is less than or equal to the last date in the version of the file that has already been downloaded, the
-    file IS NOT re-downloaded, but simply parsed. Otherwise, the file is redownloaded.
+    Obtains flare-corrected F10.7 data from Collecte Localisation Satellites. The "adjusted" here means that it has been
+    adjusted from measurements from Earth to 1AU. (Aether/GITM need measurements at 1AU, so they can adjust to the 
+    proper sun-planet distance, where planet can be Earth, Venus, Mars, etc.) A description of the data is
+    provided here: https://spaceweather.cls.fr/services/radioflux/. 
+    Downloads the most recent measurements to a file. Reads the file and extracts the F10.7 values between two dates. 
+    Note that if the ending date is less than or equal to the last date in the version of the file that has already 
+    been downloaded, the file IS NOT re-downloaded, but simply parsed. Otherwise, the file is redownloaded.
     :param dateStart: str
         The starting date in YYYYMMDD format.
     :param dateEnd: str
