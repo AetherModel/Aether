@@ -98,13 +98,21 @@
         "nMembers" : 1},
 
     "Sources" : {
-		"Grid" : {
-			"Coriolis" : true,
-			"Cent_acc": true },
-		"Neutrals" : {
-		    "NO_cool" : false,
-	    	"O_cool": false } 
-		},
+
+	  "Grid" : {
+		  "Coriolis" : true,
+		  "Cent_acc": true },
+      
+	  "Neutrals" : {
+	    "NO_cool" : false,
+	    "O_cool": false },
+      
+	  "Ions" : {
+		  "IncludePhotoElectronHeating": true,
+		  "IncludeIonizationHeating": true,
+		  "IncludeElectronIonCollisionalHeating":true,
+		  "IncludeElectronNeutralElasticCollisionalHeating":true,
+		  "IncludeElectronNeutralInelasticCollisionalHeating":true}},
     
     "Seed" : 0,
 
