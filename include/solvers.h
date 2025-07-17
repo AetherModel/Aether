@@ -40,7 +40,8 @@ arma_vec solver_conduction(
 			   arma_vec dx,
 			   precision_t dt,
 			   int64_t nGCs,
-			   bool return_diff);
+			   bool return_diff = false,
+			   arma_vec source2 = arma_vec());
 
 arma_cube solver_chemistry(arma_cube density,
 			   arma_cube source,

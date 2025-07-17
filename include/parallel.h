@@ -30,6 +30,7 @@ extern std::string cGrid;
 
 /// communicator for all of aether
 extern MPI_Comm aether_comm;
+extern MPI_Comm aether_member_comm;
 
 /**********************************************************************
   \brief initialize mpi and figure out ensembles and grid blocks

@@ -453,7 +453,7 @@ class Neutrals {
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
    **/
-  int get_species_id(std::string name);
+  int get_species_id(const std::string &name) const;
 
   /*****************************************************************************
       \brief  Checks for nans and +/- infinities in density, temp, and velocity

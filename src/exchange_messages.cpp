@@ -36,6 +36,58 @@ bool Neutrals::exchange_old(Grid &grid) {
   return DidWork;
 }
 
+void average_value_at_pole(Grid &grid, arma_cube &value, arma_cube &velocity,
+                           int64_t iLast, int64_t iPole,
+                           bool doesTouchPole) {
+  // Now let's deal with the poles:
+  // north pole first:
+  int64_t iX, nX = grid.get_nX();
+  int64_t iZ, nZ = grid.get_nZ();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iY, iInc = 1;
+
+  if (iPole < iLast)
+    iInc = -1;
+
+  double weight, sumValue, sumWeight, totalValue, totalWeight, poleValue;
+
+  for (iZ = nGCs; iZ < nZ - nGCs; iZ++) {
+
+    sumValue = 0.0;
+    sumWeight = 0.0;
+
+    if (doesTouchPole) {
+      for (iX = nGCs; iX < nX - nGCs; iX++) {
+        // determine the weight based on the northward velocity:
+        weight = iInc * velocity(iX, iLast, iZ) / 1000.0 + 1.0;
+
+        if (weight < 0.01)
+          weight = 0.01;
+
+        sumValue = sumValue + value(iX, iLast, iZ) * weight;
+        sumWeight = sumWeight + weight;
+      }
+    }
+
+    MPI_Allreduce(&sumValue, &totalValue, 1, MPI_DOUBLE, MPI_SUM,
+                  aether_comm);
+    MPI_Allreduce(&sumWeight, &totalWeight, 1, MPI_DOUBLE, MPI_SUM,
+                  aether_comm);
+    poleValue = totalValue / totalWeight;
+
+    //if (iZ == 10)
+    //std::cout << "pole value : " << poleValue << " " << totalValue << " " << totalWeight << " "
+    //<< iProc << " " << doesTouchPole << "\n";
+
+    if (doesTouchPole) {
+      for (iX = nGCs; iX < nX - nGCs; iX++)
+        for (iY = iLast + iInc; iY == iPole; iY += iInc)
+          value(iX, iY, iZ) = poleValue;
+    }
+  }
+
+}
+
 // -----------------------------------------------------------------------------
 // This is the main exchange messages for the neutrals.
 //   We are exchanging densities, temperatures, and velocities
@@ -53,7 +105,7 @@ bool Ions::exchange_old(Grid &grid) {
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
 
-  DidWork = exchange_one_var(grid, temperature_scgc, false);
+  //DidWork = exchange_one_var(grid, temperature_scgc, false);
   DidWork = exchange_one_var(grid, electron_temperature_scgc, false);
 
   // velocity components:
@@ -63,6 +115,25 @@ bool Ions::exchange_old(Grid &grid) {
   DidWork = exchange_one_var(grid, velocity_vcgc[1], true);
   // don't reverse vertical across the pole:
   DidWork = exchange_one_var(grid, velocity_vcgc[2], false);
+
+  int64_t iPole = grid.get_nY() - 1;
+  int64_t iLast = iPole - nGCs;
+
+  average_value_at_pole(grid, temperature_scgc, velocity_vcgc[1],
+                        iLast, iPole, grid.DoesTouchNorthPole);
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    average_value_at_pole(grid, species[iSpecies].density_scgc, velocity_vcgc[1],
+                          iLast, iPole, grid.DoesTouchNorthPole);
+
+  iPole = 0;
+  iLast = nGCs;
+  average_value_at_pole(grid, temperature_scgc, velocity_vcgc[1],
+                        iLast, iPole, grid.DoesTouchSouthPole);
+
+  for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    average_value_at_pole(grid, species[iSpecies].density_scgc, velocity_vcgc[1],
+                          iLast, iPole, grid.DoesTouchSouthPole);
 
   report.exit(function);
   return DidWork;
@@ -119,9 +190,9 @@ bool pack_border(const arma_cube &value,
                  int iDir) {
 
   bool DidWork = true;
-  static int64_t nX = value.n_rows;
-  static int64_t nY = value.n_cols;
-  static int64_t nZ = value.n_slices;
+  int64_t nX = value.n_rows;
+  int64_t nY = value.n_cols;
+  int64_t nZ = value.n_slices;
 
   int64_t iXstart, iXend;
   int64_t iYstart, iYend;
@@ -221,9 +292,9 @@ bool unpack_border(arma_cube &value,
                    bool XbecomesY) {
 
   bool DidWork = true;
-  static int64_t nX = value.n_rows;
-  static int64_t nY = value.n_cols;
-  static int64_t nZ = value.n_slices;
+  int64_t nX = value.n_rows;
+  int64_t nY = value.n_cols;
+  int64_t nZ = value.n_slices;
 
   int64_t iXstart, iXend;
   int64_t iYstart, iYend;
@@ -345,6 +416,7 @@ bool unpack_border(arma_cube &value,
   } catch (...) {
     DidWork = false;
   }
+
   return DidWork;
 }
 
@@ -394,7 +466,7 @@ bool pack_one_var_on_one_face(arma_cube var_scgc,
                               int iDirToPass,
                               Grid &grid) {
 
-  static int nG = grid.get_nGCs();
+  int nG = grid.get_nGCs();
   int iDir = grid.interchangesOneVar[iDirToPass].iFace;
   int iReceiver = grid.interchangesOneVar[iDirToPass].iProc_to;
   precision_t *buffer = grid.interchangesOneVar[iDirToPass].buffer;
@@ -475,9 +547,9 @@ bool Grid::send_one_var_one_face(int64_t iFace) {
 
   if (report.test_verbose(4))
     std::cout << "in send_one_var_one_face : " << iFace << " from: " <<
-    iProc << " to: " <<
-    interchangesOneVar[iFace].iProc_to << " tag: " <<
-    interchangesOneVar[iFace].iTag << "\n";
+              iProc << " to: " <<
+              interchangesOneVar[iFace].iProc_to << " tag: " <<
+              interchangesOneVar[iFace].iTag << "\n";
 
   MPI_Isend(interchangesOneVar[iFace].buffer,
             interchangesOneVar[iFace].iSizeTotal,
@@ -521,9 +593,9 @@ bool Grid::receive_one_var_one_face(int64_t iFace) {
 
   if (report.test_verbose(4))
     std::cout << "in receive_one_var_one_face : " << iFace << " from: " <<
-    iProc << " to: " << 
-    interchangesOneVar[iFace].iProc_to << " tag: " <<
-    interchangesOneVar[iFace].iTag << "\n";
+              iProc << " to: " <<
+              interchangesOneVar[iFace].iProc_to << " tag: " <<
+              interchangesOneVar[iFace].iTag << "\n";
 
 
   MPI_Recv(interchangesOneVar[iFace].rbuffer,
@@ -1026,24 +1098,28 @@ bool exchange_one_var(Grid &grid,
   int iTag, iDir, nDir;
   int iSpecies;
 
-  static int64_t nX = grid.get_nX();
-  static int64_t nY = grid.get_nY();
-  static int64_t nZ = grid.get_nZ();
-  static int64_t nG = grid.get_nGCs();
-  static arma_cube var_scgc;
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
+  int64_t nG = grid.get_nGCs();
+  arma_cube var_scgc;
 
-  static int64_t nVarsToPass = 1;
+  int64_t nVarsToPass = 1;
 
   if (!grid.isExchangeInitialized) {
     DidWork = exchange_sides_init(grid, nVarsToPass);
     grid.isExchangeInitialized = true;
+    std::cout << "initializing : " << grid.get_gridtype() << " " << nZ << " " <<
+              iProc << "\n";
   }
+
   var_scgc.set_size(nX, nY, nZ);
 
   int64_t iP;
   precision_t oneSign = 1.0;
 
   nDir = 4;
+
   if (grid.get_IsDipole() && grid.get_IsClosed())
     nDir++;
 
@@ -1139,10 +1215,10 @@ bool test_ghostcell_interpolation(Grid &grid) {
 
   bool didWork = true;
 
-  static int64_t iX, nX = grid.get_nX();
-  static int64_t iY, nY = grid.get_nY();
-  static int64_t iZ, nZ = grid.get_nZ();
-  static int64_t nG = grid.get_nGCs();
+  int64_t iX, nX = grid.get_nX();
+  int64_t iY, nY = grid.get_nY();
+  int64_t iZ, nZ = grid.get_nZ();
+  int64_t nG = grid.get_nGCs();
   int64_t iStart, iEnd, jStart, jEnd, iDir;
 
   // Check the latitudes and longitudes to make sure that they map to
@@ -1252,9 +1328,9 @@ arma_cube interpolate_ghostcells(arma_cube varIn, Grid &grid) {
   bool didWork = true;
 
   int64_t iDir;
-  static int64_t iX, ix_, nX = grid.get_nX();
-  static int64_t iY, iy_, nY = grid.get_nY();
-  static int64_t iG, nG = grid.get_nGCs();
+  int64_t iX, ix_, nX = grid.get_nX();
+  int64_t iY, iy_, nY = grid.get_nY();
+  int64_t iG, nG = grid.get_nGCs();
   precision_t r_;
   arma_cube varOut = varIn;
 
@@ -1322,10 +1398,10 @@ bool find_ghostcell_interpolation_coefs(Grid &grid) {
 
   bool didWork = true;
 
-  static int64_t iX, nX = grid.get_nX();
-  static int64_t iY, nY = grid.get_nY();
-  static int64_t iZ, nZ = grid.get_nZ();
-  static int64_t nG = grid.get_nGCs();
+  int64_t iX, nX = grid.get_nX();
+  int64_t iY, nY = grid.get_nY();
+  int64_t iZ, nZ = grid.get_nZ();
+  int64_t nG = grid.get_nGCs();
 
   // Test to see if the longitudes are the same as the original
   arma_cube yOther = grid.refy_angle * cRtoD;

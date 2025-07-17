@@ -239,6 +239,23 @@ precision_t sync_mean_across_all_procs(precision_t value) {
 }
 
 // ----------------------------------------------------------------------------
+// Calculate the average value across all processors
+//   - this is the same as sync_mean_across_all_procs, but is limited to
+//     processors in a given member
+// ----------------------------------------------------------------------------
+
+precision_t sync_mean_across_member(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  double nSend, nReceive;
+  vSend = value;
+  nSend = 1.0;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_member_comm);
+  MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_member_comm);
+  global_value = vReceive / nReceive;
+  return global_value;
+}
+// ----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // ----------------------------------------------------------------------------
 
