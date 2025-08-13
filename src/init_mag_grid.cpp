@@ -160,48 +160,6 @@ std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q,
   return {r, theta};
 }
 
-////////////////////////////////////////////
-// convert cell coordinates to geographic //
-////////////////////////////////////////////
-std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
-                                   arma_cube magAlt,
-                                   Planets planet) {
-  std::string function = "Grid::mag_to_geo";
-  static int iFunction = -1;
-  report.enter(function, iFunction);
-
-  std::vector<arma_cube> llr, xyz_mag, xyz_geo, xyzRot1, xyzRot2;
-  llr.push_back(magLon);
-  llr.push_back(magLat);
-  llr.push_back(magAlt);
-  xyz_mag = transform_llr_to_xyz_3d(llr);
-
-  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
-  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
-  std::vector<precision_t> dipole_center = planet.get_dipole_center();
-
-  // Reverse our dipole rotations:
-  xyzRot1 = rotate_around_y_3d(xyz_mag, magnetic_pole_tilt);
-  xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
-
-  // offset dipole (not fully suported yet, so will be zero)
-  if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
-      (dipole_center[2] != 0.0)) {
-
-    dipole_center = {0.0, 0.0, 0.0};
-  }
-
-  xyz_geo.push_back(xyzRot2[0] + dipole_center[0]);
-  xyz_geo.push_back(xyzRot2[1] + dipole_center[1]);
-  xyz_geo.push_back(xyzRot2[2] + dipole_center[2]);
-
-  // transform back to lon, lat, radius:
-  llr = transform_xyz_to_llr_3d(xyzRot2);
-
-  report.exit(function);
-  return llr;
-}
-
 // ----------------------------------------------------------------------
 // Initialize the dipole grid.
 // - inputs (min_apex, min_alt, LatStretch, FieldLineStretch, max_lat_dipole)

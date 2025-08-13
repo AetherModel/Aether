@@ -297,4 +297,32 @@ arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in);
 // Probably needs to be moved.
 arma_cube delTheta(arma_cube magLat);
 
+////////////////////////////////////////////
+// convert cell coordinates to geographic //
+////////////////////////////////////////////
+std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
+                                   arma_cube magAlt,
+                                   Planets planet);
+
+////////////////////////////////////////////
+// convert mag coordinates to dipole ijk  //
+////////////////////////////////////////////
+std::vector<precision_t> mag_to_ijk(precision_t mlon,
+                                    precision_t mlat, 
+                                    precision_t radius,
+                                    precision_t planet_radius);
+
+
+////////////////////////////////////////////
+// convert cell coordinates to geographic //
+////////////////////////////////////////////
+std::vector<arma_cube> geo_to_mag(arma_cube glon,
+                                    arma_cube glat, 
+                                    arma_cube radius,
+																	Planets &planet) ;
+
+
+arma_cube vec2cube(std::vector<precision_t> ivec);
+
+
 #endif  // INCLUDE_TOOLS_H_
