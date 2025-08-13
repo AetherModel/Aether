@@ -73,7 +73,7 @@ arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
     for (iX = 1; iX < nX - 1; iX++)
       gradient.row(iX) =
         (value.row(iX + 1) - value.row(iX - 1)) /
-        (2 * grid.di_center_m_scgc.row(iX));
+        (2.0 * grid.di_center_m_scgc.row(iX));
 
     // Lower (one sided):
     iX = 0;

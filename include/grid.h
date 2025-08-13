@@ -11,10 +11,9 @@
 // Grid class
 // ----------------------------------------------------------------------------
 
-class Grid
-{
+class Grid {
 
-public:
+ public:
   const int iSphere_ = 1;
   const int iCubesphere_ = 2;
   const int iDipole_ = 3;
@@ -97,7 +96,7 @@ public:
   arma_cube magAlt_Down;
   arma_cube magAlt_Below;
   arma_cube magAlt_Corner;
-  
+
   arma_cube magP_Corner;
   arma_cube magQ_Corner;
   arma_cube magInvLat_Corner;
@@ -358,7 +357,7 @@ public:
   int iProcZ;
 
   bool isExchangeInitialized = false;
-  
+
   arma_vec edge_Xp;
   arma_vec edge_Yp;
   arma_vec edge_Xm;
@@ -374,8 +373,7 @@ public:
   // again, z will only be in one
   int64_t iRootZ;
 
-  struct messages_struct
-  {
+  struct messages_struct {
     int64_t iFace;
     int64_t iProc_to;
     int64_t iSizeTotal;
@@ -442,7 +440,7 @@ public:
   bool set_dipole_interpolation_coefs(const std::vector<precision_t> &Lons,
                                       const std::vector<precision_t> &Lats,
                                       const std::vector<precision_t> &Alts);
-  
+
   /**
    * \brief Create a map of geographic locations to data and do the interpolation
    * \param data The value at the positions of geoLon, geoLat, and geoAlt
@@ -453,7 +451,7 @@ public:
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 
-private:
+ private:
   bool IsGeoGrid;
   bool HasBField;
   bool IsExperimental;
@@ -481,8 +479,7 @@ private:
 
   // interpolation members
   // The struct representing the range of a spherical grid
-  struct sphere_range
-  {
+  struct sphere_range {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -493,8 +490,7 @@ private:
     precision_t alt_max;
   };
   // The struct representing the range of a cubesphere grid
-  struct cubesphere_range
-  {
+  struct cubesphere_range {
     // The minimum value and delta change of row and col
     // We don't use row_max and col_max because they are not promised to be
     // greater than min, for example the right norm of suface 2 expands along
@@ -521,7 +517,7 @@ private:
     bool col_max_exclusive;
   };
   // The struct representing the range of a dipole grid (in magnetic coordinates)
-  struct dipole_range{
+  struct dipole_range {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -536,8 +532,7 @@ private:
   // Each point is processed by the function set_interpolation_coefs and stored
   // in the form of this structure.
   // If the point is out of the grid, in_grid = false and all other members are undefined
-  struct interp_coef_t
-  {
+  struct interp_coef_t {
     // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
     uint64_t iRow;
     uint64_t iCol;
@@ -578,8 +573,7 @@ private:
   // Initialize connections between processors
   void init_connection();
   // Used for message exchange
-  struct idx2d_t
-  {
+  struct idx2d_t {
     // Index of row and column
     int64_t ilon;
     int64_t ilat;

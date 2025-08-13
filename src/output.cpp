@@ -28,7 +28,7 @@ std::string get_filename_from_type(std::string type_output) {
 
   if (type_output == "bfield")
     filename = "3DBF";
-    
+
   if (type_output == "delta")
     filename = "3DDE";
 
