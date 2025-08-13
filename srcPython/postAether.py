@@ -15,7 +15,7 @@ from struct import unpack
 try:
     from netCDF4 import Dataset
     from h5py import File
-except InputError:
+except ImportError:
     print("NetCDF and/or h5py not found")
 
 # ----------------------------------------------------------------------
