@@ -112,7 +112,8 @@
 		  "IncludeIonizationHeating": true,
 		  "IncludeElectronIonCollisionalHeating":true,
 		  "IncludeElectronNeutralElasticCollisionalHeating":true,
-		  "IncludeElectronNeutralInelasticCollisionalHeating":true}},
+		  "IncludeElectronNeutralInelasticCollisionalHeating":true,
+			"IncludeThermoelectricHeating": false}},
     
     "Seed" : 0,
 
