@@ -200,5 +200,221 @@ bool Neutrals::initial_conditions(Grid grid,
   return didWork;
 }
 
+bool Neutrals::cosine_bell_ic(Grid grid,
+                              Times time,
+                              Indices indices,
+                              Planets planet) {
+  std::string function = "Neutrals::cosine_bell_ic";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Planet.get_radius() takes in latitude
+  // but at current stage is unimplemented
+  // Anyway, we use equator radius as assumption for CubeSphere
+  // CubeSphere must be a perfect sphere!!
+  precision_t planet_R = planet.get_radius(0);
+
+  // radius of planet + altitude
+  // just pick alt at (0,0) loction
+  arma_vec R_Alts = grid.geoAlt_scgc.tube(0, 0) + planet_R;
+
+
+  /** Get a bunch of constants for setting up the ic **/
+  precision_t R = R_Alts(2); // select R in the middle
+  //7.37128e+06 meters Earth radius + 1000km height
+  //std::cout << R << std::endl;
+
+  // Determine flow direction
+  // 0 - Equatorial
+  // pi/2 - Meridional
+  // pi/4 - NE direction
+  precision_t alpha_0 = 0.;
+
+  // Scaling factor for physical velocity
+  // 12 day period in miliseconds
+  precision_t u_0 = cTWOPI * R / (12.*24.*60.*60.);
+
+  // Radius of the cosine bell
+  precision_t r_0 = R / 3.;
+
+  // Center of the cosine bell
+  precision_t lon_0 = 7.*cPI / 4. + cPI / 8;
+  precision_t lat_0 = 0.;
+
+  // Maximum height for the cosine bell
+  precision_t h_0 = 1000.;
+
+  // Some grid dimensions and coordinates
+  int64_t nLats = grid.get_nLats();
+  int64_t nLons = grid.get_nLons();
+  int64_t nAlts = grid.get_nAlts();
+  arma_mat lat_grid = grid.geoLat_scgc.slice(2);
+  arma_mat lon_grid = grid.geoLon_scgc.slice(2);
+
+  // Calculate for physical velocity for every altitude
+  // First we prepare velocities for one slice
+  arma_mat slice_u = velocity_vcgc[0].slice(2);
+  arma_mat slice_v = velocity_vcgc[1].slice(2);
+
+  // Fill velocities in one slice
+  for (int64_t iLat = 0; iLat < nLats; iLat++) {
+    for (int64_t iLon = 0; iLon < nLons; iLon++) {
+      precision_t curr_lat = lat_grid(iLon, iLat);
+      precision_t curr_lon = lon_grid(iLon, iLat);
+      slice_u(iLon, iLat) = u_0 * (cos(alpha_0) * cos(curr_lat) + sin(alpha_0) * cos(
+                                     curr_lon) * sin(curr_lat));
+      slice_v(iLon, iLat) = -u_0 * sin(alpha_0) * sin(curr_lon);
+    }
+  }
+
+  // Update this slice of velocity to all slices (for completeness)
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
+    velocity_vcgc[0].slice(iAlt) = slice_u;
+    velocity_vcgc[1].slice(iAlt) = slice_v;
+  }
+
+  // Calculate the cosine bell or rho_scgc
+  // First, again take a slice
+  arma_mat slice_rho = rho_scgc.slice(2);
+
+  // Fill rho in one slice
+  for (int64_t iLat = 0; iLat < nLats; iLat++) {
+    for (int64_t iLon = 0; iLon < nLons; iLon++) {
+      precision_t curr_lat = lat_grid(iLon, iLat);
+      precision_t curr_lon = lon_grid(iLon, iLat);
+
+      // Calculate great circle distance
+      precision_t dlon_2 = (curr_lon - lon_0) / 2.0;
+      precision_t dlat_2 = (curr_lat - lat_0) / 2.0;
+
+      precision_t r_d = 2.0 * R * asin(sqrt(sin(dlat_2) * sin(dlat_2) + sin(
+                                              dlon_2) * sin(dlon_2) * cos(curr_lat) * cos(lat_0)));
+
+      if (r_d < r_0)
+        slice_rho(iLon, iLat) = (h_0 / 2) * (1 + cos(cPI * r_d / r_0));
+
+      else
+        slice_rho(iLon, iLat) = 0.;
+    }
+  }
+
+  // Update this slice of rho to all slices (for completeness)
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
+    rho_scgc.slice(iAlt) = slice_rho;
+
+    // Do zero concentration conversion
+    for (int64_t iSpec = 0; iSpec < nSpecies; iSpec++)
+      species[iSpec].density_scgc.slice(iAlt) = slice_rho / species[iSpec].mass;
+  }
+
+  // Add some velocity pertubation
+  //std::cout <<  velocity_vcgc[0].slice(2) << std::endl;
+  //std::cout << rho_scgc.slice(2) << std::endl;
+
+  return 1;
+}
+
+bool Neutrals::blob_ic(Grid grid,
+                       Times time,
+                       Indices indices,
+                       Planets planet) {
+  std::string function = "Neutrals::blob_ic";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  // Planet.get_radius() takes in latitude
+  // but at current stage is unimplemented
+  // Anyway, we use equator radius as assumption for CubeSphere
+  // CubeSphere must be a perfect sphere!!
+  precision_t planet_R = planet.get_radius(0);
+
+  // radius of planet + altitude
+  // just pick alt at (0,0) loction
+  arma_vec R_Alts = grid.geoAlt_scgc.tube(0, 0) + planet_R;
+
+
+  /** Get a bunch of constants for setting up the ic **/
+  precision_t R = R_Alts(2); // select R in the middle
+  //7.37128e+06 meters Earth radius + 1000km height
+  //std::cout << R << std::endl;
+
+  // Radius of the blob
+  // Hardcoded
+  precision_t r_0 = 111321 * 10;
+
+  // Center of the blob
+  precision_t lon_0 = 7.*cPI / 4. - cPI / 8.;
+  precision_t lat_0 = 0.;
+
+  // Some grid dimensions and coordinates
+  int64_t nLats = grid.get_nLats();
+  int64_t nLons = grid.get_nLons();
+  int64_t nAlts = grid.get_nAlts();
+  arma_mat lat_grid = grid.geoLat_scgc.slice(2);
+  arma_mat lon_grid = grid.geoLon_scgc.slice(2);
+
+  // Calculate for physical velocity for every altitude
+  // First we prepare velocities for one slice
+  arma_mat slice_u = velocity_vcgc[0].slice(2);
+  arma_mat slice_v = velocity_vcgc[1].slice(2);
+
+  // Fill velocities in one slice
+  for (int64_t iLat = 0; iLat < nLats; iLat++) {
+    for (int64_t iLon = 0; iLon < nLons; iLon++) {
+      slice_u(iLon, iLat) = 0.;
+      slice_v(iLon, iLat) = 0.;
+    }
+  }
+
+  // Update this slice of velocity to all slices (for completeness)
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
+    velocity_vcgc[0].slice(iAlt) = slice_u;
+    velocity_vcgc[1].slice(iAlt) = slice_v;
+  }
+
+  // Calculate the cosine bell or rho_scgc
+  // First, again take a slice
+  arma_mat slice_rho = rho_scgc.slice(2);
+
+  // Fill rho in one slice
+  for (int64_t iLat = 0; iLat < nLats; iLat++) {
+    for (int64_t iLon = 0; iLon < nLons; iLon++) {
+      precision_t curr_lat = lat_grid(iLon, iLat);
+      precision_t curr_lon = lon_grid(iLon, iLat);
+
+      // Calculate great circle distance
+      precision_t dlon_2 = (curr_lon - lon_0) / 2.0;
+      precision_t dlat_2 = (curr_lat - lat_0) / 2.0;
+
+      precision_t r_d = 2.0 * R * asin(sqrt(sin(dlat_2) * sin(dlat_2) + sin(
+                                              dlon_2) * sin(dlon_2) * cos(curr_lat) * cos(lat_0)));
+
+      if (r_d < r_0)
+        slice_rho(iLon, iLat) = 5e-12;
+
+      else
+        slice_rho(iLon, iLat) = 1e-12;
+    }
+  }
+
+  // Update this slice of rho to all slices (for completeness)
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++) {
+    rho_scgc.slice(iAlt) = slice_rho;
+
+    // Do zero concentration conversion
+    for (int64_t iSpec = 0; iSpec < nSpecies; iSpec++)
+      species[iSpec].density_scgc.slice(iAlt) = slice_rho / species[iSpec].mass;
+  }
+
+  // Temperature setup
+  for (int64_t iAlt = 0; iAlt < nAlts; iAlt++)
+    temperature_scgc.slice(iAlt) = 600.*arma_mat(nLons, nLats, fill::ones);
+
+  // Add some velocity pertubation
+  //std::cout <<  velocity_vcgc[0].slice(2) << std::endl;
+  //std::cout << rho_scgc.slice(2) << std::endl;
+
+  return 1;
+}
 
 
