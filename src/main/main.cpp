@@ -12,7 +12,7 @@ int main() {
   
   int iErr = 0;
   std::string sError;
-  bool didWork = true;
+  bool didWork = true, testsPassing=true;
 
   Times time;
 
@@ -117,8 +117,11 @@ int main() {
     Ions ionsMag(mGrid, planet);
 
     if (tests["test_gradient"]) {
-      test_gradient(planet, quadtree, tests, gGrid, mGrid);
-      }
+      testsPassing = test_gradient(planet, quadtree, tests, gGrid, mGrid);
+    }
+
+    if (!testsPassing && tests["exit_on_fail"])
+      throw std::string("Cannot continue!!");
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.

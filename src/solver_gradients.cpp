@@ -367,10 +367,9 @@ arma_cube calc_gradient2o_k(arma_cube value, Grid grid) {
 
 arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
 
-  int64_t nX = grid.get_nLons();
-  int64_t nY = grid.get_nLats();
-  int64_t nZ = grid.get_nAlts();
-  int64_t nGCs = grid.get_nGCs();
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
   int64_t iK;
 
   arma_cube gradient(nX, nY, nZ);

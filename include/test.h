@@ -11,7 +11,7 @@
 // Cubesphere is not done nor tested
 bool test_gradient(Planets planet, Quadtree quadtree, json test_config, Grid gGrid, Grid mGrid);
 bool test_gradient_cubesphere(Planets planet, Quadtree quadtree, Grid grid);
-bool test_gradient_ijk(Planets planet, Grid grid);
+bool test_gradient_ijk(Planets planet, Grid grid, bool debug);
 
 
 #endif

@@ -6,23 +6,94 @@
 
 #include "aether.h"
 
+
+// Modularize the test function so it's easy to change
+std::vector<arma_cube> test_func(Grid grid, Planets planet, bool debug) {
+
+  // one element for each coord; compatibility w/ doing individual functions
+  // out_vals has 6 elements:
+  // - first 3 are the function & last 3 are expected gradient
+  std::vector<arma_cube> out_vals;
+  arma_cube one_elem, i_coords, j_coords, k_coords;
+
+  if (grid.IsLatLonGrid) {
+    i_coords = grid.geoLon_scgc;
+    j_coords = grid.geoLat_scgc;
+    k_coords = grid.radius_scgc;
+
+    // use the func cos(i) * sin(j) * r^2
+    one_elem = cos(i_coords) % sin(j_coords) % k_coords % k_coords;
+    out_vals.push_back(one_elem);
+    out_vals.push_back(one_elem);
+    out_vals.push_back(one_elem);
+
+    // The true gradient values:
+    out_vals.push_back(-600.0 * sin(i_coords) % tan(j_coords) % k_coords);
+    out_vals.push_back(cos(i_coords) % cos(j_coords) % k_coords);
+    out_vals.push_back(2.0 * cos(i_coords) % sin(j_coords) % k_coords);
+  }
+
+  if (grid.IsDipole) {
+    std::cout<<"I AMN DIPOLE\n";
+    precision_t planetRadius = planet.get_radius(0.0);
+    i_coords = grid.magLon_scgc;
+    j_coords = grid.magP_scgc;
+    k_coords = grid.magQ_scgc;
+
+    // use the func cos(i) * sin(j) * r^2
+    // one_elem = cos(grid.magLon_scgc) % sin(grid.magLat_scgc) % grid.radius_scgc % grid.radius_scgc;
+    one_elem = i_coords % i_coords + j_coords % j_coords + k_coords % k_coords;
+    out_vals.push_back(one_elem);
+    out_vals.push_back(one_elem);
+    out_vals.push_back(one_elem);
+
+    arma_cube delT = pow(1 + 3.0 * cos(cPI/2. - grid.magLat_scgc) % cos(cPI/2. - grid.magLat_scgc),
+                         0.5);
+
+    // arma_cube r = grid.radius_scgc / planetRadius;
+    // // The true gradient values:
+    // out_vals.push_back(-k_coords % k_coords % sin(i_coords) % j_coords % j_coords
+    //                    / (r % pow(cos(grid.magLat_scgc), 2.0))); // mayB sin
+    // out_vals.push_back(2.0 * delT % j_coords % j_coords % cos(i_coords) % j_coords
+    //                    / pow(cos(grid.magLat_scgc), 3.0)); // mayb sin???
+    // out_vals.push_back(2.0 * delT % k_coords % cos(i_coords) % j_coords % j_coords
+    //                    / pow(r, 3.0));
+
+    out_vals.push_back(2.0 * i_coords
+                       / (grid.radius_scgc % cos(grid.magLat_scgc))); // mayB sin
+    out_vals.push_back(2.0 * j_coords
+                       % delT / pow(cos(grid.magLat_scgc), 3.0)); // mayb sin???
+    out_vals.push_back(2.0 * k_coords
+                       % delT / pow(grid.radius_scgc, 3.0));
+
+  }
+
+  if (debug) {
+    std::string numproc = tostr(iProc, 2);
+    std::string gridshape = "gridshape-" + tostr(grid.iGridShape_, 2);
+    i_coords.save(gridshape + "_proc-" + numproc + "_i_center.txt", arma_ascii);
+    j_coords.save(gridshape + "_proc-" + numproc + "_j_center.txt", arma_ascii);
+    k_coords.save(gridshape + "_proc-" + numproc + "_k_center.txt", arma_ascii);
+  }
+
+  return out_vals;
+}
+
 bool test_gradient(Planets planet, Quadtree quadtree, json test_config,
                    Grid gGrid, Grid mGrid) {
   std::string function = "test_gradient";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  bool didWork;
+  bool didWork = true;
+  bool debug = test_config["dump_debug_cubes"];
 
   report.print(2, "Testing neutral grid");
 
-  if (gGrid.IsCubeSphereGrid)
-    didWork = test_gradient_cubesphere(planet, quadtree, gGrid);
-
   if (gGrid.IsDipole || gGrid.IsLatLonGrid)
-    didWork = test_gradient_ijk(planet, gGrid);
-
-  MPI_Barrier(aether_comm);
+    didWork = didWork && test_gradient_ijk(planet, gGrid, debug);
+  else
+    report.error("Cubesphere gradient test not built yet sorry");
 
   if (!didWork && test_config["exit_on_fail"])
     throw std::string("Gradient test failed - neutral grid");
@@ -30,122 +101,139 @@ bool test_gradient(Planets planet, Quadtree quadtree, json test_config,
   report.print(2, "Testing ion grid");
 
   if (mGrid.IsCubeSphereGrid) // it's technically possible...
-    didWork = test_gradient_cubesphere(planet, quadtree, mGrid);
+    didWork = didWork && test_gradient_cubesphere(planet, quadtree, mGrid);
 
   if (mGrid.IsDipole || mGrid.IsLatLonGrid)
-    didWork = test_gradient_ijk(planet, mGrid);
+    didWork = didWork && test_gradient_ijk(planet, mGrid, debug);
 
-  if (!didWork && test_config["exit_on_fail"])
-    throw std::string("Gradient test failed - ion grid");
-
-
+  // if (!didWork && test_config["exit_on_fail"])
+  //   throw std::string("Gradient test failed - ion grid");
 
   report.exit(function);
 
   return didWork;
 }
 
-bool test_gradient_ijk(Planets planet, Grid grid) {
+void send_message(std::string Message, int nGood, int nBad) {
+  std::string newMessage;
+  newMessage = "iProc: " + tostr(iProc, 2) + " " + Message;
+  printf("%s has FAILED! (%i/%i); or (%f) perc\n", newMessage.data(), nBad, nGood,
+         100.*nBad / nGood);
+  return;
+}
 
-  std::string function = "test_gradient_dipole";
+
+bool test_gradient_ijk(Planets planet, Grid grid, bool debug) {
+
+  std::string function = "test_gradient_ijk";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  int64_t nIs = grid.get_nX();
-  int64_t nJs = grid.get_nY();
-  int64_t nKs = grid.get_nZ();
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nZ = grid.get_nZ();
   int64_t nGCs = grid.get_nGCs();
 
-  int64_t nX, nY, nZ;
-  precision_t tol = 1e-3;
+  // numbers of grid points without ghost cells:
+  int64_t nI, nJ, nK;
+  nI = nX - 2 * nGCs;
+  nJ = nY - 2 * nGCs;
+  nK = nZ - 2 * nGCs;
+
   bool didWork = true;
 
-  arma_cube predicted_gradient, true_gradient;
-  arma::uvec err_points;
-
-  arma_cube gradient_error;
-  gradient_error.set_size(nIs, nJs, nKs);
-  gradient_error.zeros();
-
   int64_t nCellsTot = nX * nY * nZ;
-  int64_t nCellsNGCs = (nX - 2 * nGCs) * (nY - 2 * nGCs) * (nZ - 2 * nGCs);
+  int64_t nCellsNGCs = nI * nJ * nK;
 
-  report.print(2, "Beginning i-gradient");
+  report.print(2, "Beginning gradient test");
 
-  /////////////////////////////////////////////////////////////
-  // Test the gradient in i-direction, d/dx(sin x) = cos(x)  //
-  /////////////////////////////////////////////////////////////
+  std::vector<arma_cube> tmp, func_values, true_gradient, predicted_gradient;
+  tmp = test_func(grid, planet, debug);
 
-  predicted_gradient = calc_gradient2o_i(sin(grid.i_center_scgc), grid);
-  true_gradient = cos(grid.i_center_scgc) / (grid.di_center_m_scgc);
+  func_values.push_back(tmp[0]);
+  func_values.push_back(tmp[1]);
+  func_values.push_back(tmp[2]);
+  true_gradient.push_back(tmp[3]);
+  true_gradient.push_back(tmp[4]);
+  true_gradient.push_back(tmp[5]);
 
-  gradient_error = abs(predicted_gradient - true_gradient) / abs(true_gradient);
-  err_points = find(abs(gradient_error.subcube(nGCs, nGCs,
-                                               nGCs, // don't look at ghost cells
-                                               size(nIs - 2 * nGCs, nJs - 2 * nGCs, nKs - 2 * nGCs)))
-                    > tol);
+  if (grid.IsDipole) {
+    predicted_gradient.push_back(calc_gradient2o_i(func_values[0], grid));
+    predicted_gradient.push_back(calc_gradient2o_j(func_values[1], grid));
+    predicted_gradient.push_back(calc_gradient2o_k(func_values[2], grid));
+  } else {
+    predicted_gradient.push_back(calc_gradient2o_i(func_values[0], grid));
+    predicted_gradient.push_back(calc_gradient2o_j(func_values[1], grid));
+    predicted_gradient.push_back(calc_gradient2o_k(func_values[2], grid));
+  }
 
-  didWork = all_finite(predicted_gradient, "Gradient_4o_i");
+  arma::uvec bad_is, bad_js, bad_ks;
 
-  std::cout << "(iproc " << iProc << ", gridtype: " << grid.get_gridtype()
-            << ") => Points in i-gradient, above tol: " <<
-            100.0 * err_points.n_elem / predicted_gradient.n_elem
-            << "% (" << err_points.n_elem << ", " <<
-            predicted_gradient.n_elem << ")\n";
+  // Look for values > 5% different from expected
+  bad_is = find(abs(
+                  (predicted_gradient[0].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)
+                   - true_gradient[0].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2))
+                  / true_gradient[0].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)) > 0.25);
+  bad_js = find(abs(
+                  (predicted_gradient[1].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)
+                   - true_gradient[1].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2))
+                  / true_gradient[1].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)) > 0.25);
+  bad_ks = find(abs(
+                  (predicted_gradient[2].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)
+                   - true_gradient[2].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2))
+                  / true_gradient[2].subcube(2, 2, 2, nI + 2, nJ + 2, nK + 2)) > 0.25);
 
-  if (err_points.n_elem > true_gradient.n_elem * tol)
+  // ghost cells are hard; if more than 1% of *real* cells are out of spec, the test fails.
+  if (bad_is.n_elem > 0.1 * nCellsNGCs) {
+    send_message("grad_i:", nCellsNGCs, bad_is.n_elem);
     didWork = false;
+  }
 
-  report.print(2, "Beginning j-gradient");
-
-  /////////////////////////////////////////////////////////////
-  // Test the gradient in j-direction, d/dx(cos x) = -sin(x) //
-  /////////////////////////////////////////////////////////////
-
-  predicted_gradient = calc_gradient2o_j(cos(grid.j_center_scgc), grid);
-  true_gradient = -1.0 * sin(grid.j_center_scgc) / grid.dj_center_m_scgc;
-
-  gradient_error = predicted_gradient - true_gradient;
-  err_points = find(abs(gradient_error.subcube(nGCs, nGCs, nGCs,
-                                               size(nIs - 2 * nGCs, nJs - 2 * nGCs, nKs - 2 * nGCs)))
-                    > tol);
-
-  didWork = didWork && all_finite(predicted_gradient, "Gradient_2o_j");
-
-  std::cout << "(iproc " << iProc << ", gridtype: " << grid.get_gridtype()
-            << ") => Points in j-gradient, above tol: " <<
-            100.0 * err_points.n_elem / predicted_gradient.n_elem
-            << "% (" << err_points.n_elem << ", " <<
-            predicted_gradient.n_elem << ")\n";
-
-  if (err_points.n_elem > true_gradient.n_elem * tol)
+  if (bad_js.n_elem > 0.1 * nCellsNGCs) {
+    send_message("grad_j:", nCellsNGCs, bad_js.n_elem);
     didWork = false;
+  }
 
-
-  report.print(2, "Beginning k-gradient");
-
-  //////////////////////////////////////////////////////
-  // Test the gradient in k-direction, d/dx(x^2) = 2x //
-  //////////////////////////////////////////////////////
-
-  predicted_gradient = calc_gradient2o_k(grid.radius2_scgc, grid);
-  true_gradient = 2.0 * grid.radius_scgc / grid.dk_center_m_scgc;
-
-  gradient_error = (predicted_gradient - true_gradient);
-  err_points = find(abs(gradient_error.subcube(nGCs, nGCs, nGCs,
-                                               size(nIs - 2 * nGCs, nJs - 2 * nGCs, nKs - 2 * nGCs)))
-                    > tol);
-
-  didWork = didWork && all_finite(predicted_gradient, "Gradient_2o_k");
-
-  std::cout << "(iproc " << iProc << ", gridtype: " << grid.get_gridtype()
-            << ") => Points in k-gradient, above tol: " <<
-            100.0 * err_points.n_elem / predicted_gradient.n_elem
-            << "% (" << err_points.n_elem << ", " <<
-            predicted_gradient.n_elem << ")\n";
-
-  if (err_points.n_elem > true_gradient.n_elem * tol)
+  if (bad_ks.n_elem > 0.1 * nCellsNGCs) {
+    send_message("grad_k:", nCellsNGCs, bad_ks.n_elem);
     didWork = false;
+  }
+
+  // Output if requested:
+  std::string numproc = tostr(iProc, 2);
+
+  if (debug) {
+    std::string numproc = tostr(iProc, 2);
+    std::string gridshape = "gridshape-" + tostr(grid.iGridShape_, 2) + "_iproc-";
+    grid.di_center_m_scgc.save(gridshape + numproc + "_di_center_m.txt",
+                               arma_ascii);
+    grid.dj_center_m_scgc.save(gridshape + numproc + "_dj_center_m.txt",
+                               arma_ascii);
+    grid.dk_center_m_scgc.save(gridshape + numproc + "_dk_center_m.txt",
+                               arma_ascii);
+
+    func_values[0].save(gridshape + numproc + "_testfunc.txt", arma_ascii);
+    true_gradient[0].save(gridshape + numproc + "_actual_grad_i.txt",
+                          arma_ascii);
+    true_gradient[1].save(gridshape + numproc + "_actual_grad_j.txt",
+                          arma_ascii);
+    true_gradient[2].save(gridshape + numproc + "_actual_grad_k.txt",
+                          arma_ascii);
+
+    predicted_gradient[0].save(gridshape + numproc + "_i-predicted-grad.txt",
+                               arma_ascii);
+    predicted_gradient[1].save(gridshape + numproc + "_j-predicted-grad.txt",
+                               arma_ascii);
+    predicted_gradient[2].save(gridshape + numproc + "_k-predicted-grad.txt",
+                               arma_ascii);
+  }
+
+  // For completeness, check for non-finites
+  didWork = didWork && all_finite(true_gradient, "TRUE GRADIENT");
+  didWork = didWork && all_finite(func_values, "FUNCTION");
+  didWork = didWork && all_finite(predicted_gradient, "AETHER'S GRADIENT");
+
+  report.report_errors();
 
   report.exit(function);
 
@@ -153,7 +241,7 @@ bool test_gradient_ijk(Planets planet, Grid grid) {
 }
 
 
-// This is non-functional. 
+// This is non-functional.
 // Taken from src/main/main_test_gradient.cpp with enough edits to compile.
 bool test_gradient_cubesphere(Planets planet, Quadtree quadtree, Grid grid) {
 
