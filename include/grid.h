@@ -426,7 +426,9 @@ public:
    */
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
-                               const std::vector<precision_t> &Alts);
+                               const std::vector<precision_t> &Alts,
+                               bool areLocsGeo=true,
+                               bool areLocsIJK=true);
 
   /**
    * \brief Set the interpolation coefficients for the dipole grid

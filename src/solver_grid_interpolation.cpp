@@ -399,39 +399,127 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
 // Set the interpolation coefficients
 // --------------------------------------------------------------------------
 
-bool Grid::set_interpolation_coefs(const std::vector<precision_t> &Lons,
-                                   const std::vector<precision_t> &Lats,
-                                   const std::vector<precision_t> &Alts) {
-  // If this is not a geo grid, return false
-  if (!IsGeoGrid)
-    return false;
+bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
+                                   const std::vector<precision_t> &j_coords,
+                                   const std::vector<precision_t> &k_coords,
+                                   bool areLocsGeo,// geo or mag?
+                                   bool areLocsIJK // Are locs in 'native' coords?
+                                  ) {
+  /*
+  Inputs:
+    i_coord: longitude, either geo or mag (depends if areLocsGeo)
+    j_coord:
+      - Latitude if geographic
+      - Invariant latitude if magnetic (areLocsGeo = false)
+      - L-shell / dipole 'p': if magnetic and (areLocsIJK = false)
+    k_coord:
+      - Altitude/radius if NOT areLocsIJK
+      - distance along field line, or dipole 'q' if areLocsIJK
+  */
+
+  std::string function = "Grid::set_interpolation_coefs";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   // If the size of Lons, Lats and Alts are not the same, return false
-  if (Lons.size() != Lats.size() || Lats.size() != Alts.size())
+  if (i_coords.size() != j_coords.size() || j_coords.size() != k_coords.size()) {
+    report.error("Length of i,j,k vectors do not match!");
     return false;
+  }
 
   // Clear the previous interpolation coefficients
   interp_coefs.clear();
 
-  // Handle according to whether it is cubesphere or not
-  if (IsCubeSphereGrid) {
-    // Calculate the range of the grid
-    struct cubesphere_range cr;
-    get_cubesphere_grid_range(cr);
+  if (IsGeoGrid) {
+    // Handle according to whether it is cubesphere or not
+    if (IsCubeSphereGrid) {
+      // Calculate the range of the grid
+      struct cubesphere_range cr;
+      get_cubesphere_grid_range(cr);
 
-    // Calculate the index and coefficients for each point
-    for (size_t i = 0; i < Lons.size(); ++i)
-      set_interp_coef_cubesphere(cr, Lons[i], Lats[i], Alts[i]);
-  } else {
-    // Calculate the range of the grid
-    struct sphere_range sr;
-    get_sphere_grid_range(sr);
+      // Calculate the index and coefficients for each point
+      for (size_t i = 0; i < i_coords.size(); ++i)
+        set_interp_coef_cubesphere(cr, i_coords[i], j_coords[i], k_coords[i]);
+    } else if (IsLatLonGrid) {
+      // Calculate the range of the grid
+      struct sphere_range sr;
+      get_sphere_grid_range(sr);
 
-    // Calculate the index and coefficients for each point
-    for (size_t i = 0; i < Lons.size(); ++i)
-      set_interp_coef_sphere(sr, Lons[i], Lats[i], Alts[i]);
+      // Calculate the index and coefficients for each point
+      for (size_t i = 0; i < i_coords.size(); ++i)
+        set_interp_coef_sphere(sr, i_coords[i], j_coords[i], k_coords[i]);
+    }
   }
 
+  else { // IsDipole
+
+    // Calculate the range of the grid
+    struct dipole_range dr;
+    get_dipole_grid_range(dr);
+
+    Planets planet;
+
+    // make holders for dipole coordinates.
+    int64_t iLoc, nPts = i_coords.size();
+    std::vector<precision_t> mlon(nPts), p_coord(nPts), q_coord(nPts), dipijk(3);
+
+    // these are the magnetic coordinates. A temporary step!
+    // this is a vector of cubes with shape (nPts, 1, 1) - avoids having to overload things
+    std::vector<arma_cube> magCoords;
+
+    if (areLocsGeo) {
+      arma_cube cubeCoord;
+      cubeCoord = vec2cube(i_coords);
+      magCoords.push_back(cubeCoord);
+      cubeCoord = vec2cube(j_coords);
+      magCoords.push_back(cubeCoord);
+      cubeCoord = vec2cube(k_coords);
+      magCoords.push_back(cubeCoord);
+
+      magCoords = geo_to_mag(magCoords[0], magCoords[1], magCoords[2], planet);
+      // for (iLoc = 0; iLoc < nPts; iLoc++) {
+      //   magCoords = geo_to_mag(i_coords[iLoc], j_coords[iLoc], k_coords[iLoc], planet);
+      //   mlon[iLoc] = magCoords[0];
+      //   p_coord[iLoc] = magCoords[1];
+      //   q_coord[iLoc] = magCoords[2];
+    }
+
+    else {
+      magCoords = {vec2cube(i_coords),vec2cube(j_coords), vec2cube(k_coords)};
+    }
+
+    // std::vector<precision_t> dipcoords = geo_to_mag(i_coords[0], j_coords[0], k_coords[0], planet);
+    std::vector<precision_t> dipCoords;
+    if (!areLocsIJK) {
+      std::vector<precision_t> planet_radii(nPts);
+      for (iLoc = 0; iLoc < nPts; iLoc++) {
+        // Convert from mag->dipole coordinates.
+        if (areLocsGeo){ // we were given the geo-latitude
+          planet_radii[iLoc] = planet.get_radius(j_coords[iLoc]);
+        } else{
+          // equatorial radius :(
+          planet_radii[iLoc] = planet.get_radius(0.0);
+        }
+        dipCoords = mag_to_ijk(i_coords[iLoc], j_coords[iLoc], k_coords[iLoc], planet_radii[iLoc]);
+        mlon[iLoc] = dipCoords[0];
+        p_coord[iLoc] = dipCoords[1];
+        q_coord[iLoc] = dipCoords[2];
+      }
+    } else {
+      // just save the values
+      for (iLoc = 0; iLoc < nPts; iLoc++) {
+        mlon[iLoc] = i_coords[iLoc];
+        p_coord[iLoc] = j_coords[iLoc];
+        q_coord[iLoc] = k_coords[iLoc];
+      }
+    }
+
+    // Calculate the index and coefficients for each point
+    for (size_t i = 0; i < i_coords.size(); ++i)
+      set_interp_coef_dipole(dr, mlon[i], p_coord[i], q_coord[i]);
+  }
+
+  report.exit(function);
   return true;
 }
 
