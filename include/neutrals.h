@@ -11,7 +11,7 @@
  * \class Neutrals
  *
  * \brief Defines the neutral states
- * 
+ *
  * The Neutrals class defines the neutrals states as well as a bunch
  * of derived states and source/loss terms.  The initial temperature
  * structure as well as the lower boundary densities can be set
@@ -19,7 +19,7 @@
  *
  * \author Aaron Ridley
  *
- * \date 2021/03/28 
+ * \date 2021/03/28
  *
  **************************************************************/
 
@@ -52,7 +52,7 @@ class Neutrals {
     /// Number density of species (/m3)
     arma_cube density_scgc;
     arma_cube newDensity_scgc;
-    
+
     /// Velocity of each species (m/s). For all below:
     /// Index 0 = longitudinal component of velocity
     /// Index 1 = latitudinal
@@ -65,14 +65,14 @@ class Neutrals {
 
     /// Coefficient for the friction term (sum of friction coefs with others)
     arma_cube neutral_friction_coef;
-      
+
     /// Acceleration of each species based on Eddy contribution.
     /// Only in vertical direction.
     arma_cube acc_eddy;
-      
+
     /// Acceleration of each species due to ion drag.
     std::vector<arma_cube> acc_ion_drag;
-            
+
     /// concentration (density of species / total density)
     arma_cube concentration_scgc;
     // mass concentration (mass * density of species / rho)
@@ -104,7 +104,7 @@ class Neutrals {
     std::vector<int> iEuvPeiId_;
     /// Which ion species results from the ionization?
     std::vector<int> iEuvPeiSpecies_;
-    
+
     int nAuroraIonSpecies;
     std::vector<int> iAuroraIonSpecies_;
     float Aurora_Coef;
@@ -127,7 +127,7 @@ class Neutrals {
 
     /// Chemistry source rate (/m3/s)
     arma_cube sources_scgc;
-    
+
     /// Chemistry loss rate (/m3/s)
     arma_cube losses_scgc;
 
@@ -145,7 +145,7 @@ class Neutrals {
 
   /// sound speed + abs(bulk velocity (m/s))
   std::vector<arma_cube> cMax_vcgc;
-  
+
   /// bunk temperature (K)
   arma_cube temperature_scgc;
   arma_cube newTemperature_scgc;
@@ -177,7 +177,7 @@ class Neutrals {
   /// Viscosity
   arma_cube viscosity_scgc;
 
-  /// O cooling 
+  /// O cooling
   arma_cube O_cool_scgc;
 
   /// NO cooling
@@ -225,10 +225,10 @@ class Neutrals {
   std::vector<double> initial_altitudes;
   std::vector<double> initial_temperatures;
   int64_t nInitial_temps = 0;
-    
+
   /// Number of species to advect:
   int nSpeciesAdvect;
-    
+
   /// IDs of species to advect:
   std::vector<int> species_to_advect;
 
@@ -257,9 +257,9 @@ class Neutrals {
      \param indices used to help set initial conditions
    **/
   Neutrals(Grid grid,
-	   Planets planet,
-	   Times time,
-	   Indices indices);
+           Planets planet,
+           Times time,
+           Indices indices);
 
   /**********************************************************************
      \brief Creates the variables within the species_chars structure
@@ -270,7 +270,7 @@ class Neutrals {
   /**********************************************************************
      \brief Read in the planet-specific file
 
-     This file specifies the species to model, their masses, 
+     This file specifies the species to model, their masses,
      diffusion coefficients and all of the other things needed
      for specifying the neutrals.
 
@@ -285,8 +285,8 @@ class Neutrals {
      \param indices used to help set initial conditions
    **/
   bool initial_conditions(Grid grid,
-			  Times time,
-			  Indices indices);
+                          Times time,
+                          Indices indices);
 
   /**********************************************************************
      \brief temporary function to set neutral densities with in the model
@@ -301,14 +301,14 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   void fill_with_hydrostatic(int64_t iStart,
-			     int64_t iEnd,
-			     Grid grid);
+                             int64_t iEnd,
+                             Grid grid);
 
   void fill_with_hydrostatic(int64_t iSpecies,
-			     int64_t iStart,
-			     int64_t iEnd,
-			     Grid grid);
-  
+                             int64_t iStart,
+                             int64_t iEnd,
+                             Grid grid);
+
   /**********************************************************************
      \brief Limit the density to a floor and a ceiling
    **/
@@ -324,38 +324,38 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   void calc_scale_height(Grid grid);
-  
+
   /**********************************************************************
      \brief Calculate the viscosity coefficient
    **/
   void calc_viscosity();
-  
+
   /**********************************************************************
      \brief Calculate the eddy diffusion coefficient in valid pressure
    **/
   void calc_kappa_eddy();
-  
+
   /**********************************************************************
      \brief Calculate the concentration for each species (species ndensity / total ndensity)
    **/
   void calc_concentration();
 
   /**********************************************************************
-     \brief Calculate the density of each species from the mass concentration 
+     \brief Calculate the density of each species from the mass concentration
             for each species and rho (ndensity = con * rho / mass)
    **/
   void calc_density_from_mass_concentration();
-  
+
   /**********************************************************************
      \brief Calculate the bulk mean major mass
    **/
   void calc_mean_major_mass();
-    
+
   /**********************************************************************
      \brief Calculate the mean pressure
    **/
   void calc_pressure();
-    
+
   /**********************************************************************
      \brief Calculate bulk velocity
    **/
@@ -421,8 +421,8 @@ class Neutrals {
      \param indices used to help set initial conditions
    **/
   bool set_bcs(Grid grid,
-	       Times time,
-	       Indices indices);
+               Times time,
+               Indices indices);
 
   /**********************************************************************
      \brief Set lower boundary conditions for the neutrals
@@ -431,8 +431,8 @@ class Neutrals {
      \param indices used to help set initial conditions
    **/
   bool set_lower_bcs(Grid grid,
-		     Times time,
-		     Indices indices);
+                     Times time,
+                     Indices indices);
 
   /**********************************************************************
      \brief Set upper boundary conditions for the neutrals
@@ -448,7 +448,7 @@ class Neutrals {
      \param grid The grid to define the neutrals on
   **/
   bool set_horizontal_bcs(int64_t iDir, Grid grid);
-  
+
   /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
@@ -470,7 +470,7 @@ class Neutrals {
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);  
+  bool restart_file(std::string dir, std::string cGridtype, bool DoRead);
 
   /**********************************************************************
      \brief Exchange messages between processors
@@ -482,9 +482,9 @@ class Neutrals {
   /**********************************************************************
    \brief add eddy contributions to vertical acceleration
    \param grid The grid to define the neutrals on
-  **/ 
+  **/
   void vertical_momentum_eddy(Grid &grid);
-  
+
   /**********************************************************************
      \brief Exchange one face for the NEUTRALS
 
@@ -503,29 +503,29 @@ class Neutrals {
    **/
 
   bool exchange_one_face(int iReceiver, int iSender,
-			 precision_t *buffer,
-			 int64_t iTotalSize,
-			 int nG, int iDir);
+                         precision_t *buffer,
+                         int64_t iTotalSize,
+                         int nG, int iDir);
 
   bool pack_one_face(int iReceiver,
-		     precision_t *buffer,
-		     int nG, int iDir,
-		     bool IsPole);
+                     precision_t *buffer,
+                     int nG, int iDir,
+                     bool IsPole);
   bool unpack_one_face(int iSender,
-		       precision_t *buffer,
-		       int nG, int iDir,
-		       bool DoReverseX,
-		       bool DoReverseY,
-		       bool XbecomesY);
+                       precision_t *buffer,
+                       int nG, int iDir,
+                       bool DoReverseX,
+                       bool DoReverseY,
+                       bool XbecomesY);
 
   /**********************************************************************
-     \brief Vertical advection solver - Rusanov 
+     \brief Vertical advection solver - Rusanov
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
   void solver_vertical_rusanov(Grid grid,
-			       Times time);
-  
+                               Times time);
+
   /**********************************************************************
      \brief Call the correct vertical advection scheme
      \param grid The grid to define the neutrals on
@@ -542,18 +542,146 @@ class Neutrals {
      \param vels updated velocity, which acts as a source term for the implicit solve
    **/
   arma_vec calc_friction_one_cell(int64_t iLong, int64_t iLat, int64_t iAlt,
-				   precision_t dt, arma_vec &vels);
+                                  precision_t dt, arma_vec &vels);
 
   /**********************************************************************
      \brief Calculate the neutral friction in all cells (calls one_cell above)
      \param dt time step
    **/
-  void calc_neutral_friction_implicit(precision_t dt);  
+  void calc_neutral_friction_implicit(precision_t dt);
 
   /**********************************************************************
      \brief Calculate the neutral friction coefficients for semi-implicit solver
    **/
-  void calc_neutral_friction_coefs();    
+  void calc_neutral_friction_coefs();
+
+  /**********************************************************************
+     \brief Residuals for **fluid motion** horizontally with Rusanov
+     \brief It actually updates the weighted residuals (-1/Area*R) for efficiency
+
+     \param grid
+     \param time
+     \param states
+   **/
+  std::vector<arma_mat> residual_horizontal_rusanov(std::vector<arma_mat>& states,
+                                                    Grid& grid, Times& time, int64_t iAlt);
+
+  /**********************************************************************
+     \brief Solves for **fluid motion** horizontally with RK4
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_RK4(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Solves for **fluid motion** horizontally with RK1
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_RK1(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Call the correct horizontal advection scheme with CE eqn
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+  bool advect_horizontal(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Solves for fluid motion (pure advect) horizontally with Rusanov
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_rusanov_advection(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Solves for fluid motion (pure advect) horizontally with RK1
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_RK1_advection(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Solves for fluid motion (pure advect) horizontally with RK2
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_RK2_advection(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Solves for fluid motion (pure advect) horizontally with RK4
+
+     \param grid
+     \param time
+     \param report
+   **/
+  void solver_horizontal_RK4_advection(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Residuals for fluid motion (pure advect) horizontally with HLLE
+     \brief It actually updates the weighted residuals (-1/Area*R) for efficiency
+
+     \param grid
+     \param time
+     \param states
+   **/
+  std::vector<arma_mat> residual_horizontal_hlle_advection(
+    std::vector<arma_mat>& states, Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Residuals for fluid motion (pure advect) horizontally with Rusanov
+     \brief It actually updates the weighted residuals (-1/Area*R) for efficiency
+
+     \param grid
+     \param time
+     \param states
+   **/
+  std::vector<arma_mat> residual_horizontal_rusanov_advection(
+    std::vector<arma_mat>& states, Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Call the horizontal advection scheme with only advection
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+   **/
+  bool advect_horizontal_advection(Grid& grid, Times& time);
+
+  /**********************************************************************
+     \brief Setup initial condition for the cosine bell test
+     \brief For advection test
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+     \param planet planet data for extracting the radius
+   **/
+  bool cosine_bell_ic(Grid grid,
+                      Times time,
+                      Indices indices,
+                      Planets planet);
+
+  /**********************************************************************
+     \brief Setup initial condition for the blob test
+     \brief For Actual Cubesphere fluid solver
+     \param grid The grid to define the neutrals on
+     \param time contains information about the current time
+     \param indices used to help set initial conditions
+     \param planet planet data for extracting the radius
+   **/
+  bool blob_ic(Grid grid,
+               Times time,
+               Indices indices,
+               Planets planet);
+
 };
 
 #endif  // INCLUDE_NEUTRALS_H_
