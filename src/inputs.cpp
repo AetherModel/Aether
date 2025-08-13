@@ -551,9 +551,8 @@ precision_t Inputs::get_dt_output(int iOutput) {
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
-  else{
+  else
     report.error("Output Error; more output types than dt's provided.");
-  }
 
   return value;
 }
@@ -779,7 +778,8 @@ bool Inputs::get_do_ionization_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_ion_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronIonCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronIonCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -787,7 +787,8 @@ bool Inputs::get_do_electron_ion_collisional_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_neutral_elastic_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralElasticCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronNeutralElasticCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -795,7 +796,8 @@ bool Inputs::get_do_electron_neutral_elastic_collisional_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_neutral_inelastic_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralInelasticCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronNeutralInelasticCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -1198,6 +1200,10 @@ json Inputs::get_boundary_condition_types() {
 
 std::string Inputs::get_advection_neutrals_vertical() {
   return get_setting_str("Advection", "Neutrals", "Vertical");
+}
+
+std::string Inputs::get_advection_neutrals_horizontal() {
+  return get_setting_str("Advection", "Neutrals", "Horizontal");
 }
 
 std::string Inputs::get_advection_ions_along() {
