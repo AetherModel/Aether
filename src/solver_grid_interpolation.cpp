@@ -76,7 +76,8 @@ int64_t get_cube_surface_number(const arma_vec &point_in) {
 // - Optional argument (nGCs=0) since we cannot see grid info.
 // --------------------------------------------------------------------------
 
-uint64_t binary_search_array(precision_t val_in, arma_vec ref_arr, int64_t nGCs = 0) {
+uint64_t bisect_search_array(precision_t val_in, arma_vec ref_arr,
+                             int64_t nGCs = 0) {
   // Copy from std::upper_bound. Can't directly use it
   // mainly because geoAlt_scgc(0, 0, *) can't be formed as an iterator
   uint64_t first, last, len;
@@ -186,16 +187,16 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) const {
 
 void Grid::get_dipole_grid_range(struct dipole_range &dr) const {
   // Retrieve the range and delta of longitude, latitude and altitude
-  // ** Note these are magnetic coordinates. Not labeled for consistency **
-  dr.lon_min = magLon_Corner(nGCs, nGCs, nGCs);
-  dr.lon_max = magLon_Corner(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
+  // ** Note the max/min are magnetic coordinates.  **
+  dr.lon_min = i_corner_scgc(nGCs, nGCs, nGCs);
+  dr.lon_max = i_corner_scgc(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
 
-  dr.lat_min = magLat_Corner(nGCs, nGCs, nGCs);
-  dr.lat_max = magLat_Corner(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
+  dr.lat_min = j_corner_scgc(nGCs, nGCs, nGCs);
+  dr.lat_max = j_corner_scgc(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
 
   // magAlt and geoAlt are the same, doesn't matter which we use:
-  dr.alt_min = geoAlt_scgc(nGCs, nGCs, nGCs);
-  dr.alt_max = geoAlt_scgc(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
+  dr.alt_min = k_corner_scgc(nGCs, nGCs, nGCs);
+  dr.alt_max = k_corner_scgc(nLons - nGCs, nLats - nGCs, nAlts - nGCs);
 
   // MagLon steps are uniform:
   dr.dLon = magLon_Corner(1, 0, 0) - magLon_Corner(0, 0, 0);
@@ -250,9 +251,10 @@ void Grid::set_interp_coef_sphere(const sphere_range &sr,
 
   // The altitude may not be linearly spaced, so use binary search to find
   // the first element smaller than or equal to the altitude of the give point
-  // Implemented in binary_search_array
+  // Implemented in bisect_search_array
   // - since Alt can be latitude-dependent, this needs to be done last.
-  coef.iAlt = binary_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol), nGCs);
+  coef.iAlt = bisect_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol),
+                                  nGCs);
   coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
               / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow,
                   coef.iCol, coef.iAlt));
@@ -328,9 +330,11 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
   coef.rCol = col_frac_index - coef.iCol;
   coef.iCol += nGCs - 1;
   // Use binary search to find the index for altitude (handles oblate planets)
-  coef.iAlt = binary_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol), nGCs);
+  coef.iAlt = bisect_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol),
+                                  nGCs);
   coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
-              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
+              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow,
+                  coef.iCol, coef.iAlt));
 
   // Put the coefficient into the vector
   coef.in_grid = true;
@@ -357,7 +361,7 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
 
   // ASSUMPTION: LONGITUDE IS LINEARLY SPACED, nGCs >= 1
   // For the cell containing it, directly calculate its x index
-  // Find y & z indices using binary search
+  // Find y & z indices using a bisecting search
 
   // The number of dLon between the innermost ghost cell and the given point
   coef.rRow = (lon_in - dr.lon_min) / dr.dLon + 0.5;
@@ -370,15 +374,15 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
 
 
   // Different from the sphere, latitude & altitude are not evenly spaced.
-  // Use binary search for both.
+  // Use the bisect search function for both.
 
   // Lat needs to be done a little different because it could be increasing or
   // decreasing (depending on the hemisphere we're in). Take the absolute value!
-  coef.iCol = binary_search_array(abs(lat_in),
-                                  abs(magInvLat_scgc.tube(coef.iRow, coef.iCol)), nGCs);
+  coef.iCol = bisect_search_array(abs(lat_in),
+                                  abs(j_center_scgc.tube(coef.iRow, coef.iCol)), nGCs);
 
   // need alt index to find lat coef
-  coef.iAlt = binary_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol),
+  coef.iAlt = bisect_search_array(alt_in, k_center_scgc.tube(coef.iRow, coef.iCol),
                                   nGCs);
 
   // then we can do the ratios:
