@@ -16,7 +16,8 @@ void Ions::calc_efield(Grid grid) {
     efield_vcgc[iComp] = -efield_vcgc[iComp];
 
   // Remove component along b-field (should be zero, anyways!)
-  arma_cube edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
+  arma_cube edotb;
+  edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     efield_vcgc[iComp] =
@@ -28,8 +29,8 @@ void Ions::calc_efield(Grid grid) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid) {
-  arma_cube bmag2 =
-    (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
+  arma_cube bmag2;
+  bmag2 = (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
@@ -89,35 +90,20 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   report.print(5, "going into calc_exb_drift");
   calc_exb_drift(grid);
 
-  std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> wind_acc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> total_acc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> efield_acc = make_cube_vector(nX, nY, nZ, 3);
-
   int64_t iIon, iNeutral, iDim;
+  int64_t iComp;
 
-  std::vector<arma_cube> grad_Pi_plus_Pe;
-  arma_cube rho, nuin, nuin_sum, Nie, sum_rho;
-  arma_cube top, bottom;
-
-  nuin_sum.set_size(nX, nY, nZ);
   nuin_sum.zeros();
-
-  sum_rho.set_size(nX, nY, nZ);
   sum_rho.zeros();
 
   fill_electrons();
 
-  for (int64_t iComp = 0; iComp < 3; iComp++)
+  for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp].zeros();
-
-  std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> a_perp = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> a_x_b;
 
   for (iIon = 0; iIon < nSpecies; iIon++) {
 
-    for (int64_t iComp = 0; iComp < 3; iComp++)
+    for (iComp = 0; iComp < 3; iComp++)
       species[iIon].perp_velocity_vcgc[iComp].zeros();
 
     if (species[iIon].DoAdvect) {
@@ -141,7 +127,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // Neutral Wind Forcing:
       report.print(5, "neutral winds");
 
-      for (int64_t iComp = 0; iComp < 3; iComp++)
+      for (iComp = 0; iComp < 3; iComp++)
         wind_acc[iComp].zeros();
 
       nuin_sum.zeros();
@@ -150,14 +136,14 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         nuin = species[iIon].nu_ion_neutral_vcgc[iNeutral];
         nuin_sum = nuin_sum + species[iIon].nu_ion_neutral_vcgc[iNeutral];
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           wind_acc[iComp] = wind_acc[iComp] +
                             nuin % neutrals.velocity_vcgc[iComp];
         }
       }
 
       // Total Forcing (sum everything - this is A_s):
-      for (int64_t iComp = 0; iComp < 3; iComp++) {
+      for (iComp = 0; iComp < 3; iComp++) {
         total_acc[iComp] =
           - grad_Pi_plus_Pe[iComp]
           + gravity_vcgc[iComp]
@@ -169,7 +155,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         // With a Planetary Magnetic field
         arma_cube a_dot_b = dot_product(total_acc, grid.bfield_unit_vcgc);
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = a_dot_b % grid.bfield_unit_vcgc[iComp];
           a_perp[iComp] = total_acc[iComp] - a_par[iComp];
         }
@@ -183,7 +169,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           Nie % Nie % grid.bfield_mag_scgc % grid.bfield_mag_scgc;
         bottom.clamp(1e-32, 1e32);
 
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           // I redefined A to be an acceleration instead of a force, which
           // then changes the definition of top
           top = rho % nuin % a_perp[iComp] + Nie % a_x_b[iComp];
@@ -204,7 +190,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
         }
       } else {
         // No Planetary Magnetic field
-        for (int64_t iComp = 0; iComp < 3; iComp++) {
+        for (iComp = 0; iComp < 3; iComp++) {
           a_par[iComp] = total_acc[iComp];
           // Steady state:
           //species[iIon].par_velocity_vcgc[iComp] =
@@ -220,7 +206,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       // Calculate the mass-weighted average total velocity
       sum_rho = sum_rho + rho;
 
-      for (int64_t iComp = 0; iComp < 3; iComp++) {
+      for (iComp = 0; iComp < 3; iComp++) {
         species[iIon].velocity_vcgc[iComp] =
           //species[iIon].perp_velocity_vcgc[iComp] +
           species[iIon].par_velocity_vcgc[iComp];
@@ -232,7 +218,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   }  // for iIon
 
-  for (int64_t iComp = 0; iComp < 3; iComp++)
+  for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp] = velocity_vcgc[iComp] / sum_rho;
 
   report.exit(function);
