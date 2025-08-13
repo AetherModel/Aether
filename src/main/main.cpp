@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 
 int main() {
-  
+
   int iErr = 0;
   std::string sError;
   bool didWork = true;
@@ -24,6 +24,7 @@ int main() {
   try {
     // Create inputs (reading the input file):
     input = Inputs(time);
+
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
@@ -31,32 +32,37 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
-    // For now, the number of processors and blocks are set by the 
+    // For now, the number of processors and blocks are set by the
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)
     Quadtree quadtree(input.get_grid_shape("neuGrid"));
     Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
+
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
 
     // Initialize MPI and parallel aspects of the code:
     didWork = init_parallel(quadtree, quadtree_ion);
+
     if (!didWork)
       throw std::string("init_parallel failed!");
 
     // Everything should be set for the inputs now, so write a restart file:
     didWork = input.write_restart();
+
     if (!didWork)
       throw std::string("input.write_restart failed!");
 
     // Initialize the EUV system:
     Euv euv;
+
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
 
     // Initialize the planet:
     Planets planet;
     MPI_Barrier(aether_comm);
+
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
@@ -64,6 +70,7 @@ int main() {
     Indices indices;
     didWork = read_and_store_indices(indices);
     MPI_Barrier(aether_comm);
+
     if (!didWork)
       throw std::string("read_and_store_indices failed!");
 
@@ -74,6 +81,7 @@ int main() {
     Grid gGrid("neuGrid");
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
+
     if (!didWork)
       throw std::string("init_geo_grid failed!");
 
@@ -92,6 +100,7 @@ int main() {
 
     if (mGrid.iGridShape_ == mGrid.iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
+
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
@@ -124,9 +133,12 @@ int main() {
 
     if (input.get_check_for_nans()) {
       didWork = neutrals.check_for_nonfinites("After Inputs");
+
       if (!didWork)
         throw std::string("NaNs found in Neutrals in Initialize!\n");
-      didWork = ions.check_for_nonfinites();
+
+      didWork = ions.check_for_nonfinites("NaNs found in Ions in Initialize!\n");
+
       if (!didWork)
         throw std::string("NaNs found in Ions in Initialize!\n");
     }
@@ -152,9 +164,12 @@ int main() {
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
     Electrodynamics electrodynamics(time);
+
     if (!electrodynamics.is_ok())
       throw std::string("electrodynamics on geo grid initialization failed!");
+
     Electrodynamics electrodynamicsMag(time);
+
     if (!electrodynamicsMag.is_ok())
       throw std::string("electrodynamics on mag grid initialization failed!");
 
@@ -172,6 +187,7 @@ int main() {
       didWork = output(neutrals, ions, gGrid, time, planet);
       didWork = output(neutralsMag, ionsMag, mGrid, time, planet);
     }
+
     if (!didWork)
       throw std::string("Initial output failed!");
 
@@ -232,14 +248,18 @@ int main() {
       if (!time.check_time_gate(input.get_dt_write_restarts())) {
         report.print(3, "Writing restart files");
 
-        didWork = neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
-        didWork = neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
+        didWork = neutrals.restart_file(input.get_restartout_dir(),
+                                        gGrid.get_gridtype(), DoWrite);
+        didWork = neutralsMag.restart_file(input.get_restartout_dir(),
+                                           mGrid.get_gridtype(), DoWrite);
 
         if (!didWork)
           throw std::string("Writing Restart for Neutrals Failed!!!\n");
 
-        didWork = ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
-        didWork = ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
+        didWork = ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(),
+                                    DoWrite);
+        didWork = ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(),
+                                       DoWrite);
 
         if (!didWork)
           throw std::string("Writing Restart for Ions Failed!!!\n");
