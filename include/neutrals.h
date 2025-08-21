@@ -583,6 +583,7 @@ class Neutrals {
      \param report
    **/
   void solver_horizontal_RK1(Grid& grid, Times& time);
+  void solver_horizontal_RK1_rochi(Grid& grid, Times& time);
 
   /**********************************************************************
      \brief Call the correct horizontal advection scheme with CE eqn
