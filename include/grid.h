@@ -8,13 +8,46 @@
 #include "mpi.h"
 
 // ----------------------------------------------------------------------------
+// This structure needs to be defined outside of the grid, since we can just
+// pass this stuff to the solver.
+// ----------------------------------------------------------------------------
+
+struct cubesphere_chars {
+  // For convenience, store the grid size:
+  int64_t nXt, nYt, nGCs;
+  int64_t iXfirst_, iXlast_;
+  int64_t iYfirst_, iYlast_;
+
+  // These are for Ronchi et al., JCP 124, 93-114, 1996
+  arma_mat X, Y, Z, C, D, d;
+  // These are the only things that depend on altitude:
+  arma_cube dlx, dln, dS;
+  // In theory, the radius is just a 1D vector:
+  arma_vec R;
+  // xi is the LR direction
+  // nu is the UD direction
+  arma_mat xi, nu;
+  // for the equal-angle grid, we can just use these:
+  precision_t dxi, dnu;
+  arma_mat Apn, Apx, Atn, Atx;
+  arma_mat Axt, Axp, Ant, Anp;
+
+  // These are for computing normals to the cell edges (horizontal)
+  arma_mat nXiLon;
+  arma_mat nXiLat;
+  arma_mat nNuLon;
+  arma_mat nNuLat;
+  arma_mat lat, lon;
+};
+
+
+// ----------------------------------------------------------------------------
 // Grid class
 // ----------------------------------------------------------------------------
 
-class Grid
-{
+class Grid {
 
-public:
+ public:
   const int iSphere_ = 1;
   const int iCubesphere_ = 2;
   const int iDipole_ = 3;
@@ -66,6 +99,8 @@ public:
   arma_cube g11_upper_Down, g12_upper_Down, g21_upper_Down, g22_upper_Down;
   arma_cube sqrt_g_Down;
 
+  cubesphere_chars cubeC, cubeL, cubeD;
+
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   arma_cube magLon_scgc, magX_scgc;
@@ -110,7 +145,7 @@ public:
   arma_cube magQ_Below;
   arma_cube magP_Corner;
   arma_cube magQ_Corner;
-  
+
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
   arma_vec mag_pole_north_ll;
@@ -317,6 +352,29 @@ public:
   void create_sphere_grid(Quadtree quadtree);
   void create_cubesphere_connection(Quadtree quadtree);
   void create_cubesphere_grid(Quadtree quadtree);
+
+  // These two go together, since one builds the angles and the
+  // other scales by the radius:
+  void init_cubesphere_grid(Quadtree quadtree,
+                            arma_vec dr,
+                            arma_vec du,
+                            arma_vec ll,
+                            precision_t left_off,
+                            precision_t down_off,
+                            cubesphere_chars &cubeX);
+  void scale_cube_by_radius(cubesphere_chars &cubeX);
+
+  void convert_vector_xn_to_ll(arma_mat aXi,
+                               arma_mat aNu,
+                               arma_mat &aLon,
+                               arma_mat &aLat,
+                               cubesphere_chars grid);
+  void convert_vector_ll_to_xn(arma_mat aLon,
+                               arma_mat aLat,
+                               arma_mat &aXi,
+                               arma_mat &aNu,
+                               cubesphere_chars grid);
+
   void create_altitudes(Planets planet);
   void fill_grid_bfield(Planets planet);
   bool read_restart(std::string dir);
@@ -346,11 +404,11 @@ public:
   // nLats: number of latitudes (nY)
   // spacing_factor: (not supported yet), so always 1.0. Will adjust baselat spacing, eventually.
   arma_vec baselat_spacing(precision_t extent,
-                          precision_t origin,
-                          precision_t upper_lim,
-                          precision_t lower_lim,
-                          // int16_t nLats,
-                          precision_t spacing_factor);
+                           precision_t origin,
+                           precision_t upper_lim,
+                           precision_t lower_lim,
+                           // int16_t nLats,
+                           precision_t spacing_factor);
 
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
@@ -381,8 +439,7 @@ public:
   int64_t iRootYp;
   int64_t iRootYm;
 
-  struct messages_struct
-  {
+  struct messages_struct {
     int64_t iFace;
     int64_t iProc_to;
     int64_t iSizeTotal;
@@ -444,7 +501,7 @@ public:
    */
   std::vector<precision_t> get_interpolation_values(const arma_cube &data) const;
 
-private:
+ private:
   bool IsGeoGrid;
   bool HasBField;
   bool IsExperimental;
@@ -473,8 +530,7 @@ private:
 
   // interpolation members
   // The struct representing the range of a spherical grid
-  struct sphere_range
-  {
+  struct sphere_range {
     precision_t lon_min;
     precision_t lon_max;
     precision_t dLon;
@@ -485,8 +541,7 @@ private:
     precision_t alt_max;
   };
   // The struct representing the range of a cubesphere grid
-  struct cubesphere_range
-  {
+  struct cubesphere_range {
     // The minimum value and delta change of row and col
     // We don't use row_max and col_max because they are not promised to be
     // greater than min, for example the right norm of suface 2 expands along
@@ -517,8 +572,7 @@ private:
   // Each point is processed by the function set_interpolation_coefs and stored
   // in the form of this structure.
   // If the point is out of the grid, in_grid = false and all other members are undefined
-  struct interp_coef_t
-  {
+  struct interp_coef_t {
     // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
     uint64_t iRow;
     uint64_t iCol;
@@ -555,8 +609,7 @@ private:
   // Initialize connections between processors
   void init_connection();
   // Used for message exchange
-  struct idx2d_t
-  {
+  struct idx2d_t {
     // Index of row and column
     int64_t ilon;
     int64_t ilat;
