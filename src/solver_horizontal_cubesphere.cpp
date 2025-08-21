@@ -2,15 +2,310 @@
 // Full license can be found in License.md
 
 // Initial version: F. Cheng, July 2023
+// Moved to new solver: August 2025
 
 #include "aether.h"
+
+// ---------------------------------------------------------
+// Update States
+// ---------------------------------------------------------
+
+void update_states_cubesphere(arma_mat rho,
+                              arma_mat &xVel,
+                              arma_mat &yVel,
+                              arma_mat &temp,
+                              arma_mat &drhodt,
+                              arma_mat &dlonVeldt,
+                              arma_mat &dlatVeldt,
+                              arma_mat &dtempdt,
+                              cubesphere_chars gridC,
+                              cubesphere_chars gridL,
+                              cubesphere_chars gridD,
+                              precision_t dt,
+                              int64_t iZ) {
+
+  arma_mat xMomentum, yMomentum;
+  arma_mat rhoE, energy, vel2;
+
+  precision_t cv = 1500.0;
+
+  if (report.test_verbose(2))
+    std::cout << "  --> update_states\n";
+
+  // Derived variables:
+  xMomentum = rho % xVel; // x1momentum, pure scalar field
+  yMomentum = rho % yVel; // y1momentum, pure scalar field
+  rhoE = rho % temp;
+
+  vel2 = xVel % xVel + yVel % yVel;
+  //energy = rho % (0.5 * vel2 + cv * temp);
+  energy = cv * rho % temp;
+
+  /** Initialize projection constructs */
+  static projection_struct rhoP;
+  static projection_struct xMomentumP, xVelP;
+  static projection_struct yMomentumP, yVelP;
+  static projection_struct energyP;
+  static projection_struct tempP;
+
+  // They are all pure scalar fields without sqrt(g)
+  static arma_mat totaleL, totaleR, totaleD, totaleU;
+  static arma_mat velL2, velR2, velD2, velU2;
+  static arma_mat pressureL, pressureR, pressureD, pressureU;
+
+  arma_mat dxVeldt = xVel * 0.0;
+  arma_mat dyVeldt = yVel * 0.0;
+
+  dlonVeldt = dxVeldt * 0.0 + 1;
+  dlatVeldt = dyVeldt * 0.0 + 1;
+
+  static arma_mat velNormL, velNormR, velNormU, velNormD;
+
+  /** Initialize Flux and Wave Speed Storages */
+  static arma_mat eq1FluxLR, eq1FluxDU;
+  static arma_mat eq1FluxL, eq1FluxR, eq1FluxD, eq1FluxU;
+  static arma_mat eq2FluxLR, eq2FluxDU;
+  static arma_mat eq2FluxL, eq2FluxR, eq2FluxD, eq2FluxU;
+  static arma_mat eq3FluxLR, eq3FluxDU;
+  static arma_mat eq3FluxL, eq3FluxR, eq3FluxD, eq3FluxU;
+  static arma_mat eq4FluxLR, eq4FluxDU;
+  static arma_mat eq4FluxL, eq4FluxR, eq4FluxD, eq4FluxU;
+
+  arma_mat wsL, wsR, wsD, wsU, wsLR, wsDU;
+
+  arma_mat diff; // for Riemann Solver
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Projecting\n";
+
+  rhoP = project_to_edges(rho, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                          gridC.nGCs);
+  // project the lon / lat velocities to the edges:
+  xVelP = project_to_edges(xVel, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                           gridC.nGCs);
+  yVelP = project_to_edges(yVel, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                           gridC.nGCs);
+  xMomentumP = project_to_edges(xMomentum, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                                gridC.nGCs);
+  yMomentumP = project_to_edges(yMomentum, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                                gridC.nGCs);
+  energyP = project_to_edges(energy, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                             gridC.nGCs);
+  tempP = project_to_edges(temp, gridC.xi, gridL.xi, gridC.nu, gridD.nu,
+                           gridC.nGCs);
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Derived values\n";
+
+  velL2 = (xVelP.L % xVelP.L + yVelP.L % yVelP.L);
+  velR2 = (xVelP.R % xVelP.R + yVelP.R % yVelP.R);
+  velD2 = (xVelP.D % xVelP.D + yVelP.D % yVelP.D);
+  velU2 = (xVelP.U % xVelP.U + yVelP.U % yVelP.U);
+
+  precision_t k = 1.38e-23;
+  // let's be Oxygen:
+  precision_t mass = 16.0 * 1.67e-27;
+  pressureL = k / mass * (rhoP.L % tempP.L);
+  pressureR = k / mass * (rhoP.R % tempP.R);
+  pressureD = k / mass * (rhoP.D % tempP.D);
+  pressureU = k / mass * (rhoP.U % tempP.U);
+
+  arma_mat pressureLR = (pressureL + pressureR) / 2;
+  arma_mat pressureDU = (pressureD + pressureU) / 2;
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Normal Velocities\n";
+
+  // Calculate the normal velocity at the boundaries:
+  velNormL = xVelP.L % gridL.nXiLon + yVelP.L % gridL.nXiLat;
+  velNormR = xVelP.R % gridL.nXiLon + yVelP.R % gridL.nXiLat;
+  velNormU = xVelP.U % gridD.nNuLon + yVelP.U % gridD.nNuLat;
+  velNormD = xVelP.D % gridD.nNuLon + yVelP.D % gridD.nNuLat;
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Fluxes eq 1\n";
+
+  // Flux calculated from the left of the edge
+  eq1FluxL = rhoP.L % velNormL;
+  // Flux calculated from the right of the edge
+  eq1FluxR = rhoP.R % velNormR;
+  // Flux calculated from the down of the edge
+  eq1FluxD = rhoP.D % velNormD;
+  // Flux calculated from the up of the edge
+  eq1FluxU = rhoP.U % velNormU;
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Fluxes eq 2\n";
+
+  eq2FluxL = (xMomentumP.L % velNormL);
+  eq2FluxR = (xMomentumP.R % velNormR);
+  eq2FluxD = (xMomentumP.D % velNormD);
+  eq2FluxU = (xMomentumP.U % velNormU);
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Fluxes eq 3\n";
+
+  eq3FluxL = (yMomentumP.L % velNormL);
+  eq3FluxR = (yMomentumP.R % velNormR);
+  eq3FluxD = (yMomentumP.D % velNormD);
+  eq3FluxU = (yMomentumP.U % velNormU);
+
+  eq4FluxL = energyP.L % velNormL;
+  eq4FluxR = energyP.R % velNormR;
+  eq4FluxD = energyP.D % velNormD;
+  eq4FluxU = energyP.U % velNormU;
+
+  // ------------------------------------------------
+  // Calculate the wave speed for the diffusive flux:
+  // In Reference velocities
+  if (report.test_verbose(3))
+    std::cout << "  ---> Diffusive Fluxes\n";
+
+  precision_t cGamma = 5.0 / 3.0;
+
+  wsL.resize(gridC.nXt + 1, gridC.nYt);
+  wsR.resize(gridC.nXt + 1, gridC.nYt);
+  wsD.resize(gridC.nXt, gridC.nYt + 1);
+  wsU.resize(gridC.nXt, gridC.nYt + 1);
+
+  wsL.zeros();
+  wsR.zeros();
+  wsU.zeros();
+  wsD.zeros();
+
+  for (int64_t i = 0; i < gridC.nXt; i++) {
+    for (int64_t j = 0; j < gridC.nYt; j++) {
+      wsL(i, j) = sqrt(velL2(i, j)) + sqrt(cGamma * (cGamma - 1) * tempP.L(i, j));
+      wsR(i, j) = sqrt(velR2(i, j)) + sqrt(cGamma * (cGamma - 1) * tempP.R(i, j));
+      wsD(i, j) = sqrt(velD2(i, j)) + sqrt(cGamma * (cGamma - 1) * tempP.D(i, j));
+      wsU(i, j) = sqrt(velU2(i, j)) + sqrt(cGamma * (cGamma - 1) * tempP.U(i, j));
+    }
+  }
+
+  wsLR = wsR;
+
+  for (int64_t i = 0; i < gridC.nXt; i++) {
+    for (int64_t j = 0; j < gridC.nYt; j++) {
+      if (wsL(i, j) > wsLR(i, j))
+        wsLR(i, j) = wsL(i, j);
+    }
+  }
+
+  wsDU = wsD;
+
+  for (int64_t i = 0; i < gridC.nXt; i++) {
+    for (int64_t j = 0; j < gridC.nYt; j++) {
+      if (wsU(i, j) > wsDU(i, j))
+        wsDU(i, j) = wsU(i, j);
+    }
+  }
+
+  // ------------------------------------------------
+  // Calculate average flux at the edges (Rusanov Flux):
+
+  if (report.test_verbose(3))
+    std::cout << "  ---> Averaging fluxes at edges\n";
+
+  diff = (rhoP.R - rhoP.L);
+  eq1FluxLR = (eq1FluxL + eq1FluxR) / 2 + 0.5 * wsLR % diff;
+  diff = (rhoP.U - rhoP.D);
+  eq1FluxDU = (eq1FluxD + eq1FluxU) / 2 + 0.5 * wsDU % diff;
+
+  diff = (xMomentumP.R - xMomentumP.L);
+  eq2FluxLR = (eq2FluxL + eq2FluxR) / 2 + 0.5 * wsLR % diff;
+  diff = (xMomentumP.U - xMomentumP.D);
+  eq2FluxDU = (eq2FluxD + eq2FluxU) / 2 + 0.5 * wsDU % diff;
+
+  diff = (yMomentumP.R - yMomentumP.L);
+  eq3FluxLR = (eq3FluxL + eq3FluxR) / 2 + 0.5 * wsLR % diff;
+  diff = (yMomentumP.U - yMomentumP.D);
+  eq3FluxDU = (eq3FluxD + eq3FluxU) / 2 + 0.5 * wsDU % diff;
+
+  diff = (energyP.R - energyP.L);
+  eq4FluxLR = (eq4FluxL + eq4FluxR) / 2 + 0.5 * wsLR % diff;
+  diff = (energyP.U - energyP.D);
+  eq4FluxDU = (eq4FluxD + eq4FluxU) / 2 + 0.5 * wsDU % diff;
+
+  // ------------------------------------------------
+  // Update values:
+  if (report.test_verbose(3))
+    std::cout << "  ---> Updating equations of state\n";
+
+  precision_t dpdx, dpdn, pp, pm;
+
+  arma_mat ax(gridC.nXt, gridC.nYt), an(gridC.nXt, gridC.nYt);
+
+  ax.zeros();
+  an.zeros();
+  arma_mat dedt(gridC.nXt, gridC.nYt);
+  dedt.zeros();
+
+  arma_mat rhoNew = rho;
+
+  // Only deal with inner cell
+  for (int64_t j = gridC.iYfirst_; j < gridC.iYlast_; j++) {
+    for (int64_t i = gridC.iXfirst_; i < gridC.iXlast_; i++) {
+      precision_t rhoResidual_ij = (gridL.dln(i + 1, j, iZ) * eq1FluxLR(i + 1, j) -
+                                    gridL.dln(i, j, iZ) * eq1FluxLR(i, j) +
+                                    gridD.dlx(i, j + 1, iZ) * eq1FluxDU(i, j + 1) -
+                                    gridD.dlx(i, j, iZ) * eq1FluxDU(i, j));
+      drhodt(i, j) = rhoResidual_ij / gridC.dS(i, j, iZ);
+
+      rhoNew(i, j) = rho(i, j) + dt * drhodt(i, j);
+
+      precision_t xMomentumResidual_ij = (gridL.dln(i + 1, j, iZ) * eq2FluxLR(i + 1,
+                                          j) -
+                                          gridL.dln(i, j, iZ) * eq2FluxLR(i, j) +
+                                          gridD.dlx(i, j + 1, iZ) * eq2FluxDU(i, j + 1) -
+                                          gridD.dlx(i, j, iZ) * eq2FluxDU(i, j));
+      dxVeldt(i, j) = xMomentumResidual_ij / gridC.dS(i, j, iZ) / rhoNew(i, j);
+
+      precision_t yMomentumResidual_ij = (gridL.dln(i + 1, j, iZ) * eq3FluxLR(i + 1,
+                                          j) -
+                                          gridL.dln(i, j, iZ) * eq3FluxLR(i, j) +
+                                          gridD.dlx(i, j + 1, iZ) * eq3FluxDU(i, j + 1) -
+                                          gridD.dlx(i, j, iZ) * eq3FluxDU(i, j));
+      dyVeldt(i, j) = yMomentumResidual_ij / gridC.dS(i, j, iZ) / rhoNew(i, j);
+
+      // Calculate the gradient in the potential in the cubesphere
+      // coordinate system:
+      dpdx = 1 / gridC.R(iZ) * gridC.D(i, j) *
+             (pressureLR(i + 1, j) - pressureLR(i, j)) / gridC.dxi;
+      dpdn = 1 / gridC.R(iZ) * gridC.X(i, j) * gridC.Y(i, j) /
+             gridC.D(i, j) *
+             (pressureDU(i, j + 1) - pressureDU(i, j)) / gridC.dnu;
+      ax(i, j) = (dpdx + dpdn) / rhoNew(i, j);
+
+      dpdx = 1 / gridC.R(iZ) * gridC.X(i, j) * gridC.Y(i, j) /
+             gridC.C(i, j) * (pressureLR(i + 1, j) - pressureLR(i, j)) / gridC.dxi;
+      dpdn = 1 / gridC.R(iZ) * gridC.C(i, j) *
+             (pressureDU(i, j + 1) - pressureDU(i, j)) / gridC.dnu;
+      an(i, j) = (dpdx + dpdn) / rhoNew(i, j);
+
+      precision_t energyResidual_ij = (gridL.dln(i + 1, j, iZ) * eq4FluxLR(i + 1, j) -
+                                       gridL.dln(i, j, iZ) * eq4FluxLR(i, j) +
+                                       gridD.dlx(i, j + 1, iZ) * eq4FluxDU(i, j + 1) -
+                                       gridD.dlx(i, j, iZ) * eq4FluxDU(i, j));
+      dedt(i, j) = energyResidual_ij / gridC.dS(i, j, iZ);
+
+    }
+  }
+
+  // lat is negative because of the Rochi definition of theta:
+  dlatVeldt = dyVeldt - (ax % gridC.Atx + an % gridC.Atn);
+  dlonVeldt = dxVeldt + ax % gridC.Apx + an % gridC.Apn;
+  dtempdt = dedt / rhoNew / cv;
+
+  return;
+}
+
 
 // using namespace Cubesphere_tools;
 
 std::vector<arma_mat> Neutrals::residual_horizontal_rusanov(
   std::vector<arma_mat>& states,
-  Grid& grid,
-  Times& time,
+  Grid & grid,
+  Times & time,
   int64_t iAlt) {
 
   // Dimensions of Spatial Discretization
@@ -341,7 +636,66 @@ std::vector<arma_mat> Neutrals::residual_horizontal_rusanov(
   return return_vector;
 }
 
-void Neutrals::solver_horizontal_RK1(Grid& grid, Times& time) {
+
+//--------------------------------------------------------------------
+// New solver using Rochi
+//--------------------------------------------------------------------
+
+void Neutrals::solver_horizontal_RK1_rochi(Grid & grid, Times & time) {
+
+  std::string function = "Neutrals::solver_horizontal_RK1_rochi";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  precision_t dt = time.get_dt();
+
+  int64_t nXs = grid.get_nX();
+  int64_t nYs = grid.get_nY();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t nAlts = grid.get_nAlts();
+
+  calc_concentration();
+
+  arma_mat temp(nXs, nYs), rho(nXs, nYs), vLon(nXs, nYs), vLat(nXs, nYs);
+
+  arma_mat k1rho(nXs, nYs);
+  arma_mat k1vLon(nXs, nYs), k1vLat(nXs, nYs);
+  arma_mat k1temp(nXs, nYs);
+
+  int64_t iAlt;
+
+  for (iAlt = nGCs; iAlt < nAlts - nGCs; iAlt++) {
+
+    /** States preprocessing **/
+    /* MASS DENSITY */
+    rho = rho_scgc.slice(iAlt);
+    vLon = velocity_vcgc[0].slice(iAlt);
+    vLat = velocity_vcgc[1].slice(iAlt);
+    temp = temperature_scgc.slice(iAlt);
+
+    // k1 - start at t0, go to t+1/2 to figure out slope at t0 (k1)
+    update_states_cubesphere(
+      rho, vLon, vLat, temp,
+      k1rho, k1vLon, k1vLat, k1temp,
+      grid.cubeC, grid.cubeL, grid.cubeD, dt, iAlt);
+    // Take full step using k1:
+    rho_scgc.slice(iAlt) = rho - k1rho * dt;
+    velocity_vcgc[0].slice(iAlt) = vLon - k1vLon * dt;
+    velocity_vcgc[1].slice(iAlt) = vLat - k1vLat * dt;
+    temperature_scgc.slice(iAlt) = temp - k1temp * dt;
+
+  }
+
+
+  calc_density_from_mass_concentration();
+
+  report.exit(function);
+  return;
+
+}
+
+
+void Neutrals::solver_horizontal_RK1(Grid & grid, Times & time) {
   // Function Reporting
   std::string function = "Neutrals::solver_horizontal_RK1";
   static int iFunction = -1;
@@ -370,10 +724,7 @@ void Neutrals::solver_horizontal_RK1(Grid& grid, Times& time) {
 
   // Advance for bulk calculation first, calculate for every altitude
 
-  std::cout << "nAlts : " << nAlts << "\n";
-
   for (iAlt = nGCs; iAlt < nAlts - nGCs; iAlt++) {
-    std::cout << "iAlt : " << iAlt << "\n";
     /** Extract Grid Features **/
     x = grid.refx_scgc.slice(iAlt);
     arma_mat xEdges = grid.refx_Left.slice(iAlt);
@@ -642,7 +993,7 @@ return;
 
 */
 
-void Neutrals::solver_horizontal_RK4(Grid& grid, Times& time) {
+void Neutrals::solver_horizontal_RK4(Grid & grid, Times & time) {
   // Function Reporting
   std::string function = "Neutrals::solver_horizontal_RK4";
   static int iFunction = -1;
