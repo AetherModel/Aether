@@ -35,6 +35,8 @@ bool Neutrals::initial_conditions(Grid grid,
   precision_t alt, r;
   int64_t nAlts = grid.get_nZ(true);
   int64_t nGCs = grid.get_nGCs();
+  int64_t nLons = grid.get_nLons();
+  int64_t nLats = grid.get_nLats();
 
   report.print(3, "Creating Neutrals initial_condition");
 
@@ -120,10 +122,6 @@ bool Neutrals::initial_conditions(Grid grid,
       // temperature profile in the planet.in file.
       // ---------------------------------------------------------------------
 
-      int64_t nLons = grid.get_nLons();
-      int64_t nLats = grid.get_nLats();
-      int64_t nAlts = grid.get_nAlts();
-
       // Let's assume that the altitudes are not dependent on lat/lon:
 
       arma_vec alt1d(nAlts);
@@ -189,6 +187,41 @@ bool Neutrals::initial_conditions(Grid grid,
         fill_with_hydrostatic(iSpecies, nGCs, nAlts, grid);
     } // type = planet
   }
+
+  /*
+  This section is for putting an initial blob into the simulation
+  to test the advection solver.
+  precision_t lon_0 = 0.0;
+  precision_t lat_0 = 0.0;
+  precision_t r_0 = 150.0 * 1000.0 * 10.0;
+
+  for (iAlt = 0; iAlt < nAlts; iAlt++) {
+
+    for (int64_t iLat = 0; iLat < nLats; iLat++) {
+      for (int64_t iLon = 0; iLon < nLons; iLon++) {
+        precision_t curr_lat = grid.geoLat_scgc(iLon, iLat, iAlt);
+        precision_t curr_lon = grid.geoLon_scgc(iLon, iLat, iAlt);
+        precision_t R = grid.radius_scgc(iLon, iLat, iAlt);
+
+        // Calculate great circle distance
+        precision_t dlon_2 = (curr_lon - lon_0) / 2.0;
+        precision_t dlat_2 = (curr_lat - lat_0) / 2.0;
+
+        precision_t r_d = 2.0 * R * asin(sqrt(sin(dlat_2) * sin(dlat_2) + sin(
+                                                dlon_2) * sin(dlon_2) * cos(curr_lat) * cos(lat_0)));
+
+        if (r_d < r_0) {
+          for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+            species[iSpecies].density_scgc(iLon, iLat,
+                                           iAlt) = species[iSpecies].density_scgc(iLon, iLat, iAlt) * 10.;
+            std::cout << "increasing density!\n";
+          }
+        }
+      }
+    }
+  }
+  */
+
 
   // ensure that the densities are all within bounds:
   clamp_density();
