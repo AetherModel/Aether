@@ -190,12 +190,10 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //  report.print(1, "Restarting! Reading grid files!");
   //  DidWork = read_restart(input.get_restartin_dir());
   //} else {
-  if (iGridShape_ == iCubesphere_) {
-    //if (input.get_do_restart())
-    //  report.print(0, "Not restarting the grid - it is too complicated!");
-
+  if (iGridShape_ == iCubesphere_)
     create_cubesphere_grid(quadtree);
-  } else
+
+  else
     create_sphere_grid(quadtree);
 
   //MPI_Barrier(aether_comm);
@@ -211,8 +209,15 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
-  if (iGridShape_ == iCubesphere_)
+  if (iGridShape_ == iCubesphere_) {
     correct_xy_grid(planet);
+    // New functions for equal-angular grid (center, left, down):
+    report.print(3, "Scaling Cube by Radius");
+    scale_cube_by_radius(cubeC);
+    scale_cube_by_radius(cubeL);
+    scale_cube_by_radius(cubeD);
+    report.print(3, "Done Scaling Cube by Radius");
+  }
 
   if (IsMagGrid) {
     report.print(0, "--> Grid is Magnetic, so rotating");
