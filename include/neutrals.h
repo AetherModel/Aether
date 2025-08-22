@@ -597,16 +597,15 @@ class Neutrals {
 
      \param grid
      \param time
-     \param report
    **/
   void solver_horizontal_rusanov_advection(Grid& grid, Times& time);
+  void advect_sphere(Grid &grid, Times &time);
 
   /**********************************************************************
      \brief Solves for fluid motion (pure advect) horizontally with RK1
 
      \param grid
      \param time
-     \param report
    **/
   void solver_horizontal_RK1_advection(Grid& grid, Times& time);
 
@@ -615,7 +614,6 @@ class Neutrals {
 
      \param grid
      \param time
-     \param report
    **/
   void solver_horizontal_RK2_advection(Grid& grid, Times& time);
 
@@ -624,7 +622,6 @@ class Neutrals {
 
      \param grid
      \param time
-     \param report
    **/
   void solver_horizontal_RK4_advection(Grid& grid, Times& time);
 
