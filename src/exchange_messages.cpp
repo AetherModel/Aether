@@ -1109,8 +1109,6 @@ bool exchange_one_var(Grid &grid,
   if (!grid.isExchangeInitialized) {
     DidWork = exchange_sides_init(grid, nVarsToPass);
     grid.isExchangeInitialized = true;
-    std::cout << "initializing : " << grid.get_gridtype() << " " << nZ << " " <<
-              iProc << "\n";
   }
 
   var_scgc.set_size(nX, nY, nZ);
