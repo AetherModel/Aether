@@ -10,21 +10,21 @@
         "dt" : 10.0,
         "check_for_nans" : true},
 
-    "EndTime" : [2011, 3, 20, 0, 10, 0],
+    "EndTime" : [2011, 3, 20, 0, 1, 0],
 
     "neuGrid" : {
         "Shape": "sphere4",
-        "nLonsPerBlock" : 24,
-        "nLatsPerBlock" : 22,
+        "nLonsPerBlock" : 20,
+        "nLatsPerBlock" : 18,
         "nAlts" : 40,
-        "dAltScale" : 0.25,
+        "dAltScale" : 0.3,
         "IsUniformAlt" : false},
     
     "ionGrid": {
         "Shape": "dipole4",
-        "nLonsPerBlock": 36,
+        "nLonsPerBlock": 24,
         "nLatsPerBlock": 18,
-        "nAlts": 100,
+        "nAlts": 50,
         "LatRange": [10, 80],
         "AltRange": [80.0, 1000],
         "LonRange": [0.0, 360.0]},
