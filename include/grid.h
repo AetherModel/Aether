@@ -8,6 +8,40 @@
 #include "mpi.h"
 
 // ----------------------------------------------------------------------------
+// This structure needs to be defined outside of the grid, since we can just
+// pass this stuff to the solver.
+// ----------------------------------------------------------------------------
+
+struct cubesphere_chars {
+  // For convenience, store the grid size:
+  int64_t nXt, nYt, nGCs;
+  int64_t iXfirst_, iXlast_;
+  int64_t iYfirst_, iYlast_;
+
+  // These are for Ronchi et al., JCP 124, 93-114, 1996
+  arma_mat X, Y, Z, C, D, d;
+  // These are the only things that depend on altitude:
+  arma_cube dlx, dln, dS;
+  // In theory, the radius is just a 1D vector:
+  arma_vec R;
+  // xi is the LR direction
+  // nu is the UD direction
+  arma_mat xi, nu;
+  // for the equal-angle grid, we can just use these:
+  precision_t dxi, dnu;
+  arma_mat Apn, Apx, Atn, Atx;
+  arma_mat Axt, Axp, Ant, Anp;
+
+  // These are for computing normals to the cell edges (horizontal)
+  arma_mat nXiLon;
+  arma_mat nXiLat;
+  arma_mat nNuLon;
+  arma_mat nNuLat;
+  arma_mat lat, lon;
+};
+
+
+// ----------------------------------------------------------------------------
 // Grid class
 // ----------------------------------------------------------------------------
 
@@ -65,6 +99,10 @@ class Grid {
   arma_cube g11_upper_Down, g12_upper_Down, g21_upper_Down, g22_upper_Down;
   arma_cube sqrt_g_Down;
 
+  cubesphere_chars cubeC, cubeL, cubeD;
+
+  // The magnetic latitude and altitude need to be defined better. This should be the angle between
+  // magnetic equator and the point, but sometimes it is invariant latitude.
   // These define the magnetic grid (only defined for a dipole grid):
   // The magnetic latitude is the angle between the magnetic equator and the point.
   arma_cube magLat_scgc, magY_scgc;
@@ -320,6 +358,29 @@ class Grid {
   void create_sphere_grid(Quadtree quadtree);
   void create_cubesphere_connection(Quadtree quadtree);
   void create_cubesphere_grid(Quadtree quadtree);
+
+  // These two go together, since one builds the angles and the
+  // other scales by the radius:
+  void init_cubesphere_grid(Quadtree quadtree,
+                            arma_vec dr,
+                            arma_vec du,
+                            arma_vec ll,
+                            precision_t left_off,
+                            precision_t down_off,
+                            cubesphere_chars &cubeX);
+  void scale_cube_by_radius(cubesphere_chars &cubeX);
+
+  void convert_vector_xn_to_ll(arma_mat aXi,
+                               arma_mat aNu,
+                               arma_mat &aLon,
+                               arma_mat &aLat,
+                               cubesphere_chars grid);
+  void convert_vector_ll_to_xn(arma_mat aLon,
+                               arma_mat aLat,
+                               arma_mat &aXi,
+                               arma_mat &aNu,
+                               cubesphere_chars grid);
+
   void create_altitudes(Planets planet);
   void fill_grid_bfield(Planets planet);
   bool read_restart(std::string dir);
@@ -333,6 +394,27 @@ class Grid {
   bool init_dipole_grid(Quadtree quadtree_ion, Planets planet);
   // Support functions:
   void calc_dipole_grid_spacing(Planets planet);
+
+  void calc_alt_dipole_grid_spacing();
+  void calc_lat_dipole_grid_spacing();
+  void calc_long_dipole_grid_spacing();
+  void fill_field_lines(arma_vec baseLats, precision_t min_altRe,
+                        precision_t Gamma, Planets planet,
+                        bool isCorner);
+  void dipole_alt_edges(Planets planet, precision_t min_altRe);
+  // get the latitude spacing given the quadtree start & size, and the latitude limits
+  // extent: quadtree up
+  // origin: quadtree origin
+  // upper_lim: upper latitude limit (input)
+  // lower_lim: lower latitude limit (from min_apex)
+  // nLats: number of latitudes (nY)
+  // spacing_factor: (not supported yet), so always 1.0. Will adjust baselat spacing, eventually.
+  arma_vec baselat_spacing(precision_t extent,
+                           precision_t origin,
+                           precision_t upper_lim,
+                           precision_t lower_lim,
+                           // int16_t nLats,
+                           precision_t spacing_factor);
 
   // Update ghost cells with values from other processors
   void exchange(arma_cube &data, const bool pole_inverse);
@@ -425,8 +507,8 @@ class Grid {
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
                                const std::vector<precision_t> &Alts,
-                               bool areLocsGeo=true,
-                               bool areLocsIJK=true);
+                               bool areLocsGeo = true,
+                               bool areLocsIJK = true);
 
   /**
    * \brief Set the interpolation coefficients for the dipole grid

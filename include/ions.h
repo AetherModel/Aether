@@ -11,13 +11,13 @@
  * \class Ions
  *
  * \brief Defines the ion states
- * 
+ *
  * The Ion class defines the ion states as well as a bunch
- * of derived states and source/loss terms.  
+ * of derived states and source/loss terms.
  *
  * \author Aaron Ridley
  *
- * \date 2021/03/28 
+ * \date 2021/03/28
  *
  **************************************************************/
 
@@ -29,7 +29,7 @@ class Ions {
   // species of ion.  We will then have a vector of these species.
 
   int64_t nSpecies = 8;
-  
+
   struct species_chars {
 
     /// Name of the species
@@ -68,7 +68,7 @@ class Ions {
 
     /// Ion - Electron collision frequencies:
     std::vector<precision_t> nu_ion_electron;
-    
+
     // Sources and Losses:
 
     /// Number density of species (/m3)
@@ -187,12 +187,25 @@ class Ions {
   /// Average energy of diffuse electron aurora (keV, tbc):
   arma_mat avee;
 
+  // Some variables that we are going to use in calc_ion_v:
+  std::vector<arma_cube> gravity_vcgc;
+  std::vector<arma_cube> wind_acc;
+  std::vector<arma_cube> total_acc;
+  std::vector<arma_cube> efield_acc;
+  std::vector<arma_cube> a_par;
+  std::vector<arma_cube> a_perp;
+  std::vector<arma_cube> a_x_b;
+  std::vector<arma_cube> grad_Pi_plus_Pe;
+  arma_cube rho, nuin, nuin_sum, Nie, sum_rho;
+  arma_cube top, bottom;
+
+
   /// Number of species to advect:
   int nSpeciesAdvect;
-      
+
   /// IDs of species to advect:
   std::vector<int> species_to_advect;
-    
+
   // names and units
   const std::string density_name = "Neutral Bulk Density";
   const std::string density_unit = "/m3";
@@ -207,7 +220,7 @@ class Ions {
 
   const std::string potential_name = "Potential";
   const std::string potential_unit = "Volts";
-  
+
   // --------------------------------------------------------------------
   // Functions:
 
@@ -225,11 +238,11 @@ class Ions {
   species_chars create_species(Grid grid);
 
   /**********************************************************************
-     \brief 
+     \brief
      \param planet contains information about the species to simulate
    **/
   int read_planet_file(Planets planet);
-  
+
   /**********************************************************************
      \brief Initialize the ion temperature (to the neutral temperature)
      \param neutrals the neutral class to grab the temperature from
@@ -325,16 +338,16 @@ class Ions {
      \param dt the delta-t for the current time
    **/
   void calc_ion_drift(Neutrals neutrals,
-		      Grid grid,
-		      precision_t dt);
-  
+                      Grid grid,
+                      precision_t dt);
+
   /**********************************************************************
      \brief Calculate the ion + electron pressure gradient
      \param iIon which ion to act upon
      \param grid this is the grid to solve the equation on
    **/
   std::vector<arma_cube> calc_ion_electron_pressure_gradient(int64_t iIon,
-							     Grid grid);
+                                                             Grid grid);
 
   /**********************************************************************
      \brief Calculates the ion temperature(s) on the given grid
@@ -356,7 +369,7 @@ class Ions {
   /// @brief Calculate epsilon
   /// @details intermediate variable used in photoelectron & ionization heating
   /// From (Smithro & Solomon, 2008).
-  /// @param neutrals 
+  /// @param neutrals
   /// @return epsilon
   **/
   arma_cube calc_epsilon(Neutrals &neutrals);
@@ -366,17 +379,17 @@ class Ions {
     \details Based on (Swartz & Nisbet, 1972) & (Smithro & Solomon, 2008)
             Uses equations 9-12 from (Zhu & Ridley, 2016)
             https://doi.org/10.1016/j.jastp.2016.01.005
-    \param epsilon 
-    \return Qphe 
+    \param epsilon
+    \return Qphe
   **/
   arma_cube calc_photoelectron_heating(arma_cube epsilon);
 
   /**********************************************************************
     \brief Calculates auroral heating
-    \details NOTE: in GITM this is solved separately for ion precipitation & auroral 
+    \details NOTE: in GITM this is solved separately for ion precipitation & auroral
         ionization. In Aether these are both in ions.species[iIon].ionization_scgc...
-    \param epsilon 
-    \return Qaurora 
+    \param epsilon
+    \return Qaurora
   **/
   arma_cube calc_ionization_heating(arma_cube epsilon);
 
@@ -394,26 +407,28 @@ class Ions {
   /**********************************************************************
     \brief Calculates electron-neutral elastic collisional heating
     \details From Schunk and Nagy 2009
-    \param neutrals 
+    \param neutrals
     \return vector<Qencp, Qencm, Qenc_v>
   **/
-  std::vector<arma_cube> calc_electron_neutral_elastic_collisions(Neutrals &neutrals);
+  std::vector<arma_cube> calc_electron_neutral_elastic_collisions(
+    Neutrals &neutrals);
 
   /**********************************************************************
     \brief Calculates the electron-neutral inelastic collisional heating
     \details From Schunk and Nagy 2009 pages 277, 282.
     This includes N2, O2 rotation, fine structure, O(1D) exitation & vibration, N2 vibration.
     See equation 15 from (Zhu, Ridley, Deng, 2016) https://doi.org/10.1016/j.jastp.2016.01.005
-    \param neutrals 
+    \param neutrals
     \return vector<Qencp, Qencm, Qenc_v>
   **/
-  std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(Neutrals &neutrals);
+  std::vector<arma_cube> calc_electron_neutral_inelastic_collisions(
+    Neutrals &neutrals);
 
   /**********************************************************************
     \brief Calculate the thermoelectric current (same at all altitudes)
     \details Use eq. 6 of https://doi.org/10.1016/j.jastp.2016.01.005
     - Since we do not know e- parallel velocity, the dipole needs to do it this way too.
-    \param grid 
+    \param grid
     \return arma_mat JParaAlt
   **/
   arma_mat calc_thermoelectric_current(Grid &grid);
@@ -422,7 +437,7 @@ class Ions {
      \brief Check all of the variables for nonfinites, such as nans
      \param none
    **/
-  bool check_for_nonfinites();
+  bool check_for_nonfinites(std::string location);
 
   /**********************************************************************
      \brief Run through a test of an arma_cube to see if it contains nans
@@ -445,7 +460,7 @@ class Ions {
   bool exchange_old(Grid &grid);
 
   /**********************************************************************
-     \brief Vertical advection solver - Rusanov 
+     \brief Vertical advection solver - Rusanov
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/

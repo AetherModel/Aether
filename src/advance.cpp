@@ -74,7 +74,6 @@ bool advance(Planets &planet,
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: After extras");
 
-
   ions.fill_electrons();
   ions.calc_sound_speed();
   ions.calc_cMax();
@@ -111,7 +110,6 @@ bool advance(Planets &planet,
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
 
-
   // advect in the 3rd dimension (vertical), but only if we have it:
   if (gGrid.get_nAlts(false) > 1) {
     neutrals.advect_vertical(gGrid, time);
@@ -119,7 +117,11 @@ bool advance(Planets &planet,
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Neutral Advection");
 
-    ions.advect_vertical(gGrid, time);
+    // ajr - ions.advect_vertical(gGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = ions.check_for_nonfinites("After Vertical Ion Advection");
+
   }
 
   // advect in the 1st and 2nd dimensions (horizontal), but only if
@@ -127,13 +129,19 @@ bool advance(Planets &planet,
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
+    neutrals.advect_horizontal(gGrid, time);
     ionsMag.exchange_old(mGrid);
-    advect(gGrid, time, neutrals);
+    //advect(gGrid, time, neutrals);
   }
 
-  if (didWork & input.get_check_for_nans()) {
+  if (input.get_check_for_nans()) {
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Horizontal Advection");
+
+    if (!didWork) {
+      report.exit(function);
+      return didWork;
+    }
   }
 
   // ------------------------------------
@@ -200,10 +208,10 @@ bool advance(Planets &planet,
       didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Add Sources");
     }
 
-    ions.calc_ion_temperature(neutrals, gGrid, time);
-    // ions.calc_electron_temperature(neutrals, gGrid, time);
+    //ions.calc_ion_temperature(neutrals, gGrid, time);
+    //ions.calc_electron_temperature(neutrals, gGrid, time);
     //ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
-    ionsMag.calc_electron_temperature(neutralsMag, mGrid, time);
+    //ionsMag.calc_electron_temperature(neutralsMag, mGrid, time);
 
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Advection");

@@ -13,7 +13,8 @@ void Ions::calc_efield(Grid grid) {
   efield_vcgc = calc_gradient_vector(-1.0 * potential_scgc, grid);
 
   // Remove component along b-field (should be zero, anyways!)
-  arma_cube edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
+  arma_cube edotb;
+  edotb = dot_product(efield_vcgc, grid.bfield_unit_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     efield_vcgc[iComp] =
@@ -25,9 +26,11 @@ void Ions::calc_efield(Grid grid) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid) {
+  
   std::string function = "Ions::calc_exb";
   static int iFunction = -1;
   report.enter(function, iFunction);
+  
   arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
@@ -96,31 +99,16 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   report.print(5, "going into calc_exb_drift");
   calc_exb_drift(grid);
 
-  std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> wind_acc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> total_acc = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> efield_acc = make_cube_vector(nX, nY, nZ, 3);
+  int64_t iIon, iNeutral, iDim;
+  int64_t iComp;
 
-  int64_t iIon, iNeutral, iComp;
-
-  std::vector<arma_cube> grad_Pi_plus_Pe;
-  arma_cube rho, nuin, nuin_sum, Nie, sum_rho;
-  arma_cube top, bottom;
-
-  nuin_sum.set_size(nX, nY, nZ);
   nuin_sum.zeros();
-
-  sum_rho.set_size(nX, nY, nZ);
   sum_rho.zeros();
 
   fill_electrons();
 
   for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp].zeros();
-
-  std::vector<arma_cube> a_par = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> a_perp = make_cube_vector(nX, nY, nZ, 3);
-  std::vector<arma_cube> a_x_b;
 
   for (iIon = 0; iIon < nSpecies; iIon++) {
 

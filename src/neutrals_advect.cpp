@@ -33,3 +33,43 @@ bool Neutrals::advect_vertical(Grid grid, Times time) {
   return didWork;
 }
 
+bool Neutrals::advect_horizontal(Grid & grid, Times & time) {
+  bool didWork = true;
+
+  std::string function = "Neutrals::advance_horizontal";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  if (grid.iGridShape_ == grid.iCubesphere_) {
+    if (input.get_advection_neutrals_horizontal() == "advect_test")
+      solver_horizontal_RK4_advection(grid, time);
+    else if (input.get_advection_neutrals_horizontal() == "fv")
+      solver_horizontal_RK1_rochi(grid, time);
+    else {
+      std::cout << "Horizontal solver not found!\n";
+      std::cout << "  ==> Requested : "
+                << input.get_advection_neutrals_horizontal()
+                << "\n";
+      didWork = false;
+    }
+  } else
+    advect_sphere(grid, time);
+
+
+  report.exit(function);
+  return didWork;
+}
+
+bool Neutrals::advect_horizontal_advection(Grid & grid, Times & time) {
+  bool didWork = true;
+
+  std::string function = "Neutrals::advance_horizontal_advection";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  //solver_horizontal_rusanov_advection(grid, time);
+  solver_horizontal_RK4_advection(grid, time);
+
+  report.exit(function);
+  return didWork;
+}

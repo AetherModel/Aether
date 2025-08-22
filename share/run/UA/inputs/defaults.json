@@ -24,7 +24,7 @@
     "Advection" : {
 		"Neutrals" : {
 			"Vertical" : "rusanov",
-			"Horizontal" : "default",
+			"Horizontal" : "fv",
 			"useBulkWinds" : true,
 			"useImplicitFriction" : true},
 		"Ions" : {
