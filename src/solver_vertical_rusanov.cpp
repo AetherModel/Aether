@@ -36,12 +36,12 @@ void calc_facevalues_alts_rusanov(Grid &grid,
 
   // Only do calculation on physical cells
   for (iZ = nGCs; iZ < nZs - nGCs; iZ++) {
-    ida = 2.0 / grid.dalt_lower_scgc.slice(iZ + 1);
+    ida = 2.0 / grid.dk_edge_m.slice(iZ + 1);
     dVarUp = ida %
              (factor1 * (inVar.slice(iZ + 1) - inVar.slice(iZ)) -
               factor2 * (inVar.slice(iZ + 2) - inVar.slice(iZ - 1)));
 
-    ida = 2.0 / grid.dalt_lower_scgc.slice(iZ);
+    ida = 2.0 / grid.dk_edge_m.slice(iZ);
     dVarDown = ida %
                (factor1 * (inVar.slice(iZ) - inVar.slice(iZ - 1)) -
                 factor2 * (inVar.slice(iZ + 1) - inVar.slice(iZ - 2)));
@@ -55,9 +55,9 @@ void calc_facevalues_alts_rusanov(Grid &grid,
 
   // Ghostcell closest to the bottom physical cell:
   iZ = nGCs - 1;
-  ida = 1.0 / grid.dalt_lower_scgc.slice(iZ + 1);
+  ida = 1.0 / grid.dk_edge_m.slice(iZ + 1);
   dVarUp = ida % (inVar.slice(iZ + 1) - inVar.slice(iZ));
-  ida = 1.0 / grid.dalt_lower_scgc.slice(iZ);
+  ida = 1.0 / grid.dk_edge_m.slice(iZ);
   dVarDown = ida % (inVar.slice(iZ) - inVar.slice(iZ - 1));
 
   for (iX = nGCs; iX < nXs - nGCs; iX++)
@@ -67,9 +67,9 @@ void calc_facevalues_alts_rusanov(Grid &grid,
 
   // Ghostcell closest to the top physical cell:
   iZ = nZs - nGCs;
-  ida = 1.0 / grid.dalt_lower_scgc.slice(iZ + 1);
+  ida = 1.0 / grid.dk_edge_m.slice(iZ + 1);
   dVarUp = ida % (inVar.slice(iZ + 1) - inVar.slice(iZ));
-  ida = 1.0 / grid.dalt_lower_scgc.slice(iZ);
+  ida = 1.0 / grid.dk_edge_m.slice(iZ);
   dVarDown = ida % (inVar.slice(iZ) - inVar.slice(iZ - 1));
 
   for (iX = nGCs; iX < nXs - nGCs; iX++)
@@ -80,10 +80,10 @@ void calc_facevalues_alts_rusanov(Grid &grid,
   for (iZ = nGCs; iZ < nZs - nGCs + 1; iZ++) {
     outLeft.slice(iZ) =
       inVar.slice(iZ - 1) +
-      0.5 * dVarLimited.slice(iZ - 1) % grid.dalt_lower_scgc.slice(iZ);
+      0.5 * dVarLimited.slice(iZ - 1) % grid.dk_edge_m.slice(iZ);
     outRight.slice(iZ) =
       inVar.slice(iZ) -
-      0.5 * dVarLimited.slice(iZ) % grid.dalt_lower_scgc.slice(iZ);
+      0.5 * dVarLimited.slice(iZ) % grid.dk_edge_m.slice(iZ);
   }
 
   /*
@@ -94,7 +94,7 @@ void calc_facevalues_alts_rusanov(Grid &grid,
         << inVar(7,19,19) << " "
         << inVar(7,19,20) << " "
         << dVarLimited(7,19,18) << " "
-        << grid.dalt_lower_scgc(7,19,17) << " "
+        << grid.dk_edge_m(7,19,17) << " "
         << outRight(7, 19, 17) << " "
         << outRight(7, 19, 18) << " "
         << outLeft(7, 19, 17) << " "
@@ -142,7 +142,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
     outGrad.slice(iZ) = 0.5 *
                         (varLeft.slice(iZ + 1) + varRight.slice(iZ + 1) -
                          varLeft.slice(iZ) - varRight.slice(iZ)) /
-                        grid.dalt_center_scgc.slice(iZ);
+                        grid.dk_center_m_scgc.slice(iZ);
 
   /*
   if (iProc == 11)
@@ -151,7 +151,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
         << varLeft(7, 19, 18) << " "
         << varRight(7, 19, 17) << " "
         << varRight(7, 19, 18) << " "
-        << grid.dalt_center_scgc(7, 19, 17) << " "
+        << grid.dk_edge_m(7, 19, 17) << " "
         << outGrad(7, 19, 17) << "\n";
   */
   for (iZ = nGCs; iZ < nZs - nGCs + 1; iZ++) {
@@ -177,7 +177,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
   for (iZ = nGCs; iZ < nZs - nGCs; iZ++)
     outDiff.slice(iZ) =
       (diffFlux.slice(iZ + 1) - diffFlux.slice(iZ)) /
-      grid.dalt_center_scgc.slice(iZ);
+      grid.dk_center_m_scgc.slice(iZ);
 
   report.exit(function);
   return;

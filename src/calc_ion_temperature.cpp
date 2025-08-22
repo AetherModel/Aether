@@ -96,7 +96,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         lambda1d(1) = lambda1d(2);
         lambda1d(0) = lambda1d(2);
         front1d  = 3.0 / 2.0 * cKB * density_scgc.tube(iLon, iLat);
-        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dalt1d   = grid.dk_edge_m.tube(iLon, iLat);
         sources1d = (heating_neutral_friction_scgc.tube(iLon, iLat) +
                      heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
         sources1d = sources1d / front1d;
@@ -134,7 +134,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
           lambda1d(1) = lambda1d(2);
           lambda1d(0) = lambda1d(2);
           front1d  = 3.0 / 2.0 * cKB * species[iIon].density_scgc.tube(iLon, iLat);
-          dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+          dalt1d   = grid.dk_edge_m.tube(iLon, iLat);
           sources1d = (species[iIon].heating_neutral_friction_scgc.tube(iLon, iLat) +
                        species[iIon].heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
           sources1d = sources1d / front1d;

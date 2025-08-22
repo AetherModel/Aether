@@ -18,6 +18,7 @@ endif()
 
 # Directory variables
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB TEST_FILES ${PROJECT_SOURCE_DIR}/srcTest/*.cpp)
 set(MAIN_DIR ${PROJECT_SOURCE_DIR}/src/main)
 set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 set(OUT_DIR ${PROJECT_SOURCE_DIR}/src/output)
@@ -34,7 +35,7 @@ elseif(TEST_EXCHANGE)
 elseif(TEST_GRADIENT)
   add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${MAIN_DIR}/main_test_gradient.cpp)
 else()
-  add_executable(aether ${SRC_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main.cpp)
+  add_executable(aether ${SRC_FILES} ${TEST_FILES} ${MSIS_FILES} ${IE_FILES} ${MAIN_DIR}/main.cpp)
 endif()
 
 if(USE_DOUBLE_PRECISION)

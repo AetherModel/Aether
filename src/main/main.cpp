@@ -12,7 +12,7 @@ int main() {
   
   int iErr = 0;
   std::string sError;
-  bool didWork = true;
+  bool didWork = true, testsPassing=true;
 
   Times time;
 
@@ -30,6 +30,9 @@ int main() {
     if (input.get_is_student())
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
+
+    // Find out what tests we are running:
+    json tests = input.get_tests();
 
     // For now, the number of processors and blocks are set by the 
     // neutral grid shape, since this could be sphere (1 root) or
@@ -92,14 +95,16 @@ int main() {
 
     if (mGrid.iGridShape_ == mGrid.iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
-      if (!didWork)
-        throw std::string("init_dipole_grid failed!");
     } else {
       std::cout << "Making Spherical Magnetic Grid\n";
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
     }
+
+    if (!didWork)
+    throw std::string("Initializing magneitic grid failed!");
+
 
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
@@ -110,6 +115,13 @@ int main() {
     // Initialize Ions on geographic and magnetic grids:
     Ions ions(gGrid, planet);
     Ions ionsMag(mGrid, planet);
+
+    if (tests["test_gradient"]) {
+      testsPassing = test_gradient(planet, quadtree, tests, gGrid, mGrid);
+    }
+
+    if (!testsPassing && tests["exit_on_fail"])
+      throw std::string("Cannot continue!!");
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -254,6 +266,8 @@ int main() {
 
     } // End of outer time loop - done with run!
 
+    report.report_errors();
+
     report.exit(function);
     report.times();
 
@@ -265,7 +279,6 @@ int main() {
       std::cout << "---- Must Exit! ----\n";
     }
   }
-
 
   // End parallel tasks:
   iErr = MPI_Finalize();

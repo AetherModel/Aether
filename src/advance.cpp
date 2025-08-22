@@ -106,8 +106,8 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = ions.set_bcs(gGrid, time, indices);
 
-  //if (didWork)
-  //  didWork = neutralsMag.set_bcs(mGrid, time, indices);
+  if (didWork)
+    didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
 
@@ -127,6 +127,7 @@ bool advance(Planets &planet,
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
+    ionsMag.exchange_old(mGrid);
     advect(gGrid, time, neutrals);
   }
 

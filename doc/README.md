@@ -32,6 +32,7 @@ Contents within `doc`:
   - [Ensembles](internals/ensembles.md)
   - [Indices](internals/indices.md)
   - [The Grid](internals/grid.md)
+  - [Coordinate Systems](internals/coordinates.md)
 - [Doxyfile](Doxyfile)
 - [README (this page)](README.md)
 - [Citations](citations.md)

@@ -22,6 +22,7 @@ std::string cMember;
 std::string cGrid;
 
 MPI_Comm aether_comm;
+MPI_Comm aether_member_comm;
 
 bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion) {
 
@@ -70,6 +71,11 @@ bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion) {
     // Get Ensemble member number and grid number:
     iMember = iProc / nGrids;
     iGrid = iProc % nGrids;
+
+    // Need a communicator for each ensemble member, this allows
+    // communication between all blocks in one ensemble member without
+    // the others getting the messages:
+    MPI_Comm_split(aether_comm, iMember, iGrid, &aether_member_comm);
 
     if (report.test_verbose(2))
       std::cout << "iProc : " << iProc

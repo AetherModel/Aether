@@ -150,6 +150,22 @@ void Grid::create_altitudes(Planets planet) {
     }
   }
 
+  // All cells on the geographic grid *should* be ok
+  isTooLowCell = find(geoAlt_scgc < grid_input.alt_min * cKMtoM);
+  isPhysicalCell = find(geoAlt_scgc >= grid_input.alt_min * cKMtoM);
+  // get the ghost cell indices on each lat/lon point. 
+  // may be redundant can fill lower with nGCs-1, but this is here for now
+  arma::uvec theGCs;
+  for (iLon=0; iLon<nLons; iLon++){
+    for (iLat = 0; iLat<nLats; iLat++){
+      // find *last* cell below alt_min
+      theGCs = find(geoAlt_scgc.tube(iLon, iLat) < grid_input.alt_min * cKMtoM);
+      // Get the last element if the col-vec
+      first_lower_gc(iLon, iLat) = theGCs(theGCs.n_elem - 1);
+    }
+  }
+  first_upper_gc.fill(nAlts - nGCs * 2 - 1);
+
   report.exit(function);
   return;
 }
