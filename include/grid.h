@@ -100,10 +100,7 @@ class Grid {
   arma_cube sqrt_g_Down;
 
   cubesphere_chars cubeC, cubeL, cubeD;
-  
-  // These define the magnetic grid:
-  // Armidillo Cube Versions:
-  arma_cube magLon_scgc, magX_scgc;
+
   // The magnetic latitude and altitude need to be defined better. This should be the angle between
   // magnetic equator and the point, but sometimes it is invariant latitude.
   // These define the magnetic grid (only defined for a dipole grid):
@@ -510,8 +507,8 @@ class Grid {
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
                                const std::vector<precision_t> &Alts,
-                               bool areLocsGeo=true,
-                               bool areLocsIJK=true);
+                               bool areLocsGeo = true,
+                               bool areLocsIJK = true);
 
   /**
    * \brief Set the interpolation coefficients for the dipole grid
