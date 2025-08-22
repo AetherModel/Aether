@@ -29,6 +29,9 @@ std::string get_filename_from_type(std::string type_output) {
   if (type_output == "bfield")
     filename = "3DBF";
 
+  if (type_output == "delta")
+    filename = "3DDE";
+
   if (type_output == "moment")
     filename = "3DMO";
 
@@ -89,7 +92,8 @@ bool output(const Neutrals &neutrals,
 
     // make sure the output dt is set correctly. Otherwise these errors aren't caught correctly.
     precision_t dt_output = input.get_dt_output(iOutput);
-    if (dt_output == 0.0){
+
+    if (dt_output == 0.0) {
       report.exit(function);
       return false;
     }
@@ -243,12 +247,31 @@ bool output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable("Gvertical",
                                                     "m/s^2",
                                                     grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gmag",
+                                                    "m/s^2",
+                                                    grid.gravity_mag_scgc);
         AllOutputContainers[iOutput].store_variable("Gpotential",
                                                     "m^2/s^2",
                                                     grid.gravity_potential_scgc);
         AllOutputContainers[iOutput].store_variable("radius",
                                                     "m",
                                                     grid.radius_scgc);
+      }
+
+      if (type_output == "delta") {
+        AllOutputContainers[iOutput].store_variable("dim",
+                                                    "di Center m",
+                                                    "m",
+                                                    grid.di_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("djm",
+                                                    "dj Center m",
+                                                    "m",
+                                                    grid.dj_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("dkm",
+                                                    "dk Center m",
+                                                    "m",
+                                                    grid.dk_center_m_scgc);
+
       }
 
       if (type_output == "bfield" || type_output == "ions") {
@@ -260,6 +283,13 @@ bool output(const Neutrals &neutrals,
                                                     "Magnetic Longitude",
                                                     "degrees",
                                                     grid.magLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("invLat",
+                                                    "Magnetic Invariant Latitude",
+                                                    "degrees",
+                                                    grid.magInvLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "m",
+                                                    grid.radius_scgc);
         AllOutputContainers[iOutput].store_variable("mlt",
                                                     "Magnetic Local Time",
                                                     "hours",

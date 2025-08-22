@@ -97,10 +97,10 @@ Here `FLAG` is a flag name and `VALUE` is the desired value (note the `-D`).  A
 more complete discussion of the available compilation flags can be found on the
 [Compilation Options](build_opts.md) page.
 
-If your default compiler isn't a GCC compiler, you will likely need to specify
-the desired GCC compiler at this step using:
+> If your default compiler isn't a GCC compiler, you will likely need to specify
+the desired GCC compiler at this step using the environmental variable `$CXX`, or:
 
-```bash
+> ```bash
 cmake -DCMAKE_CXX_COMPILER=<gcc or mpi executable with full path>
 ```
 

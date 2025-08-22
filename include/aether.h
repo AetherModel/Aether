@@ -143,4 +143,7 @@ using json = nlohmann::json;
 // not commented
 #include "external_msis.h"
 
+// To hold all the test functions
+#include "test.h"
+
 #endif  // INCLUDE_AETHER_H_

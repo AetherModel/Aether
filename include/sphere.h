@@ -30,6 +30,37 @@ namespace Sphere {
 };
 
 /*************************************************
+ * \brief A namespace with all (4-root) sphere grid logic.
+ *************************************************/
+namespace Sphere4 {
+
+  /// The normalized origins of each node (i.e. corner)
+  static const arma_mat ORIGINS = {
+    { 0.0,  -0.5, 0.0},
+    { 0.0, -0.25, 0.0},
+    { 0.0,   0.0, 0.0},
+    { 0.0,  0.25, 0.0}
+  };
+  
+  /// Normalized right steps in node
+  static const arma_mat RIGHTS = {
+    {2.0, 0.0, 0.0},
+    {2.0, 0.0, 0.0},
+    {2.0, 0.0, 0.0},
+    {2.0, 0.0, 0.0}
+  };
+  
+  /// Normalized up steps in node
+  static const arma_mat UPS = {
+    {0.0, 0.25, 0.0},
+    {0.0, 0.25, 0.0},
+    {0.0, 0.25, 0.0},
+    {0.0, 0.25, 0.0}
+  };
+  
+  };
+
+/*************************************************
  * \brief A namespace with all (6-root) sphere grid logic.
  *************************************************/
 namespace Sphere6 {

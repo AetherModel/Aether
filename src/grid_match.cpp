@@ -34,6 +34,13 @@ bool grid_match(Grid gGrid,
           norms = sphere_to_cube(lon, lat);
           iNode = gQuadtree.find_point(norms);
         }
+        if (report.test_verbose(6))
+          std::cout << "lon, lat, node: " << lon*cRtoD << " "
+                    << lat*cRtoD << " "
+                    << norms(0) << " "
+                    << norms(1) << " "
+                    << norms(2) << " "
+                    << iNode << "\n";
       }
     }
   }

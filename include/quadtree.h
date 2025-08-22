@@ -181,6 +181,8 @@ private:
   bool IsSphere = false;
   /// Defines whether the quadtree is a cubesphere or not:
   bool IsCubeSphere = false;
+  /// Defines whether the quadtree is a dipole or not:
+  bool IsDipole = false;
   
 };
 

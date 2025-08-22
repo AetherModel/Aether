@@ -8,8 +8,8 @@
 //   - Cubesphere, this has 6 root nodes (2 polar, 4 equatorial)
 //   - Sphere, this has 1 root node (whole grid)
 //   - Sphere6, this is a spherical grid, but has 6 root nodes (2 lats, 3 lons)
-//   - Dipole, which may be the same as Sphere
 //   - Dipole4, which has 4 root nodes (4 lats, 1 lon)
+//   - Dipole6, which has 4 root nodes (6 lats, 1 lon)
 
 #include "aether.h"
 
@@ -22,11 +22,11 @@ Quadtree::Quadtree(std::string shape) {
   if (shape == "sphere")
     nRootNodes = 1;
 
-  if (shape == "dipole")
-    nRootNodes = 1;
+    if (shape == "sphere4")
+    nRootNodes = 4;
 
-  if (shape == "dipole2")
-    nRootNodes = 2;
+  if (shape == "dipole4")
+    nRootNodes = 4;
 
   if (shape == "dipole6")
     nRootNodes = 6;
@@ -66,25 +66,26 @@ void Quadtree::build(std::string gridtype) {
     IsSphere = true;
   }
 
-  if (grid_input.shape == "dipole") {
-    origins = Dipole::ORIGINS;
-    rights = Dipole::RIGHTS;
-    ups = Dipole::UPS;
+  if (grid_input.shape == "sphere4") {
+    origins = Sphere4::ORIGINS;
+    rights = Sphere4::RIGHTS;
+    ups = Sphere4::UPS;
     IsSphere = true;
   }
 
-  if (grid_input.shape == "dipole2") {
-    origins = Dipole2::ORIGINS;
-    rights = Dipole2::RIGHTS;
-    ups = Dipole2::UPS;
-    IsSphere = true;
+  if (grid_input.shape == "dipole4") {
+    origins = Dipole4::ORIGINS;
+    rights = Dipole4::RIGHTS;
+    ups = Dipole4::UPS;
+    IsDipole = true;
   }
 
   if (grid_input.shape == "dipole6") {
     origins = Dipole6::ORIGINS;
     rights = Dipole6::RIGHTS;
     ups = Dipole6::UPS;
-    IsSphere = true;
+    IsDipole = true;
+
   }
 
   arma_vec o(3), r(3), u(3);
@@ -112,10 +113,11 @@ void Quadtree::build(std::string gridtype) {
   // restrict the domain.  This will only work for the spherical
   // grid so far:
 
-  if (grid_input.lon_min > 0.0 ||
-      grid_input.lon_max < 2.0 * cPI ||
-      grid_input.lat_min > -cPI / 2.0 ||
-      grid_input.lat_max < cPI / 2.0) {
+  if ((grid_input.lon_min > 0.0 ||
+       grid_input.lon_max < 2.0 * cPI ||
+       grid_input.lat_min > -cPI / 2.0 ||
+       grid_input.lat_max < cPI / 2.0)
+      && (IsSphere)) {
     // We are dealing with less than the whole Earth...
     origins(0) = grid_input.lon_min / cPI;
     origins(1) = grid_input.lat_min / cPI;
@@ -512,19 +514,18 @@ int64_t Quadtree::find_point(arma_vec point) {
 
   if (IsSphere)
     wrap_point = wrap_point_sphere(point);
-
   if (IsCubeSphere)
     wrap_point = wrap_point_cubesphere(point);
+  if (IsDipole)
+    wrap_point = wrap_point_sphere(point);
 
   int64_t iNode = -1;
 
   for (int64_t iRoot = 0; iRoot < nRootNodes; iRoot++) {
     iNode = find_point(wrap_point, root_nodes[iRoot]);
-
     if (iNode > -1)
       break;
   }
-
   return iNode;
 }
 
@@ -540,8 +541,9 @@ int64_t Quadtree::find_root(arma_vec point) {
 
   if (IsSphere)
     wrap_point = wrap_point_sphere(point);
-
   if (IsCubeSphere)
+    wrap_point = wrap_point_cubesphere(point);
+  if (IsDipole)
     wrap_point = wrap_point_cubesphere(point);
 
   int64_t iNode = -1, iRoot;

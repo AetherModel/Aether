@@ -10,10 +10,7 @@
 void Ions::calc_efield(Grid grid) {
 
   // efield = - grad(potential)
-  efield_vcgc = calc_gradient_vector(potential_scgc, grid);
-
-  for (int64_t iComp = 0; iComp < 3; iComp++)
-    efield_vcgc[iComp] = -efield_vcgc[iComp];
+  efield_vcgc = calc_gradient_vector(-1.0 * potential_scgc, grid);
 
   // Remove component along b-field (should be zero, anyways!)
   arma_cube edotb;
@@ -29,12 +26,19 @@ void Ions::calc_efield(Grid grid) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid) {
-  arma_cube bmag2;
-  bmag2 = (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
+  
+  std::string function = "Ions::calc_exb";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+  
+  arma_cube bmag2 =
+    (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     exb_vcgc[iComp] = exb_vcgc[iComp] / bmag2;
+
+  report.exit(function);
 }
 
 // --------------------------------------------------------------------------
@@ -43,6 +47,10 @@ void Ions::calc_exb_drift(Grid grid) {
 
 std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
     Grid grid) {
+
+  std::string function = "Ions::elec_ion_pressure_gradient";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
   std::vector<arma_cube> pressure_gradient_vcgc;
   arma_cube total_pressure_scgc;
 
@@ -58,6 +66,7 @@ std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
     cKB;
 
   pressure_gradient_vcgc = calc_gradient_vector(total_pressure_scgc, grid);
+  report.exit(function);
 
   return pressure_gradient_vcgc;
 }
@@ -118,10 +127,10 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
-      for (iDim = 0; iDim < 3; iDim ++) {
-        gravity_vcgc[iDim] = grid.gravity_vcgc[iDim];
-        grad_Pi_plus_Pe[iDim] = grad_Pi_plus_Pe[iDim] / rho;
-        efield_acc[iDim] = Nie % efield_vcgc[iDim] / rho;
+      for (iComp = 0; iComp < 3; iComp ++) {
+        gravity_vcgc[iComp] = grid.gravity_vcgc[iComp];
+        grad_Pi_plus_Pe[iComp] = grad_Pi_plus_Pe[iComp] / rho;
+        efield_acc[iComp] = Nie % efield_vcgc[iComp] / rho;
       }
 
       // Neutral Wind Forcing:
@@ -181,6 +190,9 @@ void Ions::calc_ion_drift(Neutrals neutrals,
           species[iIon].par_velocity_vcgc[iComp] =
             (species[iIon].par_velocity_vcgc[iComp] + a_par[iComp] * dt) /
             (1 + nuin_sum * dt);
+
+          // These need to change, since they are dependent on the
+          // grid. Closed, dipole fieldlines should NOT do this!!!
           species[iIon].par_velocity_vcgc[iComp].slice(nZ - 1).zeros();
           species[iIon].par_velocity_vcgc[iComp].slice(nZ - 2).zeros();
           species[iIon].par_velocity_vcgc[iComp].slice(nZ - 3) =
@@ -208,7 +220,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
       for (iComp = 0; iComp < 3; iComp++) {
         species[iIon].velocity_vcgc[iComp] =
-          //species[iIon].perp_velocity_vcgc[iComp] +
+          species[iIon].perp_velocity_vcgc[iComp] +
           species[iIon].par_velocity_vcgc[iComp];
         velocity_vcgc[iComp] = velocity_vcgc[iComp] +
                                rho % (species[iIon].velocity_vcgc[iComp]);
@@ -218,6 +230,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 
   }  // for iIon
 
+  // This is the mass weighted total bulk velocity:
   for (iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp] = velocity_vcgc[iComp] / sum_rho;
 

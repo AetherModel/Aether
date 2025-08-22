@@ -8,12 +8,15 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm
-from netCDF4 import Dataset
-from h5py import File
 import argparse
 import os
 import json
 from struct import unpack
+try:
+    from netCDF4 import Dataset
+    from h5py import File
+except ImportError:
+    print("NetCDF and/or h5py not found")
 
 # ----------------------------------------------------------------------
 # Function to parse input arguments
@@ -36,6 +39,9 @@ def parse_args():
     parser.add_argument('-oned', \
                         help='strip 1d files of ghostcells and store in one file', \
                         action="store_true")
+    parser.add_argument('-dir', default=None, type=str,
+                        help="Directory to find Aether files in. Will look in current"
+                        " directory & $PWD/UA/output/")
 
     args = parser.parse_args()
 
@@ -544,6 +550,13 @@ def get_base_files():
             IsFound, item = if_unique(ensembleFiles, fileInfo['ensembleFile'])
             if (IsFound):
                 filesInfo[i]['ensembleMembers'] = ensembleCounter[item]
+                
+    if len(filesInfo) == 0:
+        try:
+            os.chdir("UA/output")
+            filesInfo = get_base_files()
+        except:
+            print("No input files found!!")
     
     return filesInfo
 
@@ -948,12 +961,19 @@ def write_and_plot_data(dataToWrite,
 # main code
 #----------------------------------------------------------------------------
 
-if __name__ == '__main__':  # main code block
+def main(args):
 
-    args = parse_args()
     isVerbose = args.v
+    
+    if args.dir:
+        if isVerbose:
+            print("changing directory to: ", args.dir)
+        os.chdir(args.dir)
 
     filesInfo = get_base_files()
+    
+    if len(filesInfo) == 0:
+        return
 
     iVar = 3
     iAlt = args.alt
@@ -1004,4 +1024,12 @@ if __name__ == '__main__':  # main code block
                     if (isVerbose):
                         print('    ', command)
                     os.system(command)
+
+# call main:
+if __name__ == '__main__':  
+
+    args = parse_args()
+
+    # This allows code to cleanly exit on error
+    main(args)
     

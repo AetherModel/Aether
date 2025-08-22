@@ -100,18 +100,22 @@ class Grid {
   arma_cube sqrt_g_Down;
 
   cubesphere_chars cubeC, cubeL, cubeD;
-
+  
   // These define the magnetic grid:
   // Armidillo Cube Versions:
   arma_cube magLon_scgc, magX_scgc;
   // The magnetic latitude and altitude need to be defined better. This should be the angle between
   // magnetic equator and the point, but sometimes it is invariant latitude.
+  // These define the magnetic grid (only defined for a dipole grid):
+  // The magnetic latitude is the angle between the magnetic equator and the point.
   arma_cube magLat_scgc, magY_scgc;
-  // This is often just the altitude....
+  // This is the same as radius.
   arma_cube magAlt_scgc, magZ_scgc;
+  // These exist for all grid types:
   // Invariant latitude is the magnetic latitude that the field line hits at the lowest altitude.
   // This is basically the L-shell, but models want it expressed as latitude and not L-shell.
   arma_cube magInvLat_scgc;
+  arma_cube magLon_scgc, magX_scgc;
   // This is the angle from the sun, to the magnetic pole to the point.
   arma_cube magLocalTime_scgc;
 
@@ -119,7 +123,6 @@ class Grid {
   // Phi => Longitude
   // P   => L-shell
   // Q   => Distance along field line
-  arma_cube magPhi_scgc;
   arma_cube magP_scgc;
   arma_cube magQ_scgc;
 
@@ -135,16 +138,21 @@ class Grid {
   arma_cube magAlt_Below;
   arma_cube magAlt_Corner;
 
-  //For easier interpolation:
-  arma_vec baseLats_down;
-
-  // these need to be stored in (p,q) coords for a bit, its messy:
-  arma_cube magP_Down;
-  arma_cube magP_Below;
-  arma_cube magQ_Down;
-  arma_cube magQ_Below;
   arma_cube magP_Corner;
   arma_cube magQ_Corner;
+  arma_cube magInvLat_Corner;
+
+  // Masks to either access the non-physical (ghost) cells, or ignore them - use with
+  // .elem()). Together they *should* hold the indices of all cells.
+  arma::uvec isTooLowCell, isPhysicalCell;
+  // (bool values whether altitude is valid)
+  arma_cube UseThisCell;
+  // Matrices whose elements denote the altitude index of the interiormost ghost cell
+  // in the k-up and k-down direction (altitude for geo grids, q for dipole).
+  arma_mat first_lower_gc, first_upper_gc;
+
+  // Whether to close field lines on dipole grid (Always false for geo grids)
+  bool IsClosed;
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
@@ -299,6 +307,7 @@ class Grid {
 
   void set_IsDipole(bool value);
   bool get_IsDipole();
+  bool get_IsClosed();
 
   int64_t get_nPointsInGrid();
 
@@ -382,13 +391,13 @@ class Grid {
   void report_grid_boundaries();
   void calc_cent_acc(Planets planet);
 
-  // Make mag-field grid:
-  void convert_dipole_geo_xyz(Planets planet, precision_t XyzDipole[3],
-                              precision_t XyzGeo[3]);
+  void create_dipole_connection(Quadtree quadtree);
 
+  // Make mag-field grid:
   bool init_dipole_grid(Quadtree quadtree_ion, Planets planet);
   // Support functions:
   void calc_dipole_grid_spacing(Planets planet);
+
   void calc_alt_dipole_grid_spacing();
   void calc_lat_dipole_grid_spacing();
   void calc_long_dipole_grid_spacing();
@@ -417,6 +426,7 @@ class Grid {
 
   bool IsLatLonGrid;
   bool IsCubeSphereGrid;
+  bool IsDipole;
   bool DoesTouchNorthPole;
   bool DoesTouchSouthPole;
   /// The processor to the East/Right/X+:
@@ -427,17 +437,26 @@ class Grid {
   int iProcYp;
   /// The processor to the South/Down/Y-:
   int iProcYm;
+  // This is special, since message passing in the z direction will only be
+  // between closed magnetic field lines, so we don't need a +/- (p/m):
+  int iProcZ;
+
+  bool isExchangeInitialized = false;
 
   arma_vec edge_Xp;
   arma_vec edge_Yp;
   arma_vec edge_Xm;
   arma_vec edge_Ym;
+  // again, z will only be in one
+  arma_vec edge_Z;
 
   int64_t iRoot;
   int64_t iRootXp;
   int64_t iRootXm;
   int64_t iRootYp;
   int64_t iRootYm;
+  // again, z will only be in one
+  int64_t iRootZ;
 
   struct messages_struct {
     int64_t iFace;
@@ -490,7 +509,23 @@ class Grid {
    */
   bool set_interpolation_coefs(const std::vector<precision_t> &Lons,
                                const std::vector<precision_t> &Lats,
-                               const std::vector<precision_t> &Alts);
+                               const std::vector<precision_t> &Alts,
+                               bool areLocsGeo=true,
+                               bool areLocsIJK=true);
+
+  /**
+   * \brief Set the interpolation coefficients for the dipole grid
+   * \param Lons The longitude of points
+   * \param Lats The latitude of points
+   * \param Alts The altitude of points
+   * \pre Lons, Lats and Alts have the same size
+   * \return true if the function succeeds, false if the instance is not a
+   *         mag grid or the size of Lons, Lats and Alts are not the same.
+   */
+  bool set_dipole_interpolation_coefs(const std::vector<precision_t> &Lons,
+                                      const std::vector<precision_t> &Lats,
+                                      const std::vector<precision_t> &Alts);
+
   /**
    * \brief Create a map of geographic locations to data and do the interpolation
    * \param data The value at the positions of geoLon, geoLat, and geoAlt
@@ -506,7 +541,6 @@ class Grid {
   bool HasBField;
   bool IsExperimental;
   bool IsMagGrid;
-  bool IsDipole = false;
   std::string gridType;
 
   int64_t nX, nLons;
@@ -567,6 +601,17 @@ class Grid {
     bool col_min_exclusive;
     bool col_max_exclusive;
   };
+  // The struct representing the range of a dipole grid (in magnetic coordinates)
+  struct dipole_range {
+    precision_t lon_min;
+    precision_t lon_max;
+    precision_t dLon;
+    precision_t lat_min;
+    precision_t lat_max;
+    precision_t dLat;
+    precision_t alt_min;
+    precision_t alt_max;
+  };
 
   // The index and coefficient used for interpolation
   // Each point is processed by the function set_interpolation_coefs and stored
@@ -585,13 +630,12 @@ class Grid {
     bool in_grid;
   };
 
-  // Return the index of the last element that has altitude smaller than or euqal to the input
-  uint64_t search_altitude(const precision_t alt_in) const;
-
   // Calculate the range of a spherical grid
   void get_sphere_grid_range(struct sphere_range &sr) const;
   // Calculate the range of a cubesphere grid
   void get_cubesphere_grid_range(struct cubesphere_range &cr) const;
+  // Calculate the range of a dipole grid
+  void get_dipole_grid_range(struct dipole_range &dr) const;
 
   // Helper function for set_interpolation_coefs
   void set_interp_coef_sphere(const sphere_range &sr,
@@ -602,6 +646,11 @@ class Grid {
                                   const precision_t lon_in,
                                   const precision_t lat_in,
                                   const precision_t alt_in);
+  // (note these are magnetic coordinates)
+  void set_interp_coef_dipole(const dipole_range &dr,
+                              const precision_t lon_in,
+                              const precision_t lat_in,
+                              const precision_t alt_in);
 
   // Processed interpolation coefficients
   std::vector<struct interp_coef_t> interp_coefs;

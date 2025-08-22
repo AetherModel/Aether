@@ -12,6 +12,7 @@
 Grid::Grid(std::string gridtype) {
 
   // At this point, we only need 2 ghostcells.  Hardcode this:
+  // This is also (kinda?) set in sizes.h for the geo & mag grid independently
   nGCs = 2;
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
@@ -65,7 +66,7 @@ Grid::Grid(std::string gridtype) {
   if (grid_input.nZ == 1)
     HasZdim = false;
 
-  if (mklower(grid_input.shape) == "sphere")
+  if (mklower(grid_input.shape).find("sphere") != std::string::npos)
     iGridShape_ = iSphere_;
 
   if (mklower(grid_input.shape) == "cubesphere")
@@ -157,7 +158,6 @@ Grid::Grid(std::string gridtype) {
   magAlt_scgc.set_size(nX, nY, nZ);
   magInvLat_scgc.set_size(nX, nY, nZ);
 
-  magPhi_scgc.set_size(nX, nY, nZ);
   magP_scgc.set_size(nX, nY, nZ);
   magQ_scgc.set_size(nX, nY, nZ);
 
@@ -179,14 +179,9 @@ Grid::Grid(std::string gridtype) {
   magLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
-  magP_Down.set_size(nX, nY + 1, nZ);
-  magP_Below.set_size(nX, nY, nZ + 1);
-  magQ_Down.set_size(nX, nY + 1, nZ);
-  magQ_Below.set_size(nX, nY, nZ + 1);
   magP_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magQ_Corner.set_size(nX + 1, nY + 1, nZ + 1);
-
-  baseLats_down.set_size(nY + 1);
+  magInvLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
   radius_scgc.set_size(nX, nY, nZ);
   radius2_scgc.set_size(nX, nY, nZ);
@@ -275,6 +270,16 @@ Grid::Grid(std::string gridtype) {
 
   HasBField = 0;
   IsExperimental = false;
+
+  // Spatial info defaults
+  IsClosed = false;
+  DoesTouchNorthPole = false;
+  DoesTouchSouthPole = false;
+
+  UseThisCell.set_size(nX, nY, nZ);
+  UseThisCell.fill(true);
+  first_lower_gc.set_size(nX, nY);
+  first_upper_gc.set_size(nX, nY);
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
@@ -514,6 +519,23 @@ void Grid::set_IsExperimental(bool value) {
 void Grid::set_IsDipole(bool value) {
   IsDipole = value;
 }
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a dipole grid
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsDipole() {
+  return IsDipole;
+}
+
+// --------------------------------------------------------------------------
+// Get whether the dipole grid is closed (true) or open (false)
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsClosed() {
+  return IsClosed;
+}
+
 
 // --------------------------------------------------------------------------
 // Get total number of grid points
