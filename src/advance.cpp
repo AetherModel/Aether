@@ -88,6 +88,9 @@ bool advance(Planets &planet,
   precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
   time.calc_dt(dtNeutral, dtIon);
 
+  if (report.test_verbose(1))
+    std::cout << "dt in advance : " << time.get_dt() << "\n";
+
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: after calc dt");
 
   // ------------------------------------
@@ -129,9 +132,11 @@ bool advance(Planets &planet,
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
+
+    didWork = neutrals.check_for_nonfinites("Geo Grid: Before Horizontal Advection");
     neutrals.advect_horizontal(gGrid, time);
+    didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     ionsMag.exchange_old(mGrid);
-    //advect(gGrid, time, neutrals);
   }
 
   if (input.get_check_for_nans()) {
