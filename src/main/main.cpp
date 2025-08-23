@@ -12,7 +12,7 @@ int main() {
 
   int iErr = 0;
   std::string sError;
-  bool didWork = true, testsPassing=true;
+  bool didWork = true, testsPassing = true;
 
   Times time;
 
@@ -35,14 +35,18 @@ int main() {
     // Find out what tests we are running:
     json tests = input.get_tests();
 
-    // For now, the number of processors and blocks are set by the 
+    // For now, the number of processors and blocks are set by the
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)
     Quadtree quadtree(input.get_grid_shape("neuGrid"));
-    Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
 
     if (!quadtree.is_ok())
-      throw std::string("quadtree initialization failed!");
+      throw std::string("quadtree for neutrals initialization failed!");
+
+    Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
+
+    if (!quadtree_ion.is_ok())
+      throw std::string("quadtree for ions initialization failed!");
 
     // Initialize MPI and parallel aspects of the code:
     didWork = init_parallel(quadtree, quadtree_ion);
@@ -103,6 +107,7 @@ int main() {
 
     if (mGrid.iGridShape_ == mGrid.iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
+
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
@@ -113,7 +118,7 @@ int main() {
     }
 
     if (!didWork)
-    throw std::string("Initializing magneitic grid failed!");
+      throw std::string("Initializing magneitic grid failed!");
 
 
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
@@ -126,9 +131,8 @@ int main() {
     Ions ions(gGrid, planet);
     Ions ionsMag(mGrid, planet);
 
-    if (tests["test_gradient"]) {
+    if (tests["test_gradient"])
       testsPassing = test_gradient(planet, quadtree, tests, gGrid, mGrid);
-    }
 
     if (!testsPassing && tests["exit_on_fail"])
       throw std::string("Cannot continue!!");
@@ -287,21 +291,19 @@ int main() {
 
     } // End of outer time loop - done with run!
 
-    report.report_errors();
-
-    report.exit(function);
     report.times();
 
   } catch (std::string error) {
-    report.report_errors();
-
-    if (iProc == 0) {
-      std::cout << error << "\n";
-      std::cout << "---- Must Exit! ----\n";
-    }
+    report.error(error);
   }
 
-  // End parallel tasks:
-  iErr = MPI_Finalize();
+  report.exit(function);
+  report.report_errors();
+
+  if (nProcs > 0)
+    // End parallel tasks:
+    iErr = MPI_Finalize();
+
   return iErr;
+
 }
