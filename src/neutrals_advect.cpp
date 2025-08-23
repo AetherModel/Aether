@@ -45,6 +45,7 @@ bool Neutrals::advect_horizontal(Grid & grid, Times & time) {
       solver_horizontal_RK4_advection(grid, time);
     else if (input.get_advection_neutrals_horizontal() == "fv")
       solver_horizontal_RK1_rochi(grid, time);
+
     else {
       std::cout << "Horizontal solver not found!\n";
       std::cout << "  ==> Requested : "
