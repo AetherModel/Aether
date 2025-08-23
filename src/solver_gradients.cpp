@@ -342,20 +342,20 @@ arma_cube calc_gradient2o_k(arma_cube value, Grid grid) {
     // Interior:
     for (iZ = 1; iZ < nZ - 1; iZ++)
       gradient.slice(iZ) =
-                (value.slice(iZ + 1) - value.slice(iZ - 1)) /
-                (2 * grid.dk_center_m_scgc.slice(iZ));
+        (value.slice(iZ + 1) - value.slice(iZ - 1)) /
+        (2 * grid.dk_center_m_scgc.slice(iZ));
 
     // Lower (one sided):
     iZ = 0;
     gradient.slice(iZ) =
-              (value.slice(iZ + 1) - value.slice(iZ)) /
-              grid.dk_center_m_scgc.slice(iZ);
+      (value.slice(iZ + 1) - value.slice(iZ)) /
+      grid.dk_center_m_scgc.slice(iZ);
 
     // Upper (one sided):
     iZ = nZ - 1;
     gradient.slice(iZ) =
-              (value.slice(iZ) - value.slice(iZ - 1)) /
-              grid.dk_center_m_scgc.slice(iZ);
+      (value.slice(iZ) - value.slice(iZ - 1)) /
+      grid.dk_center_m_scgc.slice(iZ);
   }
 
   return gradient;
