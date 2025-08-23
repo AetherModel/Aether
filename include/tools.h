@@ -64,6 +64,8 @@ std::string add_cmember(std::string inString);
 // ----------------------------------------------------------------------
 
 void display_vector(arma_vec vec);
+void display_matrix(std::string, arma_mat mat);
+void display_cube(std::string, arma_cube values);
 
 // ----------------------------------------------------------------------
 // Display an armadillo vector with a strong name in front
@@ -311,7 +313,7 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
 // convert mag coordinates to dipole ijk  //
 ////////////////////////////////////////////
 std::vector<precision_t> mag_to_ijk(precision_t mlon,
-                                    precision_t mlat, 
+                                    precision_t mlat,
                                     precision_t radius,
                                     precision_t planet_radius);
 
@@ -320,9 +322,9 @@ std::vector<precision_t> mag_to_ijk(precision_t mlon,
 // convert cell coordinates to geographic //
 ////////////////////////////////////////////
 std::vector<arma_cube> geo_to_mag(arma_cube glon,
-                                    arma_cube glat, 
-                                    arma_cube radius,
-																	Planets &planet) ;
+                                  arma_cube glat,
+                                  arma_cube radius,
+                                  Planets &planet) ;
 
 
 arma_cube vec2cube(std::vector<precision_t> ivec);
