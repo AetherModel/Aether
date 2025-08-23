@@ -19,6 +19,28 @@ Grid::Grid(std::string gridtype) {
 
   gridType = gridtype;
 
+  if (mklower(grid_input.shape).find("sphere") != std::string::npos)
+    iGridShape_ = iSphere_;
+
+  if (mklower(grid_input.shape) == "cubesphere")
+    iGridShape_ = iCubesphere_;
+
+  //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
+  if (mklower(grid_input.shape).find("dipole") != std::string::npos)
+    iGridShape_ = iDipole_;
+
+  if (iGridShape_ == iCubesphere_) {
+    if (grid_input.nX > grid_input.nY) {
+      report.error("Cubesphere grid: nX > nY, reducing nX");
+      grid_input.nX = grid_input.nY;
+    }
+
+    if (grid_input.nY > grid_input.nX) {
+      report.error("Cubesphere grid: nY > nX, reducing nY");
+      grid_input.nY = grid_input.nX;
+    }
+  }
+
   nX = grid_input.nX + nGCs * 2;
   nLons = nX;
   nY = grid_input.nY + nGCs * 2;
@@ -65,16 +87,6 @@ Grid::Grid(std::string gridtype) {
 
   if (grid_input.nZ == 1)
     HasZdim = false;
-
-  if (mklower(grid_input.shape).find("sphere") != std::string::npos)
-    iGridShape_ = iSphere_;
-
-  if (mklower(grid_input.shape) == "cubesphere")
-    iGridShape_ = iCubesphere_;
-
-  //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
-  if (mklower(grid_input.shape).find("dipole") != std::string::npos)
-    iGridShape_ = iDipole_;
 
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
