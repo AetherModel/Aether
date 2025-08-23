@@ -15,21 +15,38 @@
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree(std::string shape) {
-  if (shape == "cubesphere")
-    nRootNodes = 6;
+Quadtree::Quadtree(std::string shapeInput) {
+  IsOk = false;
+  std::string shape = mklower(shapeInput);
 
-  if (shape == "sphere")
+  if (shape == "cubesphere") {
+    nRootNodes = 6;
+    IsOk = true;
+  }
+
+  if (shape == "sphere") {
     nRootNodes = 1;
+    IsOk = true;
+  }
 
-    if (shape == "sphere4")
+  if (shape == "sphere4") {
     nRootNodes = 4;
+    IsOk = true;
+  }
 
-  if (shape == "dipole4")
+  if (shape == "dipole4") {
     nRootNodes = 4;
+    IsOk = true;
+  }
 
-  if (shape == "dipole6")
+  if (shape == "dipole6") {
     nRootNodes = 6;
+    IsOk = true;
+  }
+
+  if (!IsOk)
+    report.error("quadtree shape not found : " + shape);
+
 }
 
 // --------------------------------------------------------------------------
@@ -504,7 +521,7 @@ arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {
 
 // --------------------------------------------------------------------------
 // This is the starting point for determining which node a point
-// on the sphere is located.  The point needs to be in normalized 
+// on the sphere is located.  The point needs to be in normalized
 // coordinates.
 // --------------------------------------------------------------------------
 
@@ -514,8 +531,10 @@ int64_t Quadtree::find_point(arma_vec point) {
 
   if (IsSphere)
     wrap_point = wrap_point_sphere(point);
+
   if (IsCubeSphere)
     wrap_point = wrap_point_cubesphere(point);
+
   if (IsDipole)
     wrap_point = wrap_point_sphere(point);
 
@@ -523,15 +542,17 @@ int64_t Quadtree::find_point(arma_vec point) {
 
   for (int64_t iRoot = 0; iRoot < nRootNodes; iRoot++) {
     iNode = find_point(wrap_point, root_nodes[iRoot]);
+
     if (iNode > -1)
       break;
   }
+
   return iNode;
 }
 
 // --------------------------------------------------------------------------
 // This is the starting point for determining which root a point
-// on the sphere is located.  The point needs to be in normalized 
+// on the sphere is located.  The point needs to be in normalized
 // coordinates.
 // --------------------------------------------------------------------------
 
@@ -541,8 +562,10 @@ int64_t Quadtree::find_root(arma_vec point) {
 
   if (IsSphere)
     wrap_point = wrap_point_sphere(point);
+
   if (IsCubeSphere)
     wrap_point = wrap_point_cubesphere(point);
+
   if (IsDipole)
     wrap_point = wrap_point_cubesphere(point);
 
