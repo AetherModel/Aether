@@ -92,21 +92,30 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   arma_mat dummy_1(nXs, nYs, fill::ones);
 
   // Loop through altitudes
+
   for (int iAlt = 0; iAlt < nAlts; iAlt++) {
     // Conver cMax to contravariant velocity first
-    arma_mat u1 = sqrt(
-                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
-                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
-    arma_mat u2 = sqrt(
-                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
-                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
-    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1;
-    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
+    //arma_mat u1 = sqrt(
+    //                cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
+    //                cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
+    //arma_mat u2 = sqrt(
+    //                cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
+    //                cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
+    dtx.slice(iAlt) = grid.cubeC.dlx.slice(iAlt) / cMax_vcgc[0].slice(iAlt);
+    dty.slice(iAlt) = grid.cubeC.dln.slice(iAlt) / cMax_vcgc[1].slice(iAlt);
+    //dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
   }
+
+  //if (iProc == 0)
+  //  display_cube("dtx : ", dtx);
+
+  //if (iProc == 0)
+  //  display_cube("dty : ", dty);
+
 
   // Take minimum dts in each direction:
   dta(0) = dtx.min();
@@ -116,6 +125,7 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   // Set a minimum dt:
   dta(3) = 10.0;
   // Take the minimum of all directions:
+
   dt = dta.min();
 
   if (report.test_verbose(3))
