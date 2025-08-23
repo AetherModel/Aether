@@ -105,7 +105,7 @@ bool Ions::exchange_old(Grid &grid) {
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     DidWork = exchange_one_var(grid, species[iSpecies].density_scgc, false);
 
-  //DidWork = exchange_one_var(grid, temperature_scgc, false);
+  DidWork = exchange_one_var(grid, temperature_scgc, false);
   DidWork = exchange_one_var(grid, electron_temperature_scgc, false);
 
   // velocity components:
@@ -1186,14 +1186,14 @@ bool exchange_one_var(Grid &grid,
   }
 
   // If this is a cubesphere grid, interpolate ghostcells to their proper location
-  //if (grid.IsCubeSphereGrid & grid.gcInterpolationSet) {
-  //  report.print(3, "Interpolating Ghostcells to Proper Location");
-  //  var_scgc = interpolate_ghostcells(var_to_pass, grid);
-  //  var_to_pass = var_scgc;
-  //}
+  if (grid.IsCubeSphereGrid & grid.gcInterpolationSet) {
+    report.print(3, "Interpolating Ghostcells to Proper Location");
+    var_scgc = interpolate_ghostcells(var_to_pass, grid);
+    var_to_pass = var_scgc;
+  }
 
   // Now we fill in the corners so that we don't have zero values there:
-  //fill_corners(var_to_pass, nG);
+  fill_corners(var_to_pass, nG);
 
   report.exit(function);
   return DidWork;
