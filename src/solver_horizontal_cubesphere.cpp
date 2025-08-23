@@ -666,8 +666,6 @@ void Neutrals::solver_horizontal_RK1_rochi(Grid & grid, Times & time) {
 
   for (iAlt = nGCs; iAlt < nAlts - nGCs; iAlt++) {
 
-    /** States preprocessing **/
-    /* MASS DENSITY */
     rho = rho_scgc.slice(iAlt);
     vLon = velocity_vcgc[0].slice(iAlt);
     vLat = velocity_vcgc[1].slice(iAlt);
@@ -683,9 +681,7 @@ void Neutrals::solver_horizontal_RK1_rochi(Grid & grid, Times & time) {
     velocity_vcgc[0].slice(iAlt) = vLon - k1vLon * dt;
     velocity_vcgc[1].slice(iAlt) = vLat - k1vLat * dt;
     temperature_scgc.slice(iAlt) = temp - k1temp * dt;
-
   }
-
 
   calc_density_from_mass_concentration();
 
