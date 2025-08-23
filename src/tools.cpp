@@ -121,7 +121,44 @@ void fill_corners(arma_cube &values, int64_t nGCs) {
 
   int64_t nXs = values.n_rows, iX;
   int64_t nYs = values.n_cols, iY;
-  int64_t iGCx, iGCy;
+  int64_t nZs = values.n_slices, iZ;
+  int64_t iGCx, iGCy, iGCz;
+
+  // Bottom:
+  for (iGCz == 0; iGCz < nGCs; iGCz++) {
+    for (iGCx = 0; iGCx < nGCs; iGCx++) {
+      for (iY = 0; iY < nYs; iY++) {
+        // Bottom:
+        values(iGCx, iY, iGCz) =
+          values(nGCs, iY, nGCs);
+        values(nXs - iGCx - 1, iY, iGCz) =
+          values(nXs - nGCs - 1, iY, nGCs);
+        // top:
+        values(iGCx, iY, nZs - iGCz - 1) =
+          values(nGCs, iY, nZs - nGCs - 1);
+        values(nXs - iGCx - 1, iY, nZs - iGCz - 1) =
+          values(nXs - nGCs - 1, iY, nZs - nGCs - 1);
+      }
+    }
+  }
+
+  for (iGCz = 0; iGCz < nGCs; iGCz++) {
+    for (iGCy = 0; iGCy < nGCs; iGCy++) {
+      for (iX = 0; iX < nXs; iX++) {
+        // Bottoms:
+        values(iX, iGCy, iGCz) =
+          values(iX, nGCs, nGCs);
+        values(iX, nYs - iGCy - 1, iGCz) =
+          values(iX, nYs - nGCs - 1, nGCs);
+        // tops:
+        values(iX, iGCy, nZs - iGCz - 1) =
+          values(iX, nGCs, nZs - nGCs - 1);
+        values(iX, nYs - iGCy - 1, nZs - iGCz - 1) =
+          values(iX, nYs - nGCs - 1, nZs - nGCs - 1);
+
+      }
+    }
+  }
 
   for (iGCx = 0; iGCx < nGCs; iGCx++) {
     for (iGCy = 0; iGCy < nGCs; iGCy++) {
@@ -158,6 +195,35 @@ void display_vector(arma_vec vec) {
 
   std::cout << "\n";
 }
+
+// ----------------------------------------------------------------------------
+// Neatly display an armadillo matrix with a name
+// ----------------------------------------------------------------------------
+
+void display_cube(std::string name, arma_cube values) {
+  std::cout << name << " ";
+
+  for (int64_t i = 0; i < values.n_slices; i++) {
+    std::cout << "Slice : " << i << ":\n";
+    display_matrix(" ", values.slice(i));
+  }
+
+}
+
+// ----------------------------------------------------------------------------
+// Neatly display an armadillo matrix with a name
+// ----------------------------------------------------------------------------
+
+void display_matrix(std::string name, arma_mat mat) {
+  std::cout << name << "\n";
+
+  for (int64_t i = 0; i < mat.n_cols; i++)
+    display_vector(" ", mat.col(i));
+
+  std::cout << "\n";
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Neatly display an armadillo vector with a name
@@ -671,7 +737,8 @@ bool all_finite(arma_cube cube, std::string name) {
       "," + std::to_string(loc[1]) +
       "," + std::to_string(loc[2]) + ")";
     int size = locations.size();
-    std::cout << "all_finite ("<<name<<"): " << cube(loc[0], loc[1], loc[2]) << "\n";
+    std::cout << "all_finite (" << name << "): " << cube(loc[0], loc[1],
+                                                         loc[2]) << "\n";
     std::string error_message =
       std::to_string(size) +
       " Nonfinite values exist in " + name +
@@ -904,11 +971,11 @@ std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
 ////////////////////////////////////////////
 
 std::vector<arma_cube> geo_to_mag(arma_cube glon,
-                                    arma_cube glat, 
-                                    arma_cube radius,
-                                    Planets &planet) {
+                                  arma_cube glat,
+                                  arma_cube radius,
+                                  Planets &planet) {
 
-    std::string function = "Grid::geo_to_gmag";
+  std::string function = "Grid::geo_to_gmag";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -946,12 +1013,12 @@ std::vector<arma_cube> geo_to_mag(arma_cube glon,
 
 
 std::vector<precision_t> mag_to_ijk(precision_t mlon,
-                                    precision_t mLat, 
+                                    precision_t mLat,
                                     precision_t radius,
                                     precision_t planet_radius) {
 
   precision_t i_lon, j_p, k_q;
-  
+
   // precision_t planet_radius = planet.get_radius();
 
   i_lon = mlon;
@@ -972,8 +1039,9 @@ arma_cube vec2cube(std::vector<precision_t> ivec) {
   arma_cube I;
 
   I.set_size(sizei, 1, 1);
-  for (int i =0; i<sizei; i++){
+
+  for (int i = 0; i < sizei; i++)
     I[i] = ivec[i];
-  }
+
   return I;
 }
