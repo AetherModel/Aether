@@ -1,6 +1,5 @@
 
-// g++ -I/usr/local/include -I/Users/ridley/Software/Json/json/include main.cpp
-// g++ -I/usr/local/include -o advect1d advect.cpp
+// g++ -o euler1dv.exe -I/usr/local/include euler_vertical.cpp
 
 /// The armadillo library is to allow the use of 3d cubes and other
 /// array types, with array math built in. This eliminates loops!
@@ -11,13 +10,13 @@
 
 // Types
 // Precision compile-time aliasing
-#ifdef AETHER_USE_PRECISION_DOUBLE
+//#ifdef AETHER_USE_PRECISION_DOUBLE
 /// Precision type chosen to be `double` through `AETHER_USE_PRECISION_DOUBLE`
 using precision_t = double;
-#else
+//#else
 /// Precision type compile-time default to float.
-using precision_t = float;
-#endif
+//using precision_t = float;
+//#endif
 
 /// Armadillo type vector (single column) with compile-time precision.
 using arma_vec = arma::Col<precision_t>;
@@ -28,24 +27,11 @@ using arma_cube = arma::Cube<precision_t>;
 
 #include <fstream>
 
-// ---------------------------------------------------------
-// grid creation
-// ---------------------------------------------------------
-
-arma_vec init_grid(int64_t nPts, int64_t nGCs) {
-
-  precision_t dx = 1.0 / nPts;
-  arma_vec x(nPts + nGCs * 2);
-
-  // uniform grid:
-  for (int64_t i = -nGCs; i < nPts + nGCs; i++) {
-    x(i + nGCs) = i * dx;
-  }
-  precision_t maxX = x(nPts + nGCs - 1);
-  x = 100.0 * x / maxX;
-
-  return x;
-}
+const precision_t t0 = 1000.0;
+const precision_t mass = 16.0 * 1.67e-27;
+const precision_t r0 = 1.0e19 * mass;
+const precision_t kb = 1.38e-23;
+const precision_t gravity = -kb * t0 / mass / 100000.0;
 
 // ---------------------------------------------------------
 // grid stretched creation
@@ -72,6 +58,25 @@ arma_vec init_stretched_grid(int64_t nPts, int64_t nGCs) {
   precision_t maxX = x(nPts + nGCs - 1);
   x = 100.0 * x / maxX;
   
+  return x;
+}
+
+// ---------------------------------------------------------
+// grid creation
+// ---------------------------------------------------------
+
+arma_vec init_grid(int64_t nPts, int64_t nGCs) {
+
+  precision_t dx = 1.0 / nPts;
+  arma_vec x(nPts + nGCs * 2);
+
+  // uniform grid:
+  for (int64_t i = -nGCs; i < nPts + nGCs; i++) {
+    x(i + nGCs) = i * dx;
+  }
+  // stretch to be 100 km:
+  x = x * 200.0 * 1000.0;
+
   return x;
 }
 
@@ -110,20 +115,64 @@ arma_vec calc_bin_widths(arma_vec edges) {
 }
 
 // ---------------------------------------------------------
-// initial density
+// initial rho
 // ---------------------------------------------------------
 
-arma_vec init_den(int64_t nPts) {
+arma_vec init_rho(int64_t nPts, arma_vec x) {
 
-  arma_vec den(nPts);
-  for (int64_t i = 0; i < nPts; i++) {
-    if (i < nPts/2)
-      den(i) = 2.0;
-    else
-      den(i) = 1.0;
+  arma_vec rho(nPts);
+  precision_t h, dx;
+  rho(0) = r0;
+  for (int64_t i = 1; i < nPts; i++) {
+    // t = 100:
+    h = kb * t0 / mass / abs(gravity);
+    dx = x(i) - x(i-1);
+    rho(i) = rho(i-1) * exp( - dx / h);
+//std::cout << "i, rho : " << i
+//	      << " " << rho(i)
+//	      << " " << dx
+//	      << " " << h << "\n";
   }
 
-  return den;
+  return rho;
+}
+
+// ---------------------------------------------------------
+// set BCs
+// ---------------------------------------------------------
+
+void set_bcs(int64_t nPts, int64_t nGCs,
+	     arma_vec x,
+	     arma_vec &rho,
+	     arma_vec &vel,
+	     arma_vec &temp) {
+
+  precision_t h, dx;
+  // Lower BC on rho:
+  rho(0) = r0;
+  vel(0) = 0.0; //vel(nGCs);
+  temp(0) = t0;
+  for (int64_t i = 1; i < nGCs; i++) {
+    h = kb * t0 / mass / abs(gravity);
+    dx = x(i) - x(i-1);
+    rho(i) = rho(i-1) * exp( - dx / h);
+    vel(i) = 0.0; //vel(nGCs);
+    temp(i) = t0;
+  }
+  // Upper BC on rho:
+  for (int64_t i = nPts + nGCs; i < nPts + 2 * nGCs; i++) {
+    h = kb * temp(i) / mass / abs(gravity);
+    dx = x(i) - x(i-1);
+    temp(i) = temp(i-1);
+    rho(i) = temp(i-1) / temp(i) * rho(i-1) * exp( - dx / h);
+    //if (vel(i-1) >= 0.0) {
+    vel(i) = vel(i-1);
+      //} else {
+      //vel(i) = 0.0;
+      //}
+  }
+
+  return;
 }
 
 // ---------------------------------------------------------
@@ -133,9 +182,19 @@ arma_vec init_den(int64_t nPts) {
 arma_vec init_vel(int64_t nPts) {
   arma_vec vel(nPts);
   // all cells positive to right:
-  vel.ones();
-  vel = -1.0 * vel;
+  vel.zeros();
   return vel;
+}
+
+// ---------------------------------------------------------
+// initial temp (e)
+// ---------------------------------------------------------
+
+arma_vec init_temp(int64_t nPts) {
+  arma_vec temp(nPts);
+  temp.ones();
+  temp = temp * t0;
+  return temp;
 }
 
 // ---------------------------------------------------------
@@ -238,6 +297,61 @@ arma_vec calc_grad(arma_vec values,
 }
 
 // ---------------------------------------------------------
+// Project gradients + values to the right face, from the left
+//   returned values are on the i - 1/2 edges
+//     (between i-1 and i cell center)
+// ---------------------------------------------------------
+
+arma_vec project_from_left(arma_vec values,
+			   arma_vec gradients,
+			   arma_vec x_centers,
+			   arma_vec x_edges,
+			   int64_t nPts,
+			   int64_t nGCs) {
+  int64_t iStart = 0;
+  int64_t iEnd = nPts + 2 * nGCs;
+
+  // Define at edges:
+  arma_vec projected(nPts + 2 * nGCs + 1);
+  projected.zeros();
+
+  // no gradient in the 0 or iEnd cells
+  for (int64_t i = iStart + 1; i < iEnd - 1; i++)
+    projected(i + 1) = values(i) +
+      gradients(i) * (x_edges(i + 1) - x_centers(i));
+
+  return projected;
+}
+
+
+// ---------------------------------------------------------
+// Project gradients + values to the left face, from the right
+//   returned values are on the i - 1 edges
+//     (between i-1 and i cell center)
+// ---------------------------------------------------------
+
+arma_vec project_from_right(arma_vec values,
+			    arma_vec gradients,
+			    arma_vec x_centers,
+			    arma_vec x_edges,
+			    int64_t nPts,
+			    int64_t nGCs) {
+  int64_t iStart = 0;
+  int64_t iEnd = nPts + 2 * nGCs;
+
+  // Define at edges:
+  arma_vec projected(nPts + 2 * nGCs + 1);
+  projected.zeros();
+
+  // no gradient in the 0 or iEnd cells
+  for (int64_t i = iStart + 1; i < iEnd - 1; i++)
+    projected(i) = values(i) +
+      gradients(i) * (x_edges(i) - x_centers(i));
+
+  return projected;
+}
+
+// ---------------------------------------------------------
 // Limiter on values
 //   projected is assumed to be on the edge between the
 //   i-1 and i cell (i-1/2)
@@ -274,32 +388,6 @@ arma_vec limiter_value(arma_vec projected,
   return limited;
 }
 
-// ---------------------------------------------------------
-// Project gradients + values to the right face, from the left
-//   returned values are on the i - 1/2 edges
-//     (between i-1 and i cell center)
-// ---------------------------------------------------------
-
-arma_vec project_from_left(arma_vec values,
-			   arma_vec gradients,
-			   arma_vec x_centers,
-			   arma_vec x_edges,
-			   int64_t nPts,
-			   int64_t nGCs) {
-  int64_t iStart = 0;
-  int64_t iEnd = nPts + 2 * nGCs;
-
-  // Define at edges:
-  arma_vec projected(nPts + 2 * nGCs + 1);
-  projected.zeros();
-
-  // no gradient in the 0 or iEnd cells
-  for (int64_t i = iStart + 1; i < iEnd - 1; i++)
-    projected(i + 1) = values(i) +
-      gradients(i) * (x_edges(i + 1) - x_centers(i));
-
-  return projected;
-}
 
 // ---------------------------------------------------------
 // Project gradients + values to the right face, from the left
@@ -334,34 +422,6 @@ arma_vec project_from_left_new(arma_vec values,
 
   projected = limiter_value(projected, values, nPts, nGCs);
   
-  return projected;
-}
-
-
-// ---------------------------------------------------------
-// Project gradients + values to the left face, from the right
-//   returned values are on the i - 1 edges
-//     (between i-1 and i cell center)
-// ---------------------------------------------------------
-
-arma_vec project_from_right(arma_vec values,
-			    arma_vec gradients,
-			    arma_vec x_centers,
-			    arma_vec x_edges,
-			    int64_t nPts,
-			    int64_t nGCs) {
-  int64_t iStart = 0;
-  int64_t iEnd = nPts + 2 * nGCs;
-
-  // Define at edges:
-  arma_vec projected(nPts + 2 * nGCs + 1);
-  projected.zeros();
-
-  // no gradient in the 0 or iEnd cells
-  for (int64_t i = iStart + 1; i < iEnd - 1; i++)
-    projected(i) = values(i) +
-      gradients(i) * (x_edges(i) - x_centers(i));
-
   return projected;
 }
 
@@ -490,7 +550,16 @@ void output(arma_vec values,
 
 int main() {
 
-  int64_t nPts = 200;
+  precision_t timeMax = 0.1;
+  precision_t time = 0.0;
+  
+  precision_t gamma = 5.0/3.0;
+  precision_t KoM = kb/mass;
+  //gamma = kb/mass;
+
+  int64_t iStep;
+  
+  int64_t nPts = 100, i;
   int64_t nGCs = 2;
   int64_t nPtsTotal = nGCs + nPts + nGCs;
 
@@ -499,92 +568,169 @@ int main() {
   arma_vec edges = calc_bin_edges(x);
   arma_vec widths = calc_bin_widths(edges);
 
-  precision_t dt = 0.1 * x(nPts + nGCs - 1) / nPts;
-  precision_t time = 0.0;
+  precision_t dt = 0.00001 * x(nPts + nGCs - 1) / nPts;
+  int64_t nSteps = 100.0 / dt;
+  
+  // std::cout << "dt : " << dt << "; nSteps: " << nSteps << "\n";
 
-  int64_t nSteps = x(nPts + nGCs - 1) / dt;
-  int64_t iStep;
-    
+  // state variables:
+  arma_vec rho = init_rho(nPtsTotal, x);
   arma_vec grad_rho;
   arma_vec rhoL;
   arma_vec rhoR;
+
+  arma_vec vel = init_vel(nPtsTotal);
   arma_vec grad_vel;
   arma_vec velL;
   arma_vec velR;
 
-  arma_vec flux;
+  // temp is "e" (not E):
+  arma_vec temp = init_temp(nPtsTotal);
+  arma_vec grad_temp;
+  arma_vec tempL, tempR;
 
-  arma_vec rho = init_den(nPtsTotal);
-  arma_vec vel = init_vel(nPtsTotal);
+  arma_vec eq1Flux, eq1FluxL, eq1FluxR;
+  arma_vec eq2Flux, eq2FluxL, eq2FluxR;
+  arma_vec eq3Flux, eq3FluxL, eq3FluxR;
+  arma_vec wsL, wsR, ws;
+  arma_vec dtAll;
 
-  exchange(rho, nPts, nGCs);
-  exchange(vel, nPts, nGCs);
+  arma_vec diff;
 
+//  exchange(rho, nPts, nGCs);
+//  exchange(vel, nPts, nGCs);
+//  exchange(temp, nPts, nGCs);
+
+  arma_vec momentum = rho % vel;
+  arma_vec grad_momenum, momentumL, momentumR;
+
+  arma_vec totalE = rho % temp * KoM + 0.5 * rho % vel % vel;
+  arma_vec grad_totalE, totaleL, totaleR;
+  
   output(rho, "rho.txt", false, nPts, nGCs);
+  output(vel, "vel.txt", false, nPts, nGCs);
+  output(temp, "temp.txt", false, nPts, nGCs);
+  output(totalE, "totale.txt", false, nPts, nGCs);
   output(x, "x.txt", false, nPts, nGCs);
-  
-  for (iStep = 0; iStep < nSteps; iStep++) {
 
-    std::cout << "iStep = " << iStep << "; time =  " << time << "\n";
-    time = time + dt;
-  
+  iStep = 0;
+  while (time < timeMax) {
+
+    std::cout << "iStep = " << iStep
+	      << "; time =  " << time
+	      << "; vel =  " << vel(80) << "\n";
+
+    // -----------------------------------
+    // Rho
+
     grad_rho = calc_grad(rho, x, nPts, nGCs);
 
     // Right side of edge from left
-//rhoR = project_from_left(rho, grad_rho,
-//			     x, edges,
-//			     nPts, nGCs);
     rhoR = project_from_left_new(rho,
 			     x, edges,
 			     nPts, nGCs);
-    //rhoR = limiter_value(rhoR, rho, nPts, nGCs);
-
+    
     // Left side of edge from left
-//    rhoL = project_from_right(rho, grad_rho,
-//			      x, edges,
-//			      nPts, nGCs);
     rhoL = project_from_right_new(rho,
 			      x, edges,
 			      nPts, nGCs);
-    //rhoL = limiter_value(rhoL, rho, nPts, nGCs);
 
+    // -----------------------------------
+    // vel
 
     grad_vel = calc_grad(vel, x, nPts, nGCs);
-
     // Right side of edge from left
-//    velR = project_from_left(vel, grad_vel,
-//			     x, edges,
-//			     nPts, nGCs);
     velR = project_from_left_new(vel,
 			     x, edges,
 			     nPts, nGCs);
-    //velR = limiter_value(velR, vel, nPts, nGCs);
-
     // Left side of edge from left
-//    velL = project_from_right(vel, grad_vel,
-//			      x, edges,
-//			      nPts, nGCs);
     velL = project_from_right_new(vel,
 			      x, edges,
 			      nPts, nGCs);
-    //velL = limiter_value(velL, vel, nPts, nGCs);
 
+    // -----------------------------------
+    // temp
 
-    flux = gudonov(rhoL, rhoR, velL, velR, nPts, nGCs);
-    //flux = rusanov(rhoL, rhoR, velL, velR, widths, nPts, nGCs);
+    grad_temp = calc_grad(temp, x, nPts, nGCs);
+    // Right side of edge from left
+    tempR = project_from_left_new(temp,
+			      x, edges,
+			      nPts, nGCs);
+    // Left side of edge from left
+    tempL = project_from_right_new(temp,
+			       x, edges,
+			       nPts, nGCs);
 
-    for (int64_t i = nGCs; i < nPts + nGCs*2 - 1; i++) {
-      rho(i) = rho(i) - dt / widths(i) *
-	(flux(i+1) - flux(i));
+    // eq 1 = rho
+    // eq 2 = rho * vel (momentum)
+    // eq 3 = E --> rho * (temp + 0.5 * vel^2) (totalE) 
+    
+    // Calculate fluxes of different terms at the edges:
+    eq1FluxL = rhoL % velL;
+    eq1FluxR = rhoR % velR;
+
+    momentumL = eq1FluxL;
+    momentumR = eq1FluxR;
+    totaleL = rhoL % tempL * KoM + 0.5 * rhoL % velL % velL;
+    totaleR = rhoR % tempR * KoM + 0.5 * rhoR % velR % velR;
+
+    //eq2FluxL = rhoL % (velL % velL + (gamma-1) * tempL);
+    //eq2FluxR = rhoR % (velR % velR + (gamma-1) * tempR);
+    eq2FluxL = rhoL % (velL % velL + KoM * tempL);
+    eq2FluxR = rhoR % (velR % velR + KoM * tempR);
+
+    //eq3FluxL = rhoL % velL % (0.5 * velL % velL + gamma * tempL);
+    //eq3FluxR = rhoR % velR % (0.5 * velR % velR + gamma * tempR);
+    eq3FluxL = rhoL % velL % (0.5 * velL % velL + gamma * tempL * KoM);
+    eq3FluxR = rhoR % velR % (0.5 * velR % velR + gamma * tempR * KoM);
+
+    // Calculate the wave speed for the diffusive flux:
+    //wsL = abs(velL) + sqrt(gamma * (gamma-1.0) * tempL);
+    //wsR = abs(velR) + sqrt(gamma * (gamma-1.0) * tempR);
+    wsL = abs(velL) + sqrt(gamma * KoM * tempL);
+    wsR = abs(velR) + sqrt(gamma * KoM * tempR);
+    ws = wsR;
+    dt = 0.0;
+    for (i = 1; i < nPts + nGCs*2 - 1; i++) {
+      if (wsR(i) > ws(i)) ws(i) = wsR(i);
+      if (widths(i) / ws(i) > dt)
+	dt = widths(i) / ws(i);
     }
-    exchange(rho, nPts, nGCs);
-    exchange(vel, nPts, nGCs);
+    dt = dt * 0.001;
+    time = time + dt;
+    
+    // Calculate average flux at the edges:
+    diff = rhoR - rhoL;
+    eq1Flux = (eq1FluxL + eq1FluxR) / 2 + 0.5 * ws % diff;
+    diff = momentumR - momentumL;
+    eq2Flux = (eq2FluxL + eq2FluxR) / 2 + 0.5 * ws % diff;
+    diff = totaleR - totaleL;
+    eq3Flux = (eq3FluxL + eq3FluxR) / 2 + 0.5 * ws % diff;
+    
+    // Update values:
+    for (i = nGCs; i < nPts + nGCs*2 - 1; i++) {
+      rho(i) = rho(i) - dt / widths(i) * (eq1Flux(i+1) - eq1Flux(i));
+      momentum(i) = momentum(i) - dt / widths(i) * (eq2Flux(i+1) - eq2Flux(i))
+	+ gravity * rho(i) * dt;
+      totalE(i) = totalE(i) - dt / widths(i) * (eq3Flux(i+1) - eq3Flux(i));
+    }
+
+    //exchange(rho, nPts, nGCs);
+    //exchange(momentum, nPts, nGCs);
+    //exchange(totalE, nPts, nGCs);
+    vel = momentum / rho;
+    temp = (totalE / rho - 0.5 * vel % vel) / KoM;
+    
+    set_bcs(nPts, nGCs, x, rho, vel, temp);
 
     output(rho, "rho.txt", true, nPts, nGCs);
-    //output(flux, "flux.txt", false, nPts, nGCs);
-    //output(rho, "test.txt", true, nPts, nGCs);
+    output(vel, "vel.txt", true, nPts, nGCs);
+    output(temp, "temp.txt", true, nPts, nGCs);
+    output(totalE, "totale.txt", true, nPts, nGCs);
     //output(rhoL, "rhor.txt", false, nPts, nGCs);
     //output(rhoR, "rhol.txt", false, nPts, nGCs);
+    iStep++;
+    
   }
   
   return 0;
