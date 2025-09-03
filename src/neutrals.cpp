@@ -263,9 +263,11 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
 
   for (iNeutral = 0; iNeutral < nSpeciesAdvect; iNeutral++) {
     iSpecies = species_to_advect[iNeutral];
+
     for (iX = nGCs; iX < nX - nGCs; iX++) {
       for (iY = nGCs; iY < nY - nGCs; iY++) {
         iFirst = grid.first_lower_gc(iX, iY) + iStart;
+
         // Integrate with hydrostatic equilibrium up:
         for (int iAlt = iFirst; iAlt < iEnd; iAlt++) {
           species[iSpecies].density_scgc(iX, iY, iAlt) =
@@ -274,6 +276,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
             species[iSpecies].density_scgc(iX, iY, iAlt - 1) *
             exp(-grid.dr_edge(iX, iY, iAlt) /
                 species[iSpecies].scale_height_scgc(iX, iY, iAlt));
+
         }
       }
     }
@@ -302,6 +305,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
   for (iX = nGCs; iX < nX - nGCs; iX++) {
     for (iY = nGCs; iY < nY - nGCs; iY++) {
       iFirst = grid.first_lower_gc(iX, iY) + iStart;
+
       // Integrate with hydrostatic equilibrium up:I
       for (int iAlt = iFirst; iAlt < iEnd; iAlt++) {
         species[iSpecies].density_scgc(iX, iY, iAlt) =
