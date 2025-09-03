@@ -50,6 +50,7 @@ void set_gcs_to_value(arma_cube &var_scgc,
 //   - basically fill in the corners with values near them
 // ----------------------------------------------------------------------------
 
+void fill_horizontal_ghostcels(arma_cube &values, int64_t nGCs);
 void fill_corners(arma_cube &values, int64_t nGCs);
 
 // -----------------------------------------------------------------------------

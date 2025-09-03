@@ -111,6 +111,39 @@ arma_vec interpolate1d(arma_vec inY,
   return outY;
 }
 
+// ----------------------------------------------------------------------------
+// Fix corners in an arma cube
+//   - basically fill in the corners with values near them
+// ----------------------------------------------------------------------------
+
+void fill_horizontal_ghostcels(arma_cube &values, int64_t nGCs) {
+
+  int64_t nXs = values.n_rows, iX;
+  int64_t nYs = values.n_cols, iY;
+  int64_t nZs = values.n_slices, iZ;
+  int64_t iGCx, iGCy, iGCz;
+
+  for (iGCx = 0; iGCx < nGCs; iGCx++) {
+    for (iY = 0; iY < nYs; iY++) {
+      // Bottom:
+      values.tube(iGCx, iY) = values.tube(nGCs, iY);
+      values.tube(nXs - iGCx - 1, iY) = values.tube(nXs - nGCs - 1, iY);
+    }
+  }
+
+  for (iX = 0; iX < nXs; iX++) {
+    for (iGCy = 0; iGCy < nGCs; iGCy++) {
+      // Bottom:
+      values.tube(iX, iGCy) = values.tube(iX, nGCs);
+      values.tube(iX, nYs - iGCy - 1) = values.tube(iX, nYs - nGCs - 1);
+    }
+  }
+
+  //fill_corners(values, nGCs);
+
+  return;
+
+}
 
 // ----------------------------------------------------------------------------
 // Fix corners in an arma cube
