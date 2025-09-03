@@ -1,8 +1,59 @@
 
-// g++ -I/usr/local/include -I/Users/ridley/Software/Json/json/include main.cpp
+// g++ -o euler1d.exe -I/usr/local/include euler.cpp
 
-#include "../../../include/aether.h"
+/// The armadillo library is to allow the use of 3d cubes and other
+/// array types, with array math built in. This eliminates loops!
+#include <armadillo>
+
+/// This is used for timing and the random seed generator:
+#include <chrono>
+
+// Types
+// Precision compile-time aliasing
+#ifdef AETHER_USE_PRECISION_DOUBLE
+/// Precision type chosen to be `double` through `AETHER_USE_PRECISION_DOUBLE`
+using precision_t = double;
+#else
+/// Precision type compile-time default to float.
+using precision_t = float;
+#endif
+
+/// Armadillo type vector (single column) with compile-time precision.
+using arma_vec = arma::Col<precision_t>;
+/// Armadillo type matrix (two dimension) with compile-time precision.
+using arma_mat = arma::Mat<precision_t>;
+/// Armadillo type cube (three dimension) with compile-time precision.
+using arma_cube = arma::Cube<precision_t>;
+
 #include <fstream>
+
+// ---------------------------------------------------------
+// grid stretched creation
+// ---------------------------------------------------------
+
+arma_vec init_stretched_grid(int64_t nPts, int64_t nGCs) {
+
+  precision_t dx = 1.0;
+  arma_vec x(nPts + nGCs * 2);
+
+  precision_t factor = 1.0;
+  precision_t i2pi = 2.0 * 3.1415927 / (nPts-1);
+
+  x(nGCs) = 0.0;
+  
+  for (int64_t i = 1; i < nPts + nGCs; i++) {
+    x(i + nGCs) = x(i - 1 + nGCs) + dx  + factor * (1 + cos(i * i2pi));
+    std::cout << "i : " << i << " " << cos(i * i2pi) << "\n";
+  }
+  for (int64_t i = -1; i >= -nGCs; i--) {
+    x(i + nGCs) = x(i + 1 + nGCs) - dx  - factor * (1 + cos(i * i2pi));
+    std::cout << "i : " << i << " " << cos(i * i2pi) << "\n";
+  }
+  precision_t maxX = x(nPts + nGCs - 1);
+  x = 100.0 * x / maxX;
+  
+  return x;
+}
 
 // ---------------------------------------------------------
 // grid creation
@@ -17,6 +68,7 @@ arma_vec init_grid(int64_t nPts, int64_t nGCs) {
   for (int64_t i = -nGCs; i < nPts + nGCs; i++) {
     x(i + nGCs) = i * dx;
   }
+  x = x * 100.0;
 
   return x;
 }
@@ -63,7 +115,7 @@ arma_vec init_rho(int64_t nPts) {
 
   arma_vec rho(nPts);
   for (int64_t i = 0; i < nPts; i++) {
-    if (i > (1 * nPts)/4 && i < 3 * nPts / 4)
+    if (i > nPts/2 - 3 && i < nPts / 2 + 3)
       rho(i) = 2.2;
     else
       rho(i) = 2.0;
@@ -285,6 +337,79 @@ arma_vec limiter_value(arma_vec projected,
   return limited;
 }
 
+
+// ---------------------------------------------------------
+// Project gradients + values to the right face, from the left
+//   returned values are on the i - 1/2 edges
+//     (between i-1 and i cell center)
+// ---------------------------------------------------------
+
+arma_vec project_from_left_new(arma_vec values,
+			       arma_vec x_centers,
+			       arma_vec x_edges,
+			       int64_t nPts,
+			       int64_t nGCs) {
+  int64_t iStart = 1;
+  int64_t iEnd = nPts + 2 * nGCs - 1;
+
+  // Define at edges:
+  arma_vec projected(nPts + 2 * nGCs + 1);
+  projected.zeros();
+
+  precision_t dxei, dxci, dxcip1, r;
+  
+  // no gradient in the 0 or iEnd cells
+  for (int64_t i = iStart; i < iEnd; i++) {
+    dxei = x_edges(i + 1) - x_edges(i);
+    dxci = x_centers(i) - x_centers(i - 1);
+    dxcip1 = x_centers(i + 1) - x_centers(i);
+    r = dxcip1 / dxci;
+    projected(i + 1) = values(i) + 
+      0.5 * dxei * (values(i) - values(i - 1)) / dxci + 
+      0.125 * dxei * dxei * (values(i + 1) + r * values(i - 1) - (1 + r) * values(i)) / (dxci * dxcip1);
+  }
+
+  projected = limiter_value(projected, values, nPts, nGCs);
+  
+  return projected;
+}
+
+// ---------------------------------------------------------
+// Project gradients + values to the left face, from the right
+//   returned values are on the i - 1 edges
+//     (between i-1 and i cell center)
+// ---------------------------------------------------------
+
+arma_vec project_from_right_new(arma_vec values,
+				arma_vec x_centers,
+				arma_vec x_edges,
+				int64_t nPts,
+				int64_t nGCs) {
+  int64_t iStart = 1;
+  int64_t iEnd = nPts + 2 * nGCs - 1;
+
+  // Define at edges:
+  arma_vec projected(nPts + 2 * nGCs + 1);
+  precision_t dxei, dxci, dxcip1, r;
+  
+  projected.zeros();
+
+  // no gradient in the 0 or iEnd cells
+  for (int64_t i = iStart; i < iEnd; i++) {
+    dxei = x_edges(i + 1) - x_edges(i);
+    dxci = x_centers(i) - x_centers(i - 1);
+    dxcip1 = x_centers(i + 1) - x_centers(i);
+    r = dxcip1 / dxci;
+    projected(i) = values(i) - 
+      0.5 * dxei * (values(i + 1) - values(i)) / dxcip1 +
+      0.125 * dxei * dxei * (values(i + 1) + r * values(i - 1) - (1 + r) * values(i)) / (dxci * dxcip1);
+  }
+
+  projected = limiter_value(projected, values, nPts, nGCs);
+  
+  return projected;
+}
+
 // ---------------------------------------------------------
 // gudonov upwind scheme
 // ---------------------------------------------------------
@@ -374,19 +499,23 @@ void output(arma_vec values,
 
 int main() {
 
-  precision_t dt = 0.0005;
+  precision_t time = 0.0;
+  
   precision_t gamma = 5.0/3.0;
 
-  int64_t nSteps = 100;
   int64_t iStep;
   
-  int64_t nPts = 60;
+  int64_t nPts = 100;
   int64_t nGCs = 2;
   int64_t nPtsTotal = nGCs + nPts + nGCs;
 
-  arma_vec x = init_grid(nPts, nGCs);
+  //arma_vec x = init_grid(nPts, nGCs);
+  arma_vec x = init_stretched_grid(nPts, nGCs);
   arma_vec edges = calc_bin_edges(x);
   arma_vec widths = calc_bin_widths(edges);
+
+  precision_t dt = 0.01 * x(nPts + nGCs - 1) / nPts;
+  int64_t nSteps = 10.0 / dt;
 
   // state variables:
   arma_vec rho = init_rho(nPtsTotal);
@@ -424,10 +553,12 @@ int main() {
   output(rho, "rho.txt", false, nPts, nGCs);
   output(vel, "vel.txt", false, nPts, nGCs);
   output(temp, "temp.txt", false, nPts, nGCs);
+  output(x, "x.txt", false, nPts, nGCs);
   
   for (iStep = 0; iStep < nSteps; iStep++) {
 
-    std::cout << "step : " << iStep << "\n";
+    std::cout << "iStep = " << iStep << "; time =  " << time << "\n";
+    time = time + dt;
     
     // -----------------------------------
     // Rho
@@ -435,12 +566,12 @@ int main() {
     grad_rho = calc_grad(rho, x, nPts, nGCs);
 
     // Right side of edge from left
-    rhoR = project_from_left(rho, grad_rho,
+    rhoR = project_from_left_new(rho,
 			     x, edges,
 			     nPts, nGCs);
     
     // Left side of edge from left
-    rhoL = project_from_right(rho, grad_rho,
+    rhoL = project_from_right_new(rho,
 			      x, edges,
 			      nPts, nGCs);
 
@@ -449,11 +580,11 @@ int main() {
 
     grad_vel = calc_grad(vel, x, nPts, nGCs);
     // Right side of edge from left
-    velR = project_from_left(vel, grad_vel,
+    velR = project_from_left_new(vel,
 			     x, edges,
 			     nPts, nGCs);
     // Left side of edge from left
-    velL = project_from_right(vel, grad_vel,
+    velL = project_from_right_new(vel,
 			      x, edges,
 			      nPts, nGCs);
 
@@ -462,11 +593,11 @@ int main() {
 
     grad_temp = calc_grad(temp, x, nPts, nGCs);
     // Right side of edge from left
-    tempR = project_from_left(temp, grad_temp,
+    tempR = project_from_left_new(temp,
 			      x, edges,
 			      nPts, nGCs);
     // Left side of edge from left
-    tempL = project_from_right(temp, grad_temp,
+    tempL = project_from_right_new(temp,
 			       x, edges,
 			       nPts, nGCs);
 
