@@ -92,8 +92,8 @@ bool Neutrals::set_upper_bcs(Grid grid) {
 
       h = species[iSpecies].scale_height_scgc.slice(iAlt);
       species[iSpecies].density_scgc.slice(iAlt) =
-                                      species[iSpecies].density_scgc.slice(iAlt - 1) %
-                                      exp(-grid.dk_edge_m.slice(iAlt) / h);
+        species[iSpecies].density_scgc.slice(iAlt - 1) %
+        exp(-grid.dk_edge_m.slice(iAlt) / h);
     }
   }
 
@@ -173,13 +173,13 @@ bool Neutrals::set_lower_bcs(Grid grid,
           std::cout << "  Found in MSIS!\n";
 
         species[iSpecies].density_scgc.slice(0) =
-                                        msis.get_mat(species[iSpecies].cName);
+          msis.get_mat(species[iSpecies].cName);
       } else {
         if (report.test_verbose(3))
           std::cout << "  NOT Found in MSIS - setting constant\n";
 
         species[iSpecies].density_scgc.slice(0).
-                                      fill(species[iSpecies].lower_bc_density);
+        fill(species[iSpecies].lower_bc_density);
       }
 
     }
@@ -198,11 +198,16 @@ bool Neutrals::set_lower_bcs(Grid grid,
   // - The equator-most (j-hat) grid cell will be entirely below min_alt!
   for (int iLon = 0; iLon < nLons; iLon++) {
     for (int iLat = 0; iLat < nLats; iLat++) {
-      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
-        // k-index of 1st lower ghost cell is not constant on the dipole grid.
-        // On the latlon grid with nGCS=2, this will be 1
-        iAlt = grid.first_lower_gc(iLon, iLat);
+      // k-index of 1st lower ghost cell is not constant on the dipole grid.
+      // On the latlon grid with nGCS=2, this will be 1
+      iAlt = grid.first_lower_gc(iLon, iLat);
+      temperature_scgc(iLon, iLat, iAlt) = initial_temperatures[0];
+      // Set all lower ghost cells to bottom temperature:
+      temperature_scgc.subcube(iLon, iLat, 0, iLon, iLat, iAlt - 1).fill(
+        temperature_scgc(iLon, iLat, iAlt));
+
+      for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
         //-----------------------------------------------
         // Planet BCs - set to fixed constant values.
@@ -213,14 +218,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
           species[iSpecies].density_scgc.subcube(iLon, iLat, 0,
                                                  iLon, iLat, iAlt - 1).fill(
                                                    species[iSpecies].lower_bc_density);
-          // only fill 1st GC with lower temperature
-          temperature_scgc(iLon, iLat, iAlt) = initial_temperatures[0];
         }  // planet bc type
-
-        // Set all lower ghost cells to bottom temperature:
-        temperature_scgc.subcube(iLon, iLat, 0, iLon, iLat, iAlt - 1).fill(
-                          temperature_scgc(iLon, iLat, iAlt));
-
 
         // 1st ghost cell density is filled with a hydrostatic solution.
         sh_ave = (species[iSpecies].scale_height_scgc(iLon, iLat, iAlt)
@@ -250,7 +248,6 @@ bool Neutrals::set_lower_bcs(Grid grid,
   }
 
   didWork = true;
-
 
   calc_bulk_velocity();
 
@@ -292,8 +289,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
       for (iY = 0; iY < nY; iY++) {
         // Constant Gradient for Temperature:
         temperature_scgc.tube(iX, iY) =
-                          2 * temperature_scgc.tube(iX - 1, iY) -
-                          temperature_scgc.tube(iX - 2, iY);
+          2 * temperature_scgc.tube(iX - 1, iY) -
+          temperature_scgc.tube(iX - 2, iY);
 
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
@@ -302,8 +299,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
-                                          2 * species[iSpecies].density_scgc.tube(iX - 1, iY) -
-                                          species[iSpecies].density_scgc.tube(iX - 2, iY);
+            2 * species[iSpecies].density_scgc.tube(iX - 1, iY) -
+            species[iSpecies].density_scgc.tube(iX - 2, iY);
       }
     }
   }
@@ -314,8 +311,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
       for (iY = 0; iY < nY; iY++) {
         // Constant Gradient for Temperature:
         temperature_scgc.tube(iX, iY) =
-                          2 * temperature_scgc.tube(iX + 1, iY) -
-                          temperature_scgc.tube(iX + 2, iY);
+          2 * temperature_scgc.tube(iX + 1, iY) -
+          temperature_scgc.tube(iX + 2, iY);
 
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
@@ -324,8 +321,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
-                                          2 * species[iSpecies].density_scgc.tube(iX + 1, iY) -
-                                          species[iSpecies].density_scgc.tube(iX + 2, iY);
+            2 * species[iSpecies].density_scgc.tube(iX + 1, iY) -
+            species[iSpecies].density_scgc.tube(iX + 2, iY);
       }
     }
   }
@@ -336,8 +333,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
       for (iY = nX - nGCs; iY < nY; iY++) {
         // Constant Gradient for Temperature:
         temperature_scgc.tube(iX, iY) =
-                          2 * temperature_scgc.tube(iX, iY - 1) -
-                          temperature_scgc.tube(iX, iY - 2);
+          2 * temperature_scgc.tube(iX, iY - 1) -
+          temperature_scgc.tube(iX, iY - 2);
 
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
@@ -346,8 +343,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
-                                          2 * species[iSpecies].density_scgc.tube(iX, iY - 1) -
-                                          species[iSpecies].density_scgc.tube(iX, iY - 2);
+            2 * species[iSpecies].density_scgc.tube(iX, iY - 1) -
+            species[iSpecies].density_scgc.tube(iX, iY - 2);
       }
     }
   }
@@ -358,8 +355,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
       for (iY = nGCs - 1; iY >= 0; iY--) {
         // Constant Gradient for Temperature:
         temperature_scgc.tube(iX, iY) =
-                          2 * temperature_scgc.tube(iX, iY + 1) -
-                          temperature_scgc.tube(iX, iY + 2);
+          2 * temperature_scgc.tube(iX, iY + 1) -
+          temperature_scgc.tube(iX, iY + 2);
 
         // Constant Value for Velocity:
         for (iV = 0; iV < 3; iV++)
@@ -368,8 +365,8 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
         // Constant Gradient for densities:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
           species[iSpecies].density_scgc.tube(iX, iY) =
-                                          2 * species[iSpecies].density_scgc.tube(iX, iY + 1) -
-                                          species[iSpecies].density_scgc.tube(iX, iY + 2);
+            2 * species[iSpecies].density_scgc.tube(iX, iY + 1) -
+            species[iSpecies].density_scgc.tube(iX, iY + 2);
       }
     }
   }
