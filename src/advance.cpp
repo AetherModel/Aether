@@ -111,6 +111,9 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
+  if (didWork)
+    didWork = ionsMag.set_bcs(mGrid, time, indices);
+
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
 
   // advect in the 3rd dimension (vertical), but only if we have it:
@@ -127,6 +130,21 @@ bool advance(Planets &planet,
 
   }
 
+  // advect in the 3rd dimension (vertical), but only if we have it:
+  if (mGrid.get_nAlts(false) > 1) {
+    neutralsMag.advect_vertical(mGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = neutralsMag.check_for_nonfinites("After Vertical Neutral Advection");
+
+    // ajr - ionsMag.advect_vertical(mGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = ionsMag.check_for_nonfinites("After Vertical Ion Advection");
+
+  }
+
+
   // advect in the 1st and 2nd dimensions (horizontal), but only if
   // we have those dimensions:
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
@@ -137,6 +155,7 @@ bool advance(Planets &planet,
     neutrals.advect_horizontal(gGrid, time);
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     ionsMag.exchange_old(mGrid);
+    //neutralsMag.exchange_old(mGrid);
   }
 
   if (input.get_check_for_nans()) {
@@ -206,7 +225,7 @@ bool advance(Planets &planet,
     calc_ion_collisions(neutrals, ions);
 
     neutrals.add_sources(time, planet, gGrid);
-    //neutralsMag.add_sources(time, planet, mGrid);
+    neutralsMag.add_sources(time, planet, mGrid);
 
     if (didWork & input.get_check_for_nans()) {
       didWork = neutrals.check_for_nonfinites("Geo Grid: After Add Sources");
