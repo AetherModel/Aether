@@ -988,7 +988,6 @@ def calc_ghostcells(dataToWrite):
     lat1d = dataToWrite[0][1][0, :, 0]
 
     nGCs = 0
-    print(lat1d)
     while (lat1d[nGCs] < -90.0):
         # Checking to see how many points are below south pole:
         nGCs = nGCs + 1
@@ -1030,8 +1029,6 @@ def calc_blocks(dataToWrite, iLon_ = 0, iLat_ = 1):
         if (np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) > 0.001):
             nBlocksLat = nBlocksLat + 1
         iBlock = iBlock + 1
-
-    print(' -> nBlocksLon, nBlocksLat : ', nBlocksLon, nBlocksLat)
 
     if (not (nBlocksLat * nBlocksLon == nBlocksTotal)):
         print("Finding nBlocksLat and nBlocksLon didn't work!")
@@ -1102,8 +1099,6 @@ def consolidate_blocks(originalData, iLon_ = 0, iLat_ = 1):
                         originalData[iBlock][key][nLons:nLons+nGCs, 0:nLats+2*nGCs, :]
                 consolidatedData[key] = data
 
-    print(consolidatedData.keys())
-
     return consolidatedData
 
 #----------------------------------------------------------------------------
@@ -1123,18 +1118,14 @@ def write_and_plot_data(dataToWrite,
     # deal with in this case!
 
     canConsolidateBlocks = False
-    print(np.shape(dataToWrite))
-    print('keys : ', dataToWrite[0].keys())
-    print('shape of variable : ', np.shape(dataToWrite[0][0]))
     isUniform = calc_if_uniform_grid(dataToWrite)
-    print(' -> isUniform : ', isUniform)
 
     if (isUniform):
         nBlocksLon, nBlocksLat = calc_blocks(dataToWrite)
         if (nBlocksLon > 0):
             canConsolidateBlocks = True
 
-    print('can consolidate blocks: ', canConsolidateBlocks)
+    print('  -> can consolidate blocks: ', canConsolidateBlocks)
     if (canConsolidateBlocks):
         dataToWrite = consolidate_blocks(dataToWrite)
 
