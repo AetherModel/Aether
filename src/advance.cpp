@@ -144,7 +144,6 @@ bool advance(Planets &planet,
 
   }
 
-
   // advect in the 1st and 2nd dimensions (horizontal), but only if
   // we have those dimensions:
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
@@ -155,6 +154,12 @@ bool advance(Planets &planet,
     neutrals.advect_horizontal(gGrid, time);
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     ionsMag.exchange_old(mGrid);
+    fill_horizontal_ghostcels(neutralsMag.temperature_scgc, mGrid.get_nGCs());
+
+    //for (int iSpecies = 0; iSpecies < neutralsMag.nSpecies; iSpecies++)
+    //  fill_horizontal_ghostcels(neutralsMag.species[iSpecies].density_scgc,
+    //                            mGrid.get_nGCs());
+
     //neutralsMag.exchange_old(mGrid);
   }
 
