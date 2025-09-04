@@ -247,6 +247,58 @@ bool Neutrals::set_lower_bcs(Grid grid,
     }
   }
 
+  // This section is for the dipole grid.  If the field-lines are
+  // closed, then we will treat the N/S ghostcells as LOWER boundaries.
+  // If thr grid is in the south, then treat the north bounday as the
+  // lower boundary.  If the grid is in the north, treat the south boundary
+  // as the lower boundary.
+  // Because we are expecting to be chemically dominant, the lower BCs don't
+  // matter as much for the ions.  We really just want to fill them with some
+  // reasonable values.
+
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t iX, iY, iYs, iYe, iFirst;
+
+  if (grid.setNorthAsDown) {
+    // First physical cell:
+    iFirst = nY - nGCs - 1;
+    iYs = nY - nGCs;
+    iYe = nY;
+  }
+
+  if (grid.setSouthAsDown) {
+    // First physical cell:
+    iFirst = nGCs;
+    iYs = 0;
+    iYe = nGCs;
+  }
+
+  if (grid.setNorthAsDown || grid.setSouthAsDown) {
+
+    for (iX = 0; iX < nX; iX++) {
+      for (int iY = iYs; iY < iYe; iY++) {
+        // Bulk Quantities:
+        temperature_scgc.tube(iX, iY) = temperature_scgc.tube(iX, iFirst);
+
+        // For each species:
+        for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+          // Assume each species falls off a bit.
+          // this BC shouldn't matter, since we are not going to do
+          // horizontal advection on neutrals:
+          species[iSpecies].density_scgc.tube(iX, iY) =
+            0.95 * species[iSpecies].density_scgc.tube(iX, iFirst);
+        }
+
+        for (iAlt = 0; iAlt <= grid.first_lower_gc(iX, iY); iAlt++) {
+          temperature_scgc(iX, iY, iAlt) =
+            temperature_scgc(iX, iFirst, grid.first_lower_gc(iX, iFirst));
+        }
+
+      }
+    }
+  }
+
   didWork = true;
 
   calc_bulk_velocity();
