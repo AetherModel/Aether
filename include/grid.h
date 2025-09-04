@@ -150,6 +150,7 @@ class Grid {
 
   // Whether to close field lines on dipole grid (Always false for geo grids)
   bool IsClosed;
+  bool setNorthAsDown, setSouthAsDown;
 
   // These are the locations of the magnetic poles:
   //  ll -> lat, lon, radius independent
