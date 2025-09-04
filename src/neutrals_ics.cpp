@@ -122,7 +122,7 @@ bool Neutrals::initial_conditions(Grid grid,
       // temperature profile in the planet.in file.
       // ---------------------------------------------------------------------
 
-      // Let's assume that the altitudes are not dependent on lat/lon:
+      // Let's assume that the altitudes are dependent on lat/lon:
 
       arma_vec alt1d(nAlts);
       arma_vec temp1d(nAlts);
@@ -188,7 +188,7 @@ bool Neutrals::initial_conditions(Grid grid,
       report.print(2, "Filling with hydrostatic");
 
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-       fill_with_hydrostatic(iSpecies, nGCs - 1, nAlts, grid);
+        fill_with_hydrostatic(iSpecies, nGCs - 1, nAlts, grid);
     } // type = planet
   }
 
