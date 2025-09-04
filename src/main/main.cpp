@@ -291,13 +291,12 @@ int main() {
 
     } // End of outer time loop - done with run!
 
-    report.times();
-
   } catch (std::string error) {
     report.error(error);
   }
 
   report.exit(function);
+  report.times();
   report.report_errors();
 
   if (nProcs > 0)
