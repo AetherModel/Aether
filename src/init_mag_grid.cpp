@@ -65,6 +65,8 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
   // along the Z direction, which turns out to be the same processor
   // as the Y direction, so just take that one:
   IsClosed = false;
+  setNorthAsDown = false;
+  setSouthAsDown = false;
 
   if ((middle_norm(1) < 0) && (up_norm(1) > 0)) {
     // We are in the south and need to pass to the north:
@@ -76,7 +78,9 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
     // points are "higher" than the other edges, let's just add some
     // to the 3rd dimension:
     edge_Z(2) = 5.0;
+    // Let set_BCs know which side to use as BCs
     IsClosed = true;
+    setNorthAsDown = true;
   }
 
   if ((middle_norm(1) > 0) && (down_norm(1) < 0)) {
@@ -86,7 +90,9 @@ void Grid::create_dipole_connection(Quadtree quadtree) {
     edge_Z = edge_Ym;
     // See note above...
     edge_Z(2) = 5.0;
+    // Let set_BCs know which side to use as BCs
     IsClosed = true;
+    setSouthAsDown = true;
   }
 
   // Check if touching South Pole:
