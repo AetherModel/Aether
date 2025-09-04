@@ -155,6 +155,7 @@ bool advance(Planets &planet,
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     ionsMag.exchange_old(mGrid);
     fill_horizontal_ghostcels(neutralsMag.temperature_scgc, mGrid.get_nGCs());
+    neutralsMag.set_lower_bcs(mGrid, time, indices);
 
     //for (int iSpecies = 0; iSpecies < neutralsMag.nSpecies; iSpecies++)
     //  fill_horizontal_ghostcels(neutralsMag.species[iSpecies].density_scgc,
@@ -220,6 +221,12 @@ bool advance(Planets &planet,
     // Calculate chemistry on both grids:
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
     chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
+
+    // We could have some weird results in the non-physical cells,
+    // so correct them
+    if (mGrid.IsDipole)
+      didWork = ionsMag.set_bcs(mGrid, time, indices);
+
 
     if (input.get_O_cooling())
       neutrals.calc_O_cool();
