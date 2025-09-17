@@ -111,7 +111,7 @@ int main() {
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
-      std::cout << "Making Spherical Magnetic Grid\n";
+      report.print(0, "Making Spherical Magnetic Grid\n");
       mGrid.set_IsDipole(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
       mGrid.set_IsGeoGrid(false);
