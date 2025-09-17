@@ -143,7 +143,7 @@ bool read_and_store_indices(Indices &indices) {
 bool Indices::perturb() {
   bool DidWork = true;
   bool DoReport = false;
-  int64_t iDebug = 2;
+  int64_t iDebug = 0;
 
   json perturb_values = input.get_perturb_values();
 
@@ -152,7 +152,7 @@ bool Indices::perturb() {
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (name != "Chemistry") {
+      if (name != "Chemistry" && name != "restart_control") {
 
         if (report.test_verbose(iDebug)) {
           std::cout << "Perturbing Index : " << name << "\n";
