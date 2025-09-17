@@ -275,6 +275,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
 
+  write_restart(input.get_restartout_dir());
+
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
                                        input.get_student_name(),

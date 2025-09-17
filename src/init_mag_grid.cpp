@@ -625,6 +625,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   fill_grid_bfield(planet);
   report.print(4, "Done filling dipole grid with b-field!");
 
+  write_restart(input.get_restartout_dir());
+
   report.exit(function);
   return DidWork;
 }
