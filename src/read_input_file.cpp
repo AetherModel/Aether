@@ -24,6 +24,9 @@ bool Inputs::read_inputs_json(Times &time) {
   json defaults;
   json user_inputs;
 
+  // allow changing of perturbations during the restart process:
+  json perturbations;
+
   isOk = true;
 
   // Set the default values first:
@@ -54,6 +57,9 @@ bool Inputs::read_inputs_json(Times &time) {
         // if they really want:
         restart_inputs["Logfile"]["append"] = true;
         settings.merge_patch(restart_inputs);
+
+        if (restart_inputs.contains("Perturb"))
+          perturbations["Perturb"] = restart_inputs["Perturb"];
       }
     }
   }
@@ -61,6 +67,21 @@ bool Inputs::read_inputs_json(Times &time) {
   // Merge the defaults/restart settings with the user provided
   // settings, with the default/restart settings being the default:
   settings.merge_patch(user_inputs);
+
+  // There are perturbations in the restart files:
+  if (perturbations.contains("Perturb"))
+
+    // If the user wants the restart perturbations to overwrite the
+    // aether.json perturbations, then do it:
+    if (user_inputs.contains("Perturb")) {
+      if (user_inputs["Perturb"].contains("restart_control"))
+        if (user_inputs["Perturb"]["restart_control"])
+          settings.merge_patch(perturbations);
+    } else
+      // if there are perturbations in the restart files, but none
+      // in the user files, then push the restart perturbations into
+      // the settings to make them consistent
+      settings.merge_patch(perturbations);
 
   //change planet file to the one specified on aether.json:
   if (isOk)
