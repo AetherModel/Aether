@@ -58,8 +58,11 @@ bool Times::restart_file(std::string dir, bool DoRead) {
     iStep--;
     dt = 0;
     increment_time();
-    std::cout << "Restarted time, Current time : ";
-    display_itime(iCurrent);
+
+    if (report.test_verbose(0)) {
+      std::cout << "Restarted time, Current time : ";
+      display_itime(iCurrent);
+    }
   } else {
     restart_time_json = { {"currenttime", current},
       {"istep", iStep}
