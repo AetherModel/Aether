@@ -197,6 +197,14 @@ int main() {
 
       if (!didWork)
         throw std::string("Reading Restart for time Failed!!!\n");
+
+      didWork = indices.restart_file(input.get_restartin_dir(),
+                                     true,
+                                     time.get_current());
+
+      if (!didWork)
+        throw std::string("Reading Restart for Indices Failed!!!\n");
+
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
