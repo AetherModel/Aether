@@ -42,7 +42,7 @@ bool Neutrals::advect_horizontal(Grid & grid, Times & time) {
   static int iFunction = -1;
   report.enter(function, iFunction);
 
-  if (grid.iGridShape_ == grid.iCubesphere_) {
+  if (grid.iGridShape_ == iCubesphere_) {
     if (input.get_advection_neutrals_horizontal() == "advect_test")
       solver_horizontal_RK4_advection(grid, time);
     else if (input.get_advection_neutrals_horizontal() == "fv")
