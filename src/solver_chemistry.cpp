@@ -12,8 +12,20 @@ arma_cube solver_chemistry(arma_cube density,
                            arma_cube source,
                            arma_cube loss,
                            precision_t dt) {
-  arma_cube normalized_loss = loss / (density + 1e-6);
+  arma_cube normalized_loss;
+  normalized_loss = loss / (density + 1e-6);
   arma_cube new_density = (density + dt * source) /
                           (1.0 + dt * normalized_loss);
+  return new_density;
+}
+
+arma_mat solver_chemistry(arma_mat density,
+                          arma_mat source,
+                          arma_mat loss,
+                          precision_t dt) {
+  arma_mat normalized_loss;
+  normalized_loss = loss / (density + 1e-6);
+  arma_mat new_density = (density + dt * source) /
+                         (1.0 + dt * normalized_loss);
   return new_density;
 }
