@@ -84,8 +84,8 @@ int main() {
     // Perturb the inputs if user has asked for this
     indices.perturb();
 
-    // Initialize Geographic grid:
-    Grid gGrid("neuGrid");
+    // Initialize neutral grid:
+    Grid gGrid(neutralType_);
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
 
@@ -102,8 +102,8 @@ int main() {
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
-    // Initialize Magnetic grid:
-    Grid mGrid("ionGrid");
+    // Initialize ion grid:
+    Grid mGrid(ionType_);
 
     if (mGrid.iGridShape_ == mGrid.iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
@@ -111,10 +111,10 @@ int main() {
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
-      report.print(0, "Making Spherical Magnetic Grid\n");
+      report.print(1, "Making Spherical Magnetic Grid\n");
       mGrid.set_IsDipole(false);
-      mGrid.set_IsGeoGrid(false);
       didWork = mGrid.init_geo_grid(quadtree, planet);
+      mGrid.set_IsGeoGrid(false);
     }
 
     if (!didWork)
