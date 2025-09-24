@@ -20,7 +20,9 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("neuGrid");
+  Inputs::grid_input_struct grid_input;
+
+  grid_input = input.get_grid_inputs(gridType);
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -216,6 +218,9 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   //MPI_Barrier(aether_comm);
   create_altitudes(planet);
+
+  // set the altitude of the lower boundary values:
+  altitude_lower_bc = planet.get_altitude_of_bc();
 
   init_connection();
 
