@@ -188,17 +188,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   report.enter(function, iFunction);
   bool DidWork = true;
 
-  IsGeoGrid = 1;
+  IsGeoGrid = true;
 
   if (iGridShape_ == iCubesphere_) {
-    report.print(0, "Creating Cubesphere Grid");
+    report.print(0, "Creating Cubesphere Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_cubesphere_connection(quadtree);
 
     IsCubeSphereGrid = true;
   } else {
-    report.print(0, "Creating Spherical Grid");
+    report.print(0, "Creating Spherical Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_sphere_connection(quadtree);
