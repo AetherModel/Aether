@@ -215,6 +215,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
   precision_t max_alt_re = (max_alt + planetRadius) / planetRadius;
 
+  // set the altitude of the lower boundary from the planet file
+  //   -- this is used for setting densities hydrostatically.
+  altitude_lower_bc = planet.get_altitude_of_bc();
+
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
     DidWork = false;
