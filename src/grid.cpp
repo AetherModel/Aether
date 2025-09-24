@@ -32,11 +32,15 @@ Grid::Grid(std::string gridtype) {
   if (iGridShape_ == iCubesphere_) {
     if (grid_input.nX > grid_input.nY) {
       report.error("Cubesphere grid: nX > nY, reducing nX");
+      report.print(0, gridType +
+                   ": Cubesphere selected, but nX /= nY, reducing nX");
       grid_input.nX = grid_input.nY;
     }
 
     if (grid_input.nY > grid_input.nX) {
       report.error("Cubesphere grid: nY > nX, reducing nY");
+      report.print(0, gridType +
+                   ": Cubesphere selected, but nX /= nY, reducing nY");
       grid_input.nY = grid_input.nX;
     }
   }
@@ -292,6 +296,7 @@ Grid::Grid(std::string gridtype) {
   UseThisCell.fill(true);
   first_lower_gc.set_size(nX, nY);
   first_upper_gc.set_size(nX, nY);
+  altitude_lower_bc = 0.0;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
