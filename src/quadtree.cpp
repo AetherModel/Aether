@@ -34,6 +34,11 @@ Quadtree::Quadtree(std::string shapeInput) {
     IsOk = true;
   }
 
+  if (shape == "sphere6") {
+    nRootNodes = 6;
+    IsOk = true;
+  }
+
   if (shape == "dipole4") {
     nRootNodes = 4;
     IsOk = true;
