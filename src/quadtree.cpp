@@ -68,6 +68,12 @@ bool Quadtree::is_ok() {
 
 void Quadtree::build(std::string gridtype) {
 
+  std::string function = "Quadtree::build";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  IsOk = false;
+
   arma_mat origins;
   arma_mat rights;
   arma_mat ups;
@@ -79,6 +85,7 @@ void Quadtree::build(std::string gridtype) {
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
     IsCubeSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "sphere") {
@@ -86,6 +93,7 @@ void Quadtree::build(std::string gridtype) {
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
     IsSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "sphere4") {
@@ -93,6 +101,15 @@ void Quadtree::build(std::string gridtype) {
     rights = Sphere4::RIGHTS;
     ups = Sphere4::UPS;
     IsSphere = true;
+    IsOk = true;
+  }
+
+  if (grid_input.shape == "sphere6") {
+    origins = Sphere6::ORIGINS;
+    rights = Sphere6::RIGHTS;
+    ups = Sphere6::UPS;
+    IsSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "dipole4") {
@@ -100,6 +117,7 @@ void Quadtree::build(std::string gridtype) {
     rights = Dipole4::RIGHTS;
     ups = Dipole4::UPS;
     IsDipole = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "dipole6") {
@@ -107,7 +125,13 @@ void Quadtree::build(std::string gridtype) {
     rights = Dipole6::RIGHTS;
     ups = Dipole6::UPS;
     IsDipole = true;
+    IsOk = true;
+  }
 
+  if (!IsOk) {
+    report.error("quadtree shape not found (in build): " + grid_input.shape);
+    report.exit(function);
+    return;
   }
 
   arma_vec o(3), r(3), u(3);
@@ -168,6 +192,9 @@ void Quadtree::build(std::string gridtype) {
     tmp = new_node(o, r, u, iP, iDepth, iNode);
     root_nodes.push_back(tmp);
   }
+
+  report.exit(function);
+  return;
 }
 
 // --------------------------------------------------------------------------
