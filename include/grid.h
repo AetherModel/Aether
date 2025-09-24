@@ -147,6 +147,7 @@ class Grid {
   // Matrices whose elements denote the altitude index of the interiormost ghost cell
   // in the k-up and k-down direction (altitude for geo grids, q for dipole).
   arma_mat first_lower_gc, first_upper_gc;
+  precision_t altitude_lower_bc;
 
   // Whether to close field lines on dipole grid (Always false for geo grids)
   bool IsClosed;
