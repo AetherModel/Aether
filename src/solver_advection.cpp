@@ -284,7 +284,7 @@ precision_t calc_dt(arma_mat &xWidth,
 
 void Neutrals::advect_sphere(Grid &grid, Times &time) {
 
-  std::string function = "advect";
+  std::string function = "advect_sphere";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -369,10 +369,12 @@ void Neutrals::advect_sphere(Grid &grid, Times &time) {
     xMomentum = rho % xVel;
     yMomentum = rho % yVel;
 
-    x = grid.x_Center.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    y = grid.y_Center.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    xEdges = grid.x_Left.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    yEdges = grid.y_Down.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
+    precision_t radius = grid.radius_scgc(1, 1, iAlt);
+
+    x = grid.x_Center.slice(iAlt) * radius;
+    y = grid.y_Center.slice(iAlt) * radius;
+    xEdges = grid.x_Left.slice(iAlt) * radius;
+    yEdges = grid.y_Down.slice(iAlt) * radius;
 
     rhoP = project_to_edges(rho, x, xEdges, y, yEdges, nGCs);
     xVelP = project_to_edges(xVel, x, xEdges, y, yEdges, nGCs);
