@@ -48,14 +48,7 @@ struct cubesphere_chars {
 class Grid {
 
  public:
-  const int iSphere_ = 1;
-  const int iCubesphere_ = 2;
-  const int iDipole_ = 3;
   int iGridShape_ = -1;
-
-  const std::string neutralType_ = "neuGrid";
-  const std::string ionType_ = "ionGrid";
-
   // Armidillo Cube Versions:
   // Cell Center Coordinates
   arma_cube geoLon_scgc, geoX_scgc;
