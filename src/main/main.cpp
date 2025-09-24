@@ -38,12 +38,12 @@ int main() {
     // For now, the number of processors and blocks are set by the
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)
-    Quadtree quadtree(input.get_grid_shape("neuGrid"));
+    Quadtree quadtree(input.get_grid_shape(neutralType_));
 
     if (!quadtree.is_ok())
       throw std::string("quadtree for neutrals initialization failed!");
 
-    Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
+    Quadtree quadtree_ion(input.get_grid_shape(ionType_));
 
     if (!quadtree_ion.is_ok())
       throw std::string("quadtree for ions initialization failed!");
@@ -105,7 +105,7 @@ int main() {
     // Initialize ion grid:
     Grid mGrid(ionType_);
 
-    if (mGrid.iGridShape_ == mGrid.iDipole_) {
+    if (mGrid.iGridShape_ == iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
 
       if (!didWork)
@@ -113,13 +113,12 @@ int main() {
     } else {
       report.print(1, "Making Spherical Magnetic Grid\n");
       mGrid.set_IsDipole(false);
-      didWork = mGrid.init_geo_grid(quadtree, planet);
+      didWork = mGrid.init_geo_grid(quadtree_ion, planet);
       mGrid.set_IsGeoGrid(false);
     }
 
     if (!didWork)
       throw std::string("Initializing magneitic grid failed!");
-
 
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
