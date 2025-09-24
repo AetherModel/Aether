@@ -186,16 +186,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   IsCubeSphereGrid = false;
   IsDipole = true;
 
-  report.print(0, "Creating inter-node dipole connections");
+  report.print(0, "Creating inter-node dipole connections for: " + gridType);
 
   if (!Is0D & !Is1Dz)
     create_dipole_connection(quadtree_ion);
 
-  report.print(0, "Creating Dipole Grid");
+  report.print(0, "Creating Dipole Grid for: " + gridType);
 
   report.print(3, "Getting grid inputs for dipole grid");
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridType);
 
   // Number of ghost cells:
   int64_t nGCs = get_nGCs();
