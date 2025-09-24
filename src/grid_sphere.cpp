@@ -124,6 +124,11 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   for (iLon = 0; iLon < nLons; iLon++)
     lon1d(iLon) = lon0 + (iLon - nGCs + 0.5) * dlon;
 
+  if (report.test_verbose(1)) {
+    std::cout << function << ": " << lon0 << " " << dlon << "\n";
+    display_vector("in function " + function + " lon1d : ", lon1d * cRtoD);
+  }
+
   for (iLat = 0; iLat < nLats; iLat++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
       geoLon_scgc.subcube(0, iLat, iAlt, nLons - 1, iLat, iAlt) = lon1d;
@@ -145,6 +150,12 @@ void Grid::create_sphere_grid(Quadtree quadtree) {
   // - copy it into the 3d cube
   for (iLat = 0; iLat < nLats; iLat++)
     lat1d(iLat) = lat0 + (iLat - nGCs + 0.5) * dlat;
+
+  if (report.test_verbose(1)) {
+    std::cout << function << ": " << lat0 << " " << dlat << "\n";
+
+    display_vector("in function " + function + " lat1d : ", lat1d * cRtoD);
+  }
 
   for (iLon = 0; iLon < nLons; iLon++) {
     for (iAlt = 0; iAlt < nAlts; iAlt++) {
