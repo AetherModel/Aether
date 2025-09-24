@@ -1,0 +1,42 @@
+
+{
+    "Debug" : {
+        "dt": 1.0,
+        "TimingPercent": 10.0,
+	"iVerbose" : 0},
+
+    "EndTime" : [2011, 3, 20, 0, 1, 0],
+
+    "neuGrid" : {
+        "Shape": "sphere6",
+        "nLonsPerBlock" : 22,
+        "nLatsPerBlock" : 22,
+        "nAlts" : 30,
+	"MinAlt": 95,
+        "LatRange": [-90, 90],
+        "LonRange": [0.0, 360.0],
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
+    
+    "ionGrid": {
+        "Shape": "sphere6",
+        "nLonsPerBlock": 32,
+        "nLatsPerBlock": 16,
+        "nAlts": 40,
+	"MinAlt": 80,
+        "LatRange": [-90.0, 90.0],
+        "LonRange": [0.0, 360.0],
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
+
+    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
+    
+    "Electrodynamics" : {
+        "Potential" : "Weimer05",
+        "DiffuseAurora" : "fta"},
+    
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [60] }
+
+}
