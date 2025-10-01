@@ -8,7 +8,7 @@
 // It is assumed that this is lon, lat, rad
 // --------------------------------------------------------------------------
 
-std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
+std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid &grid) {
 
   std::vector<arma_cube> gradient_vcgc;
 
@@ -56,7 +56,11 @@ std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid) {
 //   - these formulas assume that the grid is uniform.
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
+arma_cube calc_gradient2o_i(arma_cube value, Grid &grid) {
+
+  std::string function = "calc_gradient2o_i";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
@@ -85,7 +89,7 @@ arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
       (value.row(iX) - value.row(iX - 1)) /
       grid.di_center_m_scgc.row(iX);
   }
-
+  report.exit(function);
   return gradient;
 }
 
@@ -94,7 +98,7 @@ arma_cube calc_gradient2o_i(arma_cube value, Grid grid) {
 //   - these formulas assume that the grid is uniform.
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient4o_i(arma_cube value, Grid grid) {
+arma_cube calc_gradient4o_i(arma_cube value, Grid &grid) {
 
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
@@ -182,7 +186,7 @@ arma_cube calc_gradient_stretched_i(arma_cube value, Grid grid) {
 // Calculate the gradient in the longitudinal direction
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
+arma_cube calc_gradient_lon(arma_cube value, Grid &grid) {
   return calc_gradient2o_i(value, grid);
 }
 
@@ -191,7 +195,11 @@ arma_cube calc_gradient_lon(arma_cube value, Grid grid) {
 //   - these formulas assume that the grid is uniform.
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient2o_j(arma_cube value, Grid grid) {
+arma_cube calc_gradient2o_j(arma_cube value, Grid &grid) {
+
+  std::string function = "calc_gradient2o_j";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
@@ -220,7 +228,7 @@ arma_cube calc_gradient2o_j(arma_cube value, Grid grid) {
       (value.col(iY) - value.col(iY - 1)) /
       grid.dj_center_m_scgc.col(iY);
   }
-
+  report.exit(function);
   return gradient;
 }
 
@@ -229,7 +237,7 @@ arma_cube calc_gradient2o_j(arma_cube value, Grid grid) {
 //   - these formulas assume that the grid is uniform.
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient4o_j(arma_cube value, Grid grid) {
+arma_cube calc_gradient4o_j(arma_cube value, Grid &grid) {
 
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
@@ -317,7 +325,7 @@ arma_cube calc_gradient_stretched_j(arma_cube value, Grid grid) {
 // Calculate the gradient in the latitudinal direction
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
+arma_cube calc_gradient_lat(arma_cube value, Grid &grid) {
   return calc_gradient2o_j(value, grid);
 }
 
@@ -325,7 +333,11 @@ arma_cube calc_gradient_lat(arma_cube value, Grid grid) {
 // Calculate the gradient in the altitudinal direction
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
+arma_cube calc_gradient_alt(arma_cube value, Grid &grid) {
+
+  std::string function = "calc_gradient_alt";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
 
   int64_t nX = grid.get_nLons();
   int64_t nY = grid.get_nLats();
@@ -358,6 +370,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
       (value.slice(iK) - value.slice(iK - 1)) /
       grid.dk_edge_m.slice(iK);
   }
+  report.exit(function);
 
   return gradient;
 }
@@ -366,7 +379,7 @@ arma_cube calc_gradient_alt(arma_cube value, Grid grid) {
 // Calculate the 4th order gradient in the altitudinal direction
 // --------------------------------------------------------------------------
 
-arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
+arma_cube calc_gradient_alt_4th(arma_cube value, Grid &grid) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -393,7 +406,7 @@ arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid) {
 //   - this is only defined for the bottom ghostcells!
 // --------------------------------------------------------------------------
 
-arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
+arma_mat project_onesided_alt_3rd(arma_cube value, Grid &grid, int64_t iAlt) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -418,7 +431,7 @@ arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt) {
 // --------------------------------------------------------------------------
 // Calculate the gradient in cubesphere spatial discretization
 // --------------------------------------------------------------------------
-std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid) {
+std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid &grid) {
   // Must be used for cubesphere (Probably need a boolean check)
   int64_t nXs = grid.get_nY();
   int64_t nYs = grid.get_nX();
