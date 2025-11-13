@@ -239,7 +239,7 @@ void Neutrals::assign_bulk_velocity() {
 // Calculate scale heights of different species
 //----------------------------------------------------------------------
 
-void Neutrals::calc_scale_height(Grid grid) {
+void Neutrals::calc_scale_height(Grid &grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -518,7 +518,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid) {
+void Neutrals::calc_chapman(Grid &grid) {
 
   int64_t iAlt, iLon, iLat;
 

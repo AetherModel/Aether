@@ -7,7 +7,7 @@
 // Calculate the electric field from the potential
 // --------------------------------------------------------------------------
 
-void Ions::calc_efield(Grid grid) {
+void Ions::calc_efield(Grid &grid) {
 
   // efield = - grad(potential)
   efield_vcgc = calc_gradient_vector(potential_scgc, grid);
@@ -27,7 +27,7 @@ void Ions::calc_efield(Grid grid) {
 // Calculate the E x B drift from the electric field and magnetic field
 // --------------------------------------------------------------------------
 
-void Ions::calc_exb_drift(Grid grid) {
+void Ions::calc_exb_drift(Grid &grid) {
   arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);

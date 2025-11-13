@@ -187,7 +187,7 @@ void calc_grad_and_diff_alts_rusanov(Grid &grid,
 //
 // --------------------------------------------------------------------------
 
-void Neutrals::solver_vertical_rusanov(Grid grid,
+void Neutrals::solver_vertical_rusanov(Grid &grid,
                                        Times time) {
 
   std::string function = "Neutrals::solver_vertical_rusanov";
@@ -436,7 +436,7 @@ void Neutrals::solver_vertical_rusanov(Grid grid,
 //
 // --------------------------------------------------------------------------
 
-void Ions::solver_vertical_rusanov(Grid grid,
+void Ions::solver_vertical_rusanov(Grid &grid,
                                    Times time) {
 
   std::string function = "Ions::solver_vertical_rusanov";

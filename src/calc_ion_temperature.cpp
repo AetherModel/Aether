@@ -11,7 +11,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid &grid) {
 
   int64_t iIon;
 
@@ -46,7 +46,7 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 // Calculate the ion temperature
 // --------------------------------------------------------------------------
 
-void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
+void Ions::calc_ion_temperature(const Neutrals &neutrals, Grid &grid,
                                 Times time) {
 
   std::string function = "Ions::calc_ion_temperature";

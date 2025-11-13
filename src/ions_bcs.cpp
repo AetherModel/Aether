@@ -20,7 +20,7 @@
 // set_bcs - This is for setting the vertical BCs
 //----------------------------------------------------------------------
 
-bool Ions::set_bcs(Grid grid,
+bool Ions::set_bcs(Grid &grid,
                    Times time,
                    Indices indices) {
 
@@ -51,7 +51,7 @@ bool Ions::set_bcs(Grid grid,
 // set upper boundary conditions for the ions
 //----------------------------------------------------------------------
 
-bool Ions::set_upper_bcs(Grid grid) {
+bool Ions::set_upper_bcs(Grid &grid) {
 
   std::string function = "Ions::set_upper_bcs";
   static int iFunction = -1;
@@ -104,7 +104,7 @@ bool Ions::set_upper_bcs(Grid grid) {
 // set lower boundary conditions for the ions
 //----------------------------------------------------------------------
 
-bool Ions::set_lower_bcs(Grid grid, Times time, Indices indices) {
+bool Ions::set_lower_bcs(Grid &grid, Times time, Indices indices) {
 
   std::string function = "Ions::set_lower_bcs";
   static int iFunction = -1;

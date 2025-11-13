@@ -19,7 +19,7 @@
 //              file and fill with hydrostatic.
 // -----------------------------------------------------------------------------
 
-bool Neutrals::initial_conditions(Grid grid,
+bool Neutrals::initial_conditions(Grid &grid,
                                   Times time,
                                   Indices indices) {
 
