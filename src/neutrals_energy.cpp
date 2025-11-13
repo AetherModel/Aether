@@ -7,7 +7,7 @@
 // Calculate thermal conduction
 // ---------------------------------------------------------------------------
 
-void Neutrals::update_temperature(Grid grid, Times time) {
+void Neutrals::update_temperature(Grid &grid, Times time) {
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;

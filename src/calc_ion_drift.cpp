@@ -7,7 +7,7 @@
 // Calculate the electric field from the potential
 // --------------------------------------------------------------------------
 
-void Ions::calc_efield(Grid grid) {
+void Ions::calc_efield(Grid &grid) {
 
   // efield = - grad(potential)
   efield_vcgc = calc_gradient_vector(-1.0 * potential_scgc, grid);
@@ -25,7 +25,7 @@ void Ions::calc_efield(Grid grid) {
 // Calculate the E x B drift from the electric field and magnetic field
 // --------------------------------------------------------------------------
 
-void Ions::calc_exb_drift(Grid grid) {
+void Ions::calc_exb_drift(Grid &grid) {
   
   std::string function = "Ions::calc_exb";
   static int iFunction = -1;
@@ -75,8 +75,8 @@ std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
 // Calculate the ion drift
 // --------------------------------------------------------------------------
 
-void Ions::calc_ion_drift(Neutrals neutrals,
-                          Grid grid,
+void Ions::calc_ion_drift(Neutrals &neutrals,
+                          Grid &grid,
                           precision_t dt) {
 
   std::string function = "Ions::calc_ion_drift";

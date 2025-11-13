@@ -10,7 +10,7 @@
 // Initialize a single species for the ions
 // -----------------------------------------------------------------------------
 
-Ions::species_chars Ions::create_species(Grid grid) {
+Ions::species_chars Ions::create_species(Grid &grid) {
 
   species_chars tmp;
 
@@ -69,7 +69,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 //  Initialize Ions class
 // -----------------------------------------------------------------------------
 
-Ions::Ions(Grid grid, Planets planet) {
+Ions::Ions(Grid &grid, Planets planet) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();

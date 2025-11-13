@@ -229,13 +229,13 @@ class Ions {
      \param grid The grid to define the ions on
      \param planet contains information about the species to simulate
    **/
-  Ions(Grid grid, Planets planet);
+  Ions(Grid &grid, Planets planet);
 
   /**********************************************************************
      \brief Creates the variables within the species_chars structure
      \param grid The grid to define the ions on
    **/
-  species_chars create_species(Grid grid);
+  species_chars create_species(Grid &grid);
 
   /**********************************************************************
      \brief
@@ -248,7 +248,7 @@ class Ions {
      \param neutrals the neutral class to grab the temperature from
      \param grid The grid that the ions are defined on
    **/
-  void init_ion_temperature(Neutrals neutrals, Grid grid);
+  void init_ion_temperature(Neutrals neutrals, Grid &grid);
 
   /**********************************************************************
      \brief Sets the floor of the ion densities, just in case!
@@ -290,13 +290,13 @@ class Ions {
      \param time The time class to get dt and the current time
      \param indices The indices class to get different indices that may be needed
    **/
-  bool set_bcs(Grid grid, Times time, Indices indices);
+  bool set_bcs(Grid &grid, Times time, Indices indices);
 
   /**********************************************************************
      \brief Sets the upper boundary conditions for the ions
      \param grid The grid that the ions are defined on
    **/
-  bool set_upper_bcs(Grid grid);
+  bool set_upper_bcs(Grid &grid);
 
   /**********************************************************************
      \brief Sets the lower boundary condition for the ions
@@ -304,14 +304,14 @@ class Ions {
      \param time The time class to get dt and the current time
      \param indices The indices class to get different indices that may be needed
    **/
-  bool set_lower_bcs(Grid grid, Times time, Indices indices);
+  bool set_lower_bcs(Grid &grid, Times time, Indices indices);
 
   /**********************************************************************
      \brief Advect the ions along the 3rd dimension (could be altitude)
      \param grid The grid that the ions are defined on
      \param time The time class to get dt and the current time
    **/
-  bool advect_vertical(Grid grid, Times time);
+  bool advect_vertical(Grid &grid, Times time);
 
   /**********************************************************************
      \brief Get the ID of the ion species with the given name
@@ -323,13 +323,13 @@ class Ions {
      \brief Calculates the electric field
      \param grid The grid that the ions are defined on
    **/
-  void calc_efield(Grid grid);
+  void calc_efield(Grid &grid);
 
   /**********************************************************************
      \brief Calculates the E x B drift
      \param grid The grid that the ions are defined on
    **/
-  void calc_exb_drift(Grid grid);
+  void calc_exb_drift(Grid &grid);
 
   /**********************************************************************
      \brief Calculate the ion drift
@@ -337,10 +337,10 @@ class Ions {
      \param grid The grid that the ions are defined on
      \param dt the delta-t for the current time
    **/
-  void calc_ion_drift(Neutrals neutrals,
-                      Grid grid,
-                      precision_t dt);
-
+  void calc_ion_drift(Neutrals &neutrals,
+		      Grid &grid,
+		      precision_t dt);
+  
   /**********************************************************************
      \brief Calculate the ion + electron pressure gradient
      \param iIon which ion to act upon
@@ -355,7 +355,7 @@ class Ions {
      \param grid this is the grid to solve the equation on
      \param time the time class to know dt
    **/
-  void calc_ion_temperature(Neutrals neutrals, Grid grid, Times time);
+  void calc_ion_temperature(const Neutrals &neutrals, Grid &grid, Times time);
 
   /**********************************************************************
      \brief Calculates the electron temperature on the given grid
@@ -363,7 +363,7 @@ class Ions {
      \param grid this is the grid to solve the equation on
      \param time the time class to know dt
    **/
-  void calc_electron_temperature(Neutrals neutrals, Grid grid, Times time);
+  void calc_electron_temperature(Neutrals neutrals, Grid &grid, Times time);
 
   /**********************************************************************
   /// @brief Calculate epsilon
@@ -464,7 +464,7 @@ class Ions {
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
-  void solver_vertical_rusanov(Grid grid, Times time);
+  void solver_vertical_rusanov(Grid &grid, Times time);
 
 };
 #endif  // INCLUDE_IONS_H_

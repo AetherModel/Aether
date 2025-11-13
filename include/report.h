@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sys/time.h>
 
 #include "aether.h"
 
@@ -211,6 +212,8 @@ private:
     precision_t timing_total;
     /// This is the start-gate for the timer
     unsigned long long timing_start;
+
+    struct timeval timing_start_new;
     /// This is the level of the function that is then compared to verbose
     int iLevel;
     /// This is a string that holds all of the function names above this one
@@ -249,6 +252,8 @@ private:
     /// error message
     std::string error;
   };
+
+  struct timeval start, end;
 
   //Vector of error structs
   std::vector<error_struct> error_list;

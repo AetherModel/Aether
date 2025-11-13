@@ -11,7 +11,7 @@
 //  Create a single species by filling the species structure
 // -----------------------------------------------------------------------------
 
-Neutrals::species_chars Neutrals::create_species(Grid grid) {
+Neutrals::species_chars Neutrals::create_species(Grid &grid) {
 
   species_chars tmp;
 
@@ -81,7 +81,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 //  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid,
+Neutrals::Neutrals(Grid &grid,
                    Planets planet,
                    Times time,
                    Indices indices) {
@@ -251,7 +251,7 @@ int Neutrals::read_planet_file(Planets planet) {
 
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
                                      int64_t iEnd,
-                                     Grid grid) {
+                                     Grid &grid) {
 
   int64_t iNeutral, iSpecies;
 
@@ -294,7 +294,7 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
                                      int64_t iStart,
                                      int64_t iEnd,
-                                     Grid grid) {
+                                     Grid &grid) {
 
   int64_t iX, iY, iZ;
   int64_t nX = grid.get_nX();

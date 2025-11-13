@@ -8,7 +8,7 @@
 // --------------------------------------------------------------------------
 
 
-precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt";
   static int iFunction = -1;
@@ -29,7 +29,7 @@ precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_sphere(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_sphere";
   static int iFunction = -1;
@@ -70,7 +70,7 @@ precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_cubesphere(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_sphere";
   static int iFunction = -1;
@@ -142,7 +142,7 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_vertical(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_vertical";
   static int iFunction = -1;
