@@ -20,7 +20,7 @@
 // set_bcs - This is for setting the vertical BCs
 //----------------------------------------------------------------------
 
-bool Neutrals::set_bcs(Grid grid,
+bool Neutrals::set_bcs(Grid &grid,
                        Times time,
                        Indices indices) {
 
@@ -51,7 +51,7 @@ bool Neutrals::set_bcs(Grid grid,
 // set lower boundary conditions for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::set_upper_bcs(Grid grid) {
+bool Neutrals::set_upper_bcs(Grid &grid) {
 
   std::string function = "Neutrals::set_upper_bcs";
   static int iFunction = -1;
@@ -105,7 +105,7 @@ bool Neutrals::set_upper_bcs(Grid grid) {
 // set lower boundary conditions for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::set_lower_bcs(Grid grid,
+bool Neutrals::set_lower_bcs(Grid &grid,
                              Times time,
                              Indices indices) {
 
@@ -321,7 +321,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 //      iDir = 3 -> -y
 //----------------------------------------------------------------------
 
-bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
+bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid &grid) {
 
   std::string function = "Neutrals::set_horizontal_bcs";
   static int iFunction = -1;

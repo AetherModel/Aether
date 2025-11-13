@@ -112,7 +112,7 @@ arma_vec calculate_fang_v2(precision_t energy_bin,
 // -----------------------------------------------------------------------------
 // Calculate aurora
 // -----------------------------------------------------------------------------
-void calc_aurora(Grid grid,
+void calc_aurora(Grid &grid,
                  Neutrals &neutrals,
                  Ions &ions) {
 

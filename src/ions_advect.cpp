@@ -9,7 +9,7 @@
 // This is where we will call the different advection schemes
 // -----------------------------------------------------------------------------
 
-bool Ions::advect_vertical(Grid grid, Times time) {
+bool Ions::advect_vertical(Grid &grid, Times time) {
 
   bool didWork = true;
 
