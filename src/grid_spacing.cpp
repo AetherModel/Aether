@@ -142,12 +142,13 @@ void Grid::calc_k_grid_spacing() {
     radius_scgc.slice(iZ) - radius_scgc.slice(iZ - 1);
 
   // For the sphere & cubesphere, k is in meters:
-  if (iGridShape_ == iSphere_ || iGridShape_  == iCubesphere_){
+  if (iGridShape_ == iSphere_ || iGridShape_  == iCubesphere_) {
     dk_center_m_scgc = dk_center_scgc;
     dk_edge_m = dk_edge;
   }
+
   // This needs to be turned into a distance for the dipole:
-  if (iGridShape_ == iDipole_){
+  if (iGridShape_ == iDipole_) {
     // the dk's may be negative (not allowed). make sure they are positive
     // this gets rid of SO many errors...
     dk_center_scgc = abs(dk_center_scgc);
@@ -243,14 +244,15 @@ void Grid::calc_i_grid_spacing() {
   di_center_m_scgc = di_center_scgc % radius_scgc;
   di_edge_m = di_edge % radius_scgc;
 
-  // If the shape is a sphere or dipole, then the first coordinate is longitude.  
-  // The physical distance needs to be changed by the cos of the latitude, 
+  // If the shape is a sphere or dipole, then the first coordinate is longitude.
+  // The physical distance needs to be changed by the cos of the latitude,
   // which is the j coordinate in the sphere (different for dipole).
   if (iGridShape_ == iSphere_) {
     di_center_m_scgc = di_center_m_scgc % abs(cos(j_center_scgc));
     // edge is in-line with the j center
     di_edge_m = di_edge_m % abs(cos(j_center_scgc));
   }
+
   // Dipole will use cos(magLat)
   if (iGridShape_ == iDipole_) {
     di_center_m_scgc = di_center_m_scgc % abs(cos(magLat_scgc));
@@ -343,8 +345,10 @@ void Grid::calc_j_grid_spacing() {
 
   // Dipole will have different scaling...
   if (iGridShape_ == iDipole_) {
-    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc) % sign(magLat_scgc);
-    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc), 3) / delTheta(magLat_scgc) % sign(magLat_scgc);
+    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc),
+                                                          3) / delTheta(magLat_scgc) % sign(magLat_scgc);
+    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc),
+                                            3) / delTheta(magLat_scgc) % sign(magLat_scgc);
   }
 
   // For a stretched grid, calculate some useful quantities:

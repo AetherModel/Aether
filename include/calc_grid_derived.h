@@ -7,7 +7,7 @@
 #include <vector>
 
 // ----------------------------------------------------------------------------
-// 
+//
 // ----------------------------------------------------------------------------
 
 std::vector<precision_t> calc_bin_edges(std::vector<precision_t> centers);
@@ -19,8 +19,8 @@ arma_vec calc_bin_widths(arma_vec centers);
 // ----------------------------------------------------------------------------
 // A helper function for mapping grids
 // ----------------------------------------------------------------------------
-bool grid_match(Grid gGrid, 
-                Grid mGrid, 
+bool grid_match(Grid gGrid,
+                Grid mGrid,
                 Quadtree gQuadtree,
                 Quadtree mQuadtree);
 

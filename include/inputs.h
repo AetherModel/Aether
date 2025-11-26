@@ -607,12 +607,12 @@ class Inputs {
    **/
   std::vector<precision_t> get_satellite_dts();
 
-    /**********************************************************************
-     \brief returns settings["
-     \param 
-   **/
+  /**********************************************************************
+   \brief returns settings["
+   \param
+  **/
   json get_tests();
-  
+
   // General get_setting functions with error checks:
 
   /**********************************************************************

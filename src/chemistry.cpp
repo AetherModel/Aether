@@ -25,7 +25,8 @@ Chemistry::Chemistry(Neutrals neutrals,
 
   std::string function = "Chemistry::Chemistry"; //record current function
   static int iFunction = -1; //usually -1 for report function
-  report.enter(function, iFunction); //keeps track of functions for: verbose levels, etc.
+  report.enter(function,
+               iFunction); //keeps track of functions for: verbose levels, etc.
 
   if (read_chemistry_file(neutrals, ions) > 0) { //searching for valid chem file
     report.print(0, "Could not read chemistry file!");
@@ -529,10 +530,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 // Interpret a comma separated line of the chemical reaction file
 // -----------------------------------------------------------------------------
 
-Chemistry::reaction_type Chemistry::interpret_reaction_line(const Neutrals &neutrals,
-                                                            const Ions &ions,
-                                                            const std::vector<std::string> &line,
-                                                            const json &headers) {
+Chemistry::reaction_type Chemistry::interpret_reaction_line(
+  const Neutrals &neutrals,
+  const Ions &ions,
+  const std::vector<std::string> &line,
+  const json &headers) {
 
   std::string function = "Chemistry::interpret_reaction_line";
   static int iFunction = -1;
@@ -647,13 +649,15 @@ void Chemistry::find_species_id(const std::string &name,
   int iSpecies;
   IsNeutral = false;
 
-  id_ = neutrals.get_species_id(name); //from earth.in, starts at 0 w/ first species under "#NEUTRALS",(neutrals.cpp)
+  id_ = neutrals.get_species_id(
+          name); //from earth.in, starts at 0 w/ first species under "#NEUTRALS",(neutrals.cpp)
 
   if (id_ > -1)
     IsNeutral = true;
 
   else
-    id_ = ions.get_species_id(name);//from earth.in, starts at 0 w/ first species under "#IONS",(ions.cpp)
+    id_ = ions.get_species_id(
+            name);//from earth.in, starts at 0 w/ first species under "#IONS",(ions.cpp)
 
   report.exit(function);
   return;
@@ -671,23 +675,23 @@ void Chemistry::display_reaction(Chemistry::reaction_type reaction) {
   std::cout << "Number of Sources : " << reaction.nSources << "\n";
 
   for (i = 0; i < reaction.nLosses; i++) // First line for reaction
-    if (i < reaction.nLosses - 1) {//
+    if (i < reaction.nLosses - 1)  //
       std::cout << reaction.losses_names[i] << " + ";
-    } else {//
+
+    else  //
       std::cout << reaction.losses_names[i] << "  ->  ";
-    }
 
   for (i = 0; i < reaction.nSources; i++)
-    if (i < reaction.nSources - 1) {//
+    if (i < reaction.nSources - 1)  //
       std::cout << reaction.sources_names[i] << " + ";
-    } else {//
+
+    else  //
       std::cout << reaction.sources_names[i] << " (RR : " << reaction.rate << ")\n";
-    }
 
   for (i = 0; i < reaction.nLosses; i++)//Second line for reaction
     if (i < reaction.nLosses - 1) {//
       std::cout << reaction.losses_ids[i]
-              << "(" << reaction.losses_IsNeutral[i] << ")" << " + ";
+                << "(" << reaction.losses_IsNeutral[i] << ")" << " + ";
     } else {//
       std::cout << reaction.losses_ids[i]
                 << "(" << reaction.losses_IsNeutral[i] << ")" << "  ->  ";
@@ -696,11 +700,11 @@ void Chemistry::display_reaction(Chemistry::reaction_type reaction) {
   for (i = 0; i < reaction.nSources; i++)
     if (i < reaction.nSources - 1) {//
       std::cout << reaction.sources_ids[i]
-              << "(" << reaction.sources_IsNeutral[i] << ")" << " + ";
+                << "(" << reaction.sources_IsNeutral[i] << ")" << " + ";
     } else {//
       std::cout << reaction.sources_ids[i]
-              << "(" << reaction.sources_IsNeutral[i]
-              << ")" << " (RR : " << reaction.rate << ")\n";
+                << "(" << reaction.sources_IsNeutral[i]
+                << ")" << " (RR : " << reaction.rate << ")\n";
     }
 
 

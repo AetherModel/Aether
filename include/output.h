@@ -9,7 +9,7 @@
 /**************************************************************
  * \class Output
  * \brief A containing to allow storage of variables for output
- * 
+ *
  * Writing output is a multi-step process now:
  *  1. Create a container to store the variables you want to output
  *  2. Define the variables to output within the container
@@ -17,13 +17,13 @@
  *  4. Write the output
  *
  * \author Aaron Ridley
- * \date 2021/10/21 
+ * \date 2021/10/21
  **************************************************************/
 
 class OutputContainer {
 
  public:
-  
+
   /**********************************************************************
      \brief initialize the output container
    **/
@@ -63,8 +63,8 @@ class OutputContainer {
      \param value the array of the data to output
    **/
   void store_variable(std::string name,
-		      std::string unit,
-		      arma_cube value);
+                      std::string unit,
+                      arma_cube value);
 
   /**********************************************************************
      \brief store a variable to the list of variables to output
@@ -74,9 +74,9 @@ class OutputContainer {
      \param value the array of the data to output
    **/
   void store_variable(std::string name,
-		      std::string long_name,
-		      std::string unit,
-		      arma_cube value);
+                      std::string long_name,
+                      std::string unit,
+                      arma_cube value);
 
   /**********************************************************************
      \brief Get an arma_cube from the Container
@@ -129,12 +129,12 @@ class OutputContainer {
      \brief write a file with the information in the container
    **/
   bool write();
-  
+
   /**********************************************************************
      \brief write a json header file with the information in the container
    **/
   bool write_container_header();
-  
+
   /**********************************************************************
      \brief write a binary file with the information in the container
    **/
@@ -149,27 +149,27 @@ class OutputContainer {
      \brief write a netcdf file with the information in the container
    **/
   bool write_container_netcdf();
-  
+
   /**********************************************************************
      \brief read from a file an load into the container
    **/
   bool read();
-  
+
   /**********************************************************************
      \brief display information contained in the container
    **/
   void display();
-  
+
   /**********************************************************************
      \brief read a netcdf file - put the information in the container
    **/
   bool read_container_netcdf();
-  
+
   /**********************************************************************
-     \brief clears the vector of variables 
+     \brief clears the vector of variables
    **/
   void clear_variables();
-  
+
  private:
 
   /// User can set the directory for output
@@ -206,7 +206,7 @@ class OutputContainer {
 
   /// The frequency of the output for this particular container:
   float dt_output;
-  
+
   /// This is to allow the user to select different output formats
   int output_type;
 
@@ -214,7 +214,7 @@ class OutputContainer {
   const int binary_type = 0;
   const int netcdf_type = 1;
   const int hdf5_type = 2;
-  
+
 };
 
 /**********************************************************************
@@ -238,12 +238,12 @@ class OutputContainer {
 **/
 
 bool output(const Neutrals &neutrals,
-	    const Ions &ions,
-	    Grid &grid,
-	    Times time,
-	    const Planets &planet);
+            const Ions &ions,
+            Grid &grid,
+            Times time,
+            const Planets &planet);
 
 void output_binary_3d(std::ofstream &binary,
-		      arma_cube value);
+                      arma_cube value);
 
 #endif  // INCLUDE_OUTPUT_H_
