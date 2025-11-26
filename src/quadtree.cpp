@@ -1,12 +1,17 @@
 // Copyright 2024, the Aether Development Team (see doc/dev_team.md for members)
 // Full license can be found in License.md
 
-// Need to allow more types of grids.  We have two axes of grids, really:
-//   - Neutral
-//   - Ion
-// Within each of those, we can have several types of grids:
+// The way that the quadtree works is that you start with a given number of
+// root nodes.  When the user wants higher resolution, they as for 4 times
+// more processors, and then each root node is broken into 4.  If 16 times
+// more processors are asked for, then those 4 nodes are each broken into
+// 4 more nodes.  This goes on for as many processors as the user would like,
+// but the processors has to equal nRootNodes * 4^depth
+//
+// The following grid shapes are suppored at this time:
 //   - Cubesphere, this has 6 root nodes (2 polar, 4 equatorial)
 //   - Sphere, this has 1 root node (whole grid)
+//   - Sphere4, this is a spherical grid, but has 4 root nodes (2 lats, 2 lons)
 //   - Sphere6, this is a spherical grid, but has 6 root nodes (2 lats, 3 lons)
 //   - Dipole4, which has 4 root nodes (4 lats, 1 lon)
 //   - Dipole6, which has 4 root nodes (6 lats, 1 lon)
@@ -31,6 +36,11 @@ Quadtree::Quadtree(std::string shapeInput) {
 
   if (shape == "sphere4") {
     nRootNodes = 4;
+    IsOk = true;
+  }
+
+  if (shape == "sphere6") {
+    nRootNodes = 6;
     IsOk = true;
   }
 
@@ -63,17 +73,28 @@ bool Quadtree::is_ok() {
 
 void Quadtree::build(std::string gridtype) {
 
+  std::string function = "Quadtree::build";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  IsOk = false;
+
   arma_mat origins;
   arma_mat rights;
   arma_mat ups;
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
 
+  // Here we are taking the shape and getting the sizes and positions
+  // of the root nodes.  These are defined in the different header files
+  // such as sphere.h, cubesphere.h, and dipole.h
+
   if (grid_input.shape == "cubesphere") {
     origins = CubeSphere::ORIGINS;
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
     IsCubeSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "sphere") {
@@ -81,6 +102,7 @@ void Quadtree::build(std::string gridtype) {
     rights = Sphere::RIGHTS;
     ups = Sphere::UPS;
     IsSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "sphere4") {
@@ -88,6 +110,15 @@ void Quadtree::build(std::string gridtype) {
     rights = Sphere4::RIGHTS;
     ups = Sphere4::UPS;
     IsSphere = true;
+    IsOk = true;
+  }
+
+  if (grid_input.shape == "sphere6") {
+    origins = Sphere6::ORIGINS;
+    rights = Sphere6::RIGHTS;
+    ups = Sphere6::UPS;
+    IsSphere = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "dipole4") {
@@ -95,6 +126,7 @@ void Quadtree::build(std::string gridtype) {
     rights = Dipole4::RIGHTS;
     ups = Dipole4::UPS;
     IsDipole = true;
+    IsOk = true;
   }
 
   if (grid_input.shape == "dipole6") {
@@ -102,7 +134,14 @@ void Quadtree::build(std::string gridtype) {
     rights = Dipole6::RIGHTS;
     ups = Dipole6::UPS;
     IsDipole = true;
+    IsOk = true;
+  }
 
+  // If we can't find the shape, then there is a big problem
+  if (!IsOk) {
+    report.error("quadtree shape not found (in build): " + grid_input.shape);
+    report.exit(function);
+    return;
   }
 
   arma_vec o(3), r(3), u(3);
@@ -129,6 +168,9 @@ void Quadtree::build(std::string gridtype) {
   // Before we build the quadtree, we need to allow the user to
   // restrict the domain.  This will only work for the spherical
   // grid so far:
+  // (as programmed, this should work ok for the sphere and
+  //  dipole shapes, but will never work for cubesphere. For the
+  // cubesphere grid, it is much more complicated.)
 
   if ((grid_input.lon_min > 0.0 ||
        grid_input.lon_max < 2.0 * cPI ||
@@ -163,6 +205,9 @@ void Quadtree::build(std::string gridtype) {
     tmp = new_node(o, r, u, iP, iDepth, iNode);
     root_nodes.push_back(tmp);
   }
+
+  report.exit(function);
+  return;
 }
 
 // --------------------------------------------------------------------------
@@ -382,7 +427,14 @@ int64_t Quadtree::find_point(arma_vec point, Quadtree::qtnode node) {
 }
 
 // --------------------------------------------------------------------------
-//
+// This takes a normalized point, figures out if it is beyond the limits
+// of the root node, and if it is, then moves the coordinates onto the other
+// node.
+//  This is pretty much useful for the CubeSphere, since when you go over
+// the edge of one side, you are technically then on another side.  This can
+// happen on the sphere also, when you go across the 0/360 line (or 0/2 line
+// in normalized coordinates).  If can aslo happen at the poles when you go
+// over the pole.
 // --------------------------------------------------------------------------
 
 arma_vec Quadtree::wrap_point_sphere(arma_vec point) {
@@ -435,7 +487,8 @@ arma_vec Quadtree::wrap_point_sphere(arma_vec point) {
 }
 
 // --------------------------------------------------------------------------
-//
+// Well, ok - the above wrap_point seems to only work for the sphere and
+// dipole shape, which this is specially designed for the cubesphere
 // --------------------------------------------------------------------------
 
 arma_vec Quadtree::wrap_point_cubesphere(arma_vec point) {

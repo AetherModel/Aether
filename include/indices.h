@@ -20,7 +20,7 @@
 
  * \author Aaron Ridley
  *
- * \date 2021/04/16 
+ * \date 2021/04/16
  **************************************************************/
 
 #include <vector>
@@ -34,10 +34,10 @@ struct index_file_output_struct {
 
   /// number of times read in:
   int64_t nTimes;
-  
+
   /// array of times that correspond to the values:
   std::vector<double> times;
-  
+
   /// number of variables read in:
   int nVars;
 
@@ -62,9 +62,9 @@ void print_index_file_output_struct(index_file_output_struct contents);
 
 class Indices {
 
-// -----------------------------------------------------------------------
-// Public functions and variables
-// -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Public functions and variables
+  // -----------------------------------------------------------------------
 
  public:
 
@@ -88,10 +88,10 @@ class Indices {
   /**************************************************************
    \brief a series of functions that return the internal index number
 
-   In order to keep track of which index is which, the class uses 
+   In order to keep track of which index is which, the class uses
    constants. These functions return these constants. The user doesn't
    really need to know about the constants, but they have to get the
-   constant (when reading the file, for example) and then provide that 
+   constant (when reading the file, for example) and then provide that
    to the set index function. Conversely, we could create a bunch of
    set_ functions (such as the set_f107 function below). We figured
    that this minor inconvience is easier than making a bunch of set_
@@ -112,13 +112,17 @@ class Indices {
   int get_au_index_id();
   int get_al_index_id();
 
+  json get_all_indices(double time);
+  bool restart_file(std::string dir, bool DoRead, double time);
+
+
   /**************************************************************
    \brief Return the indices index of the variable name
    \param name the name of the variable to find the index for
    **/
-  
+
   int lookup_index_id(std::string name);
-  
+
   /**************************************************************
    \brief This function sets the f107, does an 81 day ave, sets f107a too
    \param f107_contents contents from the f107 file (time, f107, etc.)
@@ -134,9 +138,9 @@ class Indices {
    \param missing value for missing data
    **/
   bool set_index(int index_id,
-		 std::vector<double> time,
-		 std::vector<float> values,
-		 precision_t missing);
+                 std::vector<double> time,
+                 std::vector<float> values,
+                 precision_t missing);
 
   /**************************************************************
    \brief set the index array into the indices class
@@ -146,10 +150,10 @@ class Indices {
    \param missing value for missing data
    **/
   bool set_index(std::string index_name,
-		 std::vector<double> timearray,
-		 std::vector<float> indexarray,
-		 precision_t missing);
-  
+                 std::vector<double> timearray,
+                 std::vector<float> indexarray,
+                 precision_t missing);
+
   /**************************************************************
    \brief Perturbs the indices requested by user input
    **/
@@ -165,29 +169,43 @@ class Indices {
   void perturb_index(int iIndex, int seed, json style, bool DoReport);
 
   /**************************************************************
+   \brief Re-Perturbs the specific indices based on old values and the new value
+   \param iIndex which index to perturb
+   \param unperturbedValue unperturbed value (value read in at start))
+   \param perturbedValue value that the code has now
+   \param newValue value that the restart index file contains
+   **/
+
+  void reperturb_index(int iIndex,
+                       precision_t unperturbedValue,
+                       precision_t perturbedValue,
+                       precision_t newValue);
+
+
+  /**************************************************************
    \brief The general function that returns the index value at the time
    \param time the time in seconds that the index is requested at
    \param the index to return (i.e., one of the constants defined above)
    **/
-  precision_t get_index(double time, int index);
+  precision_t get_index(double time, int index, bool useNonperturbed = false);
 
   /**************************************************************
    * \brief Get the name of the indices at the specified index
    * \param iIndex which index to get name
    * \return The string of name if the function succeeds, empty string if iIndex is out of range
    **/
-  std::string get_name(int iIndex); 
+  std::string get_name(int iIndex);
 
   /**************************************************************
    \brief Return the number of the indices vector
    **/
   int all_indices_array_size();
 
-// -----------------------------------------------------------------------
-// Private functions and variables
-// -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Private functions and variables
+  // -----------------------------------------------------------------------
 
-private:
+ private:
 
   /// structure containing information about the specific index:
   struct index_time_pair {
@@ -197,12 +215,17 @@ private:
 
     /// a vector of values for the index:
     std::vector<precision_t> values;
+    std::vector<precision_t> originals;
 
     /// a vector of times for the values:
     std::vector<double> times;
 
     /// the name of the index as a string:
     std::string name;
+
+    bool didPerturb;
+    bool isAddPerturb;
+    bool isConstantPerturb;
   };
 
   /// the vector that contains all of the indices vectors:

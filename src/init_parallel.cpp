@@ -105,9 +105,8 @@ bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion) {
     if (report.test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
-    quadtree.build("neuGrid");
-    // #TODO
-    quadtree_ion.build("ionGrid");
+    quadtree.build(neutralType_);
+    quadtree_ion.build(ionType_);
 
   } else {
     if (iProc == 0) {

@@ -20,7 +20,9 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("neuGrid");
+  Inputs::grid_input_struct grid_input;
+
+  grid_input = input.get_grid_inputs(gridType);
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -186,17 +188,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   report.enter(function, iFunction);
   bool DidWork = true;
 
-  IsGeoGrid = 1;
+  IsGeoGrid = true;
 
   if (iGridShape_ == iCubesphere_) {
-    report.print(0, "Creating Cubesphere Grid");
+    report.print(0, "Creating Cubesphere Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_cubesphere_connection(quadtree);
 
     IsCubeSphereGrid = true;
   } else {
-    report.print(0, "Creating Spherical Grid");
+    report.print(0, "Creating Spherical Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_sphere_connection(quadtree);
@@ -217,6 +219,9 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //MPI_Barrier(aether_comm);
   create_altitudes(planet);
 
+  // set the altitude of the lower boundary values:
+  altitude_lower_bc = planet.get_altitude_of_bc();
+
   init_connection();
 
   //DidWork = write_restart(input.get_restartout_dir());
@@ -230,14 +235,14 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   if (iGridShape_ == iCubesphere_) {
     correct_xy_grid(planet);
     // New functions for equal-angular grid (center, left, down):
-    report.print(3, "Scaling Cube by Radius");
+    report.print(2, "Scaling Cube by Radius");
     scale_cube_by_radius(cubeC);
     scale_cube_by_radius(cubeL);
     scale_cube_by_radius(cubeD);
-    report.print(3, "Done Scaling Cube by Radius");
+    report.print(2, "Done Scaling Cube by Radius");
   }
 
-  if (IsMagGrid) {
+  if (gridType == ionType_) {
     report.print(0, "--> Grid is Magnetic, so rotating");
     std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
     llr.push_back(geoLon_scgc);
@@ -264,16 +269,16 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate PFPC coordinates (i.e., XYZ from LLR)
   calc_xyz(planet);
-
   // Calculate grid spacing
   calc_grid_spacing(planet);
   //calculate radial unit vector (for spherical or oblate planet)
   calc_rad_unit(planet);
   // Calculate gravity (including J2 term, if desired)
   calc_gravity(planet);
-
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
+
+  write_restart(input.get_restartout_dir());
 
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),

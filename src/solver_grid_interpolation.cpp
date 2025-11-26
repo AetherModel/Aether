@@ -382,7 +382,8 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
                                   abs(j_center_scgc.tube(coef.iRow, coef.iCol)), nGCs);
 
   // need alt index to find lat coef
-  coef.iAlt = bisect_search_array(alt_in, k_center_scgc.tube(coef.iRow, coef.iCol),
+  coef.iAlt = bisect_search_array(alt_in, k_center_scgc.tube(coef.iRow,
+                                                             coef.iCol),
                                   nGCs);
 
   // then we can do the ratios:
@@ -425,6 +426,8 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
   static int iFunction = -1;
   report.enter(function, iFunction);
 
+  report.print(1, "interpolation gridtype : " + gridType);
+
   // If the size of Lons, Lats and Alts are not the same, return false
   if (i_coords.size() != j_coords.size() || j_coords.size() != k_coords.size()) {
     report.error("Length of i,j,k vectors do not match!");
@@ -434,28 +437,31 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
   // Clear the previous interpolation coefficients
   interp_coefs.clear();
 
-  if (IsGeoGrid) {
-    // Handle according to whether it is cubesphere or not
-    if (IsCubeSphereGrid) {
-      // Calculate the range of the grid
-      struct cubesphere_range cr;
-      get_cubesphere_grid_range(cr);
+  if (iGridShape_ == iCubesphere_) {
+    report.print(1, "interpolation grid is cubesphere");
 
-      // Calculate the index and coefficients for each point
-      for (size_t i = 0; i < i_coords.size(); ++i)
-        set_interp_coef_cubesphere(cr, i_coords[i], j_coords[i], k_coords[i]);
-    } else if (IsLatLonGrid) {
-      // Calculate the range of the grid
-      struct sphere_range sr;
-      get_sphere_grid_range(sr);
+    // Calculate the range of the grid
+    struct cubesphere_range cr;
+    get_cubesphere_grid_range(cr);
 
-      // Calculate the index and coefficients for each point
-      for (size_t i = 0; i < i_coords.size(); ++i)
-        set_interp_coef_sphere(sr, i_coords[i], j_coords[i], k_coords[i]);
-    }
+    // Calculate the index and coefficients for each point
+    for (size_t i = 0; i < i_coords.size(); ++i)
+      set_interp_coef_cubesphere(cr, i_coords[i], j_coords[i], k_coords[i]);
   }
 
-  else { // IsDipole
+  if (iGridShape_ == iSphere_) {
+    report.print(1, "interpolation grid is sphere");
+
+    struct sphere_range sr;
+    get_sphere_grid_range(sr);
+
+    // Calculate the index and coefficients for each point
+    for (size_t i = 0; i < i_coords.size(); ++i)
+      set_interp_coef_sphere(sr, i_coords[i], j_coords[i], k_coords[i]);
+  }
+
+  if (iGridShape_ == iDipole_) { // IsDipole
+    report.print(1, "interpolation grid is dipole");
 
     // Calculate the range of the grid
     struct dipole_range dr;
@@ -489,22 +495,27 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
     }
 
     else {
-      magCoords = {vec2cube(i_coords),vec2cube(j_coords), vec2cube(k_coords)};
+      magCoords = {vec2cube(i_coords), vec2cube(j_coords), vec2cube(k_coords)};
     }
 
     // std::vector<precision_t> dipcoords = geo_to_mag(i_coords[0], j_coords[0], k_coords[0], planet);
     std::vector<precision_t> dipCoords;
+
     if (!areLocsIJK) {
       std::vector<precision_t> planet_radii(nPts);
+
       for (iLoc = 0; iLoc < nPts; iLoc++) {
         // Convert from mag->dipole coordinates.
-        if (areLocsGeo){ // we were given the geo-latitude
+        if (areLocsGeo)  // we were given the geo-latitude
           planet_radii[iLoc] = planet.get_radius(j_coords[iLoc]);
-        } else{
+
+        else {
           // equatorial radius :(
           planet_radii[iLoc] = planet.get_radius(0.0);
         }
-        dipCoords = mag_to_ijk(i_coords[iLoc], j_coords[iLoc], k_coords[iLoc], planet_radii[iLoc]);
+
+        dipCoords = mag_to_ijk(i_coords[iLoc], j_coords[iLoc], k_coords[iLoc],
+                               planet_radii[iLoc]);
         mlon[iLoc] = dipCoords[0];
         p_coord[iLoc] = dipCoords[1];
         q_coord[iLoc] = dipCoords[2];

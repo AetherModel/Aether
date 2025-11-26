@@ -616,7 +616,7 @@ arma_mat Ions::calc_thermoelectric_current(Grid &grid) {
 
   // with the dipole, the field-aligned current is in the k^ direction
   // But we do not solve for e- velocity (and exb is 0 parallel to B), so we cannot do this:
-  // if (grid.iGridShape_ == grid.iDipole_){
+  // if (grid.iGridShape_ == iDipole_){
   //   for (int64_t iAlt = 0; iAlt < ions.density_scgc.n_slices; iAlt++){
   //     JParallel += (ions.density_scgc.slice(iAlt) * cE % (ions.velocity_vcgc[2].slice(iAlt) - ions.exb_vcgc[2].slice(iAlt)))
   //                  * grid.dalt_center_scgc[iAlt];

@@ -64,10 +64,6 @@ arma_vec limiter_value(arma_vec projected, arma_vec values, int64_t nPts,
 }
 
 
-void advect(Grid &grid,
-            Times &time,
-            Neutrals &neutrals);
-
 arma_vec solver_conduction(
   arma_vec value,
   arma_vec lambda,
@@ -83,6 +79,11 @@ arma_cube solver_chemistry(arma_cube density,
                            arma_cube source,
                            arma_cube loss,
                            precision_t dt);
+
+arma_mat solver_chemistry(arma_mat density,
+                          arma_mat source,
+                          arma_mat loss,
+                          precision_t dt);
 
 std::vector<arma_cube> coriolis(std::vector<arma_cube> velocity,
                                 precision_t rotation_rate,

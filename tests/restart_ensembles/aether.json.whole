@@ -1,7 +1,7 @@
 
 {
     "Ensembles" : {
-	"nMembers" : 5},
+	"nMembers" : 3},
 
     "Perturb": {
 	"f107" : { "Mean" : 1.0,
@@ -17,23 +17,32 @@
 	"iVerbose" : 0},
 
     "StartTime" : [2011, 3, 20, 0, 0, 0],
-    "EndTime" : [2011, 3, 20, 0, 10, 0],
+    "EndTime" : [2011, 3, 20, 0, 6, 0],
 
+    "Perturb": {
+	"f107" : { "Mean" : 1.0,
+		   "Std" : 0.10,
+		   "Add" : false,
+		   "Constant" : true}},
+		   
     "neuGrid" : {
-	"nLons" : 12,
-	"nLats" : 12,
-	"nAlts" : 30},
-
+        "Shape": "cubesphere",
+        "nLonsPerBlock" : 20,
+        "nLatsPerBlock" : 20,
+        "nAlts" : 30,
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
+    
     "ionGrid": {
-        "dAltStretch": 0.2,
-        "LatStretch": 1,
-        "Shape": "dipole",
-        "nLonsPerBlock": 18,
-        "nLatsPerBlock" : 18,
-        "nAlts":36,
-        "LatMax":88,
-        "MinAlt": 80.0,
-        "MinApex": 125.0},
+        "Shape": "cubesphere",
+        "nLonsPerBlock": 16,
+        "nLatsPerBlock": 16,
+        "nAlts": 30,
+        "LatRange": [-90, 90],
+        "AltRange": [100.0, 1000],
+        "LonRange": [0.0, 360.0],
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
 
     "InitialConditions" : {
 	"type" : "msis"},

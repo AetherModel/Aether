@@ -186,16 +186,16 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   IsCubeSphereGrid = false;
   IsDipole = true;
 
-  report.print(0, "Creating inter-node dipole connections");
+  report.print(0, "Creating inter-node dipole connections for: " + gridType);
 
   if (!Is0D & !Is1Dz)
     create_dipole_connection(quadtree_ion);
 
-  report.print(0, "Creating Dipole Grid");
+  report.print(0, "Creating Dipole Grid for: " + gridType);
 
   report.print(3, "Getting grid inputs for dipole grid");
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("ionGrid");
+  Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridType);
 
   // Number of ghost cells:
   int64_t nGCs = get_nGCs();
@@ -214,6 +214,10 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Altitude to begin modeling, normalized to planet radius
   precision_t min_alt_re = (min_alt + planetRadius) / planetRadius;
   precision_t max_alt_re = (max_alt + planetRadius) / planetRadius;
+
+  // set the altitude of the lower boundary from the planet file
+  //   -- this is used for setting densities hydrostatically.
+  altitude_lower_bc = planet.get_altitude_of_bc();
 
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
@@ -624,6 +628,8 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
   report.print(4, "Done filling dipole grid with b-field!");
+
+  write_restart(input.get_restartout_dir());
 
   report.exit(function);
   return DidWork;

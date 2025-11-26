@@ -20,6 +20,9 @@ Indices::Indices() {
   index_time_pair single_index;
   single_index.nValues = 0;
   single_index.name = "";
+  single_index.didPerturb = false;
+  single_index.isAddPerturb = false;
+  single_index.isConstantPerturb = false;
 
   std::string lookup_file = input.get_indices_lookup_file();
   indices_lookup = read_json(lookup_file);
@@ -143,7 +146,7 @@ bool read_and_store_indices(Indices &indices) {
 bool Indices::perturb() {
   bool DidWork = true;
   bool DoReport = false;
-  int64_t iDebug = 2;
+  int64_t iDebug = 0;
 
   json perturb_values = input.get_perturb_values();
 
@@ -152,7 +155,7 @@ bool Indices::perturb() {
     for (auto it = perturb_values.begin(); it != perturb_values.end(); ++it) {
       std::string name = it.key();
 
-      if (name != "Chemistry") {
+      if (name != "Chemistry" && name != "restart_control") {
 
         if (report.test_verbose(iDebug)) {
           std::cout << "Perturbing Index : " << name << "\n";
@@ -181,6 +184,76 @@ bool Indices::perturb() {
 // Perturb a specific index in the way the user requested
 // ----------------------------------------------------------------------
 
+void Indices::reperturb_index(int iIndex,
+                              precision_t unperturbedValue,
+                              precision_t perturbedValue,
+                              precision_t newValue) {
+
+  int64_t nValues = all_indices_arrays[iIndex].nValues;
+
+  if (all_indices_arrays[iIndex].didPerturb &&
+      all_indices_arrays[iIndex].isConstantPerturb) {
+    precision_t perturb;
+
+    if (all_indices_arrays[iIndex].isAddPerturb) {
+      // constant, non-normalized value:
+      perturb = newValue - unperturbedValue;
+
+      if (iGrid == 0)
+        std::cout << "  -> New Added Perturb : " << perturb << "\n";
+
+      for (int64_t iValue = 0; iValue < nValues; iValue++) {
+        all_indices_arrays[iIndex].values[iValue] =
+          all_indices_arrays[iIndex].originals[iValue] + perturb;
+      }
+
+    } else {
+      // constant, normalized value:
+      perturb = newValue / unperturbedValue;
+
+      if (iGrid == 0)
+        std::cout << "  -> New (normalized) Multiplied Perturb : "
+                  << perturb << "\n";
+
+      for (int64_t iValue = 0; iValue < nValues; iValue++) {
+
+        all_indices_arrays[iIndex].values[iValue] =
+          all_indices_arrays[iIndex].originals[iValue] * perturb;
+      }
+    }
+
+  } else {
+    std::string mess = "Reperturb index: don't know how to ";
+    mess = mess + "handle non-perturb or nonconstant perturb";
+    report.error(mess);
+  }
+
+}
+
+// ----------------------------------------------------------------------
+// Perturb a specific index in the way the user requested
+/*
+The way this code works is that you can perturb things in different ways.
+Multiply by a constant value:
+  - if the mean is 1.0, then the perturbed value will be unbiased
+  - if the mean is above or below 1.0, it will be biased.
+  - the standard deviation is normalized to 1, so it is a percentage
+    of the value.
+  - This will come up with a value that you multiply all of the values by,
+    like 0.843 or 1.203.
+Multiply by a non-constant value:
+  - same as above, but each value will have a different random number
+    instead of a single (constant) value
+Add a constant value:
+  - the mean and standard deviation are NOT normalized.
+  - a single value then derived given the mean and the standard dev.
+  - an unbiased value would have a mean = 0
+Add a non-constant value:
+  - same as above, but each value will have a different random number
+    instead of a single (constant) value
+*/
+// ----------------------------------------------------------------------
+
 void Indices::perturb_index(int iIndex, int seed,
                             json style, bool DoReport) {
 
@@ -191,6 +264,8 @@ void Indices::perturb_index(int iIndex, int seed,
   bool add = true;
   bool constant = false;
 
+  all_indices_arrays[iIndex].didPerturb = true;
+
   if (style.contains("Mean"))
     mean = style["Mean"];
 
@@ -200,15 +275,21 @@ void Indices::perturb_index(int iIndex, int seed,
     std = standard_deviation(all_indices_arrays[iIndex].values);
 
   // Add or Multiply the random values
-  if (style.contains("Add"))
+  if (style.contains("Add")) {
     add = style["Add"];
+
+    if (add)
+      all_indices_arrays[iIndex].isAddPerturb = true;
+  }
 
   // Only one value for all elements or individual values for elements
   if (style.contains("Constant"))
     constant = style["Constant"];
 
-  if (constant)
+  if (constant) {
     nV = 1;
+    all_indices_arrays[iIndex].isConstantPerturb = true;
+  }
 
   std::vector<double> perturbations = get_normal_random_vect(mean,
                                                              std,
@@ -219,6 +300,9 @@ void Indices::perturb_index(int iIndex, int seed,
   for (int64_t iValue = 0; iValue < nValues; iValue++) {
     if (!constant)
       iV = iValue;
+
+    all_indices_arrays[iIndex].originals.push_back(
+      all_indices_arrays[iIndex].values[iValue]);
 
     if (add) {
       if (DoReport && iValue == 0)
@@ -316,7 +400,8 @@ precision_t Indices:: get_f107a(double time) {
 // This is the general function for getting an index
 // ----------------------------------------------------------------------
 
-precision_t Indices::get_index(double time, int index) {
+precision_t Indices::get_index(double time, int index,
+                               bool useNonperturbed /* = false */) {
 
   int64_t iLow, iMid, iHigh;
 
@@ -353,8 +438,14 @@ precision_t Indices::get_index(double time, int index) {
                all_indices_arrays[index].times[iMid]);
   precision_t x = (time - all_indices_arrays[index].times[iMid]) / dt;
 
-  precision_t value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
-                      x * all_indices_arrays[index].values[iMid + 1];
+  precision_t value;
+
+  if (useNonperturbed)
+    value = (1.0 - x) * all_indices_arrays[index].originals[iMid] +
+            x * all_indices_arrays[index].originals[iMid + 1];
+  else
+    value = (1.0 - x) * all_indices_arrays[index].values[iMid] +
+            x * all_indices_arrays[index].values[iMid + 1];
 
   return value;
 }
@@ -416,6 +507,81 @@ bool Indices::set_index(int index,
 
   return DidWork;
 }
+
+json Indices::get_all_indices(double time) {
+  json outputJson;
+
+  int64_t iIndex;
+  precision_t value;
+
+  for (iIndex = 0; iIndex < nIndices; iIndex++) {
+    if (all_indices_arrays[iIndex].nValues > 0) {
+      value = get_index(time, iIndex);
+      outputJson[all_indices_arrays[iIndex].name] = value;
+    }
+  }
+
+  return outputJson;
+}
+
+// -----------------------------------------------------------------------------
+// This is for restarting the code. Either write or read the time.
+// -----------------------------------------------------------------------------
+
+bool Indices::restart_file(std::string dir, bool DoRead, double time) {
+
+  std::string filename;
+  bool DidWork = true;
+  filename = dir + "/indices_" + cMember + ".json";
+
+  json restart_indices_json, original_indices_json;
+
+  if (DoRead) {
+    restart_indices_json = read_json(filename);
+
+    if (report.test_verbose(1)) {
+      std::cout << "Restarted indices, Current time : ";
+      std::cout << std::setw(2) << restart_indices_json << "\n";
+    }
+
+    original_indices_json = get_all_indices(time);
+    precision_t orig, rest, unperturbed;
+
+    for (auto it = original_indices_json.begin();
+         it != original_indices_json.end(); ++it) {
+      std::string name = it.key();
+      orig = original_indices_json[name];
+      rest = restart_indices_json[name];
+
+      if (abs(orig - rest) > cSmall) {
+        int iIndex = lookup_index_id(name);
+        unperturbed = get_index(time, iIndex, true);
+
+        if (iGrid == 0)
+          std::cout << "  -> Index was altered during restart : "
+                    << name << " -> index number: "
+                    << iIndex << "; orig, rest, un "
+                    << orig << " "
+                    << rest << " "
+                    << unperturbed << " "
+                    << all_indices_arrays[iIndex].isAddPerturb << "\n";
+
+        reperturb_index(iIndex, unperturbed, orig, rest);
+
+      }
+    }
+
+
+  } else {
+    restart_indices_json = get_all_indices(time);
+
+    if (iGrid == 0)
+      DidWork = write_json(filename, restart_indices_json);
+  }
+
+  return DidWork;
+}
+
 
 // ----------------------------------------------------------------------
 // Dump the contents of an index_file_output_struct

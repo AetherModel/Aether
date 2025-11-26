@@ -29,7 +29,7 @@ arma_vec solver_conduction(arma_vec value,
                            int64_t nGCs,
                            bool return_diff, // (optional) False by default (return new `value`)
                            arma_vec source2 // (optional) Sources dependent on `value`
-                           ) {
+                          ) {
 
   int64_t nPts = value.n_elem;
 
@@ -52,7 +52,7 @@ arma_vec solver_conduction(arma_vec value,
   conduction.zeros();
 
   // If source2 is not given, set it to zero:
-  if (source2.n_elem == 0){
+  if (source2.n_elem == 0) {
     source2.set_size(source.n_elem);
     source2.zeros();
   }
@@ -64,7 +64,8 @@ arma_vec solver_conduction(arma_vec value,
 
   arma_vec a = di / du22 % r - dl / du12 % r % r;
   arma_vec c = di / du22 + dl / du12;
-  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 % (1.0 - r % r) + source2 % front * dt;
+  arma_vec b = -1.0 / m - di / du22 % (1.0 + r) - dl / du12 %
+               (1.0 - r % r) + source2 % front * dt;
   arma_vec d = -1.0 * (value / m + source % front * dt);
 
   // Lower BCs (fixed value):

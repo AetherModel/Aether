@@ -26,11 +26,11 @@ void Ions::calc_efield(Grid grid) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_exb_drift(Grid grid) {
-  
+
   std::string function = "Ions::calc_exb";
   static int iFunction = -1;
   report.enter(function, iFunction);
-  
+
   arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);

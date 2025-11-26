@@ -170,7 +170,7 @@ precision_t read_float(std::ifstream &file_ptr, std::string hash) {
     line = strip_string_end(line);
 
     try {
-      output = stoi(line);
+      output = stof(line);
     } catch (...) {
       std::cout << "Issue in read_float!\n";
       std::cout << "In hash: ";

@@ -7,7 +7,7 @@
 // This is the file that defines the number of grid points in each
 // direction.  The entire code is based on these numbers, so you need
 // to recompile if you change these numbers.
-// 
+//
 // These are temporary and will eventually be removed.
 
 // This is for the geographic grid:

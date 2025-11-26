@@ -48,11 +48,7 @@ struct cubesphere_chars {
 class Grid {
 
  public:
-  const int iSphere_ = 1;
-  const int iCubesphere_ = 2;
-  const int iDipole_ = 3;
   int iGridShape_ = -1;
-
   // Armidillo Cube Versions:
   // Cell Center Coordinates
   arma_cube geoLon_scgc, geoX_scgc;
@@ -147,6 +143,7 @@ class Grid {
   // Matrices whose elements denote the altitude index of the interiormost ghost cell
   // in the k-up and k-down direction (altitude for geo grids, q for dipole).
   arma_mat first_lower_gc, first_upper_gc;
+  precision_t altitude_lower_bc;
 
   // Whether to close field lines on dipole grid (Always false for geo grids)
   bool IsClosed;

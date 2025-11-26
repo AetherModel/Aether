@@ -31,9 +31,9 @@ std::vector<std::vector<std::string>> read_csv(std::ifstream &file_ptr);
  \param csvLines a matrix of strings
  **/
 json put_csv_in_json_w_name(std::vector<std::vector<std::string>>
-			    csvLines);
+                            csvLines);
 json put_csv_in_json_wo_name(std::vector<std::vector<std::string>>
-			     csvLines);
+                             csvLines);
 
 
 /**************************************************************
@@ -46,8 +46,8 @@ std::vector<std::vector<std::string>> read_ssv(std::ifstream &file_ptr);
 /**************************************************************
  \brief Reads either a comma-separated time or series of lines describing time
 
-  format is either 
-  y, m, d, h, m, s, ms 
+  format is either
+  y, m, d, h, m, s, ms
   or
   y
   m
