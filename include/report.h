@@ -29,11 +29,11 @@
 
 class Report {
 
-// -----------------------------------------------------------------------
-// Public functions and variables
-// -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Public functions and variables
+  // -----------------------------------------------------------------------
 
-public:
+ public:
 
   // Functions:
 
@@ -147,9 +147,9 @@ public:
    \param cFunctionName
    **/
   void student_checker_function_name(bool isStudent,
-				     std::string cStudentName,
-				     int iFunctionNumber,
-				     std::string cFunctionName);
+                                     std::string cStudentName,
+                                     int iFunctionNumber,
+                                     std::string cFunctionName);
 
   /**************************************************************
    \brief Starts timer and reports when entering a function, if applicable
@@ -180,10 +180,10 @@ public:
    **/
   void times();
 
-// -----------------------------------------------------------------------
-// Private functions and variables
-// -----------------------------------------------------------------------
-private:
+  // -----------------------------------------------------------------------
+  // Private functions and variables
+  // -----------------------------------------------------------------------
+ private:
 
   /// global verbose level of the code
   int iVerbose;

@@ -407,7 +407,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   precision_t dt;
 
-  if (grid.iGridShape_ == grid.iCubesphere_)
+  if (grid.iGridShape_ == iCubesphere_)
     dt = calc_dt_cubesphere(grid);
   else {
     int iDir;

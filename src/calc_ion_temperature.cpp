@@ -27,18 +27,17 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid &grid) {
 
   temperature_scgc = neutrals.temperature_scgc;
 
-  // For electron temperature, we need to check if some species are present or not. 
+  // For electron temperature, we need to check if some species are present or not.
   // Do this check now & warn if needed:
   if ((neutrals.get_species_id("O") == -1)
-      || (neutrals.get_species_id("O2") == -1) 
-      ||(neutrals.get_species_id("N2") == -1)){
-    if (input.get_do_photoelectron_heating() 
+      || (neutrals.get_species_id("O2") == -1)
+      || (neutrals.get_species_id("N2") == -1)) {
+    if (input.get_do_photoelectron_heating()
         || input.get_do_ionization_heating()
-        || input.get_do_electron_neutral_elastic_collisional_heating()) {
-    report.error("Your electron temperature sources require neutral O, O2, and N2 to be present.");
-    }
+        || input.get_do_electron_neutral_elastic_collisional_heating())
+      report.error("Your electron temperature sources require neutral O, O2, and N2 to be present.");
   }
-  
+
   return;
 }
 

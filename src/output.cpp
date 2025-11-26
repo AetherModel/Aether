@@ -362,7 +362,7 @@ bool output(const Neutrals &neutrals,
         report.error("File output type not found!");
         didWork = false;
       } else {
-        if (grid.get_IsGeoGrid())
+        if (grid.get_gridtype() == neutralType_)
           filename = filename + "G_";
         else
           filename = filename + "M_";

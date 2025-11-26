@@ -46,6 +46,8 @@ bool advance(Planets &planet,
     didWork = neutralsMag.check_for_nonfinites("Top of Advance - ion grid");
   }
 
+  json dummy = indices.get_all_indices(time.get_current());
+
   gGrid.calc_sza(planet, time);
   mGrid.calc_sza(planet, time);
 
@@ -258,13 +260,16 @@ bool advance(Planets &planet,
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
       report.print(3, "Writing restart files");
-      neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(),
+      neutrals.restart_file(input.get_restartout_dir(),
+                            gGrid.get_gridtype(),
                             DoWrite);
-      neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(),
+      neutralsMag.restart_file(input.get_restartout_dir(),
+                               mGrid.get_gridtype(),
                                DoWrite);
       ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
       ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
       time.restart_file(input.get_restartout_dir(), DoWrite);
+      indices.restart_file(input.get_restartout_dir(), DoWrite, time.get_current());
     }
   }
 

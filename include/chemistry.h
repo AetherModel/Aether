@@ -72,7 +72,7 @@ class Chemistry {
     /// type of formula to use for reaction rate:
     int type;
     /// name of the reaction
-    std::string name;    
+    std::string name;
 
   };
 
@@ -93,12 +93,12 @@ class Chemistry {
                              Ions &ions);
 
  private:
-  bool search(std::string name, 
-              json &headers, 
+  bool search(std::string name,
+              json &headers,
               std::vector<std::string> &error);
 
-  bool check_chemistry_file(json &headers, 
-                            std::vector<std::vector<std::string>> csv, 
+  bool check_chemistry_file(json &headers,
+                            std::vector<std::vector<std::string>> csv,
                             Report &report);
 
   int read_chemistry_file(Neutrals neutrals,
@@ -107,7 +107,7 @@ class Chemistry {
   reaction_type interpret_reaction_line(const Neutrals &neutrals,
                                         const Ions &ions,
                                         const std::vector<std::string> &line,
-					const json &headers);
+                                        const json &headers);
 
   void find_species_id(const std::string &name,
                        const Neutrals &neutrals,

@@ -25,7 +25,7 @@ bool grid_match(Grid gGrid,
         lon = mGrid.geoLon_scgc(iX, iY, iZ);
         lat = mGrid.geoLat_scgc(iX, iY, iZ);
 
-        if (gGrid.iGridShape_ == gGrid.iSphere_) {
+        if (gGrid.iGridShape_ == iSphere_) {
           norms(0) = lon / cPI;
           norms(1) = lat / cPI;
           norms(2) = 0.0;
@@ -34,6 +34,7 @@ bool grid_match(Grid gGrid,
           norms = sphere_to_cube(lon, lat);
           iNode = gQuadtree.find_point(norms);
         }
+
         if (report.test_verbose(6))
           std::cout << "lon, lat, node: " << lon*cRtoD << " "
                     << lat*cRtoD << " "

@@ -18,9 +18,9 @@ std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid &grid) {
     display_vector("gradient, value : ", value_scgc.tube(9, 9));
   }
 
-  if (grid.iGridShape_ == grid.iCubesphere_)
+  if (grid.iGridShape_ == iCubesphere_)
     gradient_vcgc = calc_gradient_cubesphere(value_scgc, grid);
-  else if (grid.iGridShape_ == grid.iDipole_)
+  else if (grid.iGridShape_ == iDipole_)
     gradient_vcgc = calc_gradient_dipole(value_scgc, grid);
   else {
 

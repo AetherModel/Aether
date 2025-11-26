@@ -1024,9 +1024,11 @@ def calc_blocks(dataToWrite, iLon_ = 0, iLat_ = 1):
 
     iBlock = 1
     while (iBlock < nBlocksTotal):
-        if (np.abs(dataToWrite[iBlock][iLon_][0, 0, 0] - testLon) > 0.001):
+        if ((np.abs(dataToWrite[iBlock][iLon_][0, 0, 0] - testLon) > 0.1) and
+            (np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) < 0.1)):
             nBlocksLon = nBlocksLon + 1
-        if (np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) > 0.001):
+        if ((np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) > 0.1) and
+            (np.abs(dataToWrite[iBlock][iLon_][0, 0, 0] - testLon) < 0.1)):
             nBlocksLat = nBlocksLat + 1
         iBlock = iBlock + 1
 
@@ -1064,20 +1066,20 @@ def consolidate_blocks(originalData, iLon_ = 0, iLat_ = 1):
             consolidatedData[key] = originalData[0][key]
         else:
             # need to move data over
+            #print('variable : ', key)
             data = np.zeros((nLonsTotal, nLatsTotal, nAlts))
             for iBlock in range(nBlocks):
                 # interior points:
-                iLatS = int((originalData[iBlock][iLat_][nGCs, nGCs, nGCs] - Lat0)/dLat) + nGCs
+                iLatS = int(round((originalData[iBlock][iLat_][nGCs, nGCs, nGCs] - Lat0)/dLat)) + nGCs
                 iLatE = iLatS + nLats
-                iLonS = int((originalData[iBlock][iLon_][nGCs, nGCs, nGCs] - Lon0)/dLon) + nGCs
+                iLonS = int(round((originalData[iBlock][iLon_][nGCs, nGCs, nGCs] - Lon0)/dLon)) + nGCs
                 iLonE = iLonS + nLons
                 iLonSO = nGCs
                 iLonEO = nGCs + nLons
                 iLatSO = nGCs
                 iLatEO = iLatSO + nLats
-                #print(iLonS, iLonE, nLonsTotal, ' -> ', iLonSO, iLonEO, nLons)
-                #print(iLatS, iLatE, nLatsTotal, ' -> ', iLatSO, iLatEO, nLats)
-                #print(nGCs)
+                #print('lons : ', iLonS, iLonE, nLonsTotal, ' -> ', iLonSO, iLonEO, nLons)
+                #print('lats : ', iLatS, iLatE, nLatsTotal, ' -> ', iLatSO, iLatEO, nLats)
                 data[iLonS:iLonE, iLatS:iLatE, 0:nAlts] = \
                     originalData[iBlock][key][iLonSO:iLonEO, iLatSO:iLatEO, 0:nAlts]
 

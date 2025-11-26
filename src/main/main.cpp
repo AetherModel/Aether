@@ -38,12 +38,12 @@ int main() {
     // For now, the number of processors and blocks are set by the
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)
-    Quadtree quadtree(input.get_grid_shape("neuGrid"));
+    Quadtree quadtree(input.get_grid_shape(neutralType_));
 
     if (!quadtree.is_ok())
       throw std::string("quadtree for neutrals initialization failed!");
 
-    Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
+    Quadtree quadtree_ion(input.get_grid_shape(ionType_));
 
     if (!quadtree_ion.is_ok())
       throw std::string("quadtree for ions initialization failed!");
@@ -84,8 +84,8 @@ int main() {
     // Perturb the inputs if user has asked for this
     indices.perturb();
 
-    // Initialize Geographic grid:
-    Grid gGrid("neuGrid");
+    // Initialize neutral grid:
+    Grid gGrid(neutralType_);
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
 
@@ -102,24 +102,23 @@ int main() {
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
-    // Initialize Magnetic grid:
-    Grid mGrid("ionGrid");
+    // Initialize ion grid:
+    Grid mGrid(ionType_);
 
-    if (mGrid.iGridShape_ == mGrid.iDipole_) {
+    if (mGrid.iGridShape_ == iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
 
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
-      std::cout << "Making Spherical Magnetic Grid\n";
+      report.print(1, "Making Spherical Magnetic Grid\n");
       mGrid.set_IsDipole(false);
-      didWork = mGrid.init_geo_grid(quadtree, planet);
+      didWork = mGrid.init_geo_grid(quadtree_ion, planet);
       mGrid.set_IsGeoGrid(false);
     }
 
     if (!didWork)
       throw std::string("Initializing magneitic grid failed!");
-
 
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
@@ -197,6 +196,14 @@ int main() {
 
       if (!didWork)
         throw std::string("Reading Restart for time Failed!!!\n");
+
+      didWork = indices.restart_file(input.get_restartin_dir(),
+                                     true,
+                                     time.get_current());
+
+      if (!didWork)
+        throw std::string("Reading Restart for Indices Failed!!!\n");
+
     }
 
     // This is for the initial output.  If it is not a restart, this will go:

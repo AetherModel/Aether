@@ -225,6 +225,7 @@ class Neutrals {
   std::vector<double> initial_altitudes;
   std::vector<double> initial_temperatures;
   int64_t nInitial_temps = 0;
+  precision_t altitude_of_bc;
 
   /// Number of species to advect:
   int nSpeciesAdvect;

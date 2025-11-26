@@ -207,7 +207,22 @@ bool Neutrals::set_lower_bcs(Grid &grid,
       temperature_scgc.subcube(iLon, iLat, 0, iLon, iLat, iAlt - 1).fill(
         temperature_scgc(iLon, iLat, iAlt));
 
+      precision_t t = temperature_scgc(iLon, iLat, 0);
+      precision_t g = abs(grid.gravity_vcgc[2](iLon, iLat, iAlt));
+
+      precision_t alt1 = grid.geoAlt_scgc(iLon, iLat, iAlt);
+      precision_t alt0 = grid.altitude_lower_bc;
+      precision_t dz = alt1 - alt0;
+
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
+        precision_t m = mean_major_mass_scgc(iLon, iLat, iAlt);
+
+        //if (m == 0)
+        m = species[iSpecies].mass;
+
+        precision_t h = cKB * t / (m * g);
+        precision_t factor = exp(-dz / h);
 
         //-----------------------------------------------
         // Planet BCs - set to fixed constant values.
@@ -217,6 +232,7 @@ bool Neutrals::set_lower_bcs(Grid &grid,
           // Fill all lower ghost cells density with lower boundary condition:
           species[iSpecies].density_scgc.subcube(iLon, iLat, 0,
                                                  iLon, iLat, iAlt - 1).fill(
+                                                   factor *
                                                    species[iSpecies].lower_bc_density);
         }  // planet bc type
 

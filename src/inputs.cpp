@@ -107,7 +107,7 @@ std::string dummy_string = "unknown";
 
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-  if (report.test_verbose(5))
+  if (report.test_verbose(10))
     std::cout << "checking setting : "
               << key1 << " and "
               << key2 << "\n";
@@ -132,7 +132,7 @@ bool Inputs::check_settings(std::string key1,
 // 1 key:
 
 bool Inputs::check_settings(std::string key1) {
-  if (report.test_verbose(5))
+  if (report.test_verbose(10))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
@@ -465,6 +465,25 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
     min_max = get_setting_intarr(gridtype, "AltRange");
     grid_specs.alt_min = min_max[0];
     grid_specs.alt_max = min_max[1];
+
+    precision_t minDipoleLat = 10.0 * cDtoR;
+    precision_t maxDipoleLat = 80.0 * cDtoR;
+
+    if (grid_specs.lat_min < minDipoleLat) {
+      grid_specs.lat_min = minDipoleLat;
+      report.print(0, "Error in setting min lat for " +
+                   grid_specs.shape +
+                   " - moving to 10 deg");
+      report.error("Setting min dipole lat to 10.0");
+    }
+
+    if (grid_specs.lat_max > maxDipoleLat) {
+      grid_specs.lat_max = maxDipoleLat;
+      report.print(0, "Error in setting max lat for " +
+                   grid_specs.shape +
+                   " - moving to 80 deg");
+      report.error("Setting max dipole lat to 80.0");
+    }
 
   } else {
     grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");

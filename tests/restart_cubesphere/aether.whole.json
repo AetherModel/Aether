@@ -15,8 +15,6 @@
     "Electrodynamics" : {
 	"File" : "UA/inputs/b20110320n_omni.bin"},
     
-    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-    
     "CubeSphere" : {
 	"is" : true},
 

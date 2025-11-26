@@ -13,12 +13,12 @@ bool init_dipole_grid(Grid &mGrid, Planets planet);
 
 // Analytic solution to get from q,p dipole coords to r,theta
 // q coordinate along b-field line
-// p l-shell 
+// p l-shell
 // return (r,theta)
 std::pair<precision_t, precision_t> qp_to_r_theta(precision_t q, precision_t p);
 
 // convert mag to geographic
-std::vector <arma_cube> mag_to_geo(arma_cube magLon, 
+std::vector <arma_cube> mag_to_geo(arma_cube magLon,
                                    arma_cube magLat,
                                    arma_cube magAlt,
                                    Planets planet);
