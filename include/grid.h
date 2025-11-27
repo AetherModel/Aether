@@ -45,30 +45,31 @@ struct cubesphere_chars {
 // Grid class
 // ----------------------------------------------------------------------------
 
-  struct interp_coef_t {
-    // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
-    uint64_t iRow;
-    uint64_t iCol;
-    uint64_t iAlt;
-    // The coefficients along row, column and altitude
-    precision_t rRow;
-    precision_t rCol;
-    precision_t rAlt;
-    // Whether the point is within this grid or not
-    bool in_grid;
-    // If this is set to true:
-    bool above_grid, below_grid;
-    // do interpolation in lat and lon, but extrapolate in altitude
-  };
+struct interp_coef_t {
+  // The point is inside the cube of:
+  // [iRow, iRow+1], [iCol, iCol+1] [iAlt, iAlt+1]
+  uint64_t iRow;
+  uint64_t iCol;
+  uint64_t iAlt;
+  // The coefficients along row, column and altitude
+  precision_t rRow;
+  precision_t rCol;
+  precision_t rAlt;
+  // Whether the point is within this grid or not
+  bool in_grid;
+  // If this is set to true:
+  bool above_grid, below_grid;
+  // do interpolation in lat and lon, but extrapolate in altitude
+};
 
-  struct grid_to_grid_t {
-    int64_t iProcTo;
-    int64_t nPts;
-    int64_t nPtsReceive;
-    std::vector<struct interp_coef_t> interpCoefs;
-    std::vector<precision_t *> valueToSend;
-    std::vector<precision_t *> valueToReceive;
-  };
+struct grid_to_grid_t {
+  int64_t iProcTo;
+  int64_t nPts;
+  int64_t nPtsReceive;
+  std::vector<struct interp_coef_t> interpCoefs;
+  std::vector<precision_t *> valueToSend;
+  std::vector<precision_t *> valueToReceive;
+};
 
 class Grid {
  public:
@@ -552,12 +553,12 @@ class Grid {
    * \pre Lons, Lats and Alts have the same size
    * \return list of interpolation coefficients
    */
-  
+
   std::vector<struct interp_coef_t> get_interpolation_coefs(
-                                    const std::vector<precision_t> &Lons,
-                                    const std::vector<precision_t> &Lats,
-                                    const std::vector<precision_t> &Alts);
-  
+    const std::vector<precision_t> &Lons,
+    const std::vector<precision_t> &Lats,
+    const std::vector<precision_t> &Alts);
+
   /**
    * \brief Set the interpolation coefficients for the dipole grid
    * \param Lons The longitude of points
@@ -666,18 +667,18 @@ class Grid {
   // Each point is processed by the function set_interpolation_coefs and stored
   // in the form of this structure.
   // If the point is out of the grid, in_grid = false and all other members are undefined
-  struct interp_coef_t {
-    // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
-    uint64_t iRow;
-    uint64_t iCol;
-    uint64_t iAlt;
-    // The coefficients along row, column and altitude
-    precision_t rRow;
-    precision_t rCol;
-    precision_t rAlt;
-    // Whether the point is within this grid or not
-    bool in_grid;
-  };
+  //struct interp_coef_t {
+  //  // The point is inside the cube of [iRow, iRow+1], [iCol, iCol+1], [iAlt, iAlt+1]
+  //  uint64_t iRow;
+  //  uint64_t iCol;
+  //  uint64_t iAlt;
+  //  // The coefficients along row, column and altitude
+  //  precision_t rRow;
+  //  precision_t rCol;
+  //  precision_t rAlt;
+  //  // Whether the point is within this grid or not
+  //  bool in_grid;
+  //};
 
   // Calculate the range of a spherical grid
   void get_sphere_grid_range(struct sphere_range &sr) const;
@@ -688,18 +689,18 @@ class Grid {
 
   // Helper function for set_interpolation_coefs
   struct interp_coef_t get_interp_coef_sphere(const sphere_range &sr,
-                              const precision_t lon_in,
-                              const precision_t lat_in,
-                              const precision_t alt_in);
+                                              const precision_t lon_in,
+                                              const precision_t lat_in,
+                                              const precision_t alt_in);
   struct interp_coef_t get_interp_coef_cubesphere(const cubesphere_range &cr,
-                                  const precision_t lon_in,
-                                  const precision_t lat_in,
-                                  const precision_t alt_in);
+                                                  const precision_t lon_in,
+                                                  const precision_t lat_in,
+                                                  const precision_t alt_in);
   // (note these are magnetic coordinates)
-  void set_interp_coef_dipole(const dipole_range &dr,
-                              const precision_t lon_in,
-                              const precision_t lat_in,
-                              const precision_t alt_in);
+  struct interp_coef_t get_interp_coef_dipole(const dipole_range &dr,
+					      const precision_t lon_in,
+					      const precision_t lat_in,
+					      const precision_t alt_in);
 
   // Processed interpolation coefficients
   std::vector<struct interp_coef_t> interp_coefs;
