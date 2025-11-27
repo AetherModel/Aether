@@ -17,7 +17,7 @@
 /**********************************************************************
   \brief Reads in all of the indices files and stores them in Indices
 
-  This function goes through all of the input indices files and 
+  This function goes through all of the input indices files and
   reads in the files, then stores the values into the Indices class.
   At this point, it can read in the following file types:
   1. NGDC F10.7 files.
@@ -32,7 +32,7 @@ bool read_and_store_indices(Indices &indices);
   \param f107_file the f10.7 file to read in
 **/
 index_file_output_struct read_f107_file(std::string f107_file,
-					Indices indices);
+                                        Indices indices);
 
 /**********************************************************************
   \brief Read the OMNIWeb file format and store in the index_file struct
@@ -40,7 +40,7 @@ index_file_output_struct read_f107_file(std::string f107_file,
   \param indices needed to get the indices index for each variable
 **/
 index_file_output_struct read_omni_file(std::string omni_file,
-					Indices indices);
+                                        Indices indices);
 
 /**********************************************************************
   \brief This code compares a string to return the variable index

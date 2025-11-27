@@ -72,7 +72,7 @@ class Chemistry {
     /// type of formula to use for reaction rate:
     int type;
     /// name of the reaction
-    std::string name;    
+    std::string name;
 
   };
 
@@ -87,31 +87,31 @@ class Chemistry {
   void calc_chemistry(Neutrals &neutrals,
                       Ions &ions,
                       Times time,
-                      Grid grid);
+                      Grid &grid);
 
   void calc_chemical_sources(Neutrals &neutrals,
                              Ions &ions);
 
  private:
-  bool search(std::string name, 
-              json &headers, 
+  bool search(std::string name,
+              json &headers,
               std::vector<std::string> &error);
 
-  bool check_chemistry_file(json &headers, 
-                            std::vector<std::vector<std::string>> csv, 
+  bool check_chemistry_file(json &headers,
+                            std::vector<std::vector<std::string>> csv,
                             Report &report);
 
   int read_chemistry_file(Neutrals neutrals,
                           Ions ions);
 
-  reaction_type interpret_reaction_line(Neutrals neutrals,
-                                        Ions ions,
-                                        std::vector<std::string> line,
-					json headers);
+  reaction_type interpret_reaction_line(const Neutrals &neutrals,
+                                        const Ions &ions,
+                                        const std::vector<std::string> &line,
+                                        const json &headers);
 
-  void find_species_id(std::string name,
-                       Neutrals neutrals,
-                       Ions ions,
+  void find_species_id(const std::string &name,
+                       const Neutrals &neutrals,
+                       const Ions &ions,
                        int &id_,
                        bool &IsNeutral);
 

@@ -105,14 +105,12 @@ C          Declarations for GETFIT
 
       TIME = RMLTLON/15.
       TIME = RMLT
-   20 IF (TIME .GT. TMX) THEN
-	TIME = TIME - 24.
-	GO TO 20
-      ENDIF
-   30 IF (TIME .LT. TMN) THEN
-	TIME = TIME + 24.
-	GO TO 30
-      ENDIF
+      do while (time > tmx)
+        time = time - 24.0
+      enddo
+      do while (time < tmn)
+        time = time + 24.0
+      enddo
 
       H = SIGN (1.,RMLAT)
       RMLA = MIN(MAX(ABS(RMLAT),RMLAMN(MODL)), RMLAMX(MODL))
@@ -255,8 +253,9 @@ C          Initialize common constants
       ENDIF
 
       READ (IUN,*) NLABS
-      DO 10 I=1,NLABS
-   10 READ (IUN,'(A)',END=998,ERR=999) LABELS
+      DO I=1,NLABS
+        READ (IUN,'(A)',END=998,ERR=999) LABELS
+      enddo
 
       READ (IUN,*,END=998,ERR=999) KFIT
       IF (KFIT .NE. 2) THEN
@@ -297,8 +296,9 @@ C          Initialize common constants
 
       IF (MODL .EQ. 2) THEN
 C          Reverse the sign of BETA for MHS to conform to MHI convention
-	DO 20 I=1,NBETA
-   20   BETA(I,NDX,MODL) = -BETA(I,NDX,MODL)
+	  DO I=1,NBETA
+          BETA(I,NDX,MODL) = -BETA(I,NDX,MODL)
+        enddo
       ENDIF
       ENDDO
 C  30 IF (IPR .EQ. 1) WRITE (6,'(''MHINIT: Read ''A,'' pars: I MODL BY B
@@ -392,10 +392,11 @@ C     CALL BASPRC (TX,TY(1,MODL),NX,NY,KX,KY,X,Y,F)
       DFIT = 0.0
       DDXFIT = 0.
       DDYFIT = 0.
-      DO 30 I=1,NBETA
-      DFIT   = DFIT   + BETA(I,NDX,MODL)*F(1,1,I)
-      DDXFIT = DDXFIT + BETA(I,NDX,MODL)*F(2,1,I)/Y
-   30 DDYFIT = DDYFIT + BETA(I,NDX,MODL)*F(1,2,I)
+      DO I=1,NBETA
+        DFIT   = DFIT   + BETA(I,NDX,MODL)*F(1,1,I)
+        DDXFIT = DDXFIT + BETA(I,NDX,MODL)*F(2,1,I)/Y
+        DDYFIT = DDYFIT + BETA(I,NDX,MODL)*F(1,2,I)
+      enddo 
       DDYFIT = -DDYFIT
       DFIT   = -DFIT/1000.
       ESFIT  = -DDYFIT
@@ -422,10 +423,11 @@ C          Local declarations
 
       NDERIV = MIN0 (3,KX-1,KY-1)
       N = NX*NY
-      DO 10 I=1,N
-      DO 10 J=1,9
-   10 F(J,I) = 0.
-
+      DO I=1,N
+        DO J=1,9
+          F(J,I) = 0.
+        enddo
+      enddo
       XP = MOD (X,TX(NX+1))
       CALL INTERV (TX, NX+KX, XP, ILEFTX, MFLAG)
       YP = Y
@@ -449,24 +451,25 @@ C	STOP
       CALL BSPLVD (TY, KY, YP, ILEFTY, A, VALY, NDERIV)
       NPX = NX - (KX-1)
 
-      DO 20 MX=1,KX
-      IX = LFTMKX + MX
-      IF (IX .GE. NX-(KX-2)) IX = IX-NX+(KX-1)
+      DO MX=1,KX
+        IX = LFTMKX + MX
+        IF (IX .GE. NX-(KX-2)) IX = IX-NX+(KX-1)
 
-      DO 30 MY=1,KY
-      IY = LFTMKY + MY - 1
-      IF (IY .GT. 0) THEN
-	DO 40 JX=1,3
-	LX = MX + KX*(JX-1)
-	DO 50 JY=1,3
-	J = JX + (JY-1)*3
-	LY = MY + KY*(JY-1)
-	I = IX + (IY-1)*NPX
-   50   F(J,I) = VALX(LX)*VALY(LY)
-   40   CONTINUE
-      ENDIF
-   30 CONTINUE
-   20 CONTINUE
+        DO MY=1,KY
+          IY = LFTMKY + MY - 1
+          IF (IY .GT. 0) THEN
+	      DO JX=1,3
+	        LX = MX + KX*(JX-1)
+	        DO JY=1,3
+	          J = JX + (JY-1)*3
+	          LY = MY + KY*(JY-1)
+	          I = IX + (IY-1)*NPX
+                F(J,I) = VALX(LX)*VALY(LY)
+              enddo
+            enddo
+          ENDIF
+        enddo
+      enddo
 
       RETURN
       END
@@ -631,14 +634,15 @@ C     FOR THE CURRENT ORDER. THESE ARE STORED IN COLUMN K+1-CURRENT
 C     ORDER  BEFORE  BSPLVB  IS CALLED TO PUT VALUES FOR THE NEXT
 C     HIGHER ORDER ON TOP OF IT.
       IDERIV = MHIGH
-      DO 15 M=2,MHIGH
+      DO M=2,MHIGH
          JP1MID = 1
-         DO 11 J=IDERIV,K
+         DO J=IDERIV,K
             DBIATX(J,IDERIV) = DBIATX(JP1MID,1)
-   11       JP1MID = JP1MID + 1
+            JP1MID = JP1MID + 1
+         enddo
          IDERIV = IDERIV - 1
          CALL BSPLVB(T,KP1-IDERIV,2,X,LEFT,DBIATX)
-   15    CONTINUE
+      enddo
 C
 C     AT THIS POINT,  B(LEFT-K+I, K+1-J)(X) IS IN  DBIATX(I,J) FOR
 C     I=J,...,K AND J=1,...,MHIGH ('=' NDERIV). IN PARTICULAR, THE
@@ -647,15 +651,17 @@ C     RESPONDING DERIVATIVES OF B-SPLINES IN SUBSEQUENT COLUMNS, GENE-
 C     RATE THEIR B-REPR. BY DIFFERENCING, THEN EVALUATE AT  X.
 C
       JLOW = 1
-      DO 20 I=1,K
-         DO 19 J=JLOW,K
-   19       A(J,I) = 0.
+      DO I=1,K
+         DO J=JLOW,K
+           A(J,I) = 0.
+         enddo
          JLOW = I
-   20    A(I,I) = 1.
+         A(I,I) = 1.
+      enddo
 C     AT THIS POINT, A(.,J) CONTAINS THE B-COEFFS FOR THE J-TH OF THE
 C     K  B-SPLINES OF INTEREST HERE.
 C
-      DO 40 M=2,MHIGH
+      DO M=2,MHIGH
          KP1MM = KP1 - M
          FKP1MM = FLOAT(KP1MM)
          IL = LEFT
@@ -665,14 +671,16 @@ C        FOR J=1,...,K, CONSTRUCT B-COEFFS OF  (M-1)ST  DERIVATIVE OF
 C        B-SPLINES FROM THOSE FOR PRECEDING DERIVATIVE BY DIFFERENCING
 C        AND STORE AGAIN IN  A(.,J) . THE FACT THAT  A(I,J) = 0  FOR
 C        I .LT. J  IS USED.
-         DO 25 LDUMMY=1,KP1MM
+         DO LDUMMY=1,KP1MM
             FACTOR = FKP1MM/(T(IL+KP1MM) - T(IL))
 C           THE ASSUMPTION THAT T(LEFT).LT.T(LEFT+1) MAKES DENOMINATOR
 C           IN  FACTOR  NONZERO.
-            DO 24 J=1,I
-   24          A(I,J) = (A(I,J) - A(I-1,J))*FACTOR
+            DO J=1,I
+              A(I,J) = (A(I,J) - A(I-1,J))*FACTOR
+            enddo
             IL = IL - 1
-   25       I = I - 1
+            I = I - 1
+         enddo
 C
 C        FOR I=1,...,K, COMBINE B-COEFFS A(.,I) WITH B-SPLINE VALUES
 C        STORED IN DBIATX(.,M) TO GET VALUE OF  (M-1)ST  DERIVATIVE OF
@@ -681,12 +689,15 @@ C        DBIATX(I,M). STORAGE OF THIS VALUE OVER THE VALUE OF A B-SPLINE
 C        OF ORDER M THERE IS SAFE SINCE THE REMAINING B-SPLINE DERIVAT-
 C        IVES OF THE SAME ORDER DO NOT USE THIS VALUE DUE TO THE FACT
 C        THAT  A(J,I) = 0  FOR J .LT. I .
-   30    DO 40 I=1,K
+   30    DO I=1,K
             SUM = 0.
             JLOW = MAX0(I,M)
-            DO 35 J=JLOW,K
-   35          SUM = A(J,I)*DBIATX(J,M) + SUM
-   40       DBIATX(I,M) = SUM
+            DO J=JLOW,K
+              SUM = A(J,I)*DBIATX(J,M) + SUM
+            enddo
+            DBIATX(I,M) = SUM
+         enddo
+       enddo
    99                                   RETURN
       END
 
@@ -772,10 +783,11 @@ C
          DELTAR(J) = T(LEFT+J) - X
          DELTAL(J) = X - T(LEFT+1-J)
          SAVED = 0.
-         DO 26 I=1,J
+         DO I=1,J
             TERM = BIATX(I)/(DELTAR(I) + DELTAL(JP1-I))
             BIATX(I) = SAVED + DELTAR(I)*TERM
-   26       SAVED = DELTAL(JP1-I)*TERM
+            SAVED = DELTAL(JP1-I)*TERM
+         enddo
          BIATX(JP1) = SAVED
          J = JP1
          IF (J .LT. JHIGH)              GO TO 20

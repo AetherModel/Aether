@@ -15,11 +15,11 @@
 
 class Planets {
 
-// -----------------------------------------------------------------------
-// Public functions and variables
-// -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Public functions and variables
+  // -----------------------------------------------------------------------
 
-public:
+ public:
 
   // --------------------------------------------------------------------
   // Functions:
@@ -110,7 +110,7 @@ public:
   precision_t get_dipole_strength();
 
   /**********************************************************************
-     \brief Returns omega (rotation rate) of the planet 
+     \brief Returns omega (rotation rate) of the planet
    **/
   precision_t get_omega();
 
@@ -118,27 +118,32 @@ public:
      \brief returns neutrals json for neutral density BCs
    **/
   json get_neutrals();
-  
+
   /**********************************************************************
      \brief returns neutral temperature json for temperature ICs
    **/
   json get_temperatures();
-  
+
   /**********************************************************************
      \brief returns ions json for ion density characteristics
    **/
   json get_ions();
-  
+
+  /**********************************************************************
+     \brief returns altitude of the density boundary condition:
+   **/
+  precision_t get_altitude_of_bc();
+
   /**********************************************************************
      \brief Check to see if internal state of class is ok
    **/
-  
+
   bool is_ok();
 
-// -----------------------------------------------------------------------
-// Private functions and variables
-// -----------------------------------------------------------------------
-  
+  // -----------------------------------------------------------------------
+  // Private functions and variables
+  // -----------------------------------------------------------------------
+
  private:
 
   /// A structure to describe the planetary characteristics for each planet
@@ -250,9 +255,13 @@ public:
 
   /// Information about the initial temperature of the planet
   json temperatures;
-  
+
   /// Information about the ions of the planet
   json ions;
+
+  /// This is needed to specify at what altitude the densities
+  /// are specified:
+  precision_t altitude_of_bc;
 
   /// An internal variable to hold the state of the class
   bool IsOk;

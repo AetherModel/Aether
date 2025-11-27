@@ -6,30 +6,6 @@
 
 #include "aether.h"
 
-// -----------------------------------------------------------------------------
-// get the l-shell given latitude (in radians) and normalized radius
-// -----------------------------------------------------------------------------
-
-precision_t get_lshell(precision_t lat, precision_t rNorm) {
-  precision_t cosLat = cos(lat);
-  precision_t lshell = rNorm / (cosLat * cosLat);
-  return lshell;
-}
-
-precision_t get_lat_from_r_and_lshell(precision_t r, precision_t lshell) {
-  precision_t cosLat = sqrt(r / lshell);
-
-  if (cosLat < -1.0)
-    cosLat = -1.0;
-
-  if (cosLat > 1.0)
-    cosLat = 1.0;
-
-  precision_t lat = acos(cosLat);
-  return lat;
-}
-
-
 
 // -----------------------------------------------------------------------------
 // Calculate a tilted offset dipole field given the planetary
@@ -137,4 +113,10 @@ bfield_info_type get_dipole(precision_t lon,
     report.exit(function);
 
   return bfield_info;
+}
+
+// This is the del value from (Swisdak, 2006) & others. Used in Dipole distance calc's.
+// Note the cos->sin, since magLat is latitude, not colatitude.
+arma_cube delTheta(arma_cube magLat) {
+  return (sqrt(3 * sin(magLat) % sin(magLat) + 1));
 }

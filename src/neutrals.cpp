@@ -11,7 +11,7 @@
 //  Create a single species by filling the species structure
 // -----------------------------------------------------------------------------
 
-Neutrals::species_chars Neutrals::create_species(Grid grid) {
+Neutrals::species_chars Neutrals::create_species(Grid &grid) {
 
   species_chars tmp;
 
@@ -81,7 +81,7 @@ Neutrals::species_chars Neutrals::create_species(Grid grid) {
 //  Initialize neutrals
 // -----------------------------------------------------------------------------
 
-Neutrals::Neutrals(Grid grid,
+Neutrals::Neutrals(Grid &grid,
                    Planets planet,
                    Times time,
                    Indices indices) {
@@ -251,21 +251,34 @@ int Neutrals::read_planet_file(Planets planet) {
 
 void Neutrals::fill_with_hydrostatic(int64_t iStart,
                                      int64_t iEnd,
-                                     Grid grid) {
+                                     Grid &grid) {
 
   int64_t iNeutral, iSpecies;
+
+  int64_t iX, iY, iZ;
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iFirst;
 
   for (iNeutral = 0; iNeutral < nSpeciesAdvect; iNeutral++) {
     iSpecies = species_to_advect[iNeutral];
 
-    // Integrate with hydrostatic equilibrium up:
-    for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
-      species[iSpecies].density_scgc.slice(iAlt) =
-        temperature_scgc.slice(iAlt - 1) /
-        temperature_scgc.slice(iAlt) %
-        species[iSpecies].density_scgc.slice(iAlt - 1) %
-        exp(-grid.dr_edge.slice(iAlt) /
-            species[iSpecies].scale_height_scgc.slice(iAlt));
+    for (iX = nGCs; iX < nX - nGCs; iX++) {
+      for (iY = nGCs; iY < nY - nGCs; iY++) {
+        iFirst = grid.first_lower_gc(iX, iY) + iStart;
+
+        // Integrate with hydrostatic equilibrium up:
+        for (int iAlt = iFirst; iAlt < iEnd; iAlt++) {
+          species[iSpecies].density_scgc(iX, iY, iAlt) =
+            temperature_scgc(iX, iY, iAlt - 1) /
+            temperature_scgc(iX, iY, iAlt) *
+            species[iSpecies].density_scgc(iX, iY, iAlt - 1) *
+            exp(-grid.dr_edge(iX, iY, iAlt) /
+                species[iSpecies].scale_height_scgc(iX, iY, iAlt));
+
+        }
+      }
     }
   }
 
@@ -281,16 +294,28 @@ void Neutrals::fill_with_hydrostatic(int64_t iStart,
 void Neutrals::fill_with_hydrostatic(int64_t iSpecies,
                                      int64_t iStart,
                                      int64_t iEnd,
-                                     Grid grid) {
+                                     Grid &grid) {
 
-  // Integrate with hydrostatic equilibrium up:
-  for (int iAlt = iStart; iAlt < iEnd; iAlt++) {
-    species[iSpecies].density_scgc.slice(iAlt) =
-      temperature_scgc.slice(iAlt - 1) /
-      temperature_scgc.slice(iAlt) %
-      species[iSpecies].density_scgc.slice(iAlt - 1) %
-      exp(-grid.dr_edge.slice(iAlt) /
-          species[iSpecies].scale_height_scgc.slice(iAlt));
+  int64_t iX, iY, iZ;
+  int64_t nX = grid.get_nX();
+  int64_t nY = grid.get_nY();
+  int64_t nGCs = grid.get_nGCs();
+  int64_t iFirst;
+
+  for (iX = nGCs; iX < nX - nGCs; iX++) {
+    for (iY = nGCs; iY < nY - nGCs; iY++) {
+      iFirst = grid.first_lower_gc(iX, iY) + iStart;
+
+      // Integrate with hydrostatic equilibrium up:I
+      for (int iAlt = iFirst; iAlt < iEnd; iAlt++) {
+        species[iSpecies].density_scgc(iX, iY, iAlt) =
+          temperature_scgc(iX, iY, iAlt - 1) /
+          temperature_scgc(iX, iY, iAlt) *
+          species[iSpecies].density_scgc(iX, iY, iAlt - 1) *
+          exp(-grid.dr_edge(iX, iY, iAlt) /
+              species[iSpecies].scale_height_scgc(iX, iY, iAlt));
+      }
+    }
   }
 
   calc_mass_density();
@@ -397,7 +422,7 @@ bool Neutrals::check_for_nonfinites(std::string location) {
 // This will return -1 if the species is not found or name is empty
 //----------------------------------------------------------------------
 
-int Neutrals::get_species_id(std::string name) {
+int Neutrals::get_species_id(const std::string &name) const {
 
   std::string function = "Neutrals::get_species_id";
   static int iFunction = -1;
@@ -466,8 +491,7 @@ bool Neutrals::restart_file(std::string dir, std::string cGridtype,
         else
           RestartContainer.store_variable(cName,
                                           velocity_unit,
-                                          species[iSpecies].
-                                          velocity_vcgc[iDir]);
+                                          species[iSpecies].velocity_vcgc[iDir]);
       }
     }
 

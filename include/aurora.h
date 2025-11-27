@@ -12,16 +12,16 @@
  **/
 
 void read_aurora(Neutrals &neutrals,
-		 Ions &ions);
+                 Ions &ions);
 
 arma_vec calculate_fang(float eflux,  // in ergs/cm2/s
-			float avee,   // in keV
-			float Ebin,   // eV
-			arma_vec rhoH,
-			std::vector<float> Ci,
-			float dE,     // eV
-			arma_vec H,
-			bool DoDebug);
+                        float avee,   // in keV
+                        float Ebin,   // eV
+                        arma_vec rhoH,
+                        std::vector<float> Ci,
+                        float dE,     // eV
+                        arma_vec H,
+                        bool DoDebug);
 
 /**********************************************************************
   * brief Read in a file containing information about splitting ionization
@@ -31,8 +31,8 @@ arma_vec calculate_fang(float eflux,  // in ergs/cm2/s
   * param ions the class that contains all info about the ions
  **/
 
-void calc_aurora(Grid grid,
-		 Neutrals &neutrals,
-		 Ions &ions);
+void calc_aurora(Grid &grid,
+                 Neutrals &neutrals,
+                 Ions &ions);
 
 #endif  // INCLUDE_AURORA_H_

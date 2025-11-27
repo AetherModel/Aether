@@ -111,6 +111,39 @@ arma_vec interpolate1d(arma_vec inY,
   return outY;
 }
 
+// ----------------------------------------------------------------------------
+// Fix corners in an arma cube
+//   - basically fill in the corners with values near them
+// ----------------------------------------------------------------------------
+
+void fill_horizontal_ghostcels(arma_cube &values, int64_t nGCs) {
+
+  int64_t nXs = values.n_rows, iX;
+  int64_t nYs = values.n_cols, iY;
+  int64_t nZs = values.n_slices, iZ;
+  int64_t iGCx, iGCy, iGCz;
+
+  for (iGCx = 0; iGCx < nGCs; iGCx++) {
+    for (iY = 0; iY < nYs; iY++) {
+      // Bottom:
+      values.tube(iGCx, iY) = values.tube(nGCs, iY);
+      values.tube(nXs - iGCx - 1, iY) = values.tube(nXs - nGCs - 1, iY);
+    }
+  }
+
+  for (iX = 0; iX < nXs; iX++) {
+    for (iGCy = 0; iGCy < nGCs; iGCy++) {
+      // Bottom:
+      values.tube(iX, iGCy) = values.tube(iX, nGCs);
+      values.tube(iX, nYs - iGCy - 1) = values.tube(iX, nYs - nGCs - 1);
+    }
+  }
+
+  //fill_corners(values, nGCs);
+
+  return;
+
+}
 
 // ----------------------------------------------------------------------------
 // Fix corners in an arma cube
@@ -121,7 +154,44 @@ void fill_corners(arma_cube &values, int64_t nGCs) {
 
   int64_t nXs = values.n_rows, iX;
   int64_t nYs = values.n_cols, iY;
-  int64_t iGCx, iGCy;
+  int64_t nZs = values.n_slices, iZ;
+  int64_t iGCx, iGCy, iGCz;
+
+  // Bottom:
+  for (iGCz == 0; iGCz < nGCs; iGCz++) {
+    for (iGCx = 0; iGCx < nGCs; iGCx++) {
+      for (iY = 0; iY < nYs; iY++) {
+        // Bottom:
+        values(iGCx, iY, iGCz) =
+          values(nGCs, iY, nGCs);
+        values(nXs - iGCx - 1, iY, iGCz) =
+          values(nXs - nGCs - 1, iY, nGCs);
+        // top:
+        values(iGCx, iY, nZs - iGCz - 1) =
+          values(nGCs, iY, nZs - nGCs - 1);
+        values(nXs - iGCx - 1, iY, nZs - iGCz - 1) =
+          values(nXs - nGCs - 1, iY, nZs - nGCs - 1);
+      }
+    }
+  }
+
+  for (iGCz = 0; iGCz < nGCs; iGCz++) {
+    for (iGCy = 0; iGCy < nGCs; iGCy++) {
+      for (iX = 0; iX < nXs; iX++) {
+        // Bottoms:
+        values(iX, iGCy, iGCz) =
+          values(iX, nGCs, nGCs);
+        values(iX, nYs - iGCy - 1, iGCz) =
+          values(iX, nYs - nGCs - 1, nGCs);
+        // tops:
+        values(iX, iGCy, nZs - iGCz - 1) =
+          values(iX, nGCs, nZs - nGCs - 1);
+        values(iX, nYs - iGCy - 1, nZs - iGCz - 1) =
+          values(iX, nYs - nGCs - 1, nZs - nGCs - 1);
+
+      }
+    }
+  }
 
   for (iGCx = 0; iGCx < nGCs; iGCx++) {
     for (iGCy = 0; iGCy < nGCs; iGCy++) {
@@ -158,6 +228,35 @@ void display_vector(arma_vec vec) {
 
   std::cout << "\n";
 }
+
+// ----------------------------------------------------------------------------
+// Neatly display an armadillo matrix with a name
+// ----------------------------------------------------------------------------
+
+void display_cube(std::string name, arma_cube values) {
+  std::cout << name << " ";
+
+  for (int64_t i = 0; i < values.n_slices; i++) {
+    std::cout << "Slice : " << i << ":\n";
+    display_matrix(" ", values.slice(i));
+  }
+
+}
+
+// ----------------------------------------------------------------------------
+// Neatly display an armadillo matrix with a name
+// ----------------------------------------------------------------------------
+
+void display_matrix(std::string name, arma_mat mat) {
+  std::cout << name << "\n";
+
+  for (int64_t i = 0; i < mat.n_cols; i++)
+    display_vector(" ", mat.col(i));
+
+  std::cout << "\n";
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Neatly display an armadillo vector with a name
@@ -238,6 +337,23 @@ precision_t sync_mean_across_all_procs(precision_t value) {
   return global_value;
 }
 
+// ----------------------------------------------------------------------------
+// Calculate the average value across all processors
+//   - this is the same as sync_mean_across_all_procs, but is limited to
+//     processors in a given member
+// ----------------------------------------------------------------------------
+
+precision_t sync_mean_across_member(precision_t value) {
+  precision_t global_value;
+  double vSend, vReceive;
+  double nSend, nReceive;
+  vSend = value;
+  nSend = 1.0;
+  MPI_Allreduce(&vSend, &vReceive, 1, MPI_DOUBLE, MPI_SUM, aether_member_comm);
+  MPI_Allreduce(&nSend, &nReceive, 1, MPI_DOUBLE, MPI_SUM, aether_member_comm);
+  global_value = vReceive / nReceive;
+  return global_value;
+}
 // ----------------------------------------------------------------------------
 // Generate a vector of normally distributed random doubles
 // ----------------------------------------------------------------------------
@@ -654,7 +770,8 @@ bool all_finite(arma_cube cube, std::string name) {
       "," + std::to_string(loc[1]) +
       "," + std::to_string(loc[2]) + ")";
     int size = locations.size();
-    std::cout << "all_finite : " << cube(loc[0], loc[1], loc[2]) << "\n";
+    std::cout << "all_finite (" << name << "): " << cube(loc[0], loc[1],
+                                                         loc[2]) << "\n";
     std::string error_message =
       std::to_string(size) +
       " Nonfinite values exist in " + name +
@@ -838,4 +955,126 @@ arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in) {
   }
 
   return ans;
+}
+
+////////////////////////////////////////////
+// convert cell coordinates to geographic //
+////////////////////////////////////////////
+std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
+                                   arma_cube magAlt,
+                                   Planets planet) {
+  std::string function = "Grid::mag_to_geo";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  std::vector<arma_cube> llr, xyz_mag, xyz_geo, xyzRot1, xyzRot2;
+  llr.push_back(magLon);
+  llr.push_back(magLat);
+  llr.push_back(magAlt);
+  xyz_mag = transform_llr_to_xyz_3d(llr);
+
+  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
+  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
+  std::vector<precision_t> dipole_center = planet.get_dipole_center();
+
+  // Reverse our dipole rotations:
+  xyzRot1 = rotate_around_y_3d(xyz_mag, magnetic_pole_tilt);
+  xyzRot2 = rotate_around_z_3d(xyzRot1, magnetic_pole_rotation);
+
+  // offset dipole (not fully suported yet, so will be zero)
+  if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
+      (dipole_center[2] != 0.0)) {
+
+    dipole_center = {0.0, 0.0, 0.0};
+  }
+
+  xyz_geo.push_back(xyzRot2[0] + dipole_center[0]);
+  xyz_geo.push_back(xyzRot2[1] + dipole_center[1]);
+  xyz_geo.push_back(xyzRot2[2] + dipole_center[2]);
+
+  // transform back to lon, lat, radius:
+  llr = transform_xyz_to_llr_3d(xyzRot2);
+
+  report.exit(function);
+  return llr;
+}
+
+////////////////////////////////////////////
+//  convert cell coordinates to magnetic  //
+////////////////////////////////////////////
+
+std::vector<arma_cube> geo_to_mag(arma_cube glon,
+                                  arma_cube glat,
+                                  arma_cube radius,
+                                  Planets &planet) {
+
+  std::string function = "Grid::geo_to_gmag";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  std::vector<arma_cube> llr, xyz_mag, xyz_geo, xyzRot1, xyzRot2;
+  llr.push_back(glon);
+  llr.push_back(glat);
+  llr.push_back(radius);
+  xyz_mag = transform_llr_to_xyz_3d(llr);
+
+  precision_t magnetic_pole_rotation = planet.get_dipole_rotation();
+  precision_t magnetic_pole_tilt = planet.get_dipole_tilt();
+  std::vector<precision_t> dipole_center = planet.get_dipole_center();
+
+  // Reverse our dipole rotations:
+  xyzRot1 = rotate_around_z_3d(xyz_mag, -magnetic_pole_tilt);
+  xyzRot2 = rotate_around_y_3d(xyzRot1, -magnetic_pole_rotation);
+
+  // offset dipole (not fully suported yet, so will be zero)
+  if ((dipole_center[0] != 0.0) || (dipole_center[1] != 0.0) ||
+      (dipole_center[2] != 0.0)) {
+
+    dipole_center = {0.0, 0.0, 0.0};
+  }
+
+  xyz_geo.push_back(xyzRot2[0] - dipole_center[0]);
+  xyz_geo.push_back(xyzRot2[1] - dipole_center[1]);
+  xyz_geo.push_back(xyzRot2[2] - dipole_center[2]);
+
+  // transform back to lon, lat, radius:
+  llr = transform_xyz_to_llr_3d(xyzRot2);
+
+  report.exit(function);
+  return llr;
+}
+
+
+std::vector<precision_t> mag_to_ijk(precision_t mlon,
+                                    precision_t mLat,
+                                    precision_t radius,
+                                    precision_t planet_radius) {
+
+  precision_t i_lon, j_p, k_q;
+
+  // precision_t planet_radius = planet.get_radius();
+
+  i_lon = mlon;
+  j_p = radius / planet_radius / pow(cos(mLat), 2);
+  k_q = sin(mLat) / pow(radius / planet_radius, 2.);
+
+  return {i_lon, j_p, k_q};
+}
+
+// -----------------------------------------------------------------------
+// Transform a flat vector into a 1D cube (avoids having to overload everything)
+// - this is overloaded for one vec/cube
+// -----------------------------------------------------------------------
+
+arma_cube vec2cube(std::vector<precision_t> ivec) {
+  arma_cube outvec;
+  int sizei = ivec.size();
+  arma_cube I;
+
+  I.set_size(sizei, 1, 1);
+
+  for (int i = 0; i < sizei; i++)
+    I[i] = ivec[i];
+
+  return I;
 }

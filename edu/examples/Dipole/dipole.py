@@ -3,125 +3,173 @@ import numpy as np
 
 ####        Set inputs          ####
 
-# Set to None or '' to not save, just show (pan/zoom capabilities).
-fig_save_path = None
+# To save plot, change last line of the code, otherwise it is just shown
 
+# Number of lats/alts (without ghost cells)
+nLatsPerBlock_in = 12 
+nAltsPerBlock_in = 12 
 
-nf = 100  # number of field lines
-nz = 200  # number of grid cells on each field line
-alt_min = 90  # in km, min altitude
+# in degrees, where to begin & end grid between (90,0)
+# Grid is mirrored across N/S hemisphere
+max_blat = 85
+min_blat = 12
 
-# in degrees, start/end latitudes of field lines. between (90,0)
-max_blat = 89.9
-min_blat = 2.25
+# In km (above surface)
+min_alt = 80
+max_alt = 800
 
-gams = 0.1
-# point distribution along field lines.
-# higher puts more pts at high altitudes.
+# Number of "blocks" to simulate - i.e. # of processors in Aether run (must be >4 & even)
+nBlocks = 6
 
-baselat_spacing_factor = 6  # exponential factor for spacing baselats (uses cos() too)
+nGCs = 2
 
 # consts:
-Re = 6371  # in km
+Re_KM = 6371  # in km
+cPI = np.pi
 
 
-# leave empty for "auto" (aaron b choose), or put in custom limits here.
-# [left, right, bottom, top]
-limits_left_plot = None  # default is whole image
-limits_right_plot = None  # default is [-0.1, 2.0, -0.3, 1.75]
+########                  ~~~~~~~~~~~~~~~~~~~~                  ########
+# OUTLINE:
+# - constants & inputs (above)
+# - def main (the function to create the grid)
+# - def all conversions
+# - def the ploting function
+# - Run script:
+#   - make the grid as Aether would
+#   - call the plotting function
+
+def main(alt_minRE, alt_maxRE, lat_min, lat_max, origins, extent, nLatsPerBlock, nAltsPerBlock):
+
+    pcenters = np.zeros([len(origins), nLatsPerBlock, nAltsPerBlock])
+    qcenters = np.zeros([len(origins), nLatsPerBlock, nAltsPerBlock])
+
+    # Loop through QT's origins
+    for n, origin in enumerate(origins):
+        close_this_block = False
+        isSouth = False
+        # If we're in south hemisphere, flip everything. WIll be undone later.
+        if origin < -0.01:
+            isSouth = True
+            origin  = -1*origin - extent
+
+        lat0 = (2*(lat_max - lat_min))*origin    
+        dlat = extent * (2*(lat_max - lat_min)) / (nLatsPerBlock - nGCs*2)
+        
+        # Put latitudes down evenly (centers & corners)
+        # - This forms the invariant latitudes which field lines must pass thru
+        lat1d = []
+        lat1d_co = []   
+        pcenters1d = np.empty(nLatsPerBlock)
+        qs = np.empty((nLatsPerBlock, nAltsPerBlock))
+        pcenters2d = np.empty((nLatsPerBlock, nAltsPerBlock))
+
+        for i in range(nLatsPerBlock):
+            lat1d.append(lat0 + (i - nGCs + 0.5) * dlat + lat_min)
+
+        # IF touching pole, put last ghost cell at 89.9 degrees & the 2nd to last 1/2 way there.
+        if origin + extent > 0.49:
+            lat1d[-1] = 89.9
+            lat1d[-2] = (lat1d[-1] + lat1d[-2]) /2
+
+        for i in range(nLatsPerBlock):
+            pcenters1d[i] = alt_minRE / (np.sin(cPI/2 - np.deg2rad(lat1d[i]))**2)
+            # Easier to save later if we get this:
+            pcenters2d[i, :] = alt_minRE / (np.sin(cPI/2 - np.deg2rad(lat1d[i]))**2)
+
+        # Corners (only used here to determine if we need to close > 1 block per hemisphere)
+        for i in range(nLatsPerBlock+1): 
+            lat1d_co.append(lat0 + (i - nGCs) * dlat + lat_min)
+        pcorners = alt_minRE / np.sin(cPI/2 - np.deg2rad(lat1d_co)) **2
+
+        ## Determine if field lines should close. There are two conditions:
+        # - If the lowest l-shell in this block < altMin
+        if np.min(pcorners) < alt_maxRE: 
+            close_this_block = True
+        # - Or if we are touching the equator
+        if origin < 0.01: # NH equator
+            close_this_block + True
+        if np.abs(extent + origin) < 0.01: # SH equator
+            close_this_block = True
+
+        ## Setting up the q-values...
+
+        # The idea here is that we either want the field line to close (wrap over equator)
+        # or to have its boundaries entirely within min/max alt. 
+        # We do not want field lines ending before max_alt, and vice-versa.
+        # By definition, q=0 at the equator and +/- infinity at the N/S poles, so:
+        # - Q_max is obtained from the minimum altitude point on the highest latitude field line
+        q_max_center = rp2q(alt_minRE, pcenters1d[-1])
+        if close_this_block:
+            q_min_center = 0 # if the block is closed, q_min = 0. This is the equator!
+        else:
+            # If open, q_min is the highest altitude point on the lowest latitude field line
+            q_min_center = rp2q(alt_maxRE, pcenters1d[0])
+
+        
+        delQ = (q_max_center - q_min_center) / (nAltsPerBlock - nGCs*2) 
+        for iAlt in range(nAltsPerBlock):
+            qs[:, iAlt] = ((q_min_center + (iAlt - nGCs + 0.5) * delQ))
+        
+        # If we were in South hemisphere, multiply by -1
+        # And put data in the same order as we get back from Aether
+        if isSouth:
+            qs = -1.0*qs
+            pcenters2d = np.flip(pcenters2d, axis=0)
+
+        qcenters[n,:] = np.flip(qs, axis=1)
+        pcenters[n,:] = pcenters2d
+
+    return qcenters, pcenters
 
 
-# ------------------------------------------------------------------------
-# Main code is here:
-# ------------------------------------------------------------------------
+####        Useful Functions for conversions:          ####
+####        - Not all used... 
+####        - Format: in2out, in as few letters as necessary
+####          example: cart to geo "xy2rt": (x,y) --> (r, theta)
 
-####        Useful Functions:          ####
+## NOTE: theta for the dipole coordinate system is defined as co-latitude, not latitude
+## Thus, we do (cPI-theta) for rt2(q/p).
+## Then things are kept as-is, until conversion back to spherical when 
+## colatitude is again considered
 
+def rt2q(r, t):
+    return np.cos(cPI/2 - t)/r**2
 
-def calc_baselats(blat_min, blat_max, n_f, factor):
-    """Lay down base latitudes
+def rt2p(r, t):
+    return r/(np.sin(cPI/2 - t)**2)
 
-    Args:
-        blat_min (float): min latitude to start (positive), in degrees.
-        blat_max (float): max latitude in degrees, positiv & less than 90.0
-        nf (int): Number of field lines. Must be even!
-        factor (float): Factor to use to space latitudes.
+def rt2qp(r, t):
+    q = rt2q(r, t)
+    p = rt2p(r, t)
+    return q, p
 
-    Returns:
-        numpy array: starting latitudes
-
-    Notes: follows very similar approach to doi:10.1029/2000JA000035
-    - Not exactly exponential, but exponential and a cosine!
-    - Spaced according to B-field strength.
-
-    """
-    # Space out base latitudes:
-
-    baselats = np.linspace(
-        np.cos(np.deg2rad(blat_min ** (1 / factor))),
-        np.cos(np.deg2rad(blat_max ** (1 / factor))),
-        num=n_f,
-    )
-
-    # baselats are in southern hemisphere
-    baselats = -1 * np.flip(np.rad2deg(np.arccos(baselats)) ** factor)
-
-    return baselats
+def rt2xy(r, t):
+    x = r*np.cos(t)
+    y = r*np.sin(t)
+    return x, y
 
 
-def calc_q(alt, theta, re=None, is_alt=False, isnt_re=False):
-    """Calculate q (distance along field line) for a point
+def rq2t(r,q):
+    return np.arcsin(q * r**2)
+def rp2t(r, p):
+    return np.arccos(np.sqrt(r/p))
 
-    Args:
-        alt (float, array-like): altitude (kn or Re)
-        theta (float or array-like): magnetic latitude (in degrees).
-            0 at mag equator (measured from North Pole).
-        re (float): radius of earth in km. only used if alt is altitude and/or in km
-        is_alt (bool): altitude is altitude? False means it's radius. Default is False
-        isnt_re (bool): altitude is in km? False means altitude has units [Re]. Default is False
+def rp2q(r, p):
+    return np.sqrt((1-r/p)/r**4)
 
-    Returns:
-        (array or float): q-value for the given (alt, theta) point.
+def qp2xy(q, p):
+    r_ = qp_solve(q, p)
+    t_ = rq2t(r_, q)
+    return rt2xy(r_, t_)
 
-    Notes:
-    - make sure theta has units degrees and is measured from north pole
-    - See <doi:10.1029/2000JA000035> for more information.
-    - is_alt & isnt_re are from debugging & aren't used anymore.
+def tp2r(t, p):
+    return p * (np.cos(t)**2)
 
-    """
+def alt2r(alt, re):
+    return (alt + re)/re
 
-    if is_alt:  # convert altitude to radius
-        alt = alt + re
-    if isnt_re:  # convert km to re
-        alt = alt / re
-
-    return np.cos(np.deg2rad(90 - theta)) / (alt**2)
-
-
-def calc_p(alt, theta, re=None, is_alt=False, isnt_re=False):
-    """Calculate p-value (l-shell) for a given altitude & latitude
-
-    Args:
-        alt (float): altitude (in km or Re), (above surface or from origin)
-        theta (float): latitude, in degrees
-        re (float): earth radius in km. optional.
-        is_alt (bool): is alt altitude? if it's radius, set to False (default).
-        isnt_re (bool): altitude is in km? False (default) means altitude has units [Re].
-
-    Returns:
-        (array or float): p-value. Same as l-Shell, in Re.
-
-    Notes:
-    - make sure theta has units degrees and is measured from north pole
-    - See <doi:10.1029/2000JA000035> for more information.
-    - is_alt & isnt_re are from debugging & aren't used anymore.
-
-    """
-    if is_alt:
-        alt = alt + re
-    if isnt_re:
-        alt = alt / re
-    return alt / (np.sin(np.deg2rad(90 - theta)) ** 2)
+def r2alt(r, re):
+    return r*re - re
 
 
 def qp_solve(q, p):
@@ -145,149 +193,104 @@ def qp_solve(q, p):
     return new_r
 
 
-####        The main stuff:          ####
+def make_plot(qs, ps, alt_min_RE, Re_km=6371,
+              abs_bot = False # Take the absolute value of latitude on bottom plot?
+              ):
+
+    rs = qp_solve(qs, ps)
+    ts = rq2t(rs, qs)
+    
+    fig = plt.figure(figsize=(8,11))
+    
+    gs = plt.GridSpec(8,9)
+    
+    ax0 = fig.add_subplot(gs[:5,:3])
+    for x,y in zip(*qp2xy(qs, ps)):
+        ax0.scatter(x,y, s=5)
+    
+    xlim, ylim = ax0.get_xlim(), ax0.get_ylim()
+    
+    circle1 = plt.Circle((0, 0), 1, color='k', alpha = .7)
+    ax0.add_patch(circle1)
+    
+    ax0.set_ylim(ylim)
+    ax0.set_xlim(xlim)
+    ax0.set_aspect(1)
+    ax0.set_title('in Re:')
+
+    ax1 = fig.add_subplot(gs[:2,4:])
+    counts, _, _ = ax1.hist(rs.flatten(), bins=60)
+    ax1.vlines(alt_min_RE, 0, max(counts)*1.1, linestyle = '--', alpha=.7, color='k')
+    ax1.set_title(f"{np.sum(rs < alt_min_RE) / np.prod(rs.shape)*100:.2f}% of points below min_alt\n"
+                 f"{np.sum(rs < 1) / np.prod(rs.shape)*100:.2f}% of points below 0 Re")
+    ax1.set_xlabel('Each cell altitude in Re')
+    ax1.set_ylabel('bin count')
+
+    ax1p2 = fig.add_subplot(gs[2,4:])
+    alt_min_KM = r2alt(alt_min_RE, Re_km)
+    counts, bins, _ = ax1p2.hist(r2alt(rs, Re_km).flatten(), bins=200)
+    ax1p2.vlines(alt_min_KM, 0, max(counts)*1.1, linestyle = '--', alpha=.7, color='k')
+    ax1p2.set_xlim(-100, 1000)
+    ax1p2.set_xlabel('altitude in km')
+
+    another_hist_ax = fig.add_subplot(gs[3:5, 4:])
+    another_hist_ax.hist(np.rad2deg(ts.flatten()), bins=90)
+    another_hist_ax.set_xlabel('Magnetic Latitude (deg)')
+
+    ax2 = fig.add_subplot(gs[5:,:])
+    for x,y in zip(np.rad2deg(ts), r2alt(rs, Re_km)):
+        if abs_bot:
+            ax2.scatter(np.abs(x),y)
+        else:
+            ax2.scatter(x,y)
+            
+    ax2.hlines(100, 0 if abs_bot else -90, 90, color='k', alpha=.8)
+    ax2.set_ylim(0,1500)
+    ax2.set_xlabel('Magnetic Latitude (deg)')
+    ax2.set_ylabel('Altitude (km)')
+
+    plt.tight_layout()
+
+    return fig
 
 
-def calc_exp_grid(nf0, nz0, altminre, baselats, pvals, gamma):
-    """Exponential Grid laydown, keeps grid parallel & perpendicular to B
-
-    Args:
-        nf0 (int): number of field lines
-        nz0 (int): number of points along each field line. MUST BE EVEN!
-        altminre (float): min altitude (in Re from center of earth) to trace from
-        baselats (list/array): latitudes to start at (from calc_baselats)
-        pvals (flaot): p-values (dipole coords, so it's L-shells) for all field lines
-        gamma (float): factor used to space points along field line.
-            Lower values increase point density @ low altitudes
-
-    Returns:
-        [np.array, np.array]: (nf, nz) dimensionsl arrays of:
-            - Latitudes (in deg)
-            - Radii (in re) of grid
-
-    ** This can be vectorized & shortened A LOT.
-    Left in this state for readability and in case things need to be changed.
-
+def generate_sym_quadtree(nBlocks):
     """
+    Makes the latitude portion of the quadtree
+    input: nBlocks
+    outputs:
+        origins (normed y-coordinate of lower-left)
+        extent (size_up_norm)
+    """
+    origins = np.linspace(-0.5, 0.5, num=nBlocks, endpoint=False)
+    extent = 1/nBlocks
 
-    lats_2d = []
-    rs_2d = []
-
-    nzh = int(nz0 / 2)
-
-    for f_iter in range(nf0):
-        # q in sh & nh
-        q_S = calc_q(altminre, baselats[f_iter], is_alt=False, isnt_re=False)
-        q_N = calc_q(altminre, -baselats[f_iter], is_alt=False, isnt_re=False)
-
-        # linear spacing - made it really readable, could be done "cleaner"
-        delqp = (q_N - q_S) / nz0
-        qp0 = []
-        for i in range(nz0):
-            qp0.append(q_S + i * delqp)
-
-        # exp grid laydown, (same for all calls here, speed not an issue though)
-        delqp = altminre * delqp
-        f00s = []
-        for i in range(nz0):
-            f00s.append(gamma + (1 - gamma) * np.exp(-(((i - nzh) / (nz0 / 10)) ** 2)))
-
-        # spacing according to sinh function
-        ft = []
-        for i in range(nz0):
-            fb0 = (1 - f00s[i]) / np.exp(-q_S / delqp - 1)
-            fa = f00s[i] - fb0
-            ft.append(fa + fb0 * np.exp(-(qp0[i] - q_S) / delqp))
-
-        # q values, from south -> equator
-        qpnew = []
-        for i in range(nzh):
-            delq = qp0[i] - q_S
-            qpnew.append(q_S + ft[i] * delq)
-
-        # qpnew is from south-equator. extend it to north pole,
-        # so *-1 & reverse order so it is ascending
-        qpnew.extend(np.flip(np.array(qpnew)) * -1)
-
-        ilats = []
-        irs = []
-
-        for i in range(nz0):
-            # use qpsolve to get r from (q,p)
-            irs.append(qp_solve(qpnew[i], pvals[f_iter]))
-            # Use dipole equations to get lat from q and r
-            # q = cos(theta)/r**2
-            ilats.append(np.rad2deg(np.arcsin(qpnew[i] * irs[-1] ** 2)))
-
-        # Put into 2-D; lists easier & then return numpy
-        lats_2d.append(ilats)
-        rs_2d.append(irs)
-
-    return np.array(lats_2d), np.array(rs_2d)
+    return origins, extent
 
 
-####        Actual computation:          ####
 
+# ------------------------------------------------------------------------
+# Main code is here:
+# ------------------------------------------------------------------------
+if __name__ == "__main__":
 
-AltMinRe = (alt_min + Re) / Re  # alt min in Re
+    alt_maxRE = alt2r(max_alt, Re_KM)
+    alt_minRE = alt2r(min_alt, Re_KM)
+    
+    nLatsPerBlock = nLatsPerBlock_in + nGCs*2
+    nAltsPerBlock = nAltsPerBlock_in + nGCs*2
 
-# baselats
-baselats = calc_baselats(min_blat, max_blat, nf, baselat_spacing_factor)
+    origins, extent = generate_sym_quadtree(nBlocks)
 
-# l-shells
-pvals = calc_p(AltMinRe, baselats)
+    qs, ps = main(alt_minRE, alt_maxRE, min_blat, max_blat, origins, extent, nLatsPerBlock, nAltsPerBlock)
 
-# take those, make lats & radii
-lats, rs = calc_exp_grid(nf, nz, AltMinRe, baselats, pvals, gams)
+    # if we want r&theta now:
+    # rs = qp_solve(qs, ps)
+    # ts = rq2t(rs, qs)
 
+    # Otherwise the plotting function does it:
 
-print("making plot")
+    fig = make_plot(qs, ps, alt_minRE, Re_KM, abs_bot=False)
 
-# change variables in case anyone wants to make different plots
-xs = lats[:, :]
-ys = rs[:, :]
-
-
-fig, ax = plt.subplots(1, 2, figsize=(7, 7))
-
-# scatter points, same color is same field line
-for x, y in zip(xs, ys):
-    ax[0].scatter(y * np.cos(np.deg2rad(x)), y * np.sin(np.deg2rad(x)))
-    ax[1].scatter(y * np.cos(np.deg2rad(x)), y * np.sin(np.deg2rad(x)))
-
-# change variables again, overwrite previous xs, ys
-# Take every 4th field line so it's more clear to see things
-xs = lats[:, :-8:4]
-ys = rs[:, :-8:4]
-# black dashed lines, same nz value at different nf's
-for x, y in zip(xs.T, ys.T):
-    ax[0].plot(
-        y * np.cos(np.deg2rad(x)), y * np.sin(np.deg2rad(x)), linestyle="--", color="k"
-    )
-    ax[1].plot(
-        y * np.cos(np.deg2rad(x)), y * np.sin(np.deg2rad(x)), linestyle="--", color="k"
-    )
-
-# make square-ish
-ax[0].set_aspect(1)
-ax[1].set_aspect(1)
-
-# custom limits?
-if limits_left_plot:
-    ax[1].set_xlim(limits_left_plot[0], limits_left_plot[1])
-    ax[1].set_ylim(limits_left_plot[2], limits_left_plot[3])
-
-
-if limits_right_plot:
-    ax[1].set_xlim(limits_right_plot[0], limits_right_plot[1])
-    ax[1].set_ylim(limits_right_plot[2], limits_right_plot[3])
-else:
-    ax[1].set_xlim(-0.1, 2)
-    ax[1].set_ylim(-0.3, 1.75)
-
-# save or show:
-if fig_save_path:
-    plt.savefig(fig_save_path)
-else:
     plt.show()
-plt.close("all")
+

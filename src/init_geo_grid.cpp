@@ -20,7 +20,9 @@ void Grid::create_altitudes(Planets planet) {
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs("neuGrid");
+  Inputs::grid_input_struct grid_input;
+
+  grid_input = input.get_grid_inputs(gridType);
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -150,6 +152,24 @@ void Grid::create_altitudes(Planets planet) {
     }
   }
 
+  // All cells on the geographic grid *should* be ok
+  isTooLowCell = find(geoAlt_scgc < grid_input.alt_min * cKMtoM);
+  isPhysicalCell = find(geoAlt_scgc >= grid_input.alt_min * cKMtoM);
+  // get the ghost cell indices on each lat/lon point.
+  // may be redundant can fill lower with nGCs-1, but this is here for now
+  arma::uvec theGCs;
+
+  for (iLon = 0; iLon < nLons; iLon++) {
+    for (iLat = 0; iLat < nLats; iLat++) {
+      // find *last* cell below alt_min
+      theGCs = find(geoAlt_scgc.tube(iLon, iLat) < grid_input.alt_min * cKMtoM);
+      // Get the last element if the col-vec
+      first_lower_gc(iLon, iLat) = theGCs(theGCs.n_elem - 1);
+    }
+  }
+
+  first_upper_gc.fill(nAlts - nGCs * 2 - 1);
+
   report.exit(function);
   return;
 }
@@ -168,17 +188,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   report.enter(function, iFunction);
   bool DidWork = true;
 
-  IsGeoGrid = 1;
+  IsGeoGrid = true;
 
   if (iGridShape_ == iCubesphere_) {
-    report.print(0, "Creating Cubesphere Grid");
+    report.print(0, "Creating Cubesphere Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_cubesphere_connection(quadtree);
 
     IsCubeSphereGrid = true;
   } else {
-    report.print(0, "Creating Spherical Grid");
+    report.print(0, "Creating Spherical Grid for : " + gridType);
 
     if (!Is0D & !Is1Dz)
       create_sphere_connection(quadtree);
@@ -190,16 +210,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
   //  report.print(1, "Restarting! Reading grid files!");
   //  DidWork = read_restart(input.get_restartin_dir());
   //} else {
-  if (iGridShape_ == iCubesphere_) {
-    //if (input.get_do_restart())
-    //  report.print(0, "Not restarting the grid - it is too complicated!");
-
+  if (iGridShape_ == iCubesphere_)
     create_cubesphere_grid(quadtree);
-  } else
+
+  else
     create_sphere_grid(quadtree);
 
   //MPI_Barrier(aether_comm);
   create_altitudes(planet);
+
+  // set the altitude of the lower boundary values:
+  altitude_lower_bc = planet.get_altitude_of_bc();
 
   init_connection();
 
@@ -211,10 +232,17 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Correct the reference grid with correct length scale:
   // (with R = actual radius)
-  if (iGridShape_ == iCubesphere_)
+  if (iGridShape_ == iCubesphere_) {
     correct_xy_grid(planet);
+    // New functions for equal-angular grid (center, left, down):
+    report.print(2, "Scaling Cube by Radius");
+    scale_cube_by_radius(cubeC);
+    scale_cube_by_radius(cubeL);
+    scale_cube_by_radius(cubeD);
+    report.print(2, "Done Scaling Cube by Radius");
+  }
 
-  if (IsMagGrid) {
+  if (gridType == ionType_) {
     report.print(0, "--> Grid is Magnetic, so rotating");
     std::vector<arma_cube> llr, xyz, xyzRot1, xyzRot2;
     llr.push_back(geoLon_scgc);
@@ -241,21 +269,26 @@ bool Grid::init_geo_grid(Quadtree quadtree,
 
   // Calculate PFPC coordinates (i.e., XYZ from LLR)
   calc_xyz(planet);
-
   // Calculate grid spacing
   calc_grid_spacing(planet);
   //calculate radial unit vector (for spherical or oblate planet)
   calc_rad_unit(planet);
   // Calculate gravity (including J2 term, if desired)
   calc_gravity(planet);
-
   // Calculate magnetic field and magnetic coordinates:
   fill_grid_bfield(planet);
+
+  write_restart(input.get_restartout_dir());
 
   // Throw a little message for students:
   report.student_checker_function_name(input.get_is_student(),
                                        input.get_student_name(),
                                        4, "");
+
+  // The dipole grid has some variables that need to be set:
+  IsClosed = false;
+  setNorthAsDown = false;
+  setSouthAsDown = false;
 
   report.exit(function);
   return DidWork;

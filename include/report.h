@@ -23,16 +23,17 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sys/time.h>
 
 #include "aether.h"
 
 class Report {
 
-// -----------------------------------------------------------------------
-// Public functions and variables
-// -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Public functions and variables
+  // -----------------------------------------------------------------------
 
-public:
+ public:
 
   // Functions:
 
@@ -146,9 +147,9 @@ public:
    \param cFunctionName
    **/
   void student_checker_function_name(bool isStudent,
-				     std::string cStudentName,
-				     int iFunctionNumber,
-				     std::string cFunctionName);
+                                     std::string cStudentName,
+                                     int iFunctionNumber,
+                                     std::string cFunctionName);
 
   /**************************************************************
    \brief Starts timer and reports when entering a function, if applicable
@@ -179,10 +180,10 @@ public:
    **/
   void times();
 
-// -----------------------------------------------------------------------
-// Private functions and variables
-// -----------------------------------------------------------------------
-private:
+  // -----------------------------------------------------------------------
+  // Private functions and variables
+  // -----------------------------------------------------------------------
+ private:
 
   /// global verbose level of the code
   int iVerbose;
@@ -211,6 +212,8 @@ private:
     precision_t timing_total;
     /// This is the start-gate for the timer
     unsigned long long timing_start;
+
+    struct timeval timing_start_new;
     /// This is the level of the function that is then compared to verbose
     int iLevel;
     /// This is a string that holds all of the function names above this one
@@ -249,6 +252,8 @@ private:
     /// error message
     std::string error;
   };
+
+  struct timeval start, end;
 
   //Vector of error structs
   std::vector<error_struct> error_list;

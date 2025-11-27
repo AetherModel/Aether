@@ -502,6 +502,14 @@ json Planets::get_ions() {
   return ions;
 }
 
+// --------------------------------------------------------------------------
+// returns altitude of the density boundary condition
+// --------------------------------------------------------------------------
+
+precision_t Planets::get_altitude_of_bc() {
+  return altitude_of_bc;
+}
+
 // -----------------------------------------------------------------------------
 // Read in the planet specific file that describes the species
 // -----------------------------------------------------------------------------
@@ -543,6 +551,17 @@ bool Planets::read_planet_specific_file() {
         if (report.test_verbose(iDebug))
           std::cout << neutrals << "\n";
       } // #neutrals
+
+      if (hash == "#altitude_of_bc") {
+        report.print(iDebug, "Found #altitude_of_bc!");
+        altitude_of_bc = read_float(infile_ptr, "#altitude_of_bc");
+        // Units read in = km
+        // Units needed in code = m:
+        altitude_of_bc = altitude_of_bc * 1000.0;
+
+        if (report.test_verbose(iDebug))
+          std::cout << altitude_of_bc << "\n";
+      } // #altitude_of_bc
 
       if (hash == "#temperature") {
         report.print(iDebug, "Found #temperatures!");

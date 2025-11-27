@@ -14,7 +14,7 @@
 // -----------------------------------------------------------------------------
 
 bool calc_euv(Planets planet,
-              Grid grid,
+              Grid &grid,
               Times time,
               Euv &euv,
               Neutrals &neutrals,

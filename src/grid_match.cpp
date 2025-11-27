@@ -108,7 +108,8 @@ bool grid_match(Grid &gGrid,
       for (iZ = mGCs; iZ < mnZ - mGCs; iZ++) {
         lon = mGrid.geoLon_scgc(iX, iY, iZ);
         lat = mGrid.geoLat_scgc(iX, iY, iZ);
-        if (gGrid.iGridShape_ == gGrid.iSphere_) {
+
+        if (gGrid.iGridShape_ == iSphere_) {
           norms(0) = lon / cPI;
           norms(1) = lat / cPI;
           norms(2) = 0.0;

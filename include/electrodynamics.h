@@ -54,7 +54,7 @@ class Electrodynamics {
 
      This does the following:
      - initialize all variables to missing values
-     - read in file if it exists 
+     - read in file if it exists
    **/
   Electrodynamics(Times time);
 
@@ -66,12 +66,12 @@ class Electrodynamics {
      \param time need current time
      \param ions Going to set the potential and aurora
    **/
-  
+
   bool update(Planets planet,
-	      Grid gGrid,
-	      Times time,
-        Indices &indices,
-        Ions &ions);
+              Grid gGrid,
+              Times time,
+              Indices &indices,
+              Ions &ions);
 
 
   /**************************************************************
@@ -85,7 +85,7 @@ class Electrodynamics {
    **/
 
   bool check_times(double inputStartTime, double inputEndTime);
-  
+
   /**************************************************************
      \brief used in advance.cpp to get potential, eflux, avee
 
@@ -95,9 +95,9 @@ class Electrodynamics {
    **/
 
   std::tuple<arma_cube,
-	     arma_mat,
-	     arma_mat> get_electrodynamics(arma_cube magLat,
-					   arma_cube magLocalTime);
+      arma_mat,
+      arma_mat> get_electrodynamics(arma_cube magLat,
+                                    arma_cube magLocalTime);
 
   /**************************************************************
      \brief Gets interpolation indices
@@ -105,7 +105,7 @@ class Electrodynamics {
      Performs 2d interpolation over search vector to get indices
 
      \param vals the 2d array that needs indices
-     \param search The vector of values to interpolate over  
+     \param search The vector of values to interpolate over
    **/
 
   arma_mat get_interpolation_indices(arma_mat vals, arma_vec search);
@@ -121,7 +121,7 @@ class Electrodynamics {
 
      \param time the time requested.
    **/
-  
+
   void set_time(double time);
 
   /**************************************************************
@@ -195,7 +195,7 @@ class Electrodynamics {
      \param value Value to assign to Kp index
    **/
   void set_kp(precision_t value);
-  
+
   /**************************************************************
      \brief Get 2D electric potential on specified grid
 
@@ -209,7 +209,7 @@ class Electrodynamics {
        with the potentials in the grids
    **/
   arma_cube get_potential(arma_cube magLat,
-			  arma_cube magLocalTime);
+                          arma_cube magLocalTime);
 
   /**************************************************************
      \brief Get 2D electron energy flux on specified grid
@@ -266,13 +266,13 @@ class Electrodynamics {
        with the ion avee in the grids
    **/
   arma_mat get_ion_avee();
-  
+
   /**********************************************************************
      \brief Check to see if internal state of class is ok
    **/
-  
+
   bool is_ok();
-  
+
  private:
 
   /// This is the interpolation method for time:
@@ -284,7 +284,7 @@ class Electrodynamics {
   /// Use the next value:
   const int iNext_ = 2;
   // Use the closest value:
-  const int iClosest_ = 3; 
+  const int iClosest_ = 3;
   /// Interpolate:
   const int iInterp_ = 4;
 
@@ -307,7 +307,7 @@ class Electrodynamics {
   /// A 2d array of magnetic local times needed. Can set interpolation
   /// coefficients in all of the grids when this is called:
   arma_mat mlts_needed;
-  
+
   /// These are all indices that may be needed by sub-models:
   precision_t imf_bx_needed;
   precision_t imf_by_needed;
@@ -340,11 +340,11 @@ class Electrodynamics {
   /// If we don't read in an electrodynamics file, then this should be
   /// set to an auroral model to use.  Need to add model types.
   std::string auroral_model_to_use;
-  
+
   /// Set the interpolation indices as a float. For each interpolation index,
-  /// the integer portion is the current index, and the decimal part is the 
+  /// the integer portion is the current index, and the decimal part is the
   /// percentage of the distance between the current index and the next
-  /// index.  For example, a distance midway between index 45 and 46 
+  /// index.  For example, a distance midway between index 45 and 46
   /// would give an interpolation index of 45.5.
   /// For time, we are assuming that all grids have the same times or that
   /// there are no overlaps in time, I think.
@@ -378,22 +378,22 @@ class Electrodynamics {
 
     /// Potential at current time:
     arma_mat potential_current;
-    
+
     /// Vector of 2d electron energy flux (in ergs/cm2/s):
     std::vector<arma_mat> energy_flux;
     /// Said energy flux at the current time:
     arma_mat energy_flux_current;
-    
+
     /// Vector of 2d electron average energy (in keV):
     std::vector<arma_mat> average_energy;
     /// Average energy at current time:
     arma_mat average_energy_current;
-    
+
     /// Vector of 2d ion energy flux (in ergs/cm2/s):
     std::vector<arma_mat> ion_energy_flux;
     /// ion energy flux at current time:
     arma_mat ion_energy_flux_current;
-    
+
     /// Vector of 2d ion average energy (in keV):
     std::vector<arma_mat> ion_average_energy;
     /// ion average energy at current time:
@@ -401,7 +401,7 @@ class Electrodynamics {
 
     /// Set to 1 if ion precipitation is included, else set to 0:
     int DoesIncludeIonPrecip;
-    
+
     /// This sets the priority of the grid. The higher the number, the
     /// more important it is, so it should overwrite any regions of
     /// a lower priority grid. For example, you could have a global
@@ -419,28 +419,28 @@ class Electrodynamics {
     /// is outside of the mlt range of the grid, then the
     /// interpolation index should be set to -1:
     arma_mat mlts_indices;
-    
+
   };
-  
+
   /// As described above, a structure containing the grid-based
   /// values of electrodynamics as a function of time.  This is
   /// vector, because we can have nested grids, or, in theory, the
   /// grid could change as a function of time. You can then search
   /// for the apropriate grid in space and time.
   std::vector<input_electrodynamics_struct> input_electrodynamics;
-  
+
   /// Because each grid has a priority, we need to go through them in
   /// priority order, this is the sorted indices list, so that
   /// grid_order[0] points to the input_electrodynamics with the
   /// lowest priority, grid_order[1] points to the 2nd lowest, etc.
   std::vector<int> grid_order;
-  
+
   /// Number of input grids for electrodynamics:
   int nElectrodynamicsGrids;
-  
+
   /// An internal variable to hold the state of the class
   bool IsOk;
-  
+
   /**************************************************************
      \brief Reads a netcdf file that has the electrodynamics specification
 
@@ -469,13 +469,13 @@ class Electrodynamics {
      grids, so that the values are overwritten. To keep it
      "functional", we pass in the last round of values and those are
      moved into the output values and then the overlapping region is
-     overwritten (e.g., in the get_potential function, the 
+     overwritten (e.g., in the get_potential function, the
      grids need to be cycled through calling get_values with the
      potential on that grid and the interpolation indices for the grid.
 
      \param values_current the pot/eflux/avee/etc from
      input_electrodynamics grid
- 
+
      \param lats_indices the interpolation indices for the current
      grid latitudes
 
@@ -483,8 +483,8 @@ class Electrodynamics {
      grid mlts
 
      \param values_old the output of this function for the last grid
-  **/  
-  
+  **/
+
   arma_mat get_values(arma_mat matToInterpolateOn, int rows, int cols);
 
   void set_all_indices_for_ie(Times time, Indices &indices);

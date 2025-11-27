@@ -239,7 +239,7 @@ void Neutrals::assign_bulk_velocity() {
 // Calculate scale heights of different species
 //----------------------------------------------------------------------
 
-void Neutrals::calc_scale_height(Grid grid) {
+void Neutrals::calc_scale_height(Grid &grid) {
 
   int64_t nAlts = grid.get_nAlts();
 
@@ -407,7 +407,7 @@ precision_t Neutrals::calc_dt(Grid grid) {
 
   precision_t dt;
 
-  if (grid.iGridShape_ == grid.iCubesphere_)
+  if (grid.iGridShape_ == iCubesphere_)
     dt = calc_dt_cubesphere(grid);
   else {
     int iDir;
@@ -518,7 +518,7 @@ precision_t Neutrals::calc_dt_cubesphere(Grid grid) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid) {
+void Neutrals::calc_chapman(Grid &grid) {
 
   int64_t iAlt, iLon, iLat;
 
@@ -572,9 +572,7 @@ void Neutrals::calc_chapman(Grid grid) {
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
-    species[iSpecies].scale_height_scgc =
-      cKB * temperature_scgc /
-      (species[iSpecies].mass * grid.gravity_mag_scgc);
+    calc_scale_height(grid);
 
     xp3d = grid.radius_scgc / species[iSpecies].scale_height_scgc;
     y3d = sqrt(0.5 * xp3d) % abs(grid.cos_sza_scgc);
@@ -585,8 +583,8 @@ void Neutrals::calc_chapman(Grid grid) {
       species[iSpecies].density_scgc.slice(iAlt) %
       species[iSpecies].scale_height_scgc.slice(iAlt);
 
-    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(
-                                                       iAlt) * species[iSpecies].mass;
+    species[iSpecies].rho_alt_int_scgc.slice(iAlt) = integral3d.slice(iAlt)
+                                                     * species[iSpecies].mass;
 
     for (iAlt = nAlts - 2; iAlt >= 0; iAlt--) {
       // dr is used here instead of dalt, since we only want the radial integration, while
@@ -621,14 +619,16 @@ void Neutrals::calc_chapman(Grid grid) {
         integral1d = integral3d.tube(iLon, iLat);
         log_int1d = log_int3d.tube(iLon, iLat);
         xp1d = xp3d.tube(iLon, iLat);
-        y1d = y3d.tube(iLon, iLat);
+        // y1d = y3d.tube(iLon, iLat);
         erfcy1d = erfcy3d.tube(iLon, iLat);
         radius1d = grid.radius_scgc.tube(iLon, iLat);
-        H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
+        // H1d = species[iSpecies].scale_height_scgc.tube(iLon, iLat);
 
         for (iAlt = nGCs; iAlt < nAlts; iAlt++) {
+          if (!grid.UseThisCell(iLon, iLat, iAlt))
+            continue; // masks off cells below surface of earth, not the best implementation.
           // This is on the dayside:
-          if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
+          else if (sza1d(iAlt) < cPI / 2 || sza1d(iAlt) > 3 * cPI / 2) {
             species[iSpecies].chapman_scgc(iLon, iLat, iAlt) =
               integral1d(iAlt) * sqrt(0.5 * cPI * xp1d(iAlt)) * erfcy1d(iAlt);
           } else {

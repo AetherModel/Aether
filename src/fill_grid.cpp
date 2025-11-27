@@ -125,7 +125,7 @@ void Grid::calc_mlt() {
   // calculated and converted to an hour.
 
   for (int iZ = 0; iZ < nZ; iZ++) {
-    dlat_north = 1.0 - (cPI / 2.0 - magLat_scgc.slice(iZ)) / cPI;
+    dlat_north = 1.0 - (cPI / 2.0 - magInvLat_scgc.slice(iZ)) / cPI;
     x_blend = dlat_north * mag_pole_north_gse[0](0, 0, iZ) +
               (1.0 - dlat_north) * mag_pole_south_gse[0](0, 0, iZ);
     y_blend = dlat_north * mag_pole_north_gse[1](0, 0, iZ) +
@@ -170,18 +170,18 @@ void Grid::fill_grid_bfield(Planets planet) {
 
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
                                    planet);
-          // This is Invariant Latitude
-          magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
-          magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
-          magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
 
-          bfield_mag_scgc(iLon, iLat, iAlt) = 0.0;
+          // Magnetic coordinates:
+          // init_mag grid already initializes magLon & magInvLat
+          if (iGridShape_ != iDipole_) {
+            magInvLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
+            magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
+          }
 
           for (iDim = 0; iDim < 3; iDim++) {
             bfield_vcgc[iDim](iLon, iLat, iAlt) = bfield_info.b[iDim] * cNTtoT;
-            bfield_mag_scgc(iLon, iLat, iAlt) =
-              bfield_mag_scgc(iLon, iLat, iAlt) +
-              bfield_vcgc[iDim](iLon, iLat, iAlt) * bfield_vcgc[iDim](iLon, iLat, iAlt);
+            bfield_mag_scgc(iLon, iLat, iAlt) += pow(bfield_vcgc[iDim](iLon, iLat, iAlt),
+                                                     2);
           }
 
           bfield_mag_scgc(iLon, iLat, iAlt) =
@@ -190,8 +190,19 @@ void Grid::fill_grid_bfield(Planets planet) {
       }
     }
 
-    for (iDim = 0; iDim < 3; iDim++)
-      bfield_unit_vcgc[iDim] = bfield_vcgc[iDim] / (bfield_mag_scgc + 1e-32);
+    // Now we modify the dipole's magnetic field to account for any imprecision.
+    // Take the bfield_mag and put it into the third component (b-hat = k-hat)
+    if (iGridShape_ == iDipole_) {
+      bfield_vcgc[2] = bfield_mag_scgc % sign(magInvLat_scgc * -1.0);
+      bfield_vcgc[1].zeros();
+      bfield_vcgc[0].zeros();
+
+      bfield_unit_vcgc[0].zeros();
+      bfield_unit_vcgc[1].zeros();
+      bfield_unit_vcgc[2] = 1.0 * sign(magInvLat_scgc * -1.0);
+    } else
+      for (iDim = 0; iDim < 3; iDim++)
+        bfield_unit_vcgc[iDim] = bfield_vcgc[iDim] / (bfield_mag_scgc + 1e-32);
 
     int IsNorth = 1, IsSouth = 0;
     mag_pole_north_ll = get_magnetic_pole(IsNorth, planet);
@@ -217,6 +228,7 @@ void Grid::fill_grid_radius(Planets planet) {
   // This generalizes things so that radius could be a function of all
   // three dimensions.  The Cubesphere has different latitudes in the first
   // and second dimensions.
+
   for (iLon = 0; iLon < nLons; iLon++)
     for (iLat = 0; iLat < nLats; iLat++)
       for (iAlt = 0; iAlt < nAlts; iAlt++)

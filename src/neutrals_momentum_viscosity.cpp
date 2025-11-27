@@ -7,7 +7,7 @@
 // Calculate viscosity
 // ---------------------------------------------------------------------------
 
-void Neutrals::update_horizontal_velocity(Grid grid, Times time) {
+void Neutrals::update_horizontal_velocity(Grid &grid, Times time) {
 
   std::string function = "Neutrals::update_horizontal_velocity";
   static int iFunction = -1;
@@ -64,7 +64,7 @@ void Neutrals::update_horizontal_velocity(Grid grid, Times time) {
           lambda1d = lambda3d.tube(iLon, iLat);
           rhor21d = rhor23d.tube(iLon, iLat);
           sources1d.zeros();
-          dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+          dalt1d = grid.dk_edge_m.tube(iLon, iLat);
           visc1d.zeros();
 
           visc1d = solver_conduction(vel1d,
