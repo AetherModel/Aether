@@ -31,7 +31,7 @@ arma_vec calculate_fang(float eflux,  // in ergs/cm2/s
   * param ions the class that contains all info about the ions
  **/
 
-void calc_aurora(Grid grid,
+void calc_aurora(Grid &grid,
                  Neutrals &neutrals,
                  Ions &ions);
 

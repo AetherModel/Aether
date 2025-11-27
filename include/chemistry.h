@@ -87,7 +87,7 @@ class Chemistry {
   void calc_chemistry(Neutrals &neutrals,
                       Ions &ions,
                       Times time,
-                      Grid grid);
+                      Grid &grid);
 
   void calc_chemical_sources(Neutrals &neutrals,
                              Ions &ions);

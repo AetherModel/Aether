@@ -7,7 +7,7 @@
 // Calculate viscosity
 // ---------------------------------------------------------------------------
 
-void Neutrals::update_horizontal_velocity(Grid grid, Times time) {
+void Neutrals::update_horizontal_velocity(Grid &grid, Times time) {
 
   std::string function = "Neutrals::update_horizontal_velocity";
   static int iFunction = -1;

@@ -120,24 +120,24 @@ fmat interpolate_1d_w_index(std::vector<fmat> values,
                             double interpolation_index,
                             int interpolation_type);
 
-arma_cube calc_gradient_lon(arma_cube value, Grid grid);
-arma_cube calc_gradient_lat(arma_cube value, Grid grid);
-arma_cube calc_gradient_alt(arma_cube value, Grid grid);
-std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid grid);
-std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid grid);
+arma_cube calc_gradient_lon(arma_cube value, Grid &grid);
+arma_cube calc_gradient_lat(arma_cube value, Grid &grid);
+arma_cube calc_gradient_alt(arma_cube value, Grid &grid);
+std::vector<arma_cube> calc_gradient_vector(arma_cube value_scgc, Grid &grid);
+std::vector<arma_cube> calc_gradient_cubesphere(arma_cube value, Grid &grid);
 std::vector<arma_cube> calc_gradient_dipole(arma_cube value, Grid grid);
-arma_cube calc_gradient_alt_4th(arma_cube value, Grid grid);
-arma_mat project_onesided_alt_3rd(arma_cube value, Grid grid, int64_t iAlt);
+arma_cube calc_gradient_alt_4th(arma_cube value, Grid &grid);
+arma_mat project_onesided_alt_3rd(arma_cube value, Grid &grid, int64_t iAlt);
 
 // Calculate 4th-order gradients in the native coordinate system:
-arma_cube calc_gradient4o_i(arma_cube value, Grid grid);
-arma_cube calc_gradient4o_j(arma_cube value, Grid grid);
-arma_cube calc_gradient4o_k(arma_cube value, Grid grid);
+arma_cube calc_gradient4o_i(arma_cube value, Grid &grid);
+arma_cube calc_gradient4o_j(arma_cube value, Grid &grid);
+arma_cube calc_gradient4o_k(arma_cube value, Grid &grid);
 
 // Calculate 2nd-order gradients in the native coordinate system:
-arma_cube calc_gradient2o_i(arma_cube value, Grid grid);
-arma_cube calc_gradient2o_j(arma_cube value, Grid grid);
-arma_cube calc_gradient2o_k(arma_cube value, Grid grid);
+arma_cube calc_gradient2o_i(arma_cube value, Grid &grid);
+arma_cube calc_gradient2o_j(arma_cube value, Grid &grid);
+arma_cube calc_gradient2o_k(arma_cube value, Grid &grid);
 
 // interpolation in 1D
 precision_t linear_interpolation(const precision_t y0,
@@ -155,14 +155,14 @@ precision_t limiter_mc(precision_t dUp,
                        precision_t beta);
 
 
-/**********************************************************************
-   \brief Calculate dt (cell size / cMax) in each direction, and take min
-   \param dt returns the neutral time-step
-   \param grid The grid to define the neutrals on
- **/
-precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc);
-precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc);
-precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc);
-precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc);
+  /**********************************************************************
+     \brief Calculate dt (cell size / cMax) in each direction, and take min
+     \param dt returns the neutral time-step
+     \param grid The grid to define the neutrals on
+   **/
+  precision_t calc_dt(Grid &grid, std::vector<arma_cube> cMax_vcgc);
+  precision_t calc_dt_sphere(Grid &grid, std::vector<arma_cube> cMax_vcgc);  
+  precision_t calc_dt_cubesphere(Grid &grid, std::vector<arma_cube> cMax_vcgc);  
+  precision_t calc_dt_vertical(Grid &grid, std::vector<arma_cube> cMax_vcgc);  
 
 #endif  // INCLUDE_SOLVERS_H_

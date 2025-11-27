@@ -101,6 +101,14 @@ if (USE_NETCDF)
   target_link_libraries(aether PUBLIC ${NETCDF_LIBRARIES_C})
 endif()
 
+# use_old_timing
+# cmake -DUSE_OLD_TIMING=ON ..
+option(USE_OLD_TIMING "Use old timing for performance - default is off" OFF)
+if (USE_OLD_TIMING)
+  add_definitions(-DOLD_TIMING)
+  set(OLD_TIMING "YES")
+endif()
+
 # Set up links for executable
 file(CREATE_LINK ${CMAKE_BINARY_DIR}/aether
                  ${PROJECT_SOURCE_DIR}/share/run/aether SYMBOLIC)

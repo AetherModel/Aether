@@ -257,16 +257,16 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  Neutrals(Grid grid,
-           Planets planet,
-           Times time,
-           Indices indices);
+  Neutrals(Grid &grid,
+	   Planets planet,
+	   Times time,
+	   Indices indices);
 
   /**********************************************************************
      \brief Creates the variables within the species_chars structure
      \param grid The grid to define the neutrals on
    **/
-  species_chars create_species(Grid grid);
+  species_chars create_species(Grid &grid);
 
   /**********************************************************************
      \brief Read in the planet-specific file
@@ -285,9 +285,9 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  bool initial_conditions(Grid grid,
-                          Times time,
-                          Indices indices);
+  bool initial_conditions(Grid &grid,
+			  Times time,
+			  Indices indices);
 
   /**********************************************************************
      \brief temporary function to set neutral densities with in the model
@@ -302,14 +302,14 @@ class Neutrals {
      \param grid The grid to define the neutrals on
    **/
   void fill_with_hydrostatic(int64_t iStart,
-                             int64_t iEnd,
-                             Grid grid);
+			     int64_t iEnd,
+			     Grid &grid);
 
   void fill_with_hydrostatic(int64_t iSpecies,
-                             int64_t iStart,
-                             int64_t iEnd,
-                             Grid grid);
-
+			     int64_t iStart,
+			     int64_t iEnd,
+			     Grid &grid);
+  
   /**********************************************************************
      \brief Limit the density to a floor and a ceiling
    **/
@@ -324,8 +324,8 @@ class Neutrals {
      \brief Calculate the scale heights for the individual species
      \param grid The grid to define the neutrals on
    **/
-  void calc_scale_height(Grid grid);
-
+  void calc_scale_height(Grid &grid);
+  
   /**********************************************************************
      \brief Calculate the viscosity coefficient
    **/
@@ -381,21 +381,21 @@ class Neutrals {
      \brief Calculate the chapman integrals for the individual species
      \param grid The grid to define the neutrals on
    **/
-  void calc_chapman(Grid grid);
+  void calc_chapman(Grid &grid);
 
   /**********************************************************************
      \brief Calculate the neutral bulk vertical thermal conduction
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
    **/
-  void update_temperature(Grid grid, Times time);
+  void update_temperature(Grid &grid, Times time);
 
   /**********************************************************************
      \brief Calculate the neutral bulk horizontal viscosity
      \param grid The grid to define the neutrals on
      \param time The times within the model (dt is needed)
    **/
-  void update_horizontal_velocity(Grid grid, Times time);
+  void update_horizontal_velocity(Grid &grid, Times time);
 
   /**********************************************************************
      \brief Calculate the O radiative cooling
@@ -413,7 +413,7 @@ class Neutrals {
      \param planet Need things like rotation rate
      \param grid Need things like radius
    **/
-  void add_sources(Times time, Planets planet, Grid grid);
+  void add_sources(Times time, Planets planet, Grid &grid);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
@@ -421,9 +421,9 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  bool set_bcs(Grid grid,
-               Times time,
-               Indices indices);
+  bool set_bcs(Grid &grid,
+	       Times time,
+	       Indices indices);
 
   /**********************************************************************
      \brief Set lower boundary conditions for the neutrals
@@ -431,9 +431,9 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  bool set_lower_bcs(Grid grid,
-                     Times time,
-                     Indices indices);
+  bool set_lower_bcs(Grid &grid,
+		     Times time,
+		     Indices indices);
 
   /**********************************************************************
      \brief Set upper boundary conditions for the neutrals
@@ -441,15 +441,15 @@ class Neutrals {
      \param time contains information about the current time
      \param indices used to help set initial conditions
    **/
-  bool set_upper_bcs(Grid grid);
+  bool set_upper_bcs(Grid &grid);
 
   /**********************************************************************
      \brief Set boundary conditions for the neutrals
      \param iDir direction of the BC to set
      \param grid The grid to define the neutrals on
   **/
-  bool set_horizontal_bcs(int64_t iDir, Grid grid);
-
+  bool set_horizontal_bcs(int64_t iDir, Grid &grid);
+  
   /**********************************************************************
      \brief Get the species ID number (int) given the species name (string)
      \param name string holding the species name (e.g., "O+")
@@ -524,15 +524,15 @@ class Neutrals {
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
-  void solver_vertical_rusanov(Grid grid,
-                               Times time);
-
+  void solver_vertical_rusanov(Grid &grid,
+			       Times time);
+  
   /**********************************************************************
      \brief Call the correct vertical advection scheme
      \param grid The grid to define the neutrals on
      \param time contains information about the current time
    **/
-  bool advect_vertical(Grid grid, Times time);
+  bool advect_vertical(Grid &grid, Times time);
 
   /**********************************************************************
      \brief Calculate the neutral friction in one cell using an implicit solver

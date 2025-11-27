@@ -10,7 +10,7 @@
 // Adds all of the sources to the states. Needs time to get dt.
 // -----------------------------------------------------------------------------
 
-void Neutrals::add_sources(Times time, Planets planet, Grid grid) {
+void Neutrals::add_sources(Times time, Planets planet, Grid &grid) {
 
   std::string function = "add_sources";
   static int iFunction = -1;
