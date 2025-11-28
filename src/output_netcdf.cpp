@@ -72,8 +72,10 @@ bool OutputContainer::read_container_netcdf() {
   std::string UNITS = "units";
 
   try {
-    std::cout << "Reading NetCDF file into container : "
-              << whole_filename << "\n";
+    if (report.test_verbose(0))
+      std::cout << "Reading NetCDF file into container : "
+                << whole_filename << "\n";
+
     NcFile ncdf_file_in(whole_filename, NcFile::read);
 
     std::multimap<std::string, NcVar> variables_in_file;

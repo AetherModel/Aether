@@ -97,7 +97,6 @@ void output(arma_mat &values,
     outfile << nX << " " << nY << "\n";
   }
   outfile << values;
-  outfile << "----";
   outfile.close();
 }
 
@@ -801,7 +800,7 @@ arma_mat init_rho(arma_mat &x,
 
   r = sqrt((x - 0.0) % (x - 0.0) + (y - 0.0) % (y - 0.0));
   rho.fill(1.0);
-  // rho.elem( find( r < 0.25)).fill(2.2);
+  rho.elem( find( r < 0.25)).fill(2.2);
   // rho.elem( find( r < 0.25)) = 2.25 - r.elem( find( r < 0.25));
 
   return rho;
@@ -857,7 +856,7 @@ int main()
 {
   precision_t dt = 0.0001;        // Time Step
   precision_t current_time = 0.0; // Initial Time 0
-  precision_t total_time = 2.0;   // Total simulation time
+  precision_t total_time = 0.1;   // Total simulation time
   precision_t cfl = 0.1;         // CFL Number
   precision_t gamma = 5.0 / 3.0;  // Specific ratio of heat
 

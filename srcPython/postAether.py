@@ -8,12 +8,15 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm
-from netCDF4 import Dataset
-from h5py import File
 import argparse
 import os
 import json
 from struct import unpack
+try:
+    from netCDF4 import Dataset
+    from h5py import File
+except ImportError:
+    print("NetCDF and/or h5py not found")
 
 # ----------------------------------------------------------------------
 # Function to parse input arguments
@@ -36,6 +39,12 @@ def parse_args():
     parser.add_argument('-oned', \
                         help='strip 1d files of ghostcells and store in one file', \
                         action="store_true")
+    parser.add_argument('-combine', \
+                        help='combine all of the blocks into a single block (spherical only)', \
+                        action="store_true")
+    parser.add_argument('-dir', default=None, type=str,
+                        help="Directory to find Aether files in. Will look in current"
+                        " directory & $PWD/UA/output/")
 
     args = parser.parse_args()
 
@@ -544,6 +553,13 @@ def get_base_files():
             IsFound, item = if_unique(ensembleFiles, fileInfo['ensembleFile'])
             if (IsFound):
                 filesInfo[i]['ensembleMembers'] = ensembleCounter[item]
+                
+    if len(filesInfo) == 0:
+        try:
+            os.chdir("UA/output")
+            filesInfo = get_base_files()
+        except:
+            print("No input files found!!")
     
     return filesInfo
 
@@ -715,22 +731,27 @@ def get_sizes(allBlockData):
 # Write a NetCDF file from the data
 #----------------------------------------------------------------------------
 
-def write_netcdf(allBlockData, fileName, isVerbose = True):
+def write_netcdf(allBlockData, fileName, \
+                 isVerbose = True, \
+                 isConsolidated = False):
 
     if (isVerbose):
         print('    Outputting file : ', fileName)
     ncfile = Dataset(fileName, 'w')
 
-    nBlocks = len(allBlockData)
-    nLons, nLats, nZ = get_sizes(allBlockData)
+    if (not isConsolidated):
+        oneBlock = allBlockData[0]
+        nBlocks = len(allBlockData)
+        nLons, nLats, nZ = get_sizes(allBlockData)
+        block_dim = ncfile.createDimension('block', None)
+    else:
+        oneBlock = allBlockData
+        nLons, nLats, nZ = np.shape(allBlockData[0])
 
     lon_dim = ncfile.createDimension('lon', nLons)
     lat_dim = ncfile.createDimension('lat', nLats)
     z_dim = ncfile.createDimension('z', nZ)
-    block_dim = ncfile.createDimension('block', None)
     time_dim = ncfile.createDimension('time', None)
-
-    oneBlock = allBlockData[0]
 
     time_out = ncfile.createVariable('time', np.float64, ('time',))
     time_out[0] = datetime_to_epoch(oneBlock["time"])
@@ -747,14 +768,22 @@ def write_netcdf(allBlockData, fileName, isVerbose = True):
         else:
             longName = v
         unitName = oneBlock['units'][iV]
-        allNetCDFVars.append(ncfile.createVariable(v, np.float32, \
+        if (isConsolidated):
+            allNetCDFVars.append(ncfile.createVariable(v, np.float32, \
+                                                   ('lon', 'lat', 'z')))
+        else:
+            allNetCDFVars.append(ncfile.createVariable(v, np.float32, \
                                                    ('block', 'lon', 'lat', 'z')))
         allNetCDFVars[-1].units = unitName
         allNetCDFVars[-1].long_name = longName
 
-        for iB, oneBlock in enumerate(allBlockData):
-            tmp = np.asarray(oneBlock[iV])
-            allNetCDFVars[-1][iB,:,:,:] = tmp
+        if (isConsolidated):
+            tmp = np.asarray(allBlockData[iV])
+            allNetCDFVars[-1][:,:,:] = tmp
+        else:
+            for iB, oneBlock in enumerate(allBlockData):
+                tmp = np.asarray(oneBlock[iV])
+                allNetCDFVars[-1][iB,:,:,:] = tmp
         
     ncfile.close()
 
@@ -914,6 +943,165 @@ def calc_std_of_ensembles(filesInfo,
 
     return stdData
 
+#----------------------------------------------------------------------------
+# Test to see if grid is uniform:
+#----------------------------------------------------------------------------
+
+def calc_if_uniform_grid(dataToWrite):
+
+    nBlocks = len(dataToWrite)
+
+    # Let's figure out if we have a uniform horizontal grid:
+    isUniform = True
+
+    for iBlock in range(nBlocks):
+        # Assume first 3 variables are lon, lat, alt:
+        longitude = dataToWrite[iBlock][0]
+        latitude = dataToWrite[iBlock][1]
+
+        if (iBlock == 0):
+            dLon = longitude[1, 0, 0] - longitude[0, 0, 0]
+            dLat = latitude[0, 1, 0] - latitude[0, 0, 0]
+        else:
+            dLonT = longitude[1, 0, 0] - longitude[0, 0, 0]
+            dLatT = latitude[0, 1, 0] - latitude[0, 0, 0]
+            if (np.abs(dLat - dLatT) > dLat/1000.0):
+                isUniform = False
+            if (np.abs(dLon - dLonT) > dLon/1000.0):
+                isUniform = False
+
+    return isUniform
+
+
+#----------------------------------------------------------------------------
+# Figure out number of ghostcells
+#   - Simple method works if grid touches the south pole
+#----------------------------------------------------------------------------
+
+def calc_ghostcells(dataToWrite):
+
+    nGCs = -1
+    # ---------------------------------------------
+    # Try simple method first:
+    # Assume first 3 variables of first block are lon, lat, alt:
+    lon1d = dataToWrite[0][0][:, 0, 0]
+    lat1d = dataToWrite[0][1][0, :, 0]
+
+    nGCs = 0
+    while (lat1d[nGCs] < -90.0):
+        # Checking to see how many points are below south pole:
+        nGCs = nGCs + 1
+
+    if (nGCs < 0):
+        # Didn't find GCs, test longitude
+        while (lon1d[nGCs] < 0):
+            # Checking to see how many points are below south pole:
+            nGCs = nGCs + 1
+
+    return nGCs
+
+
+#----------------------------------------------------------------------------
+# Figure out number of blocks in lat and lon
+#   - Assume a quadtree!!!
+#----------------------------------------------------------------------------
+
+def calc_blocks(dataToWrite, iLon_ = 0, iLat_ = 1):
+
+    nBlocksLon = 1
+    nBlocksLat = 1
+
+    nBlocksTotal = len(dataToWrite)
+
+    # Brute force method:
+    # assume that all longitude blocks will have same latitude
+    # assume that all latitude blocks will have same longitude
+
+    # assume var 0 is longitude and var 1 is latitude
+    iBlock = 0
+    testLon = dataToWrite[iBlock][iLon_][0, 0, 0]
+    testLat = dataToWrite[iBlock][iLat_][0, 0, 0]
+
+    iBlock = 1
+    while (iBlock < nBlocksTotal):
+        if ((np.abs(dataToWrite[iBlock][iLon_][0, 0, 0] - testLon) > 0.1) and
+            (np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) < 0.1)):
+            nBlocksLon = nBlocksLon + 1
+        if ((np.abs(dataToWrite[iBlock][iLat_][0, 0, 0] - testLat) > 0.1) and
+            (np.abs(dataToWrite[iBlock][iLon_][0, 0, 0] - testLon) < 0.1)):
+            nBlocksLat = nBlocksLat + 1
+        iBlock = iBlock + 1
+
+    if (not (nBlocksLat * nBlocksLon == nBlocksTotal)):
+        print("Finding nBlocksLat and nBlocksLon didn't work!")
+        print("Tell Aaron to fix this!")
+        nBlocksLat = -1
+        nBlocksLon = -1
+
+    return nBlocksLon, nBlocksLat
+
+#----------------------------------------------------------------------------
+# Consolidate Blocks
+#----------------------------------------------------------------------------
+
+def consolidate_blocks(originalData, iLon_ = 0, iLat_ = 1):
+
+    nBlocksLon, nBlocksLat = calc_blocks(originalData)
+    nGCs = calc_ghostcells(originalData)
+    nLons, nLats, nAlts = np.shape(originalData[0][0])
+    nLons = nLons - 2 * nGCs
+    nLats = nLats - 2 * nGCs
+    nVars = len(originalData[0])
+    nLonsTotal = nLons * nBlocksLon + 2 * nGCs
+    nLatsTotal = nLats * nBlocksLat + 2 * nGCs
+    Lat0 = originalData[0][iLat_][nGCs, nGCs, nGCs]
+    Lon0 = originalData[0][iLon_][nGCs, nGCs, nGCs]
+    dLat = originalData[0][iLat_][nGCs, nGCs + 1, nGCs] - Lat0
+    dLon = originalData[0][iLon_][nGCs + 1, nGCs, nGCs] - Lon0
+    nBlocks = len(originalData)
+
+    consolidatedData = {}
+    for key in originalData[0].keys():
+        if (isinstance(key, str)):
+            consolidatedData[key] = originalData[0][key]
+        else:
+            # need to move data over
+            #print('variable : ', key)
+            data = np.zeros((nLonsTotal, nLatsTotal, nAlts))
+            for iBlock in range(nBlocks):
+                # interior points:
+                iLatS = int(round((originalData[iBlock][iLat_][nGCs, nGCs, nGCs] - Lat0)/dLat)) + nGCs
+                iLatE = iLatS + nLats
+                iLonS = int(round((originalData[iBlock][iLon_][nGCs, nGCs, nGCs] - Lon0)/dLon)) + nGCs
+                iLonE = iLonS + nLons
+                iLonSO = nGCs
+                iLonEO = nGCs + nLons
+                iLatSO = nGCs
+                iLatEO = iLatSO + nLats
+                #print('lons : ', iLonS, iLonE, nLonsTotal, ' -> ', iLonSO, iLonEO, nLons)
+                #print('lats : ', iLatS, iLatE, nLatsTotal, ' -> ', iLatSO, iLatEO, nLats)
+                data[iLonS:iLonE, iLatS:iLatE, 0:nAlts] = \
+                    originalData[iBlock][key][iLonSO:iLonEO, iLatSO:iLatEO, 0:nAlts]
+
+                # Lat down edge:
+                if (iLatS == nGCs):
+                    data[iLonS-nGCs:iLonE+nGCs, 0:nGCs, :] = \
+                        originalData[iBlock][key][0:nLons+2*nGCs, 0:nGCs, :]
+                # Lon Left edge:
+                if (iLonS == nGCs):
+                    data[0:nGCs, iLatS-nGCs:iLatE+nGCs, :] = \
+                        originalData[iBlock][key][0:nGCs, 0:nLats+2*nGCs, :]
+                # Lat up edge
+                if (iLatE == nLatsTotal - nGCs):
+                    data[iLonS-nGCs:iLonE+nGCs, iLatE:iLatE+nGCs, :] = \
+                        originalData[iBlock][key][0:nLons+2*nGCs, nLats:nLats+nGCs, :]
+                # long right edge
+                if (iLonE == nLonsTotal - nGCs):
+                    data[iLonE:iLonE+nGCs, iLatS-nGCs:iLatE+nGCs, :] = \
+                        originalData[iBlock][key][nLons:nLons+nGCs, 0:nLats+2*nGCs, :]
+                consolidatedData[key] = data
+
+    return consolidatedData
 
 #----------------------------------------------------------------------------
 # write and plot data
@@ -927,10 +1115,26 @@ def write_and_plot_data(dataToWrite,
                         output_netcdf,
                         isVerbose = True):
 
+    # We want to figure out whether we can combine our blocks into
+    # a single block and just write that out - it is much easier to
+    # deal with in this case!
+
+    canConsolidateBlocks = False
+    isUniform = calc_if_uniform_grid(dataToWrite)
+
+    if (isUniform):
+        nBlocksLon, nBlocksLat = calc_blocks(dataToWrite)
+        if (nBlocksLon > 0):
+            canConsolidateBlocks = True
+
+    print('  -> can consolidate blocks: ', canConsolidateBlocks)
+    if (canConsolidateBlocks):
+        dataToWrite = consolidate_blocks(dataToWrite)
+
     if output_netcdf:
         netcdfFile = fileStart + fileAddon + '.nc'
         print('  --> Outputting nc file : ', netcdfFile)
-        write_netcdf(dataToWrite, netcdfFile, isVerbose = isVerbose)
+        write_netcdf(dataToWrite, netcdfFile, isVerbose = isVerbose, isConsolidated = canConsolidateBlocks)
     else:
         hdf5File = fileStart + fileAddon + '.hdf5'
         print('  --> Outputting hdf5 file : ', hdf5File)
@@ -948,12 +1152,19 @@ def write_and_plot_data(dataToWrite,
 # main code
 #----------------------------------------------------------------------------
 
-if __name__ == '__main__':  # main code block
+def main(args):
 
-    args = parse_args()
     isVerbose = args.v
+    
+    if args.dir:
+        if isVerbose:
+            print("changing directory to: ", args.dir)
+        os.chdir(args.dir)
 
     filesInfo = get_base_files()
+    
+    if len(filesInfo) == 0:
+        return
 
     iVar = 3
     iAlt = args.alt
@@ -1004,4 +1215,12 @@ if __name__ == '__main__':  # main code block
                     if (isVerbose):
                         print('    ', command)
                     os.system(command)
+
+# call main:
+if __name__ == '__main__':  
+
+    args = parse_args()
+
+    # This allows code to cleanly exit on error
+    main(args)
     

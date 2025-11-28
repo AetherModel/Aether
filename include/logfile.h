@@ -5,7 +5,7 @@
 #define INCLUDE_LOGFILE_H_
 
 /**************************************************************
- * 
+ *
  * logfile.h:
  *
  *    Write the logfile
@@ -19,7 +19,7 @@
 /**
  * The class Satellite is used to track the satellites
  * Given any time, the user can obtain the geographic location of the satellite
- * 
+ *
  * ASSUMPTION : The satellite csv layout is the same as the following
  * year   mon   day   hr    min   sec   lon      lat      alt   x   y    z    vx     vy     vz
  * (int)  (int) (int) (int) (int) (int) (degree) (degree) (km) (km) (km) (km) (km/s) (km/s) (km/s)
@@ -27,11 +27,11 @@
 
 class Satellite {
 
-public:
+ public:
 
   /**
    * \brief Initialize the satellite class
-   *        The name of the satellite is not allowed to have any characters which can 
+   *        The name of the satellite is not allowed to have any characters which can
    *        terminate the read of a string including white space' ', endline'\n', and '\t'
    *        Different satellites must have different names (not only input file names)
    * \param csv_in The path to the satellite csv file
@@ -69,7 +69,7 @@ public:
   // DEBUG
   void print();
 
-private:
+ private:
 
   // The name of the satellite
   std::string name;
@@ -93,7 +93,7 @@ private:
 
 class Logfile {
 
-public:
+ public:
 
   /**
    * \brief Initialize the Logfile.
@@ -101,7 +101,7 @@ public:
    *    every dt time.
    */
   Logfile(Indices &indices, int64_t iLog);
-  
+
   /**
    * \brief Close the file stream if not append
    */
@@ -117,7 +117,7 @@ public:
                      Grid &gGrid,
                      Times &time);
 
-private:
+ private:
 
   // The name of logfile
   std::string logfileName;
@@ -133,7 +133,7 @@ private:
   bool doAppend;
 
   // A randomly chosen point for test
-  std::vector<precision_t> lla {2,2,2};
+  std::vector<precision_t> lla {2, 2, 2};
 };
 
 #endif  // INCLUDE_LOGFILE_H_

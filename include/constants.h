@@ -7,6 +7,18 @@
 #include <vector>
 
 // -------------------------------------------------------------------------
+// Define some constants for the code so that all functions understand
+// stuff
+// These are not physical constants, but are useful references
+// -------------------------------------------------------------------------
+
+const int iSphere_ = 1;
+const int iCubesphere_ = 2;
+const int iDipole_ = 3;
+const std::string neutralType_ = "neuGrid";
+const std::string ionType_ = "ionGrid";
+
+// -------------------------------------------------------------------------
 // Physical Constants
 //   - Naming standards:
 //     - Names start with a "c" to indicate they are constants
@@ -65,7 +77,7 @@ const double cJULIAN2000 = 2451545.0;
 // -------------------------------------------------------------------------
 
 const precision_t cPI = 3.141592653589793;
-const precision_t cTWOPI = 2*cPI;
+const precision_t cTWOPI = 2 * cPI;
 
 // -------------------------------------------------------------------------
 // Conversion Constants:
@@ -75,8 +87,8 @@ const precision_t cTWOPI = 2*cPI;
 //   - Names are all UPPER CASE otherwise
 // -------------------------------------------------------------------------
 
-const precision_t cDtoR = cPI/180.0;
-const precision_t cRtoD = 180.0/cPI;
+const precision_t cDtoR = cPI / 180.0;
+const precision_t cRtoD = 180.0 / cPI;
 
 // -------------------------------------------------------------------------
 // converting time between seconds and other units of time:
@@ -99,7 +111,7 @@ const double cMtoS = 60.0;
 const double cStoM = 1.0 / cMtoS;
 
 // MilliSeconds <-> Seconds:
-const double cMStoS = 1.0/1000.0;
+const double cMStoS = 1.0 / 1000.0;
 const double cStoMS = 1000.0;
 
 // -------------------------------------------------------------------------

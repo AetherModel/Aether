@@ -10,7 +10,7 @@
 // Initialize a single species for the ions
 // -----------------------------------------------------------------------------
 
-Ions::species_chars Ions::create_species(Grid grid) {
+Ions::species_chars Ions::create_species(Grid &grid) {
 
   species_chars tmp;
 
@@ -69,7 +69,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 //  Initialize Ions class
 // -----------------------------------------------------------------------------
 
-Ions::Ions(Grid grid, Planets planet) {
+Ions::Ions(Grid &grid, Planets planet) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -106,6 +106,25 @@ Ions::Ions(Grid grid, Planets planet) {
   density_scgc.ones();
   velocity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
   cMax_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+
+  // Some variables that will be used in calc_ion_v:
+  gravity_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
+  wind_acc = make_cube_vector(nLons, nLats, nAlts, 3);
+  total_acc = make_cube_vector(nLons, nLats, nAlts, 3);
+  efield_acc = make_cube_vector(nLons, nLats, nAlts, 3);
+  a_par = make_cube_vector(nLons, nLats, nAlts, 3);
+  a_perp = make_cube_vector(nLons, nLats, nAlts, 3);
+  a_x_b = make_cube_vector(nLons, nLats, nAlts, 3);
+  grad_Pi_plus_Pe = make_cube_vector(nLons, nLats, nAlts, 3);
+  rho.set_size(nLons, nLats, nAlts);
+  nuin.set_size(nLons, nLats, nAlts);
+  nuin_sum.set_size(nLons, nLats, nAlts);
+  Nie.set_size(nLons, nLats, nAlts);
+  sum_rho.set_size(nLons, nLats, nAlts);
+  top.set_size(nLons, nLats, nAlts);
+  bottom.set_size(nLons, nLats, nAlts);
+
+
 
   Cv_scgc.set_size(nLons, nLats, nAlts);
   Cv_scgc.zeros();
@@ -260,7 +279,7 @@ void Ions::nan_test(std::string variable) {
 // Checks for nans and +/- infinities in density, temp, and velocity
 //----------------------------------------------------------------------
 
-bool Ions::check_for_nonfinites() {
+bool Ions::check_for_nonfinites(std::string location) {
   bool didWork = true;
 
   if (!all_finite(density_scgc, "density_scgc") ||
@@ -269,7 +288,7 @@ bool Ions::check_for_nonfinites() {
     didWork = false;
 
   if (!didWork)
-    throw std::string("Check for nonfinites failed!!!\n");
+    report.error("ions are nan from location : " + location);
 
   return didWork;
 }
@@ -495,7 +514,7 @@ void Ions::fill_electrons() {
 // Will return nSpecies for electrons
 //----------------------------------------------------------------------
 
-int Ions::get_species_id(std::string name) {
+int Ions::get_species_id(const std::string &name) const {
 
   std::string function = "Ions::get_species_id";
   static int iFunction = -1;

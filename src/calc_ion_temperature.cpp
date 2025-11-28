@@ -11,7 +11,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid &grid) {
 
   int64_t iIon;
 
@@ -27,18 +27,17 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   temperature_scgc = neutrals.temperature_scgc;
 
-  // For electron temperature, we need to check if some species are present or not. 
+  // For electron temperature, we need to check if some species are present or not.
   // Do this check now & warn if needed:
   if ((neutrals.get_species_id("O") == -1)
-      || (neutrals.get_species_id("O2") == -1) 
-      ||(neutrals.get_species_id("N2") == -1)){
-    if (input.get_do_photoelectron_heating() 
+      || (neutrals.get_species_id("O2") == -1)
+      || (neutrals.get_species_id("N2") == -1)) {
+    if (input.get_do_photoelectron_heating()
         || input.get_do_ionization_heating()
-        || input.get_do_electron_neutral_elastic_collisional_heating()) {
-    report.error("Your electron temperature sources require neutral O, O2, and N2 to be present.");
-    }
+        || input.get_do_electron_neutral_elastic_collisional_heating())
+      report.error("Your electron temperature sources require neutral O, O2, and N2 to be present.");
   }
-  
+
   return;
 }
 
@@ -46,7 +45,7 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 // Calculate the ion temperature
 // --------------------------------------------------------------------------
 
-void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
+void Ions::calc_ion_temperature(const Neutrals &neutrals, Grid &grid,
                                 Times time) {
 
   std::string function = "Ions::calc_ion_temperature";
@@ -96,7 +95,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
         lambda1d(1) = lambda1d(2);
         lambda1d(0) = lambda1d(2);
         front1d  = 3.0 / 2.0 * cKB * density_scgc.tube(iLon, iLat);
-        dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dalt1d   = grid.dk_edge_m.tube(iLon, iLat);
         sources1d = (heating_neutral_friction_scgc.tube(iLon, iLat) +
                      heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
         sources1d = sources1d / front1d;
@@ -134,7 +133,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
           lambda1d(1) = lambda1d(2);
           lambda1d(0) = lambda1d(2);
           front1d  = 3.0 / 2.0 * cKB * species[iIon].density_scgc.tube(iLon, iLat);
-          dalt1d   = grid.dalt_lower_scgc.tube(iLon, iLat);
+          dalt1d   = grid.dk_edge_m.tube(iLon, iLat);
           sources1d = (species[iIon].heating_neutral_friction_scgc.tube(iLon, iLat) +
                        species[iIon].heating_neutral_heat_transfer_scgc.tube(iLon, iLat));
           sources1d = sources1d / front1d;

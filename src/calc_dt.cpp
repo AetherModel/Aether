@@ -8,7 +8,7 @@
 // --------------------------------------------------------------------------
 
 
-precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt";
   static int iFunction = -1;
@@ -16,7 +16,7 @@ precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 
   precision_t dt;
 
-  if (grid.iGridShape_ == grid.iCubesphere_)
+  if (grid.iGridShape_ == iCubesphere_)
     dt = calc_dt_cubesphere(grid, cMax_vcgc);
   else
     dt = calc_dt_sphere(grid, cMax_vcgc);
@@ -29,7 +29,7 @@ precision_t calc_dt(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_sphere(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_sphere";
   static int iFunction = -1;
@@ -41,11 +41,11 @@ precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   arma_cube dtCube;
 
   // Longitudinal Direction:
-  dtCube = grid.dlon_center_dist_scgc / cMax_vcgc[0];
+  dtCube = grid.di_center_m_scgc / cMax_vcgc[0];
   dta(0) = dtCube.min();
 
   // Latitudinal Direction:
-  dtCube = grid.dlat_center_dist_scgc / cMax_vcgc[1];
+  dtCube = grid.dj_center_m_scgc / cMax_vcgc[1];
   dta(1) = dtCube.min();
 
   // Vertical Direction:
@@ -70,7 +70,7 @@ precision_t calc_dt_sphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_cubesphere(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_sphere";
   static int iFunction = -1;
@@ -92,20 +92,22 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   arma_mat dummy_1(nXs, nYs, fill::ones);
 
   // Loop through altitudes
+
   for (int iAlt = 0; iAlt < nAlts; iAlt++) {
     // Conver cMax to contravariant velocity first
-    arma_mat u1 = sqrt(
-                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
-                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
-    arma_mat u2 = sqrt(
-                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
-                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
-                    cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
-    dtx.slice(iAlt) = grid.drefx(iAlt) * dummy_1 / u1;
-    dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
+    //arma_mat u1 = sqrt(
+    //                cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[0].slice(iAlt) % grid.A11_inv_scgc.slice(iAlt) +
+    //                cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[1].slice(iAlt) % grid.A12_inv_scgc.slice(iAlt));
+    //arma_mat u2 = sqrt(
+    //                cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[0].slice(iAlt) % grid.A21_inv_scgc.slice(iAlt) +
+    //                cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt) %
+    //                cMax_vcgc[1].slice(iAlt) % grid.A22_inv_scgc.slice(iAlt));
+    dtx.slice(iAlt) = grid.cubeC.dlx.slice(iAlt) / cMax_vcgc[0].slice(iAlt);
+    dty.slice(iAlt) = grid.cubeC.dln.slice(iAlt) / cMax_vcgc[1].slice(iAlt);
+    //dty.slice(iAlt) = grid.drefy(iAlt) * dummy_1 / u2;
   }
 
   // Take minimum dts in each direction:
@@ -116,6 +118,7 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   // Set a minimum dt:
   dta(3) = 10.0;
   // Take the minimum of all directions:
+
   dt = dta.min();
 
   if (report.test_verbose(3))
@@ -132,7 +135,7 @@ precision_t calc_dt_cubesphere(Grid grid, std::vector<arma_cube> cMax_vcgc) {
 //
 // --------------------------------------------------------------------------
 
-precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc) {
+precision_t calc_dt_vertical(Grid &grid, std::vector<arma_cube> cMax_vcgc) {
 
   std::string function = "calc_dt_vertical";
   static int iFunction = -1;
@@ -141,7 +144,7 @@ precision_t calc_dt_vertical(Grid grid, std::vector<arma_cube> cMax_vcgc) {
   precision_t dt;
 
   if (grid.get_nZ(false) > 1) {
-    arma_cube dtz = grid.dalt_center_scgc / cMax_vcgc[2];
+    arma_cube dtz = grid.dk_center_m_scgc / cMax_vcgc[2];
     dt = dtz.min();
   } else
     dt = 1e32;

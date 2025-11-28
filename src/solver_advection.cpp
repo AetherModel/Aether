@@ -282,11 +282,9 @@ precision_t calc_dt(arma_mat &xWidth,
 //
 // ---------------------------------------------------------
 
-void advect(Grid &grid,
-            Times &time,
-            Neutrals &neutrals) {
+void Neutrals::advect_sphere(Grid &grid, Times &time) {
 
-  std::string function = "advect";
+  std::string function = "advect_sphere";
   static int iFunction = -1;
   report.enter(function, iFunction);
 
@@ -337,9 +335,9 @@ void advect(Grid &grid,
   arma_mat gamma2d;
 
   // These are all needed by the solver:
-  neutrals.calc_mass_density();
-  neutrals.calc_mean_major_mass();
-  neutrals.calc_specific_heat();
+  calc_mass_density();
+  calc_mean_major_mass();
+  calc_specific_heat();
 
   arma_mat t_to_e;
 
@@ -350,14 +348,14 @@ void advect(Grid &grid,
     if (report.test_verbose(3))
       std::cout << "Advection: Working with iAlt: " << iAlt << "\n";
 
-    xVel = neutrals.velocity_vcgc[0].slice(iAlt);
-    yVel = neutrals.velocity_vcgc[1].slice(iAlt);
-    rho = neutrals.rho_scgc.slice(iAlt);
+    xVel = velocity_vcgc[0].slice(iAlt);
+    yVel = velocity_vcgc[1].slice(iAlt);
+    rho = rho_scgc.slice(iAlt);
     // this is "e", or temperature expressed as an energy
-    gamma2d = neutrals.gamma_scgc.slice(iAlt);
-    t_to_e = 1.0 / (gamma2d - 1.0) * cKB / neutrals.mean_major_mass_scgc.slice(
+    gamma2d = gamma_scgc.slice(iAlt);
+    t_to_e = 1.0 / (gamma2d - 1.0) * cKB / mean_major_mass_scgc.slice(
                iAlt);
-    temp = t_to_e % neutrals.temperature_scgc.slice(iAlt);
+    temp = t_to_e % temperature_scgc.slice(iAlt);
 
     // ------------------------------------------------
     // Calculate derived equations (at cell centers - these will be updated)
@@ -371,10 +369,12 @@ void advect(Grid &grid,
     xMomentum = rho % xVel;
     yMomentum = rho % yVel;
 
-    x = grid.x_Center.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    y = grid.y_Center.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    xEdges = grid.x_Left.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
-    yEdges = grid.y_Down.slice(iAlt) * grid.radius_scgc(1, 1, iAlt);
+    precision_t radius = grid.radius_scgc(1, 1, iAlt);
+
+    x = grid.x_Center.slice(iAlt) * radius;
+    y = grid.y_Center.slice(iAlt) * radius;
+    xEdges = grid.x_Left.slice(iAlt) * radius;
+    yEdges = grid.y_Down.slice(iAlt) * radius;
 
     rhoP = project_to_edges(rho, x, xEdges, y, yEdges, nGCs);
     xVelP = project_to_edges(xVel, x, xEdges, y, yEdges, nGCs);
@@ -542,8 +542,8 @@ void advect(Grid &grid,
     xVel = xMomentum / rho;
     yVel = yMomentum / rho;
 
-    neutrals.velocity_vcgc[0].slice(iAlt) = xVel;
-    neutrals.velocity_vcgc[1].slice(iAlt) = yVel;
+    velocity_vcgc[0].slice(iAlt) = xVel;
+    velocity_vcgc[1].slice(iAlt) = yVel;
     temp = (totalE / rho - 0.5 * (xVel % xVel + yVel % yVel)) / t_to_e;
     temp.clamp(200, 2000);
 
@@ -555,35 +555,35 @@ void advect(Grid &grid,
         //if (cos(grid.geoLat_scgc(i,j,iAlt)) < 0.2) {
         //  fac = fac * (0.2 - cos(grid.geoLat_scgc(i,j,iAlt)));
         //}
-        //dm = (1.0 - fac) * neutrals.temperature_scgc(i,j,iAlt);
-        //dp = (1.0 + fac) * neutrals.temperature_scgc(i,j,iAlt);
+        //dm = (1.0 - fac) * temperature_scgc(i,j,iAlt);
+        //dp = (1.0 + fac) * temperature_scgc(i,j,iAlt);
         //if (temp(i,j) < dm) temp(i,j) = dm;
         //if (temp(i,j) > dp) temp(i,j) = dp;
-        neutrals.temperature_scgc(i, j, iAlt) = temp(i, j);
+        temperature_scgc(i, j, iAlt) = temp(i, j);
 
-        //dm = (1.0 - fac) * neutrals.rho_scgc(i,j,iAlt);
-        //dp = (1.0 + fac) * neutrals.rho_scgc(i,j,iAlt);
+        //dm = (1.0 - fac) * rho_scgc(i,j,iAlt);
+        //dp = (1.0 + fac) * rho_scgc(i,j,iAlt);
         //if (rho(i,j) < dm) rho(i,j) = dm;
         //if (rho(i,j) > dp) rho(i,j) = dp;
-        neutrals.rho_scgc(i, j, iAlt) = rho(i, j);
+        rho_scgc(i, j, iAlt) = rho(i, j);
       }
     }
 
     if (report.test_verbose(3) && iAlt == 8) {
-      std::cout << "end t : " << neutrals.temperature_scgc.slice(
-                  iAlt).min() << " " << neutrals.temperature_scgc.slice(iAlt).max() << "\n";
+      std::cout << "end t : " << temperature_scgc.slice(
+                  iAlt).min() << " " << temperature_scgc.slice(iAlt).max() << "\n";
       std::cout << "end temp : " << temp.min() << " " << temp.max() << "\n";
       std::cout << "end xVel : " << xVel.min() << " " << xVel.max() << "\n";
       std::cout << "end yVel : " << yVel.min() << " " << yVel.max() << "\n";
     }
   }
 
-  neutrals.calc_density_from_mass_concentration();
+  calc_density_from_mass_concentration();
 
   // Assign bulk horizontal velocity to all species:
-  for (int64_t iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++)
+  for (int64_t iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     for (int64_t iDir = 0; iDir < 2; iDir++)
-      neutrals.species[iSpecies].velocity_vcgc[iDir] = neutrals.velocity_vcgc[iDir];
+      species[iSpecies].velocity_vcgc[iDir] = velocity_vcgc[iDir];
 
   report.exit(function);
   return;

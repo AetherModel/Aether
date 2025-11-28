@@ -19,14 +19,14 @@ developed.
 
 ## Contents
 
-- [Aether](#aether)
-  - [Contents](#contents)
-  - [Quick Start](#quick-start)
-    - [Dependencies](#dependencies)
-    - [Getting the Code](#getting-the-code)
-    - [Compiling \& Running](#compiling--running)
-  - [Code Manual](#code-manual)
-  - [Further Documentation](#further-documentation)
+- [Contents](#contents)
+- [Quick Start](#quick-start)
+  - [Dependencies](#dependencies)
+  - [Getting the Code](#getting-the-code)
+  - [Compiling \& Running](#compiling--running)
+  - [Inputs](#inputs)
+- [Code Manual](#code-manual)
+- [Further Documentation](#further-documentation)
 
 ## Quick Start
 
@@ -141,8 +141,15 @@ structure like this:
 cd ..
 cp -R share/run ./run.test
 cd run.test
-./aether
+mpirun -np 4 ./aether
 ```
+
+This will run the default configuration of Aether, which requires four MPI processors.
+The default grids are `sphere4` and `dipole4` for the neutrals and ions (respectively),
+which both require four "root nodes", or MPI workers. To read more about root nodes and
+the available grids, please see [this page in the documentation](doc/internals/grid.md).
+
+### Inputs
 
 There are essentially two input files that specify the settings in the code.
 When you are in a run directory, they are:

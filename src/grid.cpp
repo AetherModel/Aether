@@ -12,11 +12,38 @@
 Grid::Grid(std::string gridtype) {
 
   // At this point, we only need 2 ghostcells.  Hardcode this:
+  // This is also (kinda?) set in sizes.h for the geo & mag grid independently
   nGCs = 2;
 
   Inputs::grid_input_struct grid_input = input.get_grid_inputs(gridtype);
 
   gridType = gridtype;
+
+  if (mklower(grid_input.shape).find("sphere") != std::string::npos)
+    iGridShape_ = iSphere_;
+
+  if (mklower(grid_input.shape) == "cubesphere")
+    iGridShape_ = iCubesphere_;
+
+  //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
+  if (mklower(grid_input.shape).find("dipole") != std::string::npos)
+    iGridShape_ = iDipole_;
+
+  if (iGridShape_ == iCubesphere_) {
+    if (grid_input.nX > grid_input.nY) {
+      report.error("Cubesphere grid: nX > nY, reducing nX");
+      report.print(0, gridType +
+                   ": Cubesphere selected, but nX /= nY, reducing nX");
+      grid_input.nX = grid_input.nY;
+    }
+
+    if (grid_input.nY > grid_input.nX) {
+      report.error("Cubesphere grid: nY > nX, reducing nY");
+      report.print(0, gridType +
+                   ": Cubesphere selected, but nX /= nY, reducing nY");
+      grid_input.nY = grid_input.nX;
+    }
+  }
 
   nX = grid_input.nX + nGCs * 2;
   nLons = nX;
@@ -65,20 +92,13 @@ Grid::Grid(std::string gridtype) {
   if (grid_input.nZ == 1)
     HasZdim = false;
 
-  if (mklower(grid_input.shape) == "sphere")
-    iGridShape_ = iSphere_;
-
-  if (mklower(grid_input.shape) == "cubesphere")
-    iGridShape_ = iCubesphere_;
-
-  //lowercase, check for any number of dipole, so dipole2 matches & dipole does too
-  if (mklower(grid_input.shape).find("dipole") != std::string::npos)
-    iGridShape_ = iDipole_;
-
   geoLon_scgc.set_size(nX, nY, nZ);
   geoLat_scgc.set_size(nX, nY, nZ);
   geoAlt_scgc.set_size(nX, nY, nZ);
   geoLocalTime_scgc.set_size(nX, nY, nZ);
+
+  test_scgc.set_size(nX, nY, nZ);
+  test_scgc.zeros();
 
   refx_scgc.set_size(nX, nY, nZ);
   refy_scgc.set_size(nX, nY, nZ);
@@ -157,7 +177,6 @@ Grid::Grid(std::string gridtype) {
   magAlt_scgc.set_size(nX, nY, nZ);
   magInvLat_scgc.set_size(nX, nY, nZ);
 
-  magPhi_scgc.set_size(nX, nY, nZ);
   magP_scgc.set_size(nX, nY, nZ);
   magQ_scgc.set_size(nX, nY, nZ);
 
@@ -179,14 +198,9 @@ Grid::Grid(std::string gridtype) {
   magLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magAlt_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
-  magP_Down.set_size(nX, nY + 1, nZ);
-  magP_Below.set_size(nX, nY, nZ + 1);
-  magQ_Down.set_size(nX, nY + 1, nZ);
-  magQ_Below.set_size(nX, nY, nZ + 1);
   magP_Corner.set_size(nX + 1, nY + 1, nZ + 1);
   magQ_Corner.set_size(nX + 1, nY + 1, nZ + 1);
-
-  baseLats_down.set_size(nY + 1);
+  magInvLat_Corner.set_size(nX + 1, nY + 1, nZ + 1);
 
   radius_scgc.set_size(nX, nY, nZ);
   radius2_scgc.set_size(nX, nY, nZ);
@@ -275,6 +289,17 @@ Grid::Grid(std::string gridtype) {
 
   HasBField = 0;
   IsExperimental = false;
+
+  // Spatial info defaults
+  IsClosed = false;
+  DoesTouchNorthPole = false;
+  DoesTouchSouthPole = false;
+
+  UseThisCell.set_size(nX, nY, nZ);
+  UseThisCell.fill(true);
+  first_lower_gc.set_size(nX, nY);
+  first_upper_gc.set_size(nX, nY);
+  altitude_lower_bc = 0.0;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
@@ -514,6 +539,23 @@ void Grid::set_IsExperimental(bool value) {
 void Grid::set_IsDipole(bool value) {
   IsDipole = value;
 }
+
+// --------------------------------------------------------------------------
+// Get whether the grid is a dipole grid
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsDipole() {
+  return IsDipole;
+}
+
+// --------------------------------------------------------------------------
+// Get whether the dipole grid is closed (true) or open (false)
+// --------------------------------------------------------------------------
+
+bool Grid::get_IsClosed() {
+  return IsClosed;
+}
+
 
 // --------------------------------------------------------------------------
 // Get total number of grid points

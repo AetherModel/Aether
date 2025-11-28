@@ -4,7 +4,7 @@
 #ifndef INCLUDE_PARALLEL_H_
 #define INCLUDE_PARALLEL_H_
 
-/// Need MPI (message passing interface) to do parallel stuff: 
+/// Need MPI (message passing interface) to do parallel stuff:
 #include "mpi.h"
 
 /// number of processors in whole simulation
@@ -30,6 +30,7 @@ extern std::string cGrid;
 
 /// communicator for all of aether
 extern MPI_Comm aether_comm;
+extern MPI_Comm aether_member_comm;
 
 /**********************************************************************
   \brief initialize mpi and figure out ensembles and grid blocks
@@ -50,10 +51,10 @@ bool init_parallel(Quadtree &quadtree, Quadtree &quadtree_ion);
 **/
 
 bool pack_border(const arma_cube &value,
-		 precision_t *packed,
-		 int64_t *iCounter,
-		 int64_t nG,
-		 int iDir);
+                 precision_t *packed,
+                 int64_t *iCounter,
+                 int64_t nG,
+                 int iDir);
 
 /**********************************************************************
   \brief Unpack variable buffer after message pass
@@ -71,16 +72,16 @@ bool pack_border(const arma_cube &value,
 **/
 
 bool unpack_border(arma_cube &value,
-		   precision_t *packed,
-		   int64_t *iCounter,
-		   int64_t nG,
-		   int iDir,
-		   bool DoReverseX,
-		   bool DoReverseY,
-		   bool XbecomesY);
+                   precision_t *packed,
+                   int64_t *iCounter,
+                   int64_t nG,
+                   int iDir,
+                   bool DoReverseX,
+                   bool DoReverseY,
+                   bool XbecomesY);
 
 /**********************************************************************
-  \brief initialize the grid variables to set up ghostcell message passing 
+  \brief initialize the grid variables to set up ghostcell message passing
   \param grid the grid to set up message passing on
   \param nVarsToPass how many variables to pass
 **/
@@ -95,8 +96,8 @@ bool exchange_sides_init(Grid &grid, int64_t nVarsToPass);
 **/
 
 bool exchange_one_var(Grid &grid,
-		      arma_cube &var_to_pass,
-		      bool doReverseSignAcrossPole);
+                      arma_cube &var_to_pass,
+                      bool doReverseSignAcrossPole);
 
 /**********************************************************************
   \brief test the exchange messages one var function

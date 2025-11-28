@@ -6,21 +6,23 @@
 	"dt" : 10.0},
 
     "neuGrid" : {
+	"Shape" : "sphere",
 	"nLons" : 12,
 	"nLats" : 12,
-	"nAlts" : 30},
-
+	"nAlts" : 30,
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
+    
     "ionGrid": {
-        "dAltStretch": 0.2,
-        "LatStretch": 1,
-        "Shape": "dipole",
+        "Shape": "sphere",
         "nLonsPerBlock": 18,
         "nLatsPerBlock" : 18,
         "nAlts":36,
-        "LatMax":88,
-        "MinAlt": 80.0,
-        "MinApex": 125.0
-        },
+        "LatRange": [-90, 90],
+        "AltRange": [100.0, 1000],
+        "LonRange": [0.0, 360.0],
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
     
     "StartTime" : [2011, 3, 20, 0, 0, 0],
     "EndTime" : [2011, 3, 20, 0, 10, 0],
@@ -30,6 +32,12 @@
         "DiffuseAurora" : "fta",
         "File": "UA/inputs/b20110320n_omni.bin"},
     
+    "InitialConditions" : {
+	"type" : "msis"},
+
+    "BoundaryConditions" : {
+	"type" : "msis"},
+
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
     
     "Outputs" : {
@@ -38,6 +46,8 @@
 
     "Restart" : {
 	"do" : false,
-	"dt" : 900.0}
+	"dt" : 900.0},
+
+    "PlanetFile" : "UA/inputs/earth.in"
 
 }

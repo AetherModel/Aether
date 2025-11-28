@@ -72,6 +72,404 @@ void Grid::create_cubesphere_connection(Quadtree quadtree) {
   return;
 }
 
+
+// ----------------------------------------------------------------------
+// This function takes the normalized coordinates and makes latitude
+// and longitude arrays from them.  It can do this for the corners or
+// edges, depending on the offset.
+// ----------------------------------------------------------------------
+
+void Grid::init_cubesphere_grid(Quadtree quadtree,
+                                arma_vec dr,
+                                arma_vec du,
+                                arma_vec ll,
+                                precision_t left_off,
+                                precision_t down_off,
+                                cubesphere_chars &cubeX) {
+
+  std::string function = "Grid::init_cubesphere_grid";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
+  precision_t dnu, dxi, nu0, xi0;
+
+  // The du, dr, and ll were meant to be used on the cube
+  // and not really on the equal-angle grid.  So, we probably
+  // want to rethink these...
+  if (quadtree.iSide == 0) {
+    dnu = du[2];
+    dxi = dr[0];
+    nu0 = ll[0];
+    xi0 = ll[2];
+  }
+
+  if (quadtree.iSide == 1) {
+    dnu = du[2];
+    dxi = dr[1];
+    nu0 = ll[1];
+    xi0 = ll[2];
+  }
+
+  if (quadtree.iSide == 2) {
+    dnu = du[2];
+    dxi = -dr[0];
+    nu0 = -ll[0];
+    xi0 = ll[2];
+  }
+
+  if (quadtree.iSide == 3) {
+    dnu = du[2];
+    dxi = -dr[1];
+    nu0 = -ll[1];
+    xi0 = ll[2];
+  }
+
+  if (quadtree.iSide == 4) {
+    dnu = du[0];
+    dxi = dr[1];
+    nu0 = ll[1];
+    xi0 = ll[0];
+  }
+
+  if (quadtree.iSide == 5) {
+    dnu = -du[0];
+    dxi = dr[1];
+    nu0 = ll[1];
+    xi0 = -ll[0];
+  }
+
+  // Normalized from -1 to 1 -> -pi/4 to pi/4
+  dnu = dnu * cPI / 4.0;
+  dxi = dxi * cPI / 4.0;
+  nu0 = nu0 * cPI / 4.0;
+  xi0 = xi0 * cPI / 4.0;
+
+  cubeX.dnu = dnu;
+  cubeX.dxi = dxi;
+
+  int64_t iDU, iLR;
+  precision_t iD, iL;
+  int64_t nXp = nX, nYp = nY;
+
+  // If we are shifting the grid over and doing edges, we
+  // need to increase the number of points by 1 in that
+  // direction:
+  if (left_off < cSmall)
+    nXp++;
+
+  if (down_off < cSmall)
+    nYp++;
+
+  // These are convenient for the solver:
+  cubeX.nXt = nXp;
+  cubeX.nYt = nYp;
+  cubeX.nGCs = nGCs;
+  cubeX.iXfirst_ = nGCs;
+  cubeX.iXlast_ = nXp - nGCs;
+  cubeX.iYfirst_ = nGCs;
+  cubeX.iYlast_ = nYp - nGCs;
+
+  // these are coordinates:
+  cubeX.lat.resize(nXp, nYp);
+  cubeX.lon.resize(nXp, nYp);
+  cubeX.nu.resize(nXp, nYp);
+  cubeX.xi.resize(nXp, nYp);
+
+  cubeX.X.resize(nXp, nYp);
+  cubeX.Y.resize(nXp, nYp);
+  cubeX.Z.resize(nXp, nYp);
+  cubeX.C.resize(nXp, nYp);
+  cubeX.D.resize(nXp, nYp);
+  cubeX.d.resize(nXp, nYp);
+
+  // These are dependent on radius,
+  // but that is not included at this time:
+  cubeX.dlx.resize(nXp, nYp, nZ);
+  cubeX.dln.resize(nXp, nYp, nZ);
+  cubeX.dS.resize(nXp, nYp, nZ);
+  cubeX.R.resize(nZ);
+
+  // These are matricies for rotating vectors:
+  cubeX.Apn.resize(nXp, nYp);
+  cubeX.Apx.resize(nXp, nYp);
+  cubeX.Atn.resize(nXp, nYp);
+  cubeX.Atx.resize(nXp, nYp);
+  cubeX.Axt.resize(nXp, nYp);
+  cubeX.Axp.resize(nXp, nYp);
+  cubeX.Ant.resize(nXp, nYp);
+  cubeX.Anp.resize(nXp, nYp);
+
+  // These are for computing normals to the cell edges (horizontal)
+  cubeX.nXiLon.resize(nXp, nYp);
+  cubeX.nXiLat.resize(nXp, nYp);
+  cubeX.nNuLon.resize(nXp, nYp);
+  cubeX.nNuLat.resize(nXp, nYp);
+
+  precision_t det, dmo, latp, lonp;
+
+  // Loop through each point and derive the coordinate
+  for (iDU = 0; iDU < nY; iDU++) {
+    for (iLR = 0; iLR < nX; iLR++) {
+
+      // the offsets are so we can find cell centers, edges, and corners
+      iD = iDU - nGCs + down_off;
+      iL = iLR - nGCs + left_off;
+
+      // Define local coordinates:
+      // Xi is LR (x), Nu is UD (y)
+      cubeX.nu(iLR, iDU) = (nu0 + dnu * iD);
+      cubeX.xi(iLR, iDU) = (xi0 + dxi * iL);
+
+      cubeX.X(iLR, iDU) = tan(cubeX.xi(iLR, iDU));
+      cubeX.Y(iLR, iDU) = tan(cubeX.nu(iLR, iDU));
+
+      // Transformation from 3D Cartesian to LatLong
+      // lonp = std::atan2(y_cart, x_cart) + cPI/2.0;
+      if (quadtree.iSide == 0) {
+        lonp = std::atan(cubeX.X(iLR, iDU));
+        // Theta in Ronchi is from the north pole, so lat is 90 - theta
+        latp = std::atan(1.0 / cubeX.Y(iLR, iDU) / std::cos(lonp));
+      }
+
+      if (quadtree.iSide == 1) {
+        lonp = std::atan(-1.0 / cubeX.X(iLR, iDU));
+
+        if (lonp < 0)
+          lonp = cPI + lonp;
+
+        // Theta in Ronchi is from the north pole, so lat is 90 - theta
+        latp = std::atan(1.0 / cubeX.Y(iLR, iDU) / std::sin(lonp));
+      }
+
+      if (quadtree.iSide == 2) {
+        lonp = std::atan(cubeX.X(iLR, iDU)) + cPI;
+        // Theta in Ronchi is from the north pole, so lat is 90 - theta
+        latp = std::atan(-1.0 / cubeX.Y(iLR, iDU) / std::cos(lonp));
+      }
+
+      if (quadtree.iSide == 3) {
+        lonp = std::atan(-1.0 / cubeX.X(iLR, iDU));
+
+        if (lonp > 0)
+          lonp = lonp + cPI;
+        else
+          lonp = 2 * cPI + lonp;
+
+        // Theta in Ronchi is from the north pole, so lat is 90 - theta
+        latp = std::atan(-1.0 / cubeX.Y(iLR, iDU) / std::sin(lonp));
+      }
+
+      if (quadtree.iSide == 4) {
+        lonp = std::atan2(cubeX.X(iLR, iDU), cubeX.Y(iLR, iDU));
+        latp = std::atan2(-cubeX.Y(iLR, iDU), cos(lonp) );
+      }
+
+      if (quadtree.iSide == 5) {
+        lonp = std::atan2(-cubeX.X(iLR, iDU), cubeX.Y(iLR, iDU));
+        latp = -std::atan2(-cubeX.Y(iLR, iDU), cos(lonp) );
+      }
+
+      if (latp > 0)
+        latp = cPI / 2 - latp;
+      else
+        latp = -(cPI / 2 + latp);
+
+      if (lonp > cTWOPI)
+        lonp = lonp - cTWOPI;
+
+      if (lonp < 0.0)
+        lonp = lonp + cTWOPI;
+
+      // Fill Computed coords
+      cubeX.lat(iLR, iDU) = latp;
+      cubeX.lon(iLR, iDU) = lonp;
+
+      cubeX.d(iLR, iDU) =
+        1 +
+        cubeX.X(iLR, iDU) * cubeX.X(iLR, iDU) +
+        cubeX.Y(iLR, iDU) * cubeX.Y(iLR, iDU);
+
+      cubeX.C(iLR, iDU) =
+        sqrt(1 + cubeX.X(iLR, iDU) * cubeX.X(iLR, iDU));
+      cubeX.D(iLR, iDU) =
+        sqrt(1 + cubeX.Y(iLR, iDU) * cubeX.Y(iLR, iDU));
+
+      if (quadtree.iSide < 4) {
+        cubeX.Axt(iLR, iDU) = 0.0;
+        cubeX.Axp(iLR, iDU) =
+          cubeX.C(iLR, iDU) * cubeX.D(iLR, iDU) /
+          sqrt(cubeX.d(iLR, iDU));
+        cubeX.Ant(iLR, iDU) = -1.0;
+        cubeX.Anp(iLR, iDU) =
+          cubeX.X(iLR, iDU) * cubeX.Y(iLR, iDU) /
+          sqrt(cubeX.d(iLR, iDU));
+      } else {
+        if (cubeX.d(iLR, iDU) < 1.0001)
+          cubeX.d(iLR, iDU) = 1.0001;
+
+        dmo = 1.0 / std::sqrt(cubeX.d(iLR, iDU) - 1);
+
+        if (quadtree.iSide == 4) {
+          cubeX.Axt(iLR, iDU) =
+            - dmo * cubeX.D(iLR, iDU) * cubeX.X(iLR, iDU);
+          cubeX.Axp(iLR, iDU) =
+            dmo * cubeX.D(iLR, iDU) * cubeX.Y(iLR, iDU) /
+            sqrt(cubeX.d(iLR, iDU));
+          cubeX.Ant(iLR, iDU) =
+            - dmo * cubeX.C(iLR, iDU) * cubeX.Y(iLR, iDU);
+          cubeX.Anp(iLR, iDU) =
+            - dmo * cubeX.C(iLR, iDU) * cubeX.X(iLR, iDU) /
+            sqrt(cubeX.d(iLR, iDU));
+
+        } else {
+          // iFace == 5
+          cubeX.Axt(iLR, iDU) =
+            dmo * cubeX.D(iLR, iDU) * cubeX.X(iLR, iDU);
+          cubeX.Axp(iLR, iDU) =
+            - dmo * cubeX.D(iLR, iDU) *
+            cubeX.Y(iLR, iDU) /
+            sqrt(cubeX.d(iLR, iDU));
+          cubeX.Ant(iLR, iDU) =
+            dmo * cubeX.C(iLR, iDU) * cubeX.Y(iLR, iDU);
+          cubeX.Anp(iLR, iDU) =
+            dmo * cubeX.C(iLR, iDU) *
+            cubeX.X(iLR, iDU) /
+            sqrt(cubeX.d(iLR, iDU));
+        }
+      }
+
+      // Calculate inverse of matrix for calculating Ax and An from At and Ap:
+      det = 1.0 / (cubeX.Axt(iLR, iDU) * cubeX.Anp(iLR, iDU) -
+                   cubeX.Axp(iLR, iDU) * cubeX.Ant(iLR, iDU));
+
+      cubeX.Atx(iLR, iDU) = det * cubeX.Anp(iLR, iDU);
+      cubeX.Atn(iLR, iDU) = - det * cubeX.Axp(iLR, iDU);
+      cubeX.Apx(iLR, iDU) = - det * cubeX.Ant(iLR, iDU);
+      cubeX.Apn(iLR, iDU) = det * cubeX.Axt(iLR, iDU);
+
+      // These (dlx and dln) need to be multiplied by radius
+      cubeX.dlx(iLR, iDU, 0) =
+        cubeX.D(iLR, iDU) * dxi /
+        cubeX.d(iLR, iDU) /
+        (cos(cubeX.xi(iLR, iDU)) * cos(cubeX.xi(iLR, iDU)));
+      cubeX.dln(iLR, iDU, 0) =
+        cubeX.C(iLR, iDU) * dnu /
+        cubeX.d(iLR, iDU) /
+        (cos(cubeX.nu(iLR, iDU)) * cos(cubeX.nu(iLR, iDU)));
+
+      // Need to multiply dS * radius ^ 2
+      cubeX.dS(iLR, iDU, 0) =
+        dxi * dnu /
+        (sqrt(cubeX.d(iLR, iDU) * cubeX.d(iLR, iDU) * cubeX.d(iLR, iDU)) *
+         cos(cubeX.xi(iLR, iDU)) * cos(cubeX.xi(iLR, iDU)) *
+         cos(cubeX.nu(iLR, iDU)) * cos(cubeX.nu(iLR, iDU)));
+
+    }
+  }
+
+  // Calculate norms given the values above:
+  arma_mat e1Lat, e1Lon, e2Lat, e2Lon, m, one, zero;
+  m.resize(nXp, nYp);
+  one.resize(nXp, nYp);
+  one.fill(1.0);
+  zero.resize(nXp, nYp);
+  zero.fill(0.0);
+
+  // define e1 as the LR (xi) direction:
+  e1Lat.resize(nXp, nYp);
+  e1Lon.resize(nXp, nYp);
+  convert_vector_xn_to_ll(one, zero, e1Lon, e1Lat, cubeX);
+  m = sqrt(e1Lon % e1Lon + e1Lat % e1Lat);
+
+  // Rotate by 90 deg (CCW) to get the norm:
+  cubeX.nNuLon = -e1Lat / m;
+  cubeX.nNuLat = e1Lon / m;
+
+  // define e2 as the DU (nu) direction:
+  e2Lat.resize(nXp, nYp);
+  e2Lon.resize(nXp, nYp);
+  convert_vector_xn_to_ll(zero, one, e2Lon, e2Lat, cubeX);
+  m = sqrt(e2Lon % e2Lon + e2Lat % e2Lat);
+  // Rotate by 90 deg (CW) to get the norm:
+  cubeX.nXiLon = e2Lat / m;
+  cubeX.nXiLat = -e2Lon / m;
+
+  report.exit(function);
+  return;
+}
+
+// ---------------------------------------------------------
+// Convert vector from Alat, Alon to Axi, Anu
+//   -> Using equation (7) of Ronchi et al:
+// ---------------------------------------------------------
+
+void Grid::convert_vector_xn_to_ll(arma_mat aXi,
+                                   arma_mat aNu,
+                                   arma_mat &aLon,
+                                   arma_mat &aLat,
+                                   cubesphere_chars grid) {
+
+  // Ronchi defines aPhi = aLon, aTheta = -aLat
+  aLat = -(grid.Atx % aXi + grid.Atn % aNu);
+  aLon = grid.Apx % aXi + grid.Apn % aNu;
+
+  return;
+}
+
+// ---------------------------------------------------------
+// Convert vector from Alat, Alon to Axi, Anu
+//   -> Using equation (7) of Ronchi et al:
+// ---------------------------------------------------------
+
+void Grid::convert_vector_ll_to_xn(arma_mat aLon,
+                                   arma_mat aLat,
+                                   arma_mat &aXi,
+                                   arma_mat &aNu,
+                                   cubesphere_chars grid) {
+
+  // Ronchi defines aPhi = aLon, aTheta = -aLat
+  aXi = -grid.Axt % aLat + grid.Axp % aLon;
+  aNu = -grid.Ant % aLat + grid.Anp % aLon;
+  return;
+}
+
+
+
+// ----------------------------------------------------------------------
+// This function scales the deltas in the grid by the radius
+//   - This assumes that radius is not dependent on lat / lon!!!
+// ----------------------------------------------------------------------
+
+void Grid::scale_cube_by_radius(cubesphere_chars &cubeX) {
+
+  int64_t iZ;
+
+  for (iZ = 1; iZ < nZ; iZ++) {
+    cubeX.R(iZ) = radius_scgc(nGCs, nGCs, iZ);
+    // These are distances:
+    cubeX.dlx.slice(iZ) =
+      cubeX.dlx.slice(0) * cubeX.R(iZ);
+    cubeX.dln.slice(iZ) =
+      cubeX.dln.slice(0) * cubeX.R(iZ);
+    // This is an area:
+    cubeX.dS.slice(iZ) =
+      cubeX.dS.slice(0) * cubeX.R(iZ) * cubeX.R(iZ);
+  }
+
+  // Lastly, scale the 0th slice
+  iZ = 0;
+  cubeX.R(iZ) = radius_scgc(nGCs, nGCs, iZ);
+  cubeX.dlx.slice(iZ) =
+    cubeX.dlx.slice(0) * cubeX.R(iZ);
+  cubeX.dln.slice(iZ) =
+    cubeX.dln.slice(0) * cubeX.R(iZ);
+  // This is an area:
+  cubeX.dS.slice(iZ) =
+    cubeX.dS.slice(0) * cubeX.R(iZ) * cubeX.R(iZ);
+
+  return;
+}
+
 // ----------------------------------------------------------------------
 // This function takes the normalized coordinates and makes latitude
 // and longitude arrays from them.  It can do this for the corners or
@@ -85,10 +483,10 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
                                         int64_t nGCs,
                                         precision_t left_off,
                                         precision_t down_off,
-                                        arma_mat &lat2d,
-                                        arma_mat &lon2d,
-                                        arma_mat &refx,
-                                        arma_mat &refy) {
+                                        arma_mat & lat2d,
+                                        arma_mat & lon2d,
+                                        arma_mat & refx,
+                                        arma_mat & refy) {
 
   int64_t nX = lat2d.n_rows;
   int64_t nY = lat2d.n_cols;
@@ -172,25 +570,25 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
 // generate transformation and metric tensors
 // ----------------------------------------------------------------------
 void transformation_metrics(Quadtree quadtree,
-                            arma_mat &lat2d,
-                            arma_mat &lon2d,
-                            arma_mat &refx,
-                            arma_mat &refy,
-                            arma_mat &A11,
-                            arma_mat &A12,
-                            arma_mat &A21,
-                            arma_mat &A22,
-                            arma_mat &A11_inv,
-                            arma_mat &A12_inv,
-                            arma_mat &A21_inv,
-                            arma_mat &A22_inv,
-                            arma_mat &g11_upper,
-                            arma_mat &g12_upper,
-                            arma_mat &g21_upper,
-                            arma_mat &g22_upper,
-                            arma_mat &sqrt_g,
-                            arma_mat &refx_angle,
-                            arma_mat &refy_angle) {
+                            arma_mat & lat2d,
+                            arma_mat & lon2d,
+                            arma_mat & refx,
+                            arma_mat & refy,
+                            arma_mat & A11,
+                            arma_mat & A12,
+                            arma_mat & A21,
+                            arma_mat & A22,
+                            arma_mat & A11_inv,
+                            arma_mat & A12_inv,
+                            arma_mat & A21_inv,
+                            arma_mat & A22_inv,
+                            arma_mat & g11_upper,
+                            arma_mat & g12_upper,
+                            arma_mat & g21_upper,
+                            arma_mat & g22_upper,
+                            arma_mat & sqrt_g,
+                            arma_mat & refx_angle,
+                            arma_mat & refy_angle) {
 
   int64_t nX = lat2d.n_rows;
   int64_t nY = lat2d.n_cols;
@@ -342,6 +740,12 @@ void Grid::create_cubesphere_grid(Quadtree quadtree) {
   dr = size_right_norm / (nLons - 2 * nGCs);
   du = size_up_norm / (nLats - 2 * nGCs);
   ll = lower_left_norm;
+
+  // This function builds the equal-angle grid, but doesn't
+  // scale them with altitude, since that has not been created, yet:
+  init_cubesphere_grid(quadtree, dr, du, ll, 0.5, 0.5, cubeC);
+  init_cubesphere_grid(quadtree, dr, du, ll, 0.0, 0.5, cubeL);
+  init_cubesphere_grid(quadtree, dr, du, ll, 0.5, 0.0, cubeD);
 
   int64_t iAlt, iLon, iLat;
 

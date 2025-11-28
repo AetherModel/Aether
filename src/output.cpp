@@ -29,6 +29,9 @@ std::string get_filename_from_type(std::string type_output) {
   if (type_output == "bfield")
     filename = "3DBF";
 
+  if (type_output == "delta")
+    filename = "3DDE";
+
   if (type_output == "moment")
     filename = "3DMO";
 
@@ -40,6 +43,9 @@ std::string get_filename_from_type(std::string type_output) {
 
   if (type_output == "therm")
     filename = "3DTH";
+
+  if (type_output == "test")
+    filename = "3DTE";
 
   return filename;
 
@@ -89,7 +95,8 @@ bool output(const Neutrals &neutrals,
 
     // make sure the output dt is set correctly. Otherwise these errors aren't caught correctly.
     precision_t dt_output = input.get_dt_output(iOutput);
-    if (dt_output == 0.0){
+
+    if (dt_output == 0.0) {
       report.exit(function);
       return false;
     }
@@ -153,7 +160,6 @@ bool output(const Neutrals &neutrals,
           store_variable("density_" + neutrals.species[iSpecies].cName,
                          neutrals.density_unit,
                          neutrals.species[iSpecies].density_scgc);
-
       // Neutral Temperature:
       if (type_output == "neutrals" ||
           type_output == "states")
@@ -243,12 +249,31 @@ bool output(const Neutrals &neutrals,
         AllOutputContainers[iOutput].store_variable("Gvertical",
                                                     "m/s^2",
                                                     grid.gravity_vcgc[2]);
+        AllOutputContainers[iOutput].store_variable("Gmag",
+                                                    "m/s^2",
+                                                    grid.gravity_mag_scgc);
         AllOutputContainers[iOutput].store_variable("Gpotential",
                                                     "m^2/s^2",
                                                     grid.gravity_potential_scgc);
         AllOutputContainers[iOutput].store_variable("radius",
                                                     "m",
                                                     grid.radius_scgc);
+      }
+
+      if (type_output == "delta") {
+        AllOutputContainers[iOutput].store_variable("dim",
+                                                    "di Center m",
+                                                    "m",
+                                                    grid.di_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("djm",
+                                                    "dj Center m",
+                                                    "m",
+                                                    grid.dj_center_m_scgc);
+        AllOutputContainers[iOutput].store_variable("dkm",
+                                                    "dk Center m",
+                                                    "m",
+                                                    grid.dk_center_m_scgc);
+
       }
 
       if (type_output == "bfield" || type_output == "ions") {
@@ -260,6 +285,13 @@ bool output(const Neutrals &neutrals,
                                                     "Magnetic Longitude",
                                                     "degrees",
                                                     grid.magLon_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("invLat",
+                                                    "Magnetic Invariant Latitude",
+                                                    "degrees",
+                                                    grid.magInvLat_scgc * cRtoD);
+        AllOutputContainers[iOutput].store_variable("radius",
+                                                    "m",
+                                                    grid.radius_scgc);
         AllOutputContainers[iOutput].store_variable("mlt",
                                                     "Magnetic Local Time",
                                                     "hours",
@@ -322,6 +354,13 @@ bool output(const Neutrals &neutrals,
                                                     grid.cent_acc_vcgc[2]);
       }
 
+      // Neutral Temperature:
+      if (type_output == "test")
+        AllOutputContainers[iOutput].
+        store_variable("test_grid",
+                       "none",
+                       grid.test_scgc);
+
       // ------------------------------------------------------------
       // Set output file names
 
@@ -332,7 +371,7 @@ bool output(const Neutrals &neutrals,
         report.error("File output type not found!");
         didWork = false;
       } else {
-        if (grid.get_IsGeoGrid())
+        if (grid.get_gridtype() == neutralType_)
           filename = filename + "G_";
         else
           filename = filename + "M_";

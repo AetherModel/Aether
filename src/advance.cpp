@@ -46,6 +46,12 @@ bool advance(Planets &planet,
     didWork = neutralsMag.check_for_nonfinites("Top of Advance - ion grid");
   }
 
+  // here we are going to grab stuff from the neutral grid and put it on the
+  // ion grid
+  didWork = get_data_from_other_grid(gGrid, mGrid, neutrals.temperature_scgc, mGrid.test_scgc);
+
+  json dummy = indices.get_all_indices(time.get_current());
+
   gGrid.calc_sza(planet, time);
   mGrid.calc_sza(planet, time);
 
@@ -74,7 +80,6 @@ bool advance(Planets &planet,
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: After extras");
 
-
   ions.fill_electrons();
   ions.calc_sound_speed();
   ions.calc_cMax();
@@ -88,6 +93,9 @@ bool advance(Planets &planet,
   precision_t dtNeutral = calc_dt(gGrid, neutrals.cMax_vcgc);
   precision_t dtIon = calc_dt(gGrid, ions.cMax_vcgc);
   time.calc_dt(dtNeutral, dtIon);
+
+  if (report.test_verbose(1))
+    std::cout << "dt in advance : " << time.get_dt() << "\n";
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: after calc dt");
 
@@ -106,11 +114,13 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = ions.set_bcs(gGrid, time, indices);
 
-  //if (didWork)
-  //  didWork = neutralsMag.set_bcs(mGrid, time, indices);
+  if (didWork)
+    didWork = neutralsMag.set_bcs(mGrid, time, indices);
+
+  if (didWork)
+    didWork = ionsMag.set_bcs(mGrid, time, indices);
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
-
 
   // advect in the 3rd dimension (vertical), but only if we have it:
   if (gGrid.get_nAlts(false) > 1) {
@@ -119,7 +129,25 @@ bool advance(Planets &planet,
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Neutral Advection");
 
-    ions.advect_vertical(gGrid, time);
+    // ajr - ions.advect_vertical(gGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = ions.check_for_nonfinites("After Vertical Ion Advection");
+
+  }
+
+  // advect in the 3rd dimension (vertical), but only if we have it:
+  if (mGrid.get_nAlts(false) > 1) {
+    neutralsMag.advect_vertical(mGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = neutralsMag.check_for_nonfinites("After Vertical Neutral Advection");
+
+    // ajr - ionsMag.advect_vertical(mGrid, time);
+
+    if (didWork & input.get_check_for_nans())
+      didWork = ionsMag.check_for_nonfinites("After Vertical Ion Advection");
+
   }
 
   // advect in the 1st and 2nd dimensions (horizontal), but only if
@@ -127,12 +155,29 @@ bool advance(Planets &planet,
   if (gGrid.get_HasXdim() || gGrid.get_HasYdim()) {
     neutrals.exchange_old(gGrid);
     ions.exchange_old(gGrid);
-    advect(gGrid, time, neutrals);
+
+    didWork = neutrals.check_for_nonfinites("Geo Grid: Before Horizontal Advection");
+    neutrals.advect_horizontal(gGrid, time);
+    didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
+    ionsMag.exchange_old(mGrid);
+    fill_horizontal_ghostcels(neutralsMag.temperature_scgc, mGrid.get_nGCs());
+    neutralsMag.set_lower_bcs(mGrid, time, indices);
+
+    //for (int iSpecies = 0; iSpecies < neutralsMag.nSpecies; iSpecies++)
+    //  fill_horizontal_ghostcels(neutralsMag.species[iSpecies].density_scgc,
+    //                            mGrid.get_nGCs());
+
+    //neutralsMag.exchange_old(mGrid);
   }
 
-  if (didWork & input.get_check_for_nans()) {
+  if (input.get_check_for_nans()) {
     didWork = neutrals.check_for_nonfinites("Geo Grid: After Horizontal Advection");
     didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Horizontal Advection");
+
+    if (!didWork) {
+      report.exit(function);
+      return didWork;
+    }
   }
 
   // ------------------------------------
@@ -183,6 +228,12 @@ bool advance(Planets &planet,
     chemistry.calc_chemistry(neutrals, ions, time, gGrid);
     chemistryMag.calc_chemistry(neutralsMag, ionsMag, time, mGrid);
 
+    // We could have some weird results in the non-physical cells,
+    // so correct them
+    if (mGrid.IsDipole)
+      didWork = ionsMag.set_bcs(mGrid, time, indices);
+
+
     if (input.get_O_cooling())
       neutrals.calc_O_cool();
 
@@ -192,17 +243,17 @@ bool advance(Planets &planet,
     calc_ion_collisions(neutrals, ions);
 
     neutrals.add_sources(time, planet, gGrid);
-    //neutralsMag.add_sources(time, planet, mGrid);
+    neutralsMag.add_sources(time, planet, mGrid);
 
     if (didWork & input.get_check_for_nans()) {
       didWork = neutrals.check_for_nonfinites("Geo Grid: After Add Sources");
       didWork = neutralsMag.check_for_nonfinites("Ion Grid: After Add Sources");
     }
 
-    ions.calc_ion_temperature(neutrals, gGrid, time);
-    // ions.calc_electron_temperature(neutrals, gGrid, time);
+    //ions.calc_ion_temperature(neutrals, gGrid, time);
+    //ions.calc_electron_temperature(neutrals, gGrid, time);
     //ionsMag.calc_ion_temperature(neutralsMag, mGrid, time);
-    ionsMag.calc_electron_temperature(neutralsMag, mGrid, time);
+    //ionsMag.calc_electron_temperature(neutralsMag, mGrid, time);
 
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Advection");
@@ -213,13 +264,16 @@ bool advance(Planets &planet,
 
     if (time.check_time_gate(input.get_dt_write_restarts())) {
       report.print(3, "Writing restart files");
-      neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(),
+      neutrals.restart_file(input.get_restartout_dir(),
+                            gGrid.get_gridtype(),
                             DoWrite);
-      neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(),
+      neutralsMag.restart_file(input.get_restartout_dir(),
+                               mGrid.get_gridtype(),
                                DoWrite);
       ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
       ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
       time.restart_file(input.get_restartout_dir(), DoWrite);
+      indices.restart_file(input.get_restartout_dir(), DoWrite, time.get_current());
     }
   }
 

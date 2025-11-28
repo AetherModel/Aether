@@ -75,12 +75,20 @@ void Report::enter(std::string input, int &iFunction) {
 
   iVerbose = entries[iEntry].iFunctionVerbose;
 
+  #ifdef OLD_TIMING
   // This was taken from
   // https://stackoverflow.com/questions/19555121/how-to-get-current-timestamp-in-milliseconds-since-1970-just-the-way-java-gets
   unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>
                            (std::chrono::system_clock::now().time_since_epoch()).count();
 
   entries[iEntry].timing_start = now;
+
+  #else//New timing
+  gettimeofday(&start, NULL);
+  entries[iEntry].timing_start_new = start;
+
+  #endif
+
   iLevel++;
   entries[iEntry].iLevel = iLevel;
   iCurrentFunction = iEntry;
@@ -110,6 +118,7 @@ void Report::exit(std::string input) {
     if (DoReportOnExit)
       print(iLevel, "Exiting function : " + current_entry);
 
+    #ifdef OLD_TIMING
     // Get current system time:
     unsigned long long now = std::chrono::duration_cast<std::chrono::milliseconds>
                              (std::chrono::system_clock::now().time_since_epoch()).count();
@@ -117,6 +126,17 @@ void Report::exit(std::string input) {
     // Calculate the difference in times, do get the total timing:
     entries[iEntry].timing_total = entries[iEntry].timing_total +
                                    float(now - entries[iEntry].timing_start) / 1000.0;
+
+    #else //new timing
+    gettimeofday(&end, NULL);
+    start = entries[iEntry].timing_start_new;
+    long seconds = end.tv_sec - start.tv_sec;
+    long microseconds = end.tv_usec - start.tv_usec;
+    long elapsed_micro = seconds * 1000000 + microseconds;
+    precision_t elapsed_sec = elapsed_micro / 1000000.0;
+
+    entries[iEntry].timing_total = entries[iEntry].timing_total + elapsed_sec;
+    #endif
 
     // Increment the total number of times that the function has been called:
     entries[iEntry].nTimes++;

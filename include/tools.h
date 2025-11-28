@@ -8,11 +8,11 @@
 // Structure for a 2x2 matrix for a cubesphere:
 // ----------------------------------------------------------------------------
 
-struct mat_2x2{
-    arma_mat A11; 
-    arma_mat A12; 
-    arma_mat A21; 
-    arma_mat A22;
+struct mat_2x2 {
+  arma_mat A11;
+  arma_mat A12;
+  arma_mat A21;
+  arma_mat A22;
 };
 
 // -----------------------------------------------------------------------------
@@ -23,9 +23,9 @@ struct mat_2x2{
 // -----------------------------------------------------------------------------
 
 bool find_interpolation_coefficients(arma_vec inX,
-				     arma_vec outX,
-				     arma_vec &outIndex,
-				     arma_vec &outRatio);
+                                     arma_vec outX,
+                                     arma_vec &outIndex,
+                                     arma_vec &outRatio);
 
 // -----------------------------------------------------------------------------
 // This takes the index and ratio determined in the above function and
@@ -33,8 +33,8 @@ bool find_interpolation_coefficients(arma_vec inX,
 // -----------------------------------------------------------------------------
 
 arma_vec interpolate1d(arma_vec inY,
-		       arma_vec &index,
-		       arma_vec &ratio);
+                       arma_vec &index,
+                       arma_vec &ratio);
 
 // -----------------------------------------------------------------------------
 // Set all of the ghost cells to a constant value that is fed in.
@@ -42,14 +42,15 @@ arma_vec interpolate1d(arma_vec inY,
 // -----------------------------------------------------------------------------
 
 void set_gcs_to_value(arma_cube &var_scgc,
-		      precision_t value,
-		      int64_t nGCs);
+                      precision_t value,
+                      int64_t nGCs);
 
 // ----------------------------------------------------------------------------
 // Fix corners in an arma cube
 //   - basically fill in the corners with values near them
 // ----------------------------------------------------------------------------
 
+void fill_horizontal_ghostcels(arma_cube &values, int64_t nGCs);
 void fill_corners(arma_cube &values, int64_t nGCs);
 
 // -----------------------------------------------------------------------------
@@ -64,6 +65,8 @@ std::string add_cmember(std::string inString);
 // ----------------------------------------------------------------------
 
 void display_vector(arma_vec vec);
+void display_matrix(std::string, arma_mat mat);
+void display_cube(std::string, arma_cube values);
 
 // ----------------------------------------------------------------------
 // Display an armadillo vector with a strong name in front
@@ -101,39 +104,39 @@ precision_t sync_mean_across_all_procs(precision_t value);
 // ----------------------------------------------------------------------
 
 std::vector<double> get_normal_random_vect(double mean,
-					   double std,
-					   int64_t nValues,
-					   int seed);
+                                           double std,
+                                           int64_t nValues,
+                                           int seed);
 
 // ----------------------------------------------------------------------
 // Generate a vector of uniformly distributed random unsigned ints
 // ----------------------------------------------------------------------
 
 std::vector<unsigned int> get_random_unsigned_vect(int64_t nValues,
-						   int seed);
+                                                   int seed);
 
 // ----------------------------------------------------------------------
 // Make a vector of arma cubes:
 // ----------------------------------------------------------------------
 
 std::vector<arma_cube> make_cube_vector(int64_t nLons,
-					int64_t nLats,
-					int64_t nAlts,
-					int64_t nComps);
+                                        int64_t nLats,
+                                        int64_t nAlts,
+                                        int64_t nComps);
 
 // ----------------------------------------------------------------------
 // Take the dot product between two armadilo cubes
 // ----------------------------------------------------------------------
 
 arma_cube dot_product(std::vector<arma_cube> vec1,
-		      std::vector<arma_cube> vec2);
+                      std::vector<arma_cube> vec2);
 
 // ----------------------------------------------------------------------
 // Take the cross product between two arma cubes
 // ----------------------------------------------------------------------
 
 std::vector<arma_cube> cross_product(std::vector<arma_cube> vec1,
-				     std::vector<arma_cube> vec2);
+                                     std::vector<arma_cube> vec2);
 
 // ----------------------------------------------------------------------
 // Convert an armadillo vector to a c++ vector
@@ -220,7 +223,8 @@ bool is_approx_equal(arma_vec &vec1, arma_vec &vec2, precision_t tol);
 //-------------------------------------------------------------
 // Overload col vector function with row vec
 //-------------------------------------------------------------
-bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2, precision_t tol);
+bool is_approx_equal(Row<precision_t> &vec1, Row<precision_t> &vec2,
+                     precision_t tol);
 
 //-------------------------------------------------------------
 // Checks whether a vector is constant (all values the same)
@@ -234,7 +238,8 @@ bool is_approx_constant(arma_vec &vec, precision_t tol);
 // u and v are spherical velocities
 // u1 and u2 are contravariant velocities
 // --------------------------------------------------------------------------
-void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &A_inv_mat);
+void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2,
+                 mat_2x2 &A_inv_mat);
 
 // --------------------------------------------------------------------------
 // Convert spherical vector (velocities) to reference (contravariant) vector
@@ -242,7 +247,8 @@ void sphvect2ref(arma_mat& u, arma_mat& v, arma_mat& u1, arma_mat& u2, mat_2x2 &
 // u and v are spherical velocities
 // u1 and u2 are contravariant velocities
 // --------------------------------------------------------------------------
-void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v, mat_2x2 &A_mat);
+void refvect2sph(arma_mat &u1, arma_mat &u2, arma_mat &u, arma_mat &v,
+                 mat_2x2 &A_mat);
 
 //-----------------------------------------------------------------------
 // Checks if armacube(s) has all finite values, if not, adds them to
@@ -293,5 +299,36 @@ std::vector<int> indef_vector(arma_cube cube);
 // --------------------------------------------------------------------------
 
 arma_vec sphere_to_cube(precision_t lon_in, precision_t lat_in);
+// Used for dipole gradients & distances.
+// Probably needs to be moved.
+arma_cube delTheta(arma_cube magLat);
+
+////////////////////////////////////////////
+// convert cell coordinates to geographic //
+////////////////////////////////////////////
+std::vector <arma_cube> mag_to_geo(arma_cube magLon, arma_cube magLat,
+                                   arma_cube magAlt,
+                                   Planets planet);
+
+////////////////////////////////////////////
+// convert mag coordinates to dipole ijk  //
+////////////////////////////////////////////
+std::vector<precision_t> mag_to_ijk(precision_t mlon,
+                                    precision_t mlat,
+                                    precision_t radius,
+                                    precision_t planet_radius);
+
+
+////////////////////////////////////////////
+// convert cell coordinates to geographic //
+////////////////////////////////////////////
+std::vector<arma_cube> geo_to_mag(arma_cube glon,
+                                  arma_cube glat,
+                                  arma_cube radius,
+                                  Planets &planet) ;
+
+
+arma_cube vec2cube(std::vector<precision_t> ivec);
+
 
 #endif  // INCLUDE_TOOLS_H_

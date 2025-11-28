@@ -12,9 +12,20 @@ void Grid::calc_grid_spacing(Planets planet) {
 
   report.print(3, "starting calc_grid_spacing");
 
-  calc_alt_grid_spacing();
-  calc_lat_grid_spacing();
-  calc_long_grid_spacing();
+  // calc_alt_grid_spacing();
+  // calc_lat_grid_spacing();
+  // calc_long_grid_spacing();
+
+  calc_i_grid_spacing();
+  calc_j_grid_spacing();
+  calc_k_grid_spacing();
+
+  report.print(3, "ending calc_grid_spacing");
+}
+
+void Grid::calc_dipole_grid_spacing(Planets planet) {
+
+  report.print(3, "starting calc_grid_spacing");
 
   calc_i_grid_spacing();
   calc_j_grid_spacing();
@@ -130,6 +141,23 @@ void Grid::calc_k_grid_spacing() {
   dr_edge.slice(iZ) =
     radius_scgc.slice(iZ) - radius_scgc.slice(iZ - 1);
 
+  // For the sphere & cubesphere, k is in meters:
+  if (iGridShape_ == iSphere_ || iGridShape_  == iCubesphere_) {
+    dk_center_m_scgc = dk_center_scgc;
+    dk_edge_m = dk_edge;
+  }
+
+  // This needs to be turned into a distance for the dipole:
+  if (iGridShape_ == iDipole_) {
+    // the dk's may be negative (not allowed). make sure they are positive
+    // this gets rid of SO many errors...
+    dk_center_scgc = abs(dk_center_scgc);
+    dk_edge = abs(dk_edge);
+    dr_edge =  abs(dr_edge);
+    dk_center_m_scgc = pow(magAlt_scgc, 3) % dk_center_scgc / delTheta(magLat_scgc);
+    dk_edge_m = pow(magAlt_scgc, 3) % dk_edge / delTheta(magLat_scgc);
+  }
+
   // For a stretched grid, calculate some useful quantities:
   // lower is defined for the current cell, which
   // means that upper(iZ) is lower(iZ+1)
@@ -144,10 +172,6 @@ void Grid::calc_k_grid_spacing() {
   // Need the square of the ratio:
   dk_ratio_sq = dk_ratio % dk_ratio;
   dk_one_minus_r2 = 1.0 - dk_ratio_sq;
-
-  // k is in meters:
-  dk_edge_m = dk_edge;
-  dk_center_m_scgc = dk_center_scgc;
 
   report.print(4, "ending calc_k_grid_spacing");
   return;
@@ -220,17 +244,20 @@ void Grid::calc_i_grid_spacing() {
   di_center_m_scgc = di_center_scgc % radius_scgc;
   di_edge_m = di_edge % radius_scgc;
 
-  // If the shape is a sphere, then the first coordinate is longitude.  The physical
-  // distance needs to be changed by the cos of the latitude, which is the j coordinate.
+  // If the shape is a sphere or dipole, then the first coordinate is longitude.
+  // The physical distance needs to be changed by the cos of the latitude,
+  // which is the j coordinate in the sphere (different for dipole).
   if (iGridShape_ == iSphere_) {
     di_center_m_scgc = di_center_m_scgc % abs(cos(j_center_scgc));
     // edge is in-line with the j center
     di_edge_m = di_edge_m % abs(cos(j_center_scgc));
   }
 
-  // Need a similar thing for the dipole grid here!
+  // Dipole will use cos(magLat)
   if (iGridShape_ == iDipole_) {
-    // do something here!
+    di_center_m_scgc = di_center_m_scgc % abs(cos(magLat_scgc));
+    // edge is in-line with the j center
+    di_edge_m = di_edge_m % abs(cos(magLat_scgc));
   }
 
   // For a stretched grid, calculate some useful quantities:
@@ -316,7 +343,13 @@ void Grid::calc_j_grid_spacing() {
     dj_edge_m = dj_edge % radius_scgc;
   }
 
-  // Need to do something for the dipole grid?
+  // Dipole will have different scaling...
+  if (iGridShape_ == iDipole_) {
+    dj_center_m_scgc = radius_scgc % dj_center_scgc % pow(cos(magLat_scgc),
+                                                          3) / delTheta(magLat_scgc) % sign(magLat_scgc);
+    dj_edge_m = radius_scgc % dj_edge % pow(cos(magLat_scgc),
+                                            3) / delTheta(magLat_scgc) % sign(magLat_scgc);
+  }
 
   // For a stretched grid, calculate some useful quantities:
   // egde is defined for the current cell, which
@@ -334,182 +367,4 @@ void Grid::calc_j_grid_spacing() {
   dj_one_minus_r2 = 1.0 - dj_ratio_sq;
 
   report.print(4, "ending calc_j_grid_spacing");
-}
-
-// -----------------------------------------------------------------------------
-//  Calaculate Grid Spacing for Dipole Grid
-// -----------------------------------------------------------------------------
-
-void Grid::calc_dipole_grid_spacing(Planets planet) {
-
-  int64_t iLon, iLat, iAlt;
-
-  report.print(3, "starting calc_dipole_grid_spacing");
-
-  // This is close, but may need to be adjusted later.
-  // These quantities are obtained from integrating the scale factor (h)
-  // The along-field-line distance (alt) should be right, but the lat distance
-  // is the shortest distance from a point to the adjacent field line, not the adjacent cell.
-
-  report.print(3, "starting alt");
-  calc_alt_dipole_grid_spacing();
-  report.print(3, "starting lat");
-  calc_lat_dipole_grid_spacing();
-  report.print(3, "starting long");
-  calc_long_dipole_grid_spacing();
-
-  calc_i_grid_spacing();
-
-  std::vector<arma_cube> lon_lat_radius;
-  lon_lat_radius.push_back(geoLon_scgc);
-  lon_lat_radius.push_back(geoLat_scgc);
-  lon_lat_radius.push_back(radius_scgc);
-  std::vector<arma_cube> xyz;
-
-  xyz = transform_llr_to_xyz_3d(lon_lat_radius);
-  geoX_scgc = xyz[0];
-  geoY_scgc = xyz[0];
-  geoZ_scgc = xyz[0];
-
-  report.print(3, "ending calc_dipole_grid_spacing");
-}
-
-// for sanity (only marginally helpful):
-inline arma_mat delTm(arma_mat theta) {
-  return (sqrt(3 * cos(theta) % cos(theta) + 1));
-}
-inline arma_cube delTc(arma_cube theta) {
-  return (sqrt(3 * cos(theta) % cos(theta) + 1));
-}
-
-// -----------------------------------------------------------------------------
-// Grid spacing for altitude:
-//   - Dipole grid needs to be handled differently!
-// -----------------------------------------------------------------------------
-
-void Grid::calc_alt_dipole_grid_spacing() {
-
-  int64_t iAlt;
-  precision_t planetRadius;
-
-  for (iAlt = 1; iAlt < nAlts - 1; iAlt++) {
-
-    dalt_center_scgc.slice(iAlt) =
-      abs(magAlt_scgc.slice(iAlt + 1) % sin(magLat_scgc.slice(iAlt + 1))
-          % (1 / delTm(magLat_scgc.slice(iAlt + 1)))
-          - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1))
-          % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
-    dk_center_scgc.slice(iAlt) = dalt_center_scgc.slice(iAlt);
-
-    dalt_lower_scgc.slice(iAlt) =
-      abs(magAlt_scgc.slice(iAlt) % sin(magLat_scgc.slice(iAlt))
-          % (1 / delTm(magLat_scgc.slice(iAlt)))
-          - magAlt_scgc.slice(iAlt - 1) % sin(magLat_scgc.slice(iAlt - 1))
-          % (1 / delTm(magLat_scgc.slice(iAlt - 1)))) * 2;
-    dk_edge.slice(iAlt) = dalt_lower_scgc.slice(iAlt);
-
-    dr_edge.slice(iAlt) =
-      radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
-  }
-
-  dalt_center_scgc.slice(0) = dalt_center_scgc.slice(1);
-  dalt_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
-  dk_center_scgc.slice(0) = dalt_center_scgc.slice(0);
-  dk_center_scgc.slice(nAlts - 1) = dalt_center_scgc.slice(nAlts - 2);
-
-  dalt_lower_scgc.slice(0) = dalt_lower_scgc.slice(1);
-  dr_edge.slice(0) = dr_edge.slice(1);
-  dk_edge.slice(0) = dalt_lower_scgc.slice(1);
-  iAlt = nAlts - 1;
-  dalt_lower_scgc.slice(iAlt) =
-    magAlt_scgc.slice(iAlt) - magAlt_scgc.slice(iAlt - 1);
-  dk_edge.slice(iAlt) = dalt_lower_scgc.slice(iAlt);
-  dr_edge.slice(iAlt) =
-    radius_scgc.slice(iAlt) - radius_scgc.slice(iAlt - 1);
-
-  // For a stretched grid, calculate some useful quantities:
-  // lower is defined for the current cell, which
-  // means that upper(iAlt) is lower(iAlt+1)
-  // ratio = upper / lower
-  for (iAlt = 0; iAlt < nAlts - 1; iAlt++) {
-    dalt_ratio_scgc.slice(iAlt) =
-      dalt_lower_scgc.slice(iAlt + 1) / dalt_lower_scgc.slice(iAlt);
-    dk_ratio.slice(iAlt) =
-      dk_edge.slice(iAlt + 1) / dk_edge.slice(iAlt);
-  }
-
-  iAlt = nAlts - 1;
-  dalt_ratio_scgc.slice(iAlt) = dalt_ratio_scgc.slice(iAlt - 1);
-  dk_ratio.slice(iAlt) = dk_ratio.slice(iAlt - 1);
-
-  // Need the square of the ratio:
-  dalt_ratio_sq_scgc = dalt_ratio_scgc % dalt_ratio_scgc;
-  dk_ratio_sq = dk_ratio % dk_ratio;
-  dk_one_minus_r2 = 1.0 - dk_ratio_sq;
-
-  // k is in meters:
-  dk_edge_m = dk_edge;
-  dk_center_m_scgc = dk_center_scgc;
-}
-
-// ---------------------------------------
-// Grid spacing for latitude:
-// Again, different for the dipole...
-//  - uhoh, might not be right. not actually perpendicular to q-p, but no way around that, i think.
-// ---------------------------------------
-
-void Grid::calc_lat_dipole_grid_spacing() {
-
-  int64_t iLat;
-
-  for (iLat = 1; iLat < nLats - 1; iLat++) {
-    dlat_center_scgc.col(iLat) =
-      abs(magAlt_scgc.col(iLat + 1) % sin(magLat_scgc.col(iLat + 1))
-          % (1 / delTc(magLat_scgc.col(iLat + 1)))
-          - magAlt_scgc.col(iLat - 1) % sin(magLat_scgc.col(iLat - 1))
-          % (1 / delTc(magLat_scgc.col(iLat - 1)))) * 2;
-  }
-
-  // Bottom (one sided):
-  iLat = 0;
-  dlat_center_scgc.col(iLat) =
-    geoLat_scgc.col(iLat + 1) - geoLat_scgc.col(iLat);
-  // Top (one sided):
-  iLat = nLats - 1;
-  dlat_center_scgc.col(iLat) =
-    geoLat_scgc.col(iLat) - geoLat_scgc.col(iLat - 1);
-
-  // Make this into a distance:
-  dlat_center_dist_scgc = dlat_center_scgc % radius_scgc;
-  dj_center_scgc = dlat_center_scgc;
-  dj_center_m_scgc = dlat_center_dist_scgc;
-}
-
-// ---------------------------------------
-// Grid spacing for longitude:
-// ---------------------------------------
-
-void Grid::calc_long_dipole_grid_spacing() {
-
-  int64_t iLon;
-
-  for (iLon = 1; iLon < nLons - 1; iLon++)
-    dlon_center_scgc.row(iLon) =
-      (magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon - 1)) / 2.0;
-
-  // this might be fine for the dipole, if it works for the geo grid...
-
-  // Bottom (one sided):
-  iLon = 0;
-  dlon_center_scgc.row(iLon) =
-    magLon_scgc.row(iLon + 1) - magLon_scgc.row(iLon);
-  // Top (one sided):
-  iLon = nLons - 1;
-  dlon_center_scgc.row(iLon) =
-    magLon_scgc.row(iLon) - magLon_scgc.row(iLon - 1);
-
-  // Make this into a distance:
-  dlon_center_dist_scgc =
-    // dlon_center_scgc % radius_scgc % abs(cos(geoLat_scgc));
-    dlon_center_scgc % magAlt_scgc % cos(magLat_scgc);
 }

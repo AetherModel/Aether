@@ -107,7 +107,7 @@ std::string dummy_string = "unknown";
 
 bool Inputs::check_settings(std::string key1,
                             std::string key2) {
-  if (report.test_verbose(5))
+  if (report.test_verbose(10))
     std::cout << "checking setting : "
               << key1 << " and "
               << key2 << "\n";
@@ -132,7 +132,7 @@ bool Inputs::check_settings(std::string key1,
 // 1 key:
 
 bool Inputs::check_settings(std::string key1) {
-  if (report.test_verbose(5))
+  if (report.test_verbose(10))
     std::cout << "checking setting : " << key1 << "\n";
 
   // try to find the keys first
@@ -452,22 +452,41 @@ Inputs::grid_input_struct Inputs::get_grid_inputs(std::string gridtype) {
   grid_specs.lon_min = min_max[0] * cDtoR;
   grid_specs.lon_max = min_max[1] * cDtoR;
 
-  grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
+  min_max = get_setting_intarr(gridtype, "LatRange");
+  grid_specs.lat_min = min_max[0] * cDtoR;
+  grid_specs.lat_max = min_max[1] * cDtoR;
+
   // The rest of the settings are different for mag/geo grids,
   // First take the magnetic options, then "else" should be (cube-)sphere
-
+  // - This checks if "dipole" is in shape, to account for the # of root nodes.
   if (grid_specs.shape.find("dipole") != std::string::npos) {
-    // Latitude range (base of field line) is specified with max lat & min apex.
-    grid_specs.max_blat = check_settings_pt(gridtype, "LatMax") * cDtoR;
-    grid_specs.min_apex = check_settings_pt(gridtype, "MinApex");
-    // stretch the baselatitudes (not yet implemented)
-    grid_specs.LatStretch = check_settings_pt(gridtype, "LatStretch");
-    // controls the spacing of points along field line, <<1 for more pts at low alts
-    grid_specs.FieldLineStretch = check_settings_pt(gridtype, "dAltStretch");
+    // Invariant latitude range (of real corners) is specified with max/min.
+    // max alt of open field lines, and min alt, is set in AltRange
+    min_max = get_setting_intarr(gridtype, "AltRange");
+    grid_specs.alt_min = min_max[0];
+    grid_specs.alt_max = min_max[1];
+
+    precision_t minDipoleLat = 10.0 * cDtoR;
+    precision_t maxDipoleLat = 80.0 * cDtoR;
+
+    if (grid_specs.lat_min < minDipoleLat) {
+      grid_specs.lat_min = minDipoleLat;
+      report.print(0, "Error in setting min lat for " +
+                   grid_specs.shape +
+                   " - moving to 10 deg");
+      report.error("Setting min dipole lat to 10.0");
+    }
+
+    if (grid_specs.lat_max > maxDipoleLat) {
+      grid_specs.lat_max = maxDipoleLat;
+      report.print(0, "Error in setting max lat for " +
+                   grid_specs.shape +
+                   " - moving to 80 deg");
+      report.error("Setting max dipole lat to 80.0");
+    }
+
   } else {
-    min_max = get_setting_intarr(gridtype, "LatRange");
-    grid_specs.lat_min = min_max[0] * cDtoR;
-    grid_specs.lat_max = min_max[1] * cDtoR;
+    grid_specs.alt_min = check_settings_pt(gridtype, "MinAlt");
     grid_specs.alt_file = check_settings_str(gridtype, "AltFile");
     grid_specs.IsUniformAlt = get_setting_bool(gridtype, "IsUniformAlt");
 
@@ -551,9 +570,8 @@ precision_t Inputs::get_dt_output(int iOutput) {
 
   if (iOutput < nOutputs)
     value = settings.at("Outputs").at("dt").at(iOutput);
-  else{
+  else
     report.error("Output Error; more output types than dt's provided.");
-  }
 
   return value;
 }
@@ -779,7 +797,8 @@ bool Inputs::get_do_ionization_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_ion_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronIonCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronIonCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -787,7 +806,8 @@ bool Inputs::get_do_electron_ion_collisional_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_neutral_elastic_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralElasticCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronNeutralElasticCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -795,7 +815,8 @@ bool Inputs::get_do_electron_neutral_elastic_collisional_heating() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_electron_neutral_inelastic_collisional_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludeElectronNeutralInelasticCollisionalHeating");
+  return get_setting_bool("Sources", "Ions",
+                          "IncludeElectronNeutralInelasticCollisionalHeating");
 }
 
 // -----------------------------------------------------------------------
@@ -1209,6 +1230,10 @@ std::string Inputs::get_advection_neutrals_vertical() {
   return get_setting_str("Advection", "Neutrals", "Vertical");
 }
 
+std::string Inputs::get_advection_neutrals_horizontal() {
+  return get_setting_str("Advection", "Neutrals", "Horizontal");
+}
+
 std::string Inputs::get_advection_ions_along() {
   return get_setting_str("Advection", "Ions", "Along");
 }
@@ -1219,6 +1244,14 @@ bool Inputs::get_advection_neutrals_bulkwinds() {
 
 bool Inputs::get_advection_neutrals_implicitfriction() {
   return get_setting_bool("Advection", "Neutrals", "useImplicitFriction");
+}
+
+// -----------------------------------------------------------------------
+// See what tests are requested
+// -----------------------------------------------------------------------
+
+json Inputs::get_tests() {
+  return get_setting_json("DoTests");
 }
 
 // --------------------------------------------------------------------------

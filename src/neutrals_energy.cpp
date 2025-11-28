@@ -7,7 +7,7 @@
 // Calculate thermal conduction
 // ---------------------------------------------------------------------------
 
-void Neutrals::update_temperature(Grid grid, Times time) {
+void Neutrals::update_temperature(Grid &grid, Times time) {
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
@@ -60,7 +60,7 @@ void Neutrals::update_temperature(Grid grid, Times time) {
         //temp1d = temp1d + dt * sources1d;
         //sources1d.zeros();
 
-        dalt1d = grid.dalt_lower_scgc.tube(iLon, iLat);
+        dalt1d = grid.dk_edge_m.tube(iLon, iLat);
         conduction1d.zeros();
 
         conduction1d = solver_conduction(temp1d,

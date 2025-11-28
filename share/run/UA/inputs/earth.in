@@ -25,6 +25,8 @@ BC is a density that is used in the lowest boundary cell if you
   In this example file, the values are from 96.87 km Jan 1, 2013
   O_1D is made up.
 
+#ALTITUDE_OF_BC
+96.87
 
 #NEUTRALS
 name, mass, vibration, thermal_cond, thermal_exp, advect, BC

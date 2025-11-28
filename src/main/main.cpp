@@ -9,10 +9,10 @@
 // -----------------------------------------------------------------------------
 
 int main() {
-  
+
   int iErr = 0;
   std::string sError;
-  bool didWork = true;
+  bool didWork = true, testsPassing = true;
 
   Times time;
 
@@ -24,6 +24,7 @@ int main() {
   try {
     // Create inputs (reading the input file):
     input = Inputs(time);
+
     if (!input.is_ok())
       throw std::string("input initialization failed!");
 
@@ -31,32 +32,44 @@ int main() {
       report.print(-1, "Hello " +
                    input.get_student_name() + " - welcome to Aether!");
 
-    // For now, the number of processors and blocks are set by the 
+    // Find out what tests we are running:
+    json tests = input.get_tests();
+
+    // For now, the number of processors and blocks are set by the
     // neutral grid shape, since this could be sphere (1 root) or
     // cubesphere (6 root)
-    Quadtree quadtree(input.get_grid_shape("neuGrid"));
-    Quadtree quadtree_ion(input.get_grid_shape("ionGrid"));
+    Quadtree quadtree(input.get_grid_shape(neutralType_));
+
     if (!quadtree.is_ok())
-      throw std::string("quadtree initialization failed!");
+      throw std::string("quadtree for neutrals initialization failed!");
+
+    Quadtree quadtree_ion(input.get_grid_shape(ionType_));
+
+    if (!quadtree_ion.is_ok())
+      throw std::string("quadtree for ions initialization failed!");
 
     // Initialize MPI and parallel aspects of the code:
     didWork = init_parallel(quadtree, quadtree_ion);
+
     if (!didWork)
       throw std::string("init_parallel failed!");
 
     // Everything should be set for the inputs now, so write a restart file:
     didWork = input.write_restart();
+
     if (!didWork)
       throw std::string("input.write_restart failed!");
 
     // Initialize the EUV system:
     Euv euv;
+
     if (!euv.is_ok())
       throw std::string("EUV initialization failed!");
 
     // Initialize the planet:
     Planets planet;
     MPI_Barrier(aether_comm);
+
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
@@ -64,16 +77,18 @@ int main() {
     Indices indices;
     didWork = read_and_store_indices(indices);
     MPI_Barrier(aether_comm);
+
     if (!didWork)
       throw std::string("read_and_store_indices failed!");
 
     // Perturb the inputs if user has asked for this
     indices.perturb();
 
-    // Initialize Geographic grid:
-    Grid gGrid("neuGrid");
+    // Initialize neutral grid:
+    Grid gGrid(neutralType_);
     didWork = gGrid.init_geo_grid(quadtree, planet);
     MPI_Barrier(aether_comm);
+
     if (!didWork)
       throw std::string("init_geo_grid failed!");
 
@@ -87,20 +102,20 @@ int main() {
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
-    // Initialize Magnetic grid:
-    Grid mGrid("ionGrid");
+    // Initialize ion grid:
+    Grid mGrid(ionType_);
 
-    if (mGrid.iGridShape_ == mGrid.iDipole_) {
+    if (mGrid.iGridShape_ == iDipole_) {
       didWork = mGrid.init_dipole_grid(quadtree_ion, planet);
+
       if (!didWork)
         throw std::string("init_dipole_grid failed!");
     } else {
-      std::cout << "Making Spherical Magnetic Grid\n";
+      report.print(1, "Making Spherical Magnetic Grid\n");
       mGrid.set_IsDipole(false);
-      didWork = mGrid.init_geo_grid(quadtree, planet);
+      didWork = mGrid.init_geo_grid(quadtree_ion, planet);
       mGrid.set_IsGeoGrid(false);
     }
-
     didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
     // Initialize Neutrals on geographic grid:
@@ -110,6 +125,12 @@ int main() {
     // Initialize Ions on geographic and magnetic grids:
     Ions ions(gGrid, planet);
     Ions ionsMag(mGrid, planet);
+
+    if (tests["test_gradient"])
+      testsPassing = test_gradient(planet, quadtree, tests, gGrid, mGrid);
+
+    if (!testsPassing && tests["exit_on_fail"])
+      throw std::string("Cannot continue!!");
 
     // -----------------------------------------------------------------
     // This is a unit test for checking for nans and infinities.
@@ -124,9 +145,12 @@ int main() {
 
     if (input.get_check_for_nans()) {
       didWork = neutrals.check_for_nonfinites("After Inputs");
+
       if (!didWork)
         throw std::string("NaNs found in Neutrals in Initialize!\n");
-      didWork = ions.check_for_nonfinites();
+
+      didWork = ions.check_for_nonfinites("NaNs found in Ions in Initialize!\n");
+
       if (!didWork)
         throw std::string("NaNs found in Ions in Initialize!\n");
     }
@@ -152,9 +176,12 @@ int main() {
     // Initialize electrodynamics and check if electrodynamics times
     // works with input time
     Electrodynamics electrodynamics(time);
+
     if (!electrodynamics.is_ok())
       throw std::string("electrodynamics on geo grid initialization failed!");
+
     Electrodynamics electrodynamicsMag(time);
+
     if (!electrodynamicsMag.is_ok())
       throw std::string("electrodynamics on mag grid initialization failed!");
 
@@ -165,6 +192,14 @@ int main() {
 
       if (!didWork)
         throw std::string("Reading Restart for time Failed!!!\n");
+
+      didWork = indices.restart_file(input.get_restartin_dir(),
+                                     true,
+                                     time.get_current());
+
+      if (!didWork)
+        throw std::string("Reading Restart for Indices Failed!!!\n");
+
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
@@ -172,6 +207,7 @@ int main() {
       didWork = output(neutrals, ions, gGrid, time, planet);
       didWork = output(neutralsMag, ionsMag, mGrid, time, planet);
     }
+
     if (!didWork)
       throw std::string("Initial output failed!");
 
@@ -232,14 +268,18 @@ int main() {
       if (!time.check_time_gate(input.get_dt_write_restarts())) {
         report.print(3, "Writing restart files");
 
-        didWork = neutrals.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
-        didWork = neutralsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
+        didWork = neutrals.restart_file(input.get_restartout_dir(),
+                                        gGrid.get_gridtype(), DoWrite);
+        didWork = neutralsMag.restart_file(input.get_restartout_dir(),
+                                           mGrid.get_gridtype(), DoWrite);
 
         if (!didWork)
           throw std::string("Writing Restart for Neutrals Failed!!!\n");
 
-        didWork = ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(), DoWrite);
-        didWork = ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(), DoWrite);
+        didWork = ions.restart_file(input.get_restartout_dir(), gGrid.get_gridtype(),
+                                    DoWrite);
+        didWork = ionsMag.restart_file(input.get_restartout_dir(), mGrid.get_gridtype(),
+                                       DoWrite);
 
         if (!didWork)
           throw std::string("Writing Restart for Ions Failed!!!\n");
@@ -254,20 +294,18 @@ int main() {
 
     } // End of outer time loop - done with run!
 
-    report.exit(function);
-    report.times();
-
   } catch (std::string error) {
-    report.report_errors();
-
-    if (iProc == 0) {
-      std::cout << error << "\n";
-      std::cout << "---- Must Exit! ----\n";
-    }
+    report.error(error);
   }
 
+  report.exit(function);
+  report.times();
+  report.report_errors();
 
-  // End parallel tasks:
-  iErr = MPI_Finalize();
+  if (nProcs > 0)
+    // End parallel tasks:
+    iErr = MPI_Finalize();
+
   return iErr;
+
 }

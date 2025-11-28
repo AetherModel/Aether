@@ -8,34 +8,25 @@
         "iFunctionVerbose" : {
             "Grid::create_altitudes": 0},	
         "dt" : 10.0,
-        "check_for_nans" : false
-    },
+        "check_for_nans" : true},
 
-    "EndTime" : [2011, 3, 20, 0, 10, 0],
-
-    "GeoBlockSize" : {
-        "nLons" : 18,
-        "nLats" : 18,
-        "nAlts" : 50},
+    "EndTime" : [2011, 3, 20, 0, 1, 0],
 
     "neuGrid" : {
-	"nLonsPerBlock" : 24,
-	"nLatsPerBlock" : 22,
-	"nAlts" : 40,
-        "dAltScale" : 0.25,
+        "Shape": "sphere",
+        "nLonsPerBlock" : 20,
+        "nLatsPerBlock" : 18,
+        "nAlts" : 40,
+        "dAltScale" : 0.3,
         "IsUniformAlt" : false},
     
     "ionGrid": {
-        "dAltStretch": 0.6,
-        "LatStretch": 1,
-        "Shape": "dipole",
-        "nLonsPerBlock": 36,
-        "nLatsPerBlock" : 18,
-        "nAlts":36,
-        "LatMax":88,
-        "MinAlt":100.0,
-        "MinApex":150.0
-        },
+        "Shape": "sphere",
+        "nLonsPerBlock": 24,
+        "nLatsPerBlock": 22,
+        "nAlts": 50,
+        "dAltScale" : 0.3,
+        "IsUniformAlt" : false},
 
     "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
 
@@ -43,6 +34,7 @@
         "Potential" : "Weimer05",
         "DiffuseAurora" : "fta",
         "File": "UA/inputs/b20110320n_omni.bin"},
+        
     "Outputs" : {
         "type" : ["states", "grid"],
         "dt" : [900, -1] },

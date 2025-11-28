@@ -5,7 +5,7 @@
 #define INCLUDE_TIMES_H_
 
 /**************************************************************
- * 
+ *
  * times.h:
  *
  *   Functions that are assocuated with keeping track of time in
@@ -20,7 +20,7 @@
 
 class Times {
 
-public:
+ public:
 
   /**************************************************************
      \brief Initialize the Times class
@@ -61,7 +61,7 @@ public:
      \brief Sets the start, restart, and current times.
 
      This sets the start time, restart time, and current time to
-   the input time, and initializes iStep and dt, then calls 
+   the input time, and initializes iStep and dt, then calls
    increment_time, which derives a bunch of other variables.
 
    \param itime year, month, day, hour, minute, second, millisecond vector
@@ -161,21 +161,21 @@ public:
      \brief Get the current time as an array
    **/
   std::vector<int> get_iCurrent();
-  
+
   /**************************************************************
      \brief Get the current simulation time (sec since start)
    **/
   double get_simulation_time();
-  
+
   /**********************************************************************
      \brief Read / Write restart files for time
      \param dir directory to write restart files
      \param DoRead read the restart files if true, write if false
    **/
-  bool restart_file(std::string dir, bool DoRead);  
+  bool restart_file(std::string dir, bool DoRead);
 
-private:
-  
+ private:
+
   // -------------------------------------------------------------
   // These variables are for keeping track of the time. All in seconds
   // since reference time (except where noted).
@@ -212,7 +212,7 @@ private:
 
   /// Universal time in hours
   precision_t ut;
-  
+
   /// in weird JPL units
   precision_t orbittime;
 
@@ -227,13 +227,13 @@ private:
 
   /// This is day of year (and NOT real Julian Day!)
   int jDay;
-  
+
   /// This is Julian day
   double julian_day;
 
   /// represented as YYMMDD
   std::string sYMD;
-  
+
   /// represented as HHMMSS
   std::string sHMS;
 

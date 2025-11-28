@@ -9,14 +9,14 @@
 /**************************************************************
  * \class Quadtree
  *
- * \brief Defines the quadtree for blocks 
- * 
+ * \brief Defines the quadtree for blocks
+ *
  * Aether is logically an i, j, k grid structure.  Aether does domain
  * decomposition on the (i, j) coordinates and each processor works on
  * the full domain of the k dimension.  (e.g., nn spherical
  * coordinates, i = longitude, j = latitude, and k = altitude.)  The
  * quadtree takes the (i, j) dimensions and makes blocks out of them.
- * 
+ *
  * In the quadtree there are a number of root nodes, which are then
  * divided into 2 x 2 blocks.  Each of those can then be subdivided
  * into 2 x 2 blocks.  Each block resides on a separate processor.
@@ -32,13 +32,13 @@
  *
  * \author Aaron Ridley
  *
- * \date 2022/07/05 
+ * \date 2022/07/05
  *
  **************************************************************/
 
 class Quadtree {
 
-public:
+ public:
 
   /// number of blocks in each direction:
   const uint64_t nLR = 2;
@@ -86,7 +86,7 @@ public:
 
   /// Number of root nodes:
   int64_t nRootNodes;
-  
+
   /// The quadtree root nodes:
   std::vector<struct qtnode> root_nodes;
 
@@ -98,7 +98,7 @@ public:
   arma_vec limit_high = {0.0, 0.0, 0.0};
   /// For the given processor, the side that it is on:
   uint64_t iSide = -1;
-  
+
   /**********************************************************************
      \brief Initializes the quadtree
    **/
@@ -107,7 +107,7 @@ public:
   /**********************************************************************
      \brief Builds the quadtree
    **/
-  void build(std::string gridtype); 
+  void build(std::string gridtype);
 
   /**********************************************************************
      \brief Makes a new node on the quadtree, recursively
@@ -119,18 +119,18 @@ public:
      \param iSide basically the root node, or the side of the cubesphere
    **/
   qtnode new_node(arma_vec lower_left_norm_in,
-		  arma_vec size_right_norm_in,
-		  arma_vec size_up_norm_in,
-		  uint64_t &iProc_in_out,
-		  uint64_t depth_in,
-		  uint64_t iSide);
+                  arma_vec size_right_norm_in,
+                  arma_vec size_up_norm_in,
+                  uint64_t &iProc_in_out,
+                  uint64_t depth_in,
+                  uint64_t iSide);
 
   /**********************************************************************
      \brief Get different vectors from the node
      \param node which node to get the vector from
      \param which defines the vector to get:
                   LL = lower left;
-                  SR = size in the right/left direction; 
+                  SR = size in the right/left direction;
                   SU = size in the up/down direction;
                   MID = mid point of the node;
    **/
@@ -154,26 +154,26 @@ public:
   int64_t find_root(arma_vec point);
 
   /**********************************************************************
-     \brief If the point is outside of the normalized limits of the 
+     \brief If the point is outside of the normalized limits of the
             quadtree, this tries to put the point back into the domain
      \param point the x, y, z normalized coordinate of the point.
    **/
   arma_vec wrap_point_sphere(arma_vec point);
 
   /**********************************************************************
-     \brief If the point is outside of the normalized limits of the 
+     \brief If the point is outside of the normalized limits of the
             quadtree, this tries to put the point back into the domain
      \param point the x, y, z normalized coordinate of the point.
    **/
   arma_vec wrap_point_cubesphere(arma_vec point);
-  
+
   /**********************************************************************
      \brief Check to see if internal state of class is ok
    **/
-  
+
   bool is_ok();
 
-private:
+ private:
 
   /// Defines whether the quadtree state is ok:
   bool IsOk = true;
@@ -181,7 +181,9 @@ private:
   bool IsSphere = false;
   /// Defines whether the quadtree is a cubesphere or not:
   bool IsCubeSphere = false;
-  
+  /// Defines whether the quadtree is a dipole or not:
+  bool IsDipole = false;
+
 };
 
 #endif  // INCLUDE_QUADTREE_H_
