@@ -3,7 +3,9 @@
 
 #include "aether.h"
 
-// Hepler varialbes / function begins. These are only used inside this cpp file and neither declared nor visible in any other file
+// Hepler variables / function begins.
+// These are only used inside this cpp file and neither declared
+// nor visible in any other file
 
 // The size of a 2*2*2 arma cube
 const arma::SizeCube unit_cube_size = arma::size(2, 2, 2);
@@ -69,17 +71,48 @@ int64_t get_cube_surface_number(const arma_vec &point_in) {
   }
 }
 
-// Helper variables / function ends. The following are all member functions of Grid class
+// Helper variables / function ends. The following are all member
+// functions of Grid class
 
 // --------------------------------------------------------------------------
-// Return the index of the last element that has a value smaller than or equal to the input
+// Return the index of the last element that has altitude smaller than
+// or equal to the input
+// --------------------------------------------------------------------------
+
+uint64_t Grid::search_altitude(const precision_t alt_in) const {
+  // Copy from std::upper_bound. Can't directly use it
+  // mainly because geoAlt_scgc(0, 0, *) can't be formed as an iterator
+  uint64_t first, last, len;
+  first = nGCs;
+  last = nAlts - nGCs;
+  len = last - first;
+
+  while (len > 0) {
+    uint64_t half = len >> 1;
+    uint64_t mid = first + half;
+
+    if (geoAlt_scgc(0, 0, mid) > alt_in)
+      len = half;
+
+    else {
+      first = mid + 1;
+      len = len - half - 1;
+    }
+  }
+
+  return first - 1;
+}
+
+// --------------------------------------------------------------------------
+// Return the index of the last element that has a value smaller than
+//   or equal to the input
 // - Optional argument (nGCs=0) since we cannot see grid info.
 // --------------------------------------------------------------------------
 
+// this replaces the above
+
 uint64_t bisect_search_array(precision_t val_in, arma_vec ref_arr,
                              int64_t nGCs = 0) {
-  // Copy from std::upper_bound. Can't directly use it
-  // mainly because geoAlt_scgc(0, 0, *) can't be formed as an iterator
   uint64_t first, last, len;
   first = nGCs;
   last = ref_arr.size();
@@ -181,6 +214,7 @@ void Grid::get_cubesphere_grid_range(struct cubesphere_range &cr) const {
   }
 }
 
+
 // --------------------------------------------------------------------------
 // Get the range of a Dipole grid
 // --------------------------------------------------------------------------
@@ -208,28 +242,34 @@ void Grid::get_dipole_grid_range(struct dipole_range &dr) const {
 // Almost the copy of interp_sphere_linear_helper
 // --------------------------------------------------------------------------
 
-void Grid::set_interp_coef_sphere(const sphere_range &sr,
-                                  const precision_t lon_in,
-                                  const precision_t lat_in,
-                                  const precision_t alt_in) {
+
+struct interp_coef_t Grid::get_interp_coef_sphere(const sphere_range &sr,
+						  const precision_t lon_in,
+						  const precision_t lat_in,
+						  const precision_t alt_in) {
+
   // WARNING: IF WE ARE DEALING WITH LESS THAN THE WHOLE EARTH, THEN ALL THE POINTS WITH
   // LONGITUDE = geo_grid_input.lon_max = settings["GeoGrid"]["MaxLon"]
   // OR LATITUDE = geo_grid_input.lat_max = settings["GeoGrid"]["MaxLat"]
   // ARE EXCLUDED.
   // TO FIX IT, EACH GRID SHOULD BE ABLE TO ACCESS THE MaxLon and MaxLat
 
-  // The structure which will be put into the interp_coefs. Initialize in_grid to be false
+  // The structure which will be put into the interp_coefs.
+  // Initialize in_grid to be false
   struct interp_coef_t coef;
   coef.in_grid = false;
 
   // Determine whether the point is inside this grid
-  // Treat north pole specially because latitude is inclusive for both -cPI/2 and cPI/2
+  // Treat north pole specially because latitude is inclusive for
+  //   both -cPI/2 and cPI/2
+  // Don't check for altitude here!
   if (lon_in < sr.lon_min || lon_in >= sr.lon_max || lat_in < sr.lat_min
-      || lat_in > sr.lat_max || (lat_in == sr.lat_max && sr.lat_max != cPI / 2)
-      || alt_in < sr.alt_min || alt_in > sr.alt_max) {
-    interp_coefs.push_back(coef);
-    return;
+      || lat_in > sr.lat_max || (lat_in == sr.lat_max && sr.lat_max != cPI / 2)) {
+    return coef;
   }
+
+  // This point is in the grid!
+  coef.in_grid = true;
 
   // ASSUMPTION: LONGITUDE AND LATITUDE ARE LINEARLY SPACED, nGCs >= 1
   // For the cell containing it, directly calculate its x and y index
@@ -251,17 +291,32 @@ void Grid::set_interp_coef_sphere(const sphere_range &sr,
 
   // The altitude may not be linearly spaced, so use binary search to find
   // the first element smaller than or equal to the altitude of the give point
-  // Implemented in bisect_search_array
-  // - since Alt can be latitude-dependent, this needs to be done last.
-  coef.iAlt = bisect_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol),
-                                  nGCs);
-  coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
-              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow,
-                  coef.iCol, coef.iAlt));
+  // Implemented in search_altitude
 
-  // Put the coefficient into the vector
-  coef.in_grid = true;
-  interp_coefs.push_back(coef);
+  if (alt_in < sr.alt_min) {
+    coef.iAlt = nGCs;
+    coef.rAlt = alt_in - sr.alt_min;
+    coef.below_grid = true;
+    coef.above_grid = false;
+  } else {
+    if (alt_in > sr.alt_max) {
+      coef.iAlt = nAlts - nGCs;
+      coef.rAlt = alt_in - sr.alt_max;
+      coef.below_grid = false;
+      coef.above_grid = true;
+    } else {
+      coef.iAlt = bisect_search_array(alt_in,
+				      geoAlt_scgc.tube(coef.iRow, coef.iCol),
+				      nGCs);
+      coef.rAlt =
+	(alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
+	/ (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) -
+	   geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
+      coef.below_grid = false;
+      coef.above_grid = false;
+    }
+  }
+  return coef;
 }
 
 // --------------------------------------------------------------------------
@@ -269,7 +324,7 @@ void Grid::set_interp_coef_sphere(const sphere_range &sr,
 // Almost the copy of interp_cubesphere_linear_helper
 // --------------------------------------------------------------------------
 
-void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
+struct interp_coef_t Grid::get_interp_coef_cubesphere(const cubesphere_range &cr,
                                       const precision_t lon_in,
                                       const precision_t lat_in,
                                       const precision_t alt_in) {
@@ -286,8 +341,7 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
 
   // Determine whether the projection point is on the surface of the grid
   if (surface_in != cr.surface_number) {
-    interp_coefs.push_back(coef);
-    return;
+    return coef;
   }
 
   // Calculate the theoretical fractional row index and column index
@@ -307,11 +361,12 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
       || row_frac_index > row_index_max || (row_frac_index == row_index_max &&
                                             cr.row_max_exclusive)
       || col_frac_index > col_index_max || (col_frac_index == col_index_max &&
-                                            cr.col_max_exclusive)
-      || alt_in < cr.alt_min || alt_in > cr.alt_max) {
-    interp_coefs.push_back(coef);
-    return;
+                                            cr.col_max_exclusive)) {
+    return coef;
   }
+
+  // This point is in the grid!
+  coef.in_grid = true;
 
   // Get the real integer index and the interpolation coefficient
   uint64_t row_index, col_index, alt_index;
@@ -329,36 +384,63 @@ void Grid::set_interp_coef_cubesphere(const cubesphere_range &cr,
   coef.iCol = static_cast<uint64_t>(col_frac_index);
   coef.rCol = col_frac_index - coef.iCol;
   coef.iCol += nGCs - 1;
-  // Use binary search to find the index for altitude (handles oblate planets)
-  coef.iAlt = bisect_search_array(alt_in, geoAlt_scgc.tube(coef.iRow, coef.iCol),
-                                  nGCs);
-  coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
-              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) - geoAlt_scgc(coef.iRow,
-                  coef.iCol, coef.iAlt));
 
-  // Put the coefficient into the vector
-  coef.in_grid = true;
-  interp_coefs.push_back(coef);
+
+  // The altitude may not be linearly spaced, so use binary search to find
+  // the first element smaller than or equal to the altitude of the give point
+  // Implemented in search_altitude
+
+  if (alt_in < cr.alt_min) {
+    coef.iAlt = nGCs;
+    coef.rAlt = alt_in - cr.alt_min;
+    coef.below_grid = true;
+    coef.above_grid = false;
+  } else {
+    if (alt_in > cr.alt_max) {
+      coef.iAlt = nAlts - nGCs;
+      coef.rAlt = alt_in - cr.alt_max;
+      coef.below_grid = false;
+      coef.above_grid = true;
+    } else {
+      coef.iAlt = bisect_search_array(alt_in,
+				      geoAlt_scgc.tube(coef.iRow, coef.iCol),
+				      nGCs);
+      coef.rAlt =
+	(alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
+	/ (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) -
+	   geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
+      coef.below_grid = false;
+      coef.above_grid = false;
+    }
+  }
+  return coef;
 }
 
-void Grid::set_interp_coef_dipole(const dipole_range &dr,
-                                  const precision_t lon_in,
-                                  const precision_t lat_in,
-                                  const precision_t alt_in) {
 
-  // The structure which will be put into the interp_coefs. Initialize in_grid to be false
+struct interp_coef_t Grid::get_interp_coef_dipole(const dipole_range &dr,
+						  const precision_t lon_in,
+						  const precision_t lat_in,
+						  const precision_t alt_in) {
+
+  // The structure which will be put into the interp_coefs. Initialize
+  // in_grid to be false
   struct interp_coef_t coef;
   coef.in_grid = false;
 
-  // Determine whether the point is inside this grid
-  // Treat north pole specially because latitude is inclusive for both -cPI/2 and cPI/2
-  if (lon_in < dr.lon_min || lon_in >= dr.lon_max || lat_in < dr.lat_min
-      || lat_in > dr.lat_max || (lat_in == dr.lat_max && dr.lat_max != cPI / 2)
+  // Determine whether the point is inside this grid Treat north pole
+  // specially because latitude is inclusive for both -cPI/2 and cPI/2
+  if (lon_in < dr.lon_min ||
+      lon_in >= dr.lon_max ||
+      lat_in < dr.lat_min  ||
+      lat_in > dr.lat_max ||
+      (lat_in == dr.lat_max && dr.lat_max != cPI / 2)
       || alt_in < dr.alt_min || alt_in > dr.alt_max) {
-    interp_coefs.push_back(coef);
-    return;
+    return coef;
   }
 
+  // Put the coefficient into the vector
+  coef.in_grid = true;
+  
   // ASSUMPTION: LONGITUDE IS LINEARLY SPACED, nGCs >= 1
   // For the cell containing it, directly calculate its x index
   // Find y & z indices using a bisecting search
@@ -369,9 +451,9 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
   coef.iRow = static_cast<uint64_t>(coef.rRow);
   // Calculate the fractional part, which is the ratio for Longitude
   coef.rRow -= coef.iRow;
-  // The actual x-axis index of the bottom-left of the cube used for interpolation
+  // The actual x-axis index of the bottom-left of the cube used for
+  // interpolation
   coef.iRow += nGCs - 1;
-
 
   // Different from the sphere, latitude & altitude are not evenly spaced.
   // Use the bisect search function for both.
@@ -381,24 +463,43 @@ void Grid::set_interp_coef_dipole(const dipole_range &dr,
   coef.iCol = bisect_search_array(abs(lat_in),
                                   abs(j_center_scgc.tube(coef.iRow, coef.iCol)), nGCs);
 
-  // need alt index to find lat coef
-  coef.iAlt = bisect_search_array(alt_in, k_center_scgc.tube(coef.iRow,
-                                                             coef.iCol),
-                                  nGCs);
+  // Use binary search to find the index for altitude
+  if (alt_in < dr.alt_min) {
+    coef.iAlt = nGCs;
+    coef.rAlt = 0.0;
+    coef.below_grid = true;
+    coef.above_grid = false;
+  } else {
+    if (alt_in > dr.alt_max) {
+      coef.iAlt = nAlts - nGCs;
+      coef.rAlt = 0.0;
+      coef.below_grid = false;
+      coef.above_grid = true;
+    } else {
+      // Use binary search to find the index for altitude (handles
+      // oblate planets)
 
-  // then we can do the ratios:
-  coef.rCol = (lat_in - magLat_scgc(coef.iRow, coef.iCol, coef.iAlt))
-              / (magLat_scgc(coef.iRow, coef.iCol + 1, coef.iAlt)
-                 - magLat_scgc(coef.iRow, coef.iCol, coef.iAlt));
+      // need alt index to find lat coef
+      coef.iAlt = bisect_search_array(alt_in,
+				      k_center_scgc.tube(coef.iRow, coef.iCol),
+				      nGCs);
+      // then we can do the ratios:
+      coef.rCol =
+	(lat_in - magLat_scgc(coef.iRow, coef.iCol, coef.iAlt))
+	/ (magLat_scgc(coef.iRow, coef.iCol + 1, coef.iAlt)
+	   - magLat_scgc(coef.iRow, coef.iCol, coef.iAlt));
+      coef.rAlt =
+	(alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
+	/ (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1) -
+	   geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
+      coef.below_grid = false;
+      coef.above_grid = false;
+    }
+  }
 
-  coef.rAlt = (alt_in - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt))
-              / (geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt + 1)
-                 - geoAlt_scgc(coef.iRow, coef.iCol, coef.iAlt));
-
-  // Put the coefficient into the vector
-  coef.in_grid = true;
-  interp_coefs.push_back(coef);
+  return coef;
 }
+
 
 // --------------------------------------------------------------------------
 // Set the interpolation coefficients
@@ -427,9 +528,12 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
   report.enter(function, iFunction);
 
   report.print(1, "interpolation gridtype : " + gridType);
+  
+  struct interp_coef_t coef;
 
   // If the size of Lons, Lats and Alts are not the same, return false
-  if (i_coords.size() != j_coords.size() || j_coords.size() != k_coords.size()) {
+  if (i_coords.size() != j_coords.size() ||
+      j_coords.size() != k_coords.size()) {
     report.error("Length of i,j,k vectors do not match!");
     return false;
   }
@@ -437,16 +541,22 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
   // Clear the previous interpolation coefficients
   interp_coefs.clear();
 
-  if (iGridShape_ == iCubesphere_) {
-    report.print(1, "interpolation grid is cubesphere");
-
+  // ---------------------------------------------------
+  // Cubesphere
+  if (IsCubeSphereGrid) {
     // Calculate the range of the grid
     struct cubesphere_range cr;
     get_cubesphere_grid_range(cr);
 
     // Calculate the index and coefficients for each point
-    for (size_t i = 0; i < i_coords.size(); ++i)
-      set_interp_coef_cubesphere(cr, i_coords[i], j_coords[i], k_coords[i]);
+    for (size_t i = 0; i < i_coords.size(); ++i) {
+      coef = get_interp_coef_cubesphere(cr,
+					i_coords[i],
+					j_coords[i],
+					k_coords[i]);
+      interp_coefs.push_back(coef);
+    }
+
   }
 
   if (iGridShape_ == iSphere_) {
@@ -456,8 +566,13 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
     get_sphere_grid_range(sr);
 
     // Calculate the index and coefficients for each point
-    for (size_t i = 0; i < i_coords.size(); ++i)
-      set_interp_coef_sphere(sr, i_coords[i], j_coords[i], k_coords[i]);
+    for (size_t i = 0; i < i_coords.size(); ++i) {
+      coef = get_interp_coef_sphere(sr,
+				    i_coords[i],
+				    j_coords[i],
+				    k_coords[i]);
+      interp_coefs.push_back(coef);
+    }
   }
 
   if (iGridShape_ == iDipole_) { // IsDipole
@@ -473,8 +588,9 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
     int64_t iLoc, nPts = i_coords.size();
     std::vector<precision_t> mlon(nPts), p_coord(nPts), q_coord(nPts), dipijk(3);
 
-    // these are the magnetic coordinates. A temporary step!
-    // this is a vector of cubes with shape (nPts, 1, 1) - avoids having to overload things
+    // these are the magnetic coordinates. A temporary step!  this is
+    // a vector of cubes with shape (nPts, 1, 1) - avoids having to
+    // overload things
     std::vector<arma_cube> magCoords;
 
     if (areLocsGeo) {
@@ -530,12 +646,72 @@ bool Grid::set_interpolation_coefs(const std::vector<precision_t> &i_coords,
     }
 
     // Calculate the index and coefficients for each point
-    for (size_t i = 0; i < i_coords.size(); ++i)
-      set_interp_coef_dipole(dr, mlon[i], p_coord[i], q_coord[i]);
+    for (size_t i = 0; i < i_coords.size(); ++i) {
+      coef = get_interp_coef_dipole(dr, mlon[i], p_coord[i], q_coord[i]);
+      interp_coefs.push_back(coef);
+    }
   }
 
   report.exit(function);
   return true;
+}
+
+// --------------------------------------------------------------------------
+// Set the interpolation coefficients 
+//    (v2 - return a list of interpolation coefficients)
+// --------------------------------------------------------------------------
+
+std::vector<struct interp_coef_t> Grid::get_interpolation_coefs(
+                                    const std::vector<precision_t> &Lons,
+                                    const std::vector<precision_t> &Lats,
+                                    const std::vector<precision_t> &Alts) {
+
+  int64_t nPts = Lons.size(), iPt;
+  std::vector<struct interp_coef_t> listOfCoefs;
+  struct interp_coef_t singleCoef;
+  bool isBad = false;
+
+  // If this is not a geo grid, return false
+  if (!IsGeoGrid)
+    isBad = true;
+
+  // If the size of Lons, Lats and Alts are not the same, return false
+  if (Lons.size() != Lats.size() || Lats.size() != Alts.size())
+    isBad = true;
+
+  if (isBad) {
+    for (iPt = 0; iPt < nPts; ++iPt) {
+      // Put the coefficient into the vector
+      singleCoef.in_grid = false;
+      listOfCoefs.push_back(singleCoef);
+    }
+    return listOfCoefs;
+  }
+
+  // Handle according to whether it is cubesphere or not
+  if (IsCubeSphereGrid) {
+    // Calculate the range of the grid
+    struct cubesphere_range cr;
+    get_cubesphere_grid_range(cr);
+
+    // Calculate the index and coefficients for each point
+    for (iPt = 0; iPt < nPts; ++iPt) {
+      singleCoef = get_interp_coef_cubesphere(cr, Lons[iPt], Lats[iPt], Alts[iPt]);
+      listOfCoefs.push_back(singleCoef);
+    }
+  } else {
+    // Calculate the range of the grid
+    struct sphere_range sr;
+    get_sphere_grid_range(sr);
+
+    // Calculate the index and coefficients for each point
+    for (iPt = 0; iPt < nPts; ++iPt) {
+      singleCoef = get_interp_coef_sphere(sr, Lons[iPt], Lats[iPt], Alts[iPt]);
+      listOfCoefs.push_back(singleCoef);
+    }      
+  }
+
+  return listOfCoefs;
 }
 
 // --------------------------------------------------------------------------
@@ -567,3 +743,34 @@ std::vector<precision_t> Grid::get_interpolation_values(
 
   return ans;
 }
+
+// --------------------------------------------------------------------------
+// Do the interpolation based on the coefficients passed in
+// --------------------------------------------------------------------------
+
+std::vector<precision_t> Grid::get_interpolation_values(arma_cube data,
+                                                        std::vector<struct interp_coef_t> coefArray ) {
+  std::vector<precision_t> ans;
+
+  // If the size of data is not the same as the size of grid, return an empty vector
+  if (data.n_rows != nLons || data.n_cols != nLats || data.n_slices != nAlts)
+    return ans;
+
+  for (auto &it : coefArray) {
+    // Do interpolation if in_grid = true. Push cNinf otherwise
+    if (it.in_grid) {
+      ans.push_back(interpolate_unit_cube(
+                      data.subcube(it.iRow, it.iCol, it.iAlt, unit_cube_size),
+                      it.rRow,
+                      it.rCol,
+                      it.rAlt
+                    ));
+      // Add std::cout if needed here
+      // std::cout << "iProc = " << iProc << " interpolates the point successfully\n";
+    } else
+      ans.push_back(cNinf);
+  }
+
+  return ans;
+}
+
