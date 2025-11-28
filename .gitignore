@@ -39,3 +39,7 @@ _deps
 #vs code settings
 .vscode
 .DS_Store
+
+# fism files
+srcPython/FISM*.nc
+srcPython/fism*.txt

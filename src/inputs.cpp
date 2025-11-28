@@ -936,11 +936,20 @@ std::string Inputs::get_diffuse_auroral_model() {
 }
 
 // -----------------------------------------------------------------------
-// Return the EUV model used (EUVAC only option now)
+// Return the EUV model used (EUVAC, NEUVAC, FISM, etc.)
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_euv_model() {
   return mklower(check_settings_str("Euv", "Model"));
+}
+
+
+// -----------------------------------------------------------------------
+// Return the FISM data file
+// -----------------------------------------------------------------------
+
+std::string Inputs::get_euv_fismfile(){
+  return get_setting_str("Euv", "fismFile");
 }
 
 // -----------------------------------------------------------------------

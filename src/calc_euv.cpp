@@ -49,6 +49,9 @@ bool calc_euv(Planets planet,
       didWork = euv.neuvac(time, indices);
     else if (euvModel == "hfg")
       didWork = euv.solomon_hfg(time, indices);
+    else if (euvModel == "fism"){
+      didWork = euv.get_fism(time);
+    }
 
     if (didWork)
       euv.scale_from_1au(planet, time);

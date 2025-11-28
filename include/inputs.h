@@ -228,6 +228,12 @@ class Inputs {
      \brief returns settings["
      \param
    **/
+  std::string get_euv_fismfile();
+  
+  /**********************************************************************
+     \brief returns settings["
+     \param 
+   **/
   bool get_euv_douse();
 
   /**********************************************************************
