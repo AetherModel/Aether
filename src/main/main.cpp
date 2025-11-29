@@ -102,6 +102,33 @@ int main() {
     if (input.get_cent_acc())
       gGrid.calc_cent_acc(planet);
 
+    // didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
+
+    // ----------------------------------------------------------
+    // Initialize things on the Neutral Grid:
+
+    // Initialize Neutrals on geographic grid:
+    Neutrals neutrals(gGrid, planet, time, indices);
+    // Initialize Ions on the neutral grid:
+    Ions ions(gGrid, planet);
+    // Once EUV, neutrals, and ions have been defined, pair cross sections
+    euv.pair_euv(neutrals, ions);
+    // Initialize Chemical scheme (including reading file):
+    Chemistry chemistry(neutrals, ions);
+    // Read in the collision frequencies and other diffusion coefficients:
+    read_collision_file(neutrals, ions);
+    // Initialize ion temperatures from neutral temperature (Neutral grid)
+    ions.init_ion_temperature(neutrals, gGrid);
+    // Initialize electrodynamics and check if electrodynamics times
+    // works with input time (Neutral Grid)
+    Electrodynamics electrodynamics(time);
+
+    if (!electrodynamics.is_ok())
+      throw std::string("electrodynamics on geo grid initialization failed!");
+
+    // ----------------------------------------------------------
+    // Initialize the Ion Grid and associated states:
+
     // Initialize ion grid:
     Grid mGrid(ionType_);
 
@@ -116,15 +143,27 @@ int main() {
       didWork = mGrid.init_geo_grid(quadtree_ion, planet);
       mGrid.set_IsGeoGrid(false);
     }
-    didWork = grid_match(gGrid, mGrid, quadtree, quadtree_ion);
 
-    // Initialize Neutrals on geographic grid:
-    Neutrals neutrals(gGrid, planet, time, indices);
+    // Initialize Neutrals on Ion grid:
     Neutrals neutralsMag(mGrid, planet, time, indices);
-
-    // Initialize Ions on geographic and magnetic grids:
-    Ions ions(gGrid, planet);
+    // Initialize Ions on the Ion grid:
     Ions ionsMag(mGrid, planet);
+    // Once EUV, neutrals, and ions have been defined, pair cross sections
+    euv.pair_euv(neutralsMag, ionsMag);
+    // Initialize Chemical scheme (including reading file):
+    Chemistry chemistryMag(neutralsMag, ionsMag);
+    // Read in the collision frequencies and other diffusion coefficients:
+    read_collision_file(neutralsMag, ionsMag);
+    // Initialize ion temperatures from neutral temperature (Ion Grid)
+    ionsMag.init_ion_temperature(neutralsMag, mGrid);
+    // Initialize electrodynamics on Ion grid:
+    Electrodynamics electrodynamicsMag(time);
+
+    if (!electrodynamicsMag.is_ok())
+      throw std::string("electrodynamics on mag grid initialization failed!");
+
+    // ----------------------------------------------------------
+    // Now some tests:
 
     if (tests["test_gradient"])
       testsPassing = test_gradient(planet, quadtree, tests, gGrid, mGrid);
@@ -156,35 +195,6 @@ int main() {
     }
 
     // -----------------------------------------------------------------
-
-    // Once EUV, neutrals, and ions have been defined, pair cross sections
-    euv.pair_euv(neutrals, ions);
-    euv.pair_euv(neutralsMag, ionsMag);
-
-    // Initialize Chemical scheme (including reading file):
-    Chemistry chemistry(neutrals, ions);
-    Chemistry chemistryMag(neutralsMag, ionsMag);
-
-    // Read in the collision frequencies and other diffusion coefficients:
-    read_collision_file(neutrals, ions);
-    read_collision_file(neutralsMag, ionsMag);
-
-    // Initialize ion temperatures from neutral temperature (both grids)
-    ions.init_ion_temperature(neutrals, gGrid);
-    ionsMag.init_ion_temperature(neutralsMag, mGrid);
-
-    // Initialize electrodynamics and check if electrodynamics times
-    // works with input time
-    Electrodynamics electrodynamics(time);
-
-    if (!electrodynamics.is_ok())
-      throw std::string("electrodynamics on geo grid initialization failed!");
-
-    Electrodynamics electrodynamicsMag(time);
-
-    if (!electrodynamicsMag.is_ok())
-      throw std::string("electrodynamics on mag grid initialization failed!");
-
     // If the user wants to restart, then get the time of the restart
     if (input.get_do_restart()) {
       report.print(1, "Restarting! Reading time file!");
@@ -199,7 +209,6 @@ int main() {
 
       if (!didWork)
         throw std::string("Reading Restart for Indices Failed!!!\n");
-
     }
 
     // This is for the initial output.  If it is not a restart, this will go:
