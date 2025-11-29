@@ -34,6 +34,9 @@ Electrodynamics::Electrodynamics(Times time) {
   std::string efield = input.get_potential_model();
   std::string aurora = input.get_diffuse_auroral_model();
 
+  report.print(0, "Setting e-field model to " + efield);
+  report.print(0, "Setting aurora model to " + aurora);
+
   if (efield.length() == 0 & aurora.length() == 0)
     HaveFortranIe = false;
 
