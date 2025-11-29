@@ -4,8 +4,8 @@ name is the character string that identifies the species
 O(3P) is the base state of neutral atomic oxygen and is called O.
 O(1D) is an excited state of oxygen and is NOT INCLUDED
 N(4S) is the base state of neutral atomic nitrogen and is called N.
-N(2D) is an excited state of nitrogen and is called N_2D
-N(2P) is an excited state of nitrogen and is called N_2P
+N(2D) is an excited state of nitrogen and is called N2D
+N(2P) is an excited state of nitrogen and is called N2P
 
 Vibration is the degrees of freedom for the atom/molecule
 
@@ -33,8 +33,8 @@ N, 14, 5, 5.6e-4, 0.69, 1, 2.5e11
 O2, 32, 7, 3.6e-4, 0.69, 1, 0.4e19
 N2, 28, 7, 3.6e-4, 0.69, 1, 0.8e19
 NO, 30, 7, 3.6e-4, 0.69, 1, 5.4e14
-N_2D, 14, 5, 5.6e-4, 0.69, 0, 2.5e9
-N_2P, 14, 5, 5.6e-4, 0.69, 0, 2.5e7
+N2D, 14, 5, 5.6e-4, 0.69, 0, 2.5e9
+N2P, 14, 5, 5.6e-4, 0.69, 0, 2.5e7
 
 Here we can input a temperature profile for the initial condition:
   - below the lowest altitude, it will use the lowest alt

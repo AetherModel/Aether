@@ -39,7 +39,9 @@
     },
     "Planet": {
         "name": "earth",
-        "file": "UA/inputs/earth.in"
+        "file": "UA/inputs/earth.in",
+	"aurora": "UA/inputs/aurora_earth.csv",
+	"characteristics": "UA/inputs/orbits.csv"
     },
     "BField": "dipole",
     "Electrodynamics": {
@@ -77,7 +79,7 @@
         3,
         20,
         0,
-        10,
+        5,
         0
     ],
     "neuGrid": {
@@ -86,7 +88,7 @@
             -90.0,
             90.0
         ],
-        "nLatsPerBlock": 18,
+        "nLatsPerBlock": 12,
         "LonRange": [
             0.0,
             360.0
@@ -101,19 +103,19 @@
     },
     "ionGrid": {
         "Shape": "dipole4",
-        "nLonsPerBlock": 36,
-        "nLatsPerBlock": 18,
-        "nAlts": 100,
+        "nLonsPerBlock": 18,
+        "nLatsPerBlock": 10,
+        "nAlts": 80,
         "AltFile": "",
         "dAltScale": 0.25,
         "IsUniformAlt": false,
-        "MinAlt": 80.0,
+        "MinAlt": 95.0,
         "LatRange": [
             10,
             80
         ],
         "AltRange": [
-            80.0,
+            95.0,
             1000
         ],
         "LonRange": [
@@ -138,7 +140,6 @@
             "O_cool": false
         },
         "Ions": {
-            "IncludePhotoElectronHeating": true,
             "IncludeIonizationHeating": true,
             "IncludeElectronIonCollisionalHeating": true,
             "IncludeElectronNeutralElasticCollisionalHeating": true,
@@ -150,10 +151,8 @@
     "F107File": "UA/inputs/f107.txt",
     "ChemistryFile": "UA/inputs/chemistry_earth_richards.csv",
     "CollisionsFile": "UA/inputs/ion_neutral_collision_frequencies.csv",
-    "PlanetCharacteristicsFile": "UA/inputs/orbits.csv",
-    "AuroraFile": "UA/inputs/aurora_earth.csv",
     "IndicesLookupFile": "UA/inputs/indices_lookup.json",
-    "OmniwebFile": [
+    "OmniwebFiles": [
         "UA/inputs/omni_20110319.txt"
     ],
     "Logfile": {

@@ -26,7 +26,7 @@ BC is a density that is used in the lowest boundary cell if you
   Set to a real value to use this.
   Set to a negative number if you want to use a different BC.
   In this example file, the values are from 96.87 km Jan 1, 2013
-  O_1D is made up.
+  O1D is made up.
 
 
 #NEUTRALS
