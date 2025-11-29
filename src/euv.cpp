@@ -47,8 +47,9 @@ Euv::Euv() {
       // Read in FISM data - does not need to be "slotted"
       if (input.get_euv_model() == "fism")
         fismData = read_fism(input.get_euv_fismfile());
+
       // Read in NEUVAC data - also does not need to be "slotted"
-      
+
       // Slot the EUVAC model coefficients:
       if (input.get_euv_model() == "euvac") {
         IsOk = slot_euv("F74113", "", euvac_f74113);
@@ -298,6 +299,9 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
   bool includePhotoelectrons = input.get_include_photoelectrons();
 
+  if (report.test_verbose(4))
+    std::cout << "  include photoelectrons : " << includePhotoelectrons << "\n";
+
   for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
     if (report.test_verbose(5))
@@ -313,7 +317,8 @@ bool Euv::pair_euv(Neutrals &neutrals,
     for (int64_t iEuv = 0; iEuv < nEuvs; iEuv++) {
 
       if (report.test_verbose(4))
-        std::cout << "  " << waveinfo[iEuv].name << "\n";
+        std::cout << "  " << waveinfo[iEuv].name << " <-to-> " <<
+                  neutrals.species[iSpecies].cName << "\n";
 
       // if this matches...
       if (neutrals.species[iSpecies].cName == waveinfo[iEuv].name) {
@@ -321,7 +326,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
         // First see if we can find absorbtion:
         if (waveinfo[iEuv].type == "abs") {
           if (report.test_verbose(4))
-            std::cout << "  Found absorbtion\n";
+            std::cout << "  ---> Found absorbtion!!\n";
 
           neutrals.species[iSpecies].iEuvAbsId_ = iEuv;
         }
@@ -331,9 +336,13 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
           // Loop through the ions to see if names match:
           for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
+            if (report.test_verbose(5))
+              std::cout << "  testing ionization -----> "
+                        << ions.species[iIon].cName << "-to-" << waveinfo[iEuv].to << "\n";
+
             if (ions.species[iIon].cName == waveinfo[iEuv].to) {
               if (report.test_verbose(4))
-                std::cout << "  Found ionization!! --> "
+                std::cout << "  ---> Found ionization!! --> "
                           << ions.species[iIon].cName << "\n";
 
               neutrals.species[iSpecies].iEuvIonId_.push_back(iEuv);
@@ -422,7 +431,7 @@ bool Euv::euvac(Times time,
       std::cout << "     " << iWave << " "
                 << wavelengths_short[iWave] << " "
                 << wavelengths_long[iWave] << " "
-                << wavelengths_intensity_1au[iWave] / 1e12 << " "
+                << wavelengths_intensity_1au[iWave] << " "
                 << euvac_afac[iWave] * 100.0 << " "
                 << euvac_f74113[iWave] / 1e9 << " "
                 << slope << "\n";
@@ -439,7 +448,7 @@ bool Euv::euvac(Times time,
 bool Euv::get_fism(Times time) {
   // This is functionally similar to get_indices, however we do not store FISM in
   // the Indices class since it has variable number of bins.
-  
+
   std::string function = "Euv::get_fism";
   static int iFunction = -1;
   report.enter(function, iFunction);
@@ -502,7 +511,7 @@ bool Euv::neuvac(Times time,
     wavelengths_intensity_1au[iWave] =
       (neuvac_s1[iWave] * pow(f107, neuvac_p1[iWave]) +
        neuvac_s2[iWave] * pow(f107a, neuvac_p2[iWave]) +
-       neuvac_s2[iWave] * (f107_diff) +
+       neuvac_s3[iWave] * (f107_diff) +
        neuvac_int[iWave]) / wavelengths_energy[iWave];
 
   if (report.test_verbose(4)) {
