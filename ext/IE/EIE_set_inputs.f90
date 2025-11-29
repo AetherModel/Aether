@@ -36,6 +36,8 @@ subroutine EIE_set_inputs(StringInputLines)
                 EIE_NameOfAuroralModel = 'ihp'
            if (index(EIE_NameOfAuroralModel,'PEM') > 0) &
                 EIE_NameOfAuroralModel = 'pem'
+           if (index(EIE_NameOfAuroralModel,'FTA') > 0) &
+                EIE_NameOfAuroralModel = 'fta'
 
            if (index(EIE_NameOfEFieldModel,'AMIE') > 0) &
                 EIE_NameOfEFieldModel = 'amie'
@@ -52,6 +54,8 @@ subroutine EIE_set_inputs(StringInputLines)
            if (index(EIE_NameOfEFieldModel,'Weimer05') > 0) &
                 EIE_NameOfEFieldModel = 'weimer05'
            if (index(EIE_NameOfEFieldModel,'WEIMER05') > 0) &
+                EIE_NameOfEFieldModel = 'weimer05'
+           if (index(EIE_NameOfEFieldModel,'weimer') > 0) &
                 EIE_NameOfEFieldModel = 'weimer05'
 
 !           if (index(EIE_NameOfEFieldModel,'weimer') > 0 .and. &
