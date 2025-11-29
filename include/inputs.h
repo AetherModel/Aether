@@ -229,10 +229,10 @@ class Inputs {
      \param
    **/
   std::string get_euv_fismfile();
-  
+
   /**********************************************************************
      \brief returns settings["
-     \param 
+     \param
    **/
   bool get_euv_douse();
 
@@ -277,12 +277,6 @@ class Inputs {
      \param
    **/
   std::string get_planet();
-
-  /**********************************************************************
-     \brief returns settings["
-     \param
-   **/
-  std::string get_planetary_file();
 
   /**********************************************************************
      \brief returns settings["
