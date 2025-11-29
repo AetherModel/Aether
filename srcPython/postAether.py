@@ -754,6 +754,8 @@ def write_netcdf(allBlockData, fileName, \
     time_dim = ncfile.createDimension('time', None)
 
     time_out = ncfile.createVariable('time', np.float64, ('time',))
+    time_out.units = 's'
+    time_out.long_name = 'Seconds Since Jan 1, 1965 00 UT'
     time_out[0] = datetime_to_epoch(oneBlock["time"])
         
     allNetCDFVars = []
@@ -933,7 +935,7 @@ def calc_std_of_ensembles(filesInfo,
             sums = do_math_on_block_data(sums,
                                          blockData2 = diffs,
                                          math = iAdd_)
-    factor = 1.0 / fileInfo['ensembleMembers']
+    factor = 1.0 / filesInfo['ensembleMembers']
     sumsD = do_math_on_block_data(sums,
                                   factor = factor,
                                   math = iMult_)
