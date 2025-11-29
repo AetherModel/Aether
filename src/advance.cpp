@@ -48,7 +48,7 @@ bool advance(Planets &planet,
 
   // here we are going to grab stuff from the neutral grid and put it on the
   // ion grid
-  didWork = get_data_from_other_grid(gGrid, mGrid, neutrals.temperature_scgc, mGrid.test_scgc);
+  // didWork = get_data_from_other_grid(gGrid, mGrid, neutrals.temperature_scgc, mGrid.test_scgc);
 
   json dummy = indices.get_all_indices(time.get_current());
 
