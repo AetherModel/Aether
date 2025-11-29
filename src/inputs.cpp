@@ -781,7 +781,7 @@ bool Inputs::get_O_cooling() {
 // -----------------------------------------------------------------------
 
 bool Inputs::get_do_photoelectron_heating() {
-  return get_setting_bool("Sources", "Ions", "IncludePhotoElectronHeating");
+  return get_setting_bool("Euv", "IncludePhotoElectrons");
 }
 
 // -----------------------------------------------------------------------
@@ -948,7 +948,7 @@ std::string Inputs::get_euv_model() {
 // Return the FISM data file
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_euv_fismfile(){
+std::string Inputs::get_euv_fismfile() {
   return get_setting_str("Euv", "fismFile");
 }
 
@@ -1053,7 +1053,7 @@ std::string Inputs::get_euv_file() {
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_aurora_file() {
-  return check_settings_str("AuroraFile");
+  return check_settings_str("Planet", "aurora");
 }
 
 // -----------------------------------------------------------------------
@@ -1097,20 +1097,12 @@ std::string Inputs::get_planet() {
 }
 
 // -----------------------------------------------------------------------
-// Return file that contains (all) planetary characteristics
-// -----------------------------------------------------------------------
-
-std::string Inputs::get_planetary_file() {
-  return check_settings_str("PlanetCharacteristicsFile");
-}
-
-// -----------------------------------------------------------------------
 // Return planetary file name that describes the species and such for
 // a given planet
 // -----------------------------------------------------------------------
 
 std::string Inputs::get_planet_species_file() {
-  return check_settings_str("PlanetSpeciesFile");
+  return get_setting_str("Planet", "file");
 }
 
 // -----------------------------------------------------------------------
