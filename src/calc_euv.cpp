@@ -49,9 +49,8 @@ bool calc_euv(Planets planet,
       didWork = euv.neuvac(time, indices);
     else if (euvModel == "hfg")
       didWork = euv.solomon_hfg(time, indices);
-    else if (euvModel == "fism"){
+    else if (euvModel == "fism")
       didWork = euv.get_fism(time);
-    }
 
     if (didWork)
       euv.scale_from_1au(planet, time);
@@ -141,16 +140,16 @@ void calc_ionization_heating(Euv euv,
             intensity2d %
             neutrals.species[iSpecies].density_scgc.slice(iAlt);
 
-          // Test for an augmentation due to photo-electrons:
-
-          for (iPei = 0;
-               iPei < neutrals.species[iSpecies].nEuvPeiSpecies;
-               iPei++) {
-            if (neutrals.species[iSpecies].iEuvIonSpecies_[iPei] ==
-                neutrals.species[iSpecies].iEuvIonSpecies_[iIonization]) {
-              j_ = neutrals.species[iSpecies].iEuvIonId_[iPei];
-              ionization2d *= (1 + euv.waveinfo[j_].values[iWave]);
-              std::cout << "here in the ipei loop\n";
+          if (input.check_settings("Euv", "IncludePhotoElectrons")) {
+            // Test for an augmentation due to photo-electrons:
+            for (iPei = 0;
+                 iPei < neutrals.species[iSpecies].nEuvPeiSpecies;
+                 iPei++) {
+              if (neutrals.species[iSpecies].iEuvIonSpecies_[iPei] ==
+                  neutrals.species[iSpecies].iEuvIonSpecies_[iIonization]) {
+                j_ = neutrals.species[iSpecies].iEuvIonId_[iPei];
+                ionization2d *= (1 + euv.waveinfo[j_].values[iWave]);
+              }
             }
           }
 
