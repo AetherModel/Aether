@@ -399,15 +399,16 @@ bool Planets::read_file() {
   std::ifstream myFile;
   bool DidWork = true;
 
-  report.print(1, "Reading planetary file : " + input.get_planetary_file());
+  std::string planetCharacteristicsFile;
+  planetCharacteristicsFile =
+    input.check_settings_str("Planet", "characteristics");
 
-  myFile.open(input.get_planetary_file());
+  report.print(1, "Reading planetary file : " + planetCharacteristicsFile);
+
+  myFile.open(planetCharacteristicsFile);
 
   if (!myFile.is_open()) {
-    if (iProc == 0)
-      std::cout << "Could not open planetary file : "
-                << input.get_planetary_file() << "\n";
-
+    report.error("Could not open planetary file : " + planetCharacteristicsFile);
     DidWork = false;
   } else {
 
@@ -525,12 +526,13 @@ bool Planets::read_planet_specific_file() {
   report.enter(function, iFunction);
 
   int iDebug = 4;
+  std::string planetSpeciesFile;
+  planetSpeciesFile = input.get_planet_species_file();
 
-  infile_ptr.open(input.get_planet_species_file());
+  infile_ptr.open(planetSpeciesFile);
 
   if (!infile_ptr.is_open()) {
-    std::cout << "Could not open input file: "
-              << input.get_planet_species_file() << "!!!\n";
+    report.error("Could not open planet species file: " + planetSpeciesFile);
     DidWork = false;
   } else {
 
