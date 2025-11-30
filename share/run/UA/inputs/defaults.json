@@ -53,7 +53,7 @@
     "Euv": {
         "doUse": true,
         "Model": "euvac",
-        "File": "UA/inputs/euv.csv",
+        "File": "UA/inputs/euv_59_v2.csv",
         "IncludePhotoElectrons": true,
         "HeatingEfficiency": 0.05,
         "dt": 60.0
