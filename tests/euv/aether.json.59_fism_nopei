@@ -1,0 +1,23 @@
+
+{
+    "Debug" : {
+	"iVerbose" : 0,
+	"iFunctionVerbose" : {
+            "calc_ionization_heating" : 5,
+            "Euv::get_fism" : 5,
+            "Euv::neuvac" : 5},	
+	"dt" : 10.0},
+
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
+
+    "Outputs" : {
+	"type" : ["states"],
+	"dt" : [600]},
+    
+    "Euv" : {
+	"Model" : "fism",
+	"IncludePhotoElectrons" : false,	
+	"fismFile" : "../fism2_file_59.txt", 
+	"File" : "UA/inputs/euv_59_v2.csv"
+    }
+}
