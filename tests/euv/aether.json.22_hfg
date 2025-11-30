@@ -1,6 +1,5 @@
 
 {
-
     "Debug" : {
 	"iVerbose" : 0,
 	"iFunctionVerbose" : {
@@ -8,25 +7,14 @@
             "Euv::solomon_hfg" : 5},
 	"dt" : 10.0},
 
-    "GeoBlockSize" : {
-	"nLons" : 18,
-	"nLats" : 18,
-	"nAlts" : 40},
-
-    "EndTime" : [2011, 3, 20, 0, 30, 0],    
+    "EndTime" : [2011, 3, 20, 0, 10, 0],
 
     "Outputs" : {
 	"type" : ["states"],
-	"dt" : [900]},
+	"dt" : [600]},
     
     "Euv" : {
 	"Model" : "hfg",
 	"File" : "UA/inputs/euv_solomon.csv"
-    },
-    
-    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
-
-    "DoCalcBulkIonTemp" : false
+    }
 }
