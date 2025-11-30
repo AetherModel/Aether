@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Authors of this code:
 # Daniel A. Brandt, Ph.D., Michigan Tech Research Institute, daabrand@mtu.edu
