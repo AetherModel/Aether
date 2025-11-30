@@ -140,15 +140,28 @@ void calc_ionization_heating(Euv euv,
             intensity2d %
             neutrals.species[iSpecies].density_scgc.slice(iAlt);
 
+          iIon = neutrals.species[iSpecies].iEuvIonSpecies_[iIonization];
+
           if (input.check_settings("Euv", "IncludePhotoElectrons")) {
             // Test for an augmentation due to photo-electrons:
             for (iPei = 0;
                  iPei < neutrals.species[iSpecies].nEuvPeiSpecies;
                  iPei++) {
-              if (neutrals.species[iSpecies].iEuvIonSpecies_[iPei] ==
+              if (neutrals.species[iSpecies].iEuvPeiSpecies_[iPei] ==
                   neutrals.species[iSpecies].iEuvIonSpecies_[iIonization]) {
-                j_ = neutrals.species[iSpecies].iEuvIonId_[iPei];
-                ionization2d *= (1 + euv.waveinfo[j_].values[iWave]);
+                j_ = neutrals.species[iSpecies].iEuvPeiId_[iPei];
+
+                if (iAlt == 2)
+                  if (report.test_verbose(5) &&
+                      euv.waveinfo[j_].values[iWave] > 0.0)
+                    std::cout << " PEI check : "
+                              << iWave << " "
+                              << neutrals.species[iSpecies].cName << " "
+                              << ions.species[iIon].cName << " "
+                              << iPei << " "
+                              << euv.waveinfo[j_].values[iWave] << "\n";
+
+                ionization2d = ionization2d * (1 + euv.waveinfo[j_].values[iWave]);
               }
             }
           }
@@ -156,7 +169,6 @@ void calc_ionization_heating(Euv euv,
           neutrals.species[iSpecies].ionization_scgc.slice(iAlt) =
             neutrals.species[iSpecies].ionization_scgc(iAlt) + ionization2d;
 
-          iIon = neutrals.species[iSpecies].iEuvIonSpecies_[iIonization];
           ions.species[iIon].ionization_scgc.slice(iAlt) =
             ions.species[iIon].ionization_scgc.slice(iAlt) + ionization2d;
 
