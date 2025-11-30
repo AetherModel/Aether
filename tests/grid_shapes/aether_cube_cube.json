@@ -2,6 +2,11 @@
 {
     "Debug" : {
         "dt": 1.0,
+	"iFunctionVerbose" : {
+            "Grid::create_dipole_connection" : 5,
+            "Grid::init_geo_grid" : 5,
+            "Grid::init_dipole_grid" : 5,
+            "Grid::create_altitudes" : 5},
         "TimingPercent": 10.0,
 	"iVerbose" : 0},
 
@@ -29,14 +34,7 @@
         "dAltScale" : 0.3,
         "IsUniformAlt" : false},
 
-    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-    
-    "Electrodynamics" : {
-        "Potential" : "Weimer05",
-        "DiffuseAurora" : "fta"},
-    
     "Outputs" : {
 	"type" : ["states"],
 	"dt" : [60] }
-
 }
