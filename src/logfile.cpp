@@ -274,7 +274,7 @@ Logfile::Logfile(Indices &indices, int64_t iLog) {
   }
 
   // The header of time. They are placed at the beginning of all values
-  std::string header_time = "year month day hour minute second milli";
+  std::string header_time = "\n#START\nyear month day hour minute second milli";
   // Satellite-specific and log-specific header
   std::string header_log, header_sat;
   // The general log takes average, while the satellite takes the
