@@ -480,8 +480,21 @@ bool Euv::get_fism(Times time) {
   // store the wavelength:
   for (int iWave = 0; iWave < nWavelengths; iWave ++)
     wavelengths_intensity_1au[iWave] =
-      (1.0 - x) * fismData.values[fism_prev_index][iWave]
-      + x * fismData.values[fism_prev_index + 1][iWave];
+      ((1.0 - x) * fismData.values[fism_prev_index][iWave]
+       + x * fismData.values[fism_prev_index + 1][iWave]) /
+      wavelengths_energy[iWave];
+
+
+  if (report.test_verbose(4)) {
+    std::cout << "FISM output : \n";
+
+    for (int iWave = 0; iWave < nWavelengths; iWave++) {
+      std::cout << "     " << iWave << " "
+                << wavelengths_short[iWave] << " "
+                << wavelengths_long[iWave] << " "
+                << wavelengths_intensity_1au[iWave] << "\n";
+    }
+  }
 
   report.exit(function);
   return didWork;
