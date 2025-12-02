@@ -177,6 +177,10 @@ bool Neutrals::initial_conditions(Grid &grid,
               iLon, iLat, 0, iLon, iLat, grid.first_lower_gc(iLon, iLat) + 1).fill(
                 species[iSpecies].lower_bc_density);
 
+            for (int iDir = 0; iDir < 3; iDir++) {
+              species[iSpecies].velocity_vcgc[iDir].tube(iLon, iLat).zeros();
+              velocity_vcgc[iDir].tube(iLon, iLat).zeros();
+            }
           }
         }
       }
