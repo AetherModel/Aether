@@ -174,6 +174,12 @@ Neutrals::Neutrals(Grid &grid,
   // bulk ion_neutral collisional acceleration:
   acc_sources_total = make_cube_vector(nLons, nLats, nAlts, 3);
 
+  for (int iDir = 0; iDir < 3; iDir++) {
+    acc_ion_collisions[0].zeros();
+    acc_coriolis[0].zeros();
+    acc_sources_total[0].zeros();
+  }
+
   // This gets a bunch of the species-dependent characteristics:
   iErr = read_planet_file(planet);
 
@@ -185,6 +191,8 @@ Neutrals::Neutrals(Grid &grid,
 
   if (!didWork)
     report.error("Error in setting neutral initial conditions!");
+
+  didWork = check_for_nonfinites("End of initialization of neutrals");
 
   return;
 }
@@ -362,7 +370,7 @@ bool Neutrals::check_for_nonfinites(std::string location) {
   bool isBad = false;
   bool didWork = true;
 
-  isBad = !all_finite(density_scgc, "density_scgc");
+  isBad = !all_finite(density_scgc, "neutrals - density_scgc");
 
   if (isBad) {
     report.error("non-finite found in neutral density!");
@@ -374,17 +382,17 @@ bool Neutrals::check_for_nonfinites(std::string location) {
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     isBad = !all_finite(species[iSpecies].density_scgc,
-                        species[iSpecies].cName + " density");
+                        species[iSpecies].cName + " (neutral) density");
 
     if (isBad) {
       report.error("non-finite found in " +
-                   species[iSpecies].cName + " density!");
+                   species[iSpecies].cName + " (neutral) density!");
       report.error("from location : " + location);
       didWork = false;
     }
   }
 
-  isBad = !all_finite(temperature_scgc, "temperature_scgc");
+  isBad = !all_finite(temperature_scgc, "neutral - temperature_scgc");
 
   if (isBad) {
     report.error("non-finite found in neutral temperature!");
@@ -392,7 +400,7 @@ bool Neutrals::check_for_nonfinites(std::string location) {
     didWork = false;
   }
 
-  isBad = !all_finite(velocity_vcgc, "velocity_vcgc");
+  isBad = !all_finite(velocity_vcgc, "neutral - velocity_vcgc");
 
   if (isBad) {
     report.error("non-finite found in neutral velocity!");
@@ -404,11 +412,11 @@ bool Neutrals::check_for_nonfinites(std::string location) {
 
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     isBad = !all_finite(species[iSpecies].velocity_vcgc,
-                        species[iSpecies].cName + " velocity!");
+                        species[iSpecies].cName + " (neutral) velocity!");
 
     if (isBad) {
       report.error("non-finite found in " +
-                   species[iSpecies].cName + " velocity!");
+                   species[iSpecies].cName + " (neutral) velocity!");
       report.error("from location : " + location);
       didWork = false;
     }
