@@ -299,7 +299,7 @@ Grid::Grid(std::string gridtype) {
   UseThisCell.fill(true);
   first_lower_gc.set_size(nX, nY);
   first_upper_gc.set_size(nX, nY);
-  altitude_lower_bc = 0.0;
+  altitude_lower_bc = -1.0;
 
   cent_acc_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
