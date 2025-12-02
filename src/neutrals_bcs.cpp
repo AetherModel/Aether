@@ -234,6 +234,12 @@ bool Neutrals::set_lower_bcs(Grid &grid,
                                                  iLon, iLat, iAlt - 1).fill(
                                                    factor *
                                                    species[iSpecies].lower_bc_density);
+          species[iSpecies].velocity_vcgc[0].subcube(iLon, iLat, 0,
+                                                     iLon, iLat, iAlt - 1).fill(0.0);
+          species[iSpecies].velocity_vcgc[1].subcube(iLon, iLat, 0,
+                                                     iLon, iLat, iAlt - 1).fill(0.0);
+          species[iSpecies].velocity_vcgc[2].subcube(iLon, iLat, 0,
+                                                     iLon, iLat, iAlt - 1).fill(0.0);
         }  // planet bc type
 
         // 1st ghost cell density is filled with a hydrostatic solution.
@@ -316,7 +322,6 @@ bool Neutrals::set_lower_bcs(Grid &grid,
   }
 
   didWork = true;
-
   calc_bulk_velocity();
 
   if (!didWork) {
