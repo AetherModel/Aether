@@ -219,6 +219,23 @@ bool Grid::init_dipole_grid(Quadtree quadtree_ion, Planets planet) {
   //   -- this is used for setting densities hydrostatically.
   altitude_lower_bc = planet.get_altitude_of_bc();
 
+  if (altitude_lower_bc <= 0) {
+    Inputs::grid_input_struct grid_input;
+    grid_input = input.get_grid_inputs(gridType);
+    altitude_lower_bc = grid_input.alt_min * cKMtoM;
+
+    if (report.test_verbose(0)) {
+      std::cout << "*** Altitude of Boundary Condition is not set ***\n";
+      std::cout << "  altitude specified in the aether.json file : "
+                << altitude_lower_bc / cKMtoM << " km\n";
+      std::cout << "  Forcing altitude of BC to be this value!\n";
+      std::cout << "  If this is not your intent, ";
+      std::cout << "  add the following to your planet file:\n";
+      std::cout << "  #ALTITUDE_OF_BC\n";
+      std::cout << "  value\n";
+    }
+  }
+
   if (nAlts % 2 != 0) {
     report.error("nAlts must be even!");
     DidWork = false;
