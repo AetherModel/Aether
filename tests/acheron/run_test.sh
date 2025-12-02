@@ -1,5 +1,7 @@
 #!/bin/sh
 
+PLOTTER=~/Software/PyITM/bin/plot_alt_wpolar.py
+
 rm -rf ./run.test_*
 
 # ----------------------------------------------------------------------
@@ -8,11 +10,15 @@ rm -rf ./run.test_*
 cp -R ../../share/run ./run.test_acheron
 cd run.test_acheron
 cp ../aether.json.acheron ./aether.json
-mpirun -np 6 ./aether
+mpirun -np 4 ./aether
 
 # post process and plot:
 cd UA/output
 ~/bin/postAether.py -rm
-# not sure where plotting code is located....
-~/bin/run_plot_block_model_results.py 3DALL_20110320_*.nc -var="Temperature" -alt=2
+
+# This assumes pyitm is installed and the plotter is in the bin directory:
+${PLOTTER} -var=Tn -alt=1300 3DALG_20110320_001000.nc
+${PLOTTER} -var=O+ -alt=1100 3DALM_20110320_001000.nc
+# into test directory
+cd ../../..
 

@@ -29,6 +29,9 @@ BC is a density that is used in the lowest boundary cell if you
   O1D is made up.
 
 
+#ALTITUDE_OF_BC
+1000.0
+
 #NEUTRALS
 name, mass, vibration, thermal_cond, thermal_exp, advect, BC
 O, 16, 5, 5.6e-4, 0.69, 1, 5.0e17
@@ -50,6 +53,6 @@ O+ is O+(4S) is the base state of O+, but is just called O+
 O+ has excited states of O+(2D) and O+(2P).
 
 #IONS
-name, mass, charge, advect
-O+, 16, 1, 1
+name, mass, charge, vibration, advect
+O+, 16, 1, 5, 1
 

@@ -3,45 +3,78 @@
     "Debug" : {
 	"iVerbose" : 0,
         "iFunctionVerbose" : {
-            "Grid::create_altitudes": 0},	
+            "Neutrals::initial_conditions": 5},	
 	"dt" : 10.0,
-	"check_for_nans" : false
+	"check_for_nans" : true
     },
 
-    "Planet" : "acheron",
-    "AuroraFile" : "UA/inputs/aurora_acheron.csv",
+    "Planet": {
+        "name": "acheron",
+        "file": "UA/inputs/acheron.in",
+	"aurora": "UA/inputs/aurora_acheron.csv"
+    },
 
-    "Advection" : {
-	"Neutrals" : {
-	    "Vertical" : "hydro",
-	    "Horizontal" : "default"}},
+    "ChemistryFile": "UA/inputs/chemistry_acheron.csv",
 
-    "Ensembles" : {
-	"nMembers" : 1},
-
+    "Logfile": {
+        "species": [
+            "O",
+            "O+"
+        ]
+    },
+    
     "EndTime" : [2011, 3, 20, 0, 10, 0],
 
-    "CubeSphere" : {
-	"is" : true},
-
-    "GeoBlockSize" : {
-	"nLons" : 36,
-	"nLats" : 36,
-	"nAlts" : 1},
-
-    "GeoGrid" : {
-	"MinAlt" : 1000.0,
-	"dAlt"   : 0.25,
-	"IsUniformAlt" : false},    
-
-    "OmniwebFiles" : ["UA/inputs/omni_20110319.txt"],
-
-    "ElectrodynamicsFile" : "UA/inputs/b20110320n_omni.bin",
+    "InitialConditions": {
+        "type": "planet"
+    },
+    "BoundaryConditions": {
+        "type": "planet"
+    },
     
+    "neuGrid": {
+        "Shape": "sphere",
+        "nLatsPerBlock": 20,
+        "nLonsPerBlock": 18,
+        "nAlts": 40,
+        "MinAlt": 1000.0,
+        "IsUniformAlt": false
+    },
+    "ionGrid": {
+        "Shape": "sphere",
+        "nLonsPerBlock": 18,
+        "nLatsPerBlock": 22,
+        "LatRange": [
+            -90.0,
+            90.0
+        ],
+	"nAlts": 44,
+        "dAltScale": 0.25,
+        "IsUniformAlt": false,
+        "MinAlt": 1000.0
+    },
+
     "Outputs" : {
 	"type" : ["states"],
 	"dt" : [900] },
-    
-    "DoCalcBulkIonTemp" : false
+
+    "Sources": {
+        "Grid": {
+            "Coriolis": false,
+            "Cent_acc": false
+        },
+        "Neutrals": {
+            "NO_cool": false,
+            "O_cool": false
+        },
+        "Ions": {
+            "IncludeIonizationHeating": true,
+            "IncludeElectronIonCollisionalHeating": false,
+            "IncludeElectronNeutralElasticCollisionalHeating": false,
+            "IncludeElectronNeutralInelasticCollisionalHeating": false,
+            "IncludeThermoelectricHeating": false
+        }
+    }
+
     
 }

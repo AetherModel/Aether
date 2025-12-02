@@ -16,10 +16,10 @@
         }
     },
     "InitialConditions": {
-        "type": "Planet"
+        "type": "planet"
     },
     "BoundaryConditions": {
-        "type": "Planet"
+        "type": "planet"
     },
     "Advection": {
         "Neutrals": {
