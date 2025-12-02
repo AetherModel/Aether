@@ -282,9 +282,9 @@ void Ions::nan_test(std::string variable) {
 bool Ions::check_for_nonfinites(std::string location) {
   bool didWork = true;
 
-  if (!all_finite(density_scgc, "density_scgc") ||
-      !all_finite(temperature_scgc, "temperature_scgc") ||
-      !all_finite(velocity_vcgc, "velocity_vcgc"))
+  if (!all_finite(density_scgc, "ions - density_scgc") ||
+      !all_finite(temperature_scgc, "ions - temperature_scgc") ||
+      !all_finite(velocity_vcgc, "ions - velocity_vcgc"))
     didWork = false;
 
   if (!didWork)
@@ -339,7 +339,7 @@ void Ions::calc_sound_speed() {
     std::cout << "max sound speed : " << sound_scgc.max() << "\n";
     std::cout << "max gamma : " << gamma_scgc.max() << "\n";
 
-    if (!all_finite(sound_scgc, "sound speed")) {
+    if (!all_finite(sound_scgc, "ions - sound speed")) {
       std::cout << "sound speed has nans!\n";
       report.report_errors();
     }
