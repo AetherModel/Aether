@@ -300,6 +300,10 @@ int Planets::update(Times time) {
 
 bool Planets::set_planet() {
 
+  std::string function = "set_planet";
+  static int iFunction = -1;
+  report.enter(function, iFunction);
+
   bool DidWork = true;
   int IsFound = 0;
 
@@ -361,16 +365,27 @@ bool Planets::set_planet() {
       // approximation...
       planet.radius = 0.68 * planet.equator_radius + 0.32 * planet.polar_radius;
 
-      if (report.test_verbose(2))
-        std::cout << "Planet Radius set to : "
-                  << planet.radius / 1000.0 << " (km)\n";
-
       planet.dipole_strength = planets[i].dipole_strength;
       planet.dipole_rotation = planets[i].dipole_rotation;
       planet.dipole_tilt = planets[i].dipole_tilt;
 
       for (int j = 0; j < 3; j++)
         planet.dipole_center[j] = planets[i].dipole_center[j];
+
+      if (report.test_verbose(2)) {
+        std::cout << "Planet Radius set to : "
+                  << planet.radius / 1000.0 << " (km)\n";
+        std::cout << "Dipole Characteristics : \n";
+        std::cout << "  -> strength : " << planet.dipole_strength << "\n";
+        std::cout << "  -> rotation : " << planet.dipole_rotation << "\n";
+        std::cout << "  -> tilt : " << planet.dipole_tilt << "\n";
+        std::cout << "  -> center :";
+
+        for (int j = 0; j < 3; j++)
+          std::cout << " " << planet.dipole_center[j];
+
+        std::cout << "\n";
+      }
 
       planet.update_time = -1e32;
 
@@ -384,6 +399,7 @@ bool Planets::set_planet() {
     DidWork = false;
   }
 
+  report.exit(function);
   return DidWork;
 }
 
