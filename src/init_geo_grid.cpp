@@ -267,8 +267,8 @@ bool Grid::init_geo_grid(Quadtree quadtree,
     llr.push_back(radius_scgc);
     xyz = transform_llr_to_xyz_3d(llr);
 
-    precision_t magnetic_pole_rotation = 265.0 * cDtoR;
-    precision_t magnetic_pole_tilt = 10.0 * cDtoR;
+    precision_t magnetic_pole_rotation = planet.get_dipole_rotation() * cDtoR;
+    precision_t magnetic_pole_tilt = planet.get_dipole_tilt() * cDtoR;
 
     // Reverse our dipole rotations:
     xyzRot1 = rotate_around_y_3d(xyz, magnetic_pole_tilt);
