@@ -117,8 +117,8 @@ bool advance(Planets &planet,
   if (didWork)
     didWork = neutralsMag.set_bcs(mGrid, time, indices);
 
-  if (didWork)
-    didWork = ionsMag.set_bcs(mGrid, time, indices);
+  //if (didWork)
+  //  didWork = ionsMag.set_bcs(mGrid, time, indices);
 
   didWork = neutralsMag.check_for_nonfinites("Ion Grid: set bcs");
 
@@ -129,7 +129,7 @@ bool advance(Planets &planet,
     if (didWork & input.get_check_for_nans())
       didWork = neutrals.check_for_nonfinites("After Vertical Neutral Advection");
 
-    // ajr - ions.advect_vertical(gGrid, time);
+    ions.advect_vertical(gGrid, time);
 
     if (didWork & input.get_check_for_nans())
       didWork = ions.check_for_nonfinites("After Vertical Ion Advection");
@@ -143,7 +143,7 @@ bool advance(Planets &planet,
     if (didWork & input.get_check_for_nans())
       didWork = neutralsMag.check_for_nonfinites("After Vertical Neutral Advection");
 
-    // ajr - ionsMag.advect_vertical(mGrid, time);
+    ionsMag.advect_vertical(mGrid, time);
 
     if (didWork & input.get_check_for_nans())
       didWork = ionsMag.check_for_nonfinites("After Vertical Ion Advection");

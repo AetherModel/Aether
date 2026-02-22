@@ -125,23 +125,23 @@ bool Ions::set_lower_bcs(Grid &grid, Times time, Indices indices) {
 
   // This is true for all grids:
   for (iX = 0; iX < nX; iX++) {
-    for (int iY = 0; iY < nY; iY++) {
+    for (iY = 0; iY < nY; iY++) {
       iFirst = grid.first_lower_gc(iX, iY);
 
       for (iAlt = iFirst; iAlt >= 0; iAlt--) {
         // Bulk Quantities:
-        temperature_scgc.slice(iAlt) = temperature_scgc.slice(iFirst + 1);
+        temperature_scgc(iX, iY, iAlt) = temperature_scgc(iX, iY, iFirst + 1);
 
         // For each species:
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
           // assign all species temperatures the bulk temperature:
-          species[iSpecies].temperature_scgc.slice(iAlt) =
-            temperature_scgc.slice(iAlt);
+          species[iSpecies].temperature_scgc(iX, iY, iAlt) =
+            temperature_scgc(iX, iY, iAlt);
           // Assume each species falls off a bit.
           // this BC shouldn't matter, since the bottom of the code
           // should be in chemical equalibrium:
-          species[iSpecies].density_scgc.slice(iAlt) =
-            0.95 * species[iSpecies].density_scgc.slice(iFirst + 1);
+          species[iSpecies].density_scgc(iX, iY, iAlt) =
+            0.95 * species[iSpecies].density_scgc(iX, iY, iFirst + 1);
         }
       }
     }
@@ -158,8 +158,8 @@ bool Ions::set_lower_bcs(Grid &grid, Times time, Indices indices) {
 
   if (grid.setNorthAsDown) {
     // First physical cell:
-    iFirst = nY - nGCs - 2;
-    iYs = nY - nGCs - 1;
+    iFirst = nY - nGCs - 1;
+    iYs = nY - nGCs;
     iYe = nY;
   }
 
