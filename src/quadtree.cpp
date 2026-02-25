@@ -54,9 +54,11 @@ Quadtree::Quadtree(std::string shapeInput) {
     IsOk = true;
   }
 
-  if (!IsOk)
+  if (!IsOk){
     report.error("quadtree shape not found : " + shape);
-
+    if (shape=="dipole")
+      report.error("Did you mean dipole4 (sphere) dipole6 (cubesphere)?");
+  }
 }
 
 // --------------------------------------------------------------------------
