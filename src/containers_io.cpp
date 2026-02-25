@@ -163,6 +163,14 @@ void OutputContainer::set_version(float in_version) {
 }
 
 // -----------------------------------------------------------------------------
+// Set the grid shape of this output.
+// -----------------------------------------------------------------------------
+
+void OutputContainer::set_gridshape(std::string in_type) {
+  gridShape = in_type;
+}
+
+// -----------------------------------------------------------------------------
 // Set the number of ghostcells.
 // -----------------------------------------------------------------------------
 
@@ -285,7 +293,9 @@ bool OutputContainer::write_container_header() {
     units.push_back(elements[iVar].cUnit);
   }
 
-  json header = json::object({ {"version", version},
+  json header = json::object({ 
+    {"version", version},
+    {"gridShape", gridShape},
     {"time", itime},
     {"nVars", nVars},
     {"nX", nX},

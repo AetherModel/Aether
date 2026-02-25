@@ -501,6 +501,22 @@ std::string Grid::get_gridtype() {
 }
 
 // --------------------------------------------------------------------------
+// Return string grid shape (presently cubesphere,latlon,dipole)
+// --------------------------------------------------------------------------
+
+std::string Grid::get_gridshape() {
+
+  if (iGridShape_ == iCubesphere_) 
+    gridShape = "cubesphere";
+  if (iGridShape_ == iSphere_) 
+    gridShape = "latlon";
+  if (iGridShape_ == iDipole_) 
+    gridShape = "dipole";
+
+  return gridShape;
+}
+
+// --------------------------------------------------------------------------
 // Get whether the grid is a experimental (return true for experimental)
 // --------------------------------------------------------------------------
 

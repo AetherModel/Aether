@@ -120,6 +120,12 @@ class OutputContainer {
   void set_version(float in_version);
 
   /**********************************************************************
+     \brief set the version of Aether
+     \param in_version the version number
+   **/
+  void set_gridshape(std::string in_shape);
+
+  /**********************************************************************
      \brief set the number of ghost cells in Aether
      \param in_nGCs the number of ghostcells in the grid
    **/
@@ -200,6 +206,9 @@ class OutputContainer {
 
   /// The version of the code / data / whatever:
   float version;
+
+  /// The shape of grid:
+  std::string gridShape;
 
   /// The number of Ghost Cells:
   int nGCs;

@@ -79,8 +79,6 @@ bool output(const Neutrals &neutrals,
     std::string output_dir = "UA/output/";
     DummyOutputContainer.set_directory(output_dir);
     DummyOutputContainer.set_version(aether_version);
-    DummyOutputContainer.set_nGhostCells(grid.get_nGCs());
-
     for (int iOutput = 0; iOutput < nOutputs; iOutput++)
       AllOutputContainers.push_back(DummyOutputContainer);
 
@@ -109,6 +107,11 @@ bool output(const Neutrals &neutrals,
       AllOutputContainers[iOutput].set_time(time.get_current());
 
       std::string type_output = input.get_type_output(iOutput);
+
+      // ------------------------------------------------------------
+      // Store the grid info
+      AllOutputContainers[iOutput].set_nGhostCells(grid.get_nGCs());
+      AllOutputContainers[iOutput].set_gridshape(grid.get_gridshape());
 
       // ------------------------------------------------------------
       // Put Lon, Lat, Alt into all output containers:

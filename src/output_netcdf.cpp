@@ -169,6 +169,12 @@ bool OutputContainer::write_container_netcdf() {
 
   try {
     NcFile ncdf_file(whole_filename, NcFile::replace);
+    // Some attributes:
+    ncdf_file.putAtt("source", "AetherModel");
+    ncdf_file.putAtt("version", NC_DOUBLE, version);
+    ncdf_file.putAtt("gridShape", gridShape);
+    ncdf_file.putAtt("nGCs", NC_INT, nGCs);
+
     // Add dimensions:
     NcDim xDim = ncdf_file.addDim("n_x", elements[0].value.n_rows);
     NcDim yDim = ncdf_file.addDim("n_y", elements[0].value.n_cols);

@@ -331,6 +331,7 @@ class Grid {
 
   bool get_IsGeoGrid();
   std::string get_gridtype();
+  std::string get_gridshape();
   bool get_HasBField();
   void set_IsGeoGrid(bool value);
   void set_IsExperimental(bool value);
@@ -589,7 +590,8 @@ class Grid {
   bool HasBField;
   bool IsExperimental;
   bool IsMagGrid;
-  std::string gridType;
+  std::string gridType; //gridType is Neu or Ion
+  std::string gridShape; // gridShape can be latlon, cubesphere, or dipole
 
   int64_t nX, nLons;
   int64_t nY, nLats;
