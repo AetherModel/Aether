@@ -195,6 +195,7 @@ bool OutputContainer::write_container_netcdf() {
     double time_array[1];
     time_array[0] = time_int_to_real(itime);
     timeVar.putVar(time_array);
+    timeVar.putAtt(UNITS, "seconds since 1965-01-01 00:00:00");
 
     // Output all objects in the container:
     std::vector<NcVar> Var;
