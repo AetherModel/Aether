@@ -384,7 +384,7 @@ def read_aether_one_binary_file(header, ifile, vars_to_read, isVerbose = True):
     if (isVerbose):
         print("    Reading file : ", file_to_read)
 
-    data = {hkey: header[hkey] for hkey in ["version",
+    data = {hkey: header[hkey] for hkey in ["version", "gridshape",
                                             "nlons", "nlats",
                                             "nalts", "ngcs", "nvars", "vars",
                                             "units", "long_name"]}
@@ -972,8 +972,12 @@ def calc_if_uniform_grid(dataToWrite):
 
     # Let's figure out if we have a uniform horizontal grid:
     isUniform = True
+    iBlock = 0
 
-    for iBlock in range(nBlocks):
+    while (iBlock < nBlocks) and isUniform:
+        if dataToWrite[iBlock]['gridshape'] != 'latlon':
+            isUniform=False
+            continue
         # Assume first 3 variables are lon, lat, alt:
         longitude = dataToWrite[iBlock][0]
         latitude = dataToWrite[iBlock][1]
@@ -988,7 +992,7 @@ def calc_if_uniform_grid(dataToWrite):
                 isUniform = False
             if (np.abs(dLon - dLonT) > dLon/1000.0):
                 isUniform = False
-
+        iBlock += 1
     return isUniform
 
 
