@@ -716,6 +716,23 @@ def read_block_files(coreFile, isNetCDF, isVerbose = True):
     return allBlockData, fileList
 
 #----------------------------------------------------------------------------
+# Read the gridShape attribute from the first block file of a coreFile
+#----------------------------------------------------------------------------
+
+def get_gridshape(coreFile, isNetCDF):
+    if isNetCDF:
+        fileList = sorted(glob(coreFile + '_g*.nc'))
+    else:
+        fileList = sorted(glob(coreFile + '_g*.json'))
+    if not fileList:
+        return None
+    if isNetCDF:
+        header = read_aether_netcdf_header(fileList[0])
+    else:
+        header = read_aether_json_header(fileList[0])
+    return header.get('gridshape', None)
+
+#----------------------------------------------------------------------------
 # return the nLons (nX), nLats (nY), and nAlts (nZ) of a block's data
 #----------------------------------------------------------------------------
 
