@@ -28,8 +28,8 @@ def parse_args():
     parser.add_argument('-hdf5', \
                         help='output HDF5 files', \
                         action="store_true")
-    parser.add_argument('-rm', \
-                        help='removes processed files', \
+    parser.add_argument('-keep', \
+                        help='Do not remove processed files', \
                         action="store_true")
     parser.add_argument('-alt', default = -1, type = int, \
                         help='altitude to plot (-1 for no plot!)')
@@ -1205,8 +1205,8 @@ def main(args):
                 #write_and_plot_data(stdData, fileInfo['ensembleFile'],
                 #                    '_std', iVar, iAlt, output_netcdf)
                             
-        if (args.rm):
-            print('  --> Removing files ...')
+        if not (args.keep):
+            print('  --> Removing files ...', filelist)
             for file in filelist:
                 command = 'rm -f '+file
                 if (isVerbose):
