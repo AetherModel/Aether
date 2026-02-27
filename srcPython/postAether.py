@@ -12,6 +12,7 @@ import argparse
 import os
 import json
 from struct import unpack
+import interp_dipole
 try:
     from netCDF4 import Dataset
     from h5py import File
@@ -41,6 +42,9 @@ def parse_args():
                         action="store_true")
     parser.add_argument('-combine', \
                         help='combine all of the blocks into a single block (spherical only)', \
+                        action="store_true")
+    parser.add_argument('-interp', \
+                        help="Interpolate ion grids' outputs to the neutral grid?", \
                         action="store_true")
     parser.add_argument('-dir', default=None, type=str,
                         help="Directory to find Aether files in. Will look in current"
@@ -280,6 +284,12 @@ def read_aether_netcdf_header(filename, epoch_name='time'):
         elif np.any(header["vars"] != ncvars):
             raise IOError(''.join(['unexpected number or name of variables in',
                                    ' file: ', filename]))
+
+        # Read global attributes (e.g. gridShape, nGCs)
+        for attr in ncfile.ncattrs():
+            key = attr.lower()
+            if key not in header:
+                header[key] = ncfile.getncattr(attr)
 
         # Add the time for this file
         epoch = np.double(ncfile.variables[epoch_name][0])
@@ -711,7 +721,7 @@ def read_block_files(coreFile, isNetCDF, isVerbose = True):
                                                iFile,
                                                varsToRead,
                                                isVerbose = isVerbose)
-            
+
         allBlockData.append(data)
     return allBlockData, fileList
 
@@ -975,7 +985,8 @@ def calc_if_uniform_grid(dataToWrite):
     iBlock = 0
 
     while (iBlock < nBlocks) and isUniform:
-        if dataToWrite[iBlock]['gridshape'] != 'latlon':
+        # This won't error if gridshape isn't present
+        if dataToWrite[iBlock].get('gridshape', '') != 'latlon':
             isUniform=False
             continue
         # Assume first 3 variables are lon, lat, alt:
@@ -1136,13 +1147,23 @@ def write_and_plot_data(dataToWrite,
                         iVar,
                         iAlt,
                         output_netcdf,
+                        interp=False, 
                         isVerbose = True):
+
+    # interp is False by default.  When truthy it is a dict from
+    # prefetch_weights() containing cached weights/flat_idx/inside/geoGridGeo.
 
     # We want to figure out whether we can combine our blocks into
     # a single block and just write that out - it is much easier to
     # deal with in this case!
 
     canConsolidateBlocks = False
+
+    if interp:
+        dataToWrite = interp_dipole.apply_cached_interp(interp, dataToWrite, isVerbose)
+        # The output is now on the geographic grid, which is uniform --
+        # try to consolidate the blocks just like a regular geo run.
+    
     isUniform = calc_if_uniform_grid(dataToWrite)
 
     if (isUniform):
@@ -1194,6 +1215,13 @@ def main(args):
 
     output_netcdf = False if args.hdf5 else True
 
+    if args.interp:
+        # Precompute interpolation weights
+        # It's faster to do once and it needs to be done before merging any blocks
+        interpData = interp_dipole.prefetch_weights(filesInfo, isVerbose=isVerbose)
+    else:
+        interpData = False
+
     for iFile, fileInfo in enumerate(filesInfo):
         coreFile = fileInfo['coreFile']
         isNetCDF = fileInfo['isNetCDF']
@@ -1201,9 +1229,14 @@ def main(args):
         allBlockData, filelist = read_block_files(coreFile, isNetCDF,
                                                   isVerbose = isVerbose)
 
+        # Only interpolate dipole atmosphere files onto the geo grid
+        gridshape = get_gridshape(coreFile, isNetCDF)
+        do_interp = interpData if gridshape == 'dipole' and args.interp else False
+
         write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt,
-                            output_netcdf, isVerbose = isVerbose)
-    
+                            output_netcdf, interp=do_interp,
+                            isVerbose = isVerbose)
+
         if (fileInfo['isEnsemble']):
             factor = 1.0 / float(fileInfo['ensembleMembers'])
             if (fileInfo['ensembleNumber'] == 1):
@@ -1216,9 +1249,9 @@ def main(args):
                                                       factor = factor)
                 ensembleIndexList.append(iFile)
             if (fileInfo['ensembleNumber'] == fileInfo['ensembleMembers']):
-    
+
                 write_and_plot_data(ensembleData, fileInfo['ensembleFile'],
-                                    '_mean', iVar, iAlt, output_netcdf)
+                                    '_mean', iVar, iAlt, output_netcdf, interp=do_interp)
                 
                 #stdData = calc_std_of_ensembles(filesInfo,
                 #                                ensembleIndexList,
