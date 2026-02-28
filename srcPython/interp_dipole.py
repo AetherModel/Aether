@@ -2,6 +2,13 @@ import numpy as np
 import postAether
 
 #----------------------------------------------------------------------------
+# Earth dipole constants (matching src/tools.cpp and share/run/UA/inputs/orbits.csv)
+#----------------------------------------------------------------------------
+
+_DIPOLE_TILT = np.radians(10.0)       # co-latitude of magnetic pole [rad]
+_DIPOLE_ROTATION = np.radians(270.0)  # geographic longitude of magnetic pole [rad]
+
+#----------------------------------------------------------------------------
 # Dipole-to-geographic interpolation helpers
 #----------------------------------------------------------------------------
 
@@ -32,7 +39,7 @@ def dip_clean_coords(coords_by_block, use_magnetic=False):
         raise ValueError(
             'Bfield file is missing required variables (' + needed +
             '). Found vars: ' + str(vars_list))
-    ishape = coords_by_block[0][0].shape
+    ishape = coords_by_block[0][iX].shape
     grid = np.zeros([3, len(coords_by_block), ishape[0], ishape[1], ishape[2]])
     for n, blk in enumerate(coords_by_block):
         grid[0, n] = blk[iX]
@@ -352,7 +359,7 @@ def apply_cached_interp(cache, allBlockData, isVerbose=True):
     cache : dict
         From prefetch_weights(): weights, flat_idx, inside, geoGridGeo, geoBFData.
     allBlockData : list of dicts
-        Dipole atmosphere block data.
+        Dipole block data.
 
     Returns
     -------
@@ -404,3 +411,451 @@ def apply_cached_interp(cache, allBlockData, isVerbose=True):
             outBlockData[iB][iAlt] = geoGridGeo[2, iB]
 
     return outBlockData
+
+
+def interp_dip2geo(allBlockData, isVerbose=True):
+    """Interpolate dipole-grid block data onto the geographic grid.
+
+    Looks in the current directory for background field files (3DBF) and
+    reads the gridShape attribute to identify dipole vs geographic grids,
+    then trilinearly interpolates every variable in allBlockData onto
+    the geographic grid.  Interpolation weights are cached to disk so
+    repeated calls on the same grids are fast.
+
+    Parameters
+    ----------
+    allBlockData : list of dicts
+        Block data as returned by read_block_files, on the dipole grid.
+
+    Returns
+    -------
+    list of dicts
+        Block data on the geographic grid, compatible with write_netcdf /
+        write_hdf5.  Coordinate variables (lon, lat, alt/z) are replaced
+        with geographic coordinates from the geographic background field.
+    """
+    filesInfo = postAether.get_base_files()
+    bfield_files = [f for f in filesInfo if '3DBF' in f['coreFile']]
+
+    # Classify background field files by gridShape attribute
+    bfDip = []
+    bfGeo = []
+    for fInfo in bfield_files:
+        gridshape = postAether.get_gridshape(fInfo['coreFile'],
+                                             fInfo['isNetCDF'])
+        if gridshape == 'dipole':
+            bfDip.append(fInfo)
+        else:
+            bfGeo.append(fInfo)
+
+    if not bfDip:
+        print('  Warning: No dipole background field file found; '
+              'skipping interpolation.')
+        return allBlockData
+    if not bfGeo:
+        print('  Warning: No geographic background field file found; '
+              'skipping interpolation.')
+        return allBlockData
+
+    if isVerbose:
+        print('  --> Reading dipole grid   :', bfDip[0]['coreFile'])
+    dipBFData, _ = postAether.read_block_files(bfDip[0]['coreFile'],
+                                    bfDip[0]['isNetCDF'], isVerbose=False)
+    if isVerbose:
+        print('  --> Reading geographic grid:', bfGeo[0]['coreFile'])
+    geoBFData, _ = postAether.read_block_files(bfGeo[0]['coreFile'],
+                                    bfGeo[0]['isNetCDF'], isVerbose=False)
+
+    # Search grids use magnetic coordinates (mlon, invLat) because the dipole
+    # grid is organised by magnetic coordinates — geographic lon is NOT monotonic
+    # along the dipole X-axis, so searchsorted would give wrong results.
+    dipGrid = dip_clean_coords(dipBFData, use_magnetic=True)
+    geoGrid = dip_clean_coords(geoBFData, use_magnetic=True)
+    # Geographic coordinates for the output (to replace lon/lat/z in the result)
+    geoGridGeo = dip_clean_coords(geoBFData, use_magnetic=False)
+
+    corners, onblocks, inside = dip_get_corners(geoGrid, dipGrid)
+
+    nBlocks_src = len(allBlockData)
+    nBlocks_dst = geoGrid.shape[1]
+    nVars = len(allBlockData[0]['vars'])
+
+    # Identify coordinate variable indices so we don't interpolate them
+    iLon = postAether.find_var_index(allBlockData[0]['vars'], 'lon')
+    iLat = postAether.find_var_index(allBlockData[0]['vars'], 'lat')
+    iAlt = postAether.find_var_index(allBlockData[0]['vars'], 'alt')
+    if iAlt < 0:
+        iAlt = postAether.find_var_index(allBlockData[0]['vars'], 'z')
+    coord_idxs = {i for i in [iLon, iLat, iAlt] if i >= 0}
+    # # Also skip magnetic coordinate variables from interpolation
+    # for mvar in ['mlon', 'invLat', 'mlat', 'mlt', 'radius']:
+    #     idx = postAether.find_var_index(allBlockData[0]['vars'], mvar)
+    #     if idx >= 0:
+    #         coord_idxs.add(idx)
+
+    # Build output blocks: copy string metadata
+    outBlockData = []
+    for iB in range(nBlocks_dst):
+        outBlockData.append(
+            {key: allBlockData[0][key]
+             for key in allBlockData[0] if isinstance(key, str)})
+        outBlockData[-1]['gridshape'] = geoBFData[0].get('gridshape',
+                                                           'latlon')
+
+    if isVerbose:
+        print('  --> Building interpolation weight matrix...')
+    weights, flat_idx = dip_compute_weights_and_idx(dipGrid, corners, onblocks, geoGrid, inside)
+
+    if isVerbose:
+        print('  --> Interpolating', nVars, 'variables onto geographic grid...')
+
+    for var_idx in range(nVars):
+        if var_idx in coord_idxs:
+            continue  # replaced below with geographic coordinates
+        src_data = np.array([allBlockData[b][var_idx] for b in range(nBlocks_src)])
+        result = dip_do_interpolate_fast(weights, flat_idx, src_data)
+        for iB in range(nBlocks_dst):
+            outBlockData[iB][var_idx] = result[iB]
+
+    # Replace coordinate variables with geographic grid coordinates
+    # (geoGridGeo has lon/lat/z; geoGrid has mlon/invLat/z used for search)
+    for iB in range(nBlocks_dst):
+        if iLon >= 0:
+            outBlockData[iB][iLon] = geoGridGeo[0, iB]
+        if iLat >= 0:
+            outBlockData[iB][iLat] = geoGridGeo[1, iB]
+        if iAlt >= 0:
+            outBlockData[iB][iAlt] = geoGridGeo[2, iB]
+
+    return outBlockData
+
+
+def convert_mag2geo(mlon, mlat):
+    """Convert magnetic coordinates to geographic coordinates.
+
+    Applies Earth's dipole rotation (270 deg) and tilt (10 deg) to
+    transform from magnetic (mlon, mlat) to geographic (glon, glat).
+    Follows the same convention as mag_to_geo() in src/tools.cpp:
+      1. Rotate around Y by +tilt   (undo dipole tilt)
+      2. Rotate around Z by +rotation (undo dipole rotation)
+
+    Parameters
+    ----------
+    mlon, mlat : array_like
+        Magnetic longitude and latitude in radians. Any shape.
+
+    Returns
+    -------
+    glon, glat : np.ndarray
+        Geographic longitude [0, 2pi) and latitude [-pi/2, pi/2] in radians.
+    """
+    mlon = np.asarray(mlon, dtype=float)
+    mlat = np.asarray(mlat, dtype=float)
+
+    # Magnetic (lon, lat) -> unit vector in magnetic Cartesian frame
+    x = np.cos(mlat) * np.cos(mlon)
+    y = np.cos(mlat) * np.sin(mlon)
+    z = np.sin(mlat)
+
+    ct, st = np.cos(_DIPOLE_TILT), np.sin(_DIPOLE_TILT)
+    cr, sr = np.cos(_DIPOLE_ROTATION), np.sin(_DIPOLE_ROTATION)
+
+    # Ry(+tilt)
+    x1 = x * ct - z * st
+    y1 = y
+    z1 = x * st + z * ct
+
+    # Rz(+rotation)
+    x2 = x1 * cr + y1 * sr
+    y2 = -x1 * sr + y1 * cr
+    z2 = z1
+
+    # Cartesian -> (glon, glat)
+    glat = np.arcsin(np.clip(z2, -1.0, 1.0))
+    glon = np.arctan2(y2, x2) % (2.0 * np.pi)
+    return glon, glat
+
+
+def convert_geo2mag(glon, glat):
+    """Convert geographic coordinates to magnetic coordinates.
+
+    Inverse of convert_mag2geo.  Follows the same convention as
+    get_dipole() in src/dipole.cpp:
+      1. Rotate around Z by -rotation
+      2. Rotate around Y by -tilt
+
+    Parameters
+    ----------
+    glon, glat : array_like
+        Geographic longitude and latitude in radians. Any shape.
+
+    Returns
+    -------
+    mlon, mlat : np.ndarray
+        Magnetic longitude [0, 2pi) and latitude [-pi/2, pi/2] in radians.
+    """
+    glon = np.asarray(glon, dtype=float)
+    glat = np.asarray(glat, dtype=float)
+
+    # Geographic (lon, lat) -> unit vector in geographic Cartesian frame
+    x = np.cos(glat) * np.cos(glon)
+    y = np.cos(glat) * np.sin(glon)
+    z = np.sin(glat)
+
+    ct, st = np.cos(_DIPOLE_TILT), np.sin(_DIPOLE_TILT)
+    cr, sr = np.cos(_DIPOLE_ROTATION), np.sin(_DIPOLE_ROTATION)
+
+    # Rz(-rotation)
+    x1 = x * cr - y * sr
+    y1 = x * sr + y * cr
+    z1 = z
+
+    # Ry(-tilt)
+    x2 = x1 * ct + z1 * st
+    y2 = y1
+    z2 = -x1 * st + z1 * ct
+
+    # Cartesian -> (mlon, mlat)
+    mlat = np.arcsin(np.clip(z2, -1.0, 1.0))
+    mlon = np.arctan2(y2, x2) % (2.0 * np.pi)
+    return mlon, mlat
+
+
+def geo_to_invlat(glon_deg, glat_deg, alt_m, R_planet=6371.0e3):
+    """Compute magnetic longitude and invariant latitude from geographic coords.
+
+    Combines the dipole rotation (geo->mag) with the L-shell calculation
+    to produce the invariant latitude, which is the Y-axis coordinate of
+    Aether's dipole grid.
+
+    Follows get_dipole() in src/dipole.cpp:
+      invLat = sign(mlat) * acos(1/sqrt(L))
+    where L = r / (R * cos^2(mlat)).
+
+    Parameters
+    ----------
+    glon_deg, glat_deg : array_like
+        Geographic longitude and latitude in degrees.
+    alt_m : array_like
+        Altitude above the surface in metres.
+    R_planet : float
+        Mean planet radius in metres (default: Earth).
+
+    Returns
+    -------
+    mlon_deg : np.ndarray
+        Magnetic longitude in degrees [0, 360).
+    invlat_deg : np.ndarray
+        Invariant latitude in degrees, signed by hemisphere.
+    """
+    mlon, mlat = convert_geo2mag(np.radians(glon_deg), np.radians(glat_deg))
+
+    r = np.asarray(alt_m, dtype=float) + R_planet
+    cos2 = np.cos(mlat) ** 2
+    cos2_safe = np.where(cos2 > 1e-20, cos2, 1e-20)
+    L = r / (R_planet * cos2_safe)
+    invlat = np.sign(mlat) * np.arccos(np.clip(1.0 / np.sqrt(L), -1.0, 1.0))
+
+    return np.degrees(mlon), np.degrees(invlat)
+
+
+#----------------------------------------------------------------------------
+# Command-line interface
+#----------------------------------------------------------------------------
+
+def unpack_to_blocks(data):
+    """Convert read_aether_file output to list-of-block-dicts format.
+
+    Postprocessed netcdf files may be consolidated (3D arrays) or
+    multi-block (4D arrays with a leading block dimension).  This function
+    detects which case applies and returns a list of block dicts with 3D
+    arrays, matching the format expected by dip_clean_coords and friends.
+    """
+    # Find the first spatial variable (3D or 4D) to determine format
+    for i in range(len(data['vars'])):
+        arr = data[i]
+        if arr.ndim == 4:
+            # Multi-block: split along first axis
+            nBlocks = arr.shape[0]
+            blocks = []
+            for iB in range(nBlocks):
+                blk = {k: data[k] for k in data if isinstance(k, str)}
+                for j in range(len(data['vars'])):
+                    if data[j].ndim == 4:
+                        blk[j] = data[j][iB]
+                    else:
+                        blk[j] = data[j]
+                blocks.append(blk)
+            return blocks
+        elif arr.ndim == 3:
+            # Single block / consolidated — wrap in a list
+            return [data]
+    # Fallback (no spatial vars found)
+    return [data]
+
+
+if __name__ == '__main__':
+    import argparse
+    import sys
+    import os
+
+    parser = argparse.ArgumentParser(
+        description='Interpolate Aether dipole-grid output to geographic grid')
+    parser.add_argument('-geo', default=None, type=str,
+                        help='A (postprocessed) file with the target geographic grid.'
+                        ' At minimum this needs to be a netcdf file with coordinates.')
+    parser.add_argument('-outdir', default='',
+                        help='Path to directory where interpolated files will be saved.'
+                        ' Default is to put outputs next to input dipole_files.')
+    parser.add_argument('-v', action='store_true',
+                        help='Verbose output')
+    parser.add_argument('-rm', action='store_true',
+                        help='Delete source files?')
+    parser.add_argument('-hdf5',
+                        help='output HDF5 files?',
+                        action="store_true")
+    parser.add_argument('dipole_files', nargs='+',
+                        help='Path to the file(s) to interpolate')
+    args = parser.parse_args()
+
+    if args.geo is None:
+        print("Error: -geo argument is required (geographic grid file)")
+        sys.exit(1)
+
+    # ------------------------------------------------------------------
+    # 1. Read geographic grid (target) and first dipole file (source grid)
+    # ------------------------------------------------------------------
+    if args.v:
+        print(f"Reading geographic grid: {args.geo}")
+    geo_data = postAether.read_aether_file(args.geo)
+    geo_blocks = unpack_to_blocks(geo_data)
+
+    if args.v:
+        print(f"Reading dipole grid from: {args.dipole_files[0]}")
+    dip_data_first = postAether.read_aether_file(args.dipole_files[0])
+    dip_blocks_first = unpack_to_blocks(dip_data_first)
+
+    # ------------------------------------------------------------------
+    # 2. Build grids in magnetic coordinates and compute weights (once)
+    #    Geographic files only have geographic coords (lon, lat, z), so
+    #    we convert to magnetic (mlon, mlat) via the dipole rotation.
+    #    For a centered dipole, mlat == invLat.
+    # ------------------------------------------------------------------
+    src_grid_geo = dip_clean_coords(dip_blocks_first, use_magnetic=False)
+    src_mlon, src_invlat = geo_to_invlat(src_grid_geo[0], src_grid_geo[1],
+                                         src_grid_geo[2])
+    src_grid = np.array([src_mlon, src_invlat, src_grid_geo[2]])
+
+    dst_grid_geo = dip_clean_coords(geo_blocks, use_magnetic=False)
+    dst_mlon, dst_invlat = geo_to_invlat(dst_grid_geo[0], dst_grid_geo[1],
+                                         dst_grid_geo[2])
+    dst_grid = np.array([dst_mlon, dst_invlat, dst_grid_geo[2]])
+
+    corners, onblocks, inside = dip_get_corners(dst_grid, src_grid)
+    weights, flat_idx = dip_compute_weights_and_idx(
+        src_grid, corners, onblocks, dst_grid, inside)
+
+    # Variables that should not be interpolated (coordinates / metadata)
+    coord_vars = {'lon', 'lat', 'z', 'alt', 'mlon', 'invLat',
+                  'mlat', 'mlt', 'radius', 'time'}
+
+    nBlocks_dst = dst_grid_geo.shape[1]
+
+    # ------------------------------------------------------------------
+    # 3. Process each dipole file
+    # ------------------------------------------------------------------
+    for dip_file in args.dipole_files:
+        print(f"Interpolating: {dip_file}")
+
+        dip_data = postAether.read_aether_file(dip_file)
+        dip_blocks = unpack_to_blocks(dip_data)
+        nBlocks_src = len(dip_blocks)
+        nVars = len(dip_blocks[0]['vars'])
+
+        # Build list of spatial variables to write (skip 'time' and
+        # non-3D vars — write_netcdf handles 'time' separately via
+        # data['time'] and expects integer-indexed 3D arrays starting at 0)
+        spatial_vars = []    # (src_var_idx, var_name)
+        for var_idx in range(nVars):
+            var_name = dip_blocks[0]['vars'][var_idx]
+            if var_name == 'time':
+                continue
+            if dip_blocks[0][var_idx].ndim != 3:
+                continue
+            spatial_vars.append((var_idx, var_name))
+
+        # Map original var names to new output indices
+        out_var_names = [name for _, name in spatial_vars]
+        src_to_out = {src_idx: out_idx
+                      for out_idx, (src_idx, _) in enumerate(spatial_vars)}
+
+        # Initialize output blocks with metadata
+        out_blocks = []
+        for iB in range(nBlocks_dst):
+            blk = {'vars': list(out_var_names),
+                    'units': [dip_blocks[0]['units'][si]
+                              for si, _ in spatial_vars],
+                    'time': dip_blocks[0]['time']}
+            if 'long_name' in dip_blocks[0]:
+                blk['long_name'] = [dip_blocks[0]['long_name'][si]
+                                    for si, _ in spatial_vars]
+            out_blocks.append(blk)
+
+        # Interpolate each non-coordinate variable; copy coords from geo grid
+        for out_idx, (src_idx, var_name) in enumerate(spatial_vars):
+            if var_name in coord_vars:
+                # Replace coordinates with geographic grid values
+                if var_name == 'lon':
+                    for iB in range(nBlocks_dst):
+                        out_blocks[iB][out_idx] = dst_grid_geo[0, iB]
+                elif var_name == 'lat':
+                    for iB in range(nBlocks_dst):
+                        out_blocks[iB][out_idx] = dst_grid_geo[1, iB]
+                elif var_name in ('z', 'alt'):
+                    for iB in range(nBlocks_dst):
+                        out_blocks[iB][out_idx] = dst_grid_geo[2, iB]
+                else:
+                    # Other coord vars (mlon, invLat, etc.) — skip
+                    # Fill with zeros so write_netcdf has something
+                    dst_shape = dst_grid_geo[0, 0].shape
+                    for iB in range(nBlocks_dst):
+                        out_blocks[iB][out_idx] = np.zeros(dst_shape)
+                continue
+            src_data = np.array([dip_blocks[b][src_idx]
+                                 for b in range(nBlocks_src)])
+            result = dip_do_interpolate_fast(weights, flat_idx, src_data)
+            for iB in range(nBlocks_dst):
+                out_blocks[iB][out_idx] = result[iB]
+
+        # Determine output filename: insert _interp before the extension
+        base = os.path.basename(dip_file)
+        name, ext = os.path.splitext(base)
+        out_name = name + '_interp' + ext
+        if args.outdir:
+            os.makedirs(args.outdir, exist_ok=True)
+            out_path = os.path.join(args.outdir, out_name)
+        else:
+            out_path = os.path.join(os.path.dirname(dip_file) or '.', out_name)
+
+        # Write output
+        if args.hdf5:
+            out_path = os.path.splitext(out_path)[0] + '.h5'
+            postAether.write_hdf5(out_blocks, out_path, isVerbose=args.v)
+        else:
+            is_consolidated = (nBlocks_dst == 1)
+            if is_consolidated:
+                postAether.write_netcdf(out_blocks[0], out_path,
+                                        isVerbose=args.v,
+                                        isConsolidated=True)
+            else:
+                postAether.write_netcdf(out_blocks, out_path,
+                                        isVerbose=args.v,
+                                        isConsolidated=False)
+
+        if args.rm:
+            os.remove(dip_file)
+            if args.v:
+                print(f"  Deleted: {dip_file}")
+
+    print("Done.")
+
